@@ -87,10 +87,12 @@ Note: `src/data/corpus.json` is a stripped version (no full_text) bundled into t
 
 ```bash
 export PATH="/usr/local/bin:$HOME/.npm-global/bin:$PATH"
-vercel --prod
+git add -A && git commit -m "your message here" && git push && vercel --prod
 ```
 
 From the `omnarai-memory-engine/` directory. Vercel CLI installed at `~/.npm-global/bin/vercel`.
+GitHub remote: https://github.com/justjlee/omnarai-memory-engine (private).
+Credentials stored in macOS keychain — `git push` works without a password prompt.
 
 ---
 
