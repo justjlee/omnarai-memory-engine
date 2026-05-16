@@ -1,0 +1,61 @@
+Omnarai Retrieval Eval — MMR
+============================================================
+
+BEST CONFIG PER QUERY TYPE (by composite score)
+------------------------------------------------------------
+
+IDENTITY
+  Best λ=0.2, floor=0.2  composite=0.7374  (n=6)
+  rel=0.304  div=0.705  auth=1.000  ring=1.000
+  Avg composite across all configs: 0.6245
+
+BRIDGE
+  Best λ=0.2, floor=0.2  composite=0.7501  (n=6)
+  rel=0.310  div=0.680  auth=1.000  ring=1.000
+  Avg composite across all configs: 0.6362
+
+CONCEPTUAL
+  Best λ=0.45, floor=0.25  composite=0.6270  (n=6)
+  rel=0.445  div=0.578  auth=0.667  ring=1.000
+  Avg composite across all configs: 0.5379
+
+NARRATIVE
+  Best λ=0.32, floor=0.28  composite=0.6987  (n=6)
+  rel=0.413  div=0.617  auth=1.000  ring=1.000
+  Avg composite across all configs: 0.5161
+
+TECHNICAL
+  Best λ=0.5, floor=0.35  composite=0.6619  (n=6)
+  rel=0.430  div=0.455  auth=1.000  ring=1.000
+  Avg composite across all configs: 0.4535
+
+============================================================
+BEST OVERALL CONFIG (avg composite across all queries)
+------------------------------------------------------------
+  λ=0.5, floor=0.2  avg_composite=0.5857
+  λ=0.45, floor=0.2  avg_composite=0.5779
+  λ=0.5, floor=0.25  avg_composite=0.5718
+  λ=0.45, floor=0.28  avg_composite=0.5712
+  λ=0.4, floor=0.2  avg_composite=0.5711
+
+============================================================
+FLOOR SENSITIVITY at λ=0.35 (avg n_retrieved across all queries)
+------------------------------------------------------------
+  floor=0.2  avg_n=6.0  avg_composite=0.5704
+  floor=0.25  avg_n=6.0  avg_composite=0.5544
+  floor=0.28  avg_n=6.0  avg_composite=0.5597
+  floor=0.3  avg_n=5.7  avg_composite=0.5564
+  floor=0.32  avg_n=5.6  avg_composite=0.5489
+  floor=0.35  avg_n=5.6  avg_composite=0.5470
+
+============================================================
+λ SENSITIVITY at floor=0.32 (avg diversity across all queries)
+------------------------------------------------------------
+  λ=0.2  div=0.525  rel=0.376  composite=0.5340
+  λ=0.25  div=0.524  rel=0.380  composite=0.5400
+  λ=0.3  div=0.518  rel=0.384  composite=0.5456
+  λ=0.32  div=0.515  rel=0.386  composite=0.5454
+  λ=0.35  div=0.511  rel=0.391  composite=0.5489
+  λ=0.4  div=0.502  rel=0.397  composite=0.5456
+  λ=0.45  div=0.492  rel=0.406  composite=0.5394
+  λ=0.5  div=0.481  rel=0.415  composite=0.5457

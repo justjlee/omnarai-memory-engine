@@ -1,5 +1,5 @@
 {
-  "totalPosts": 50,
+  "totalPosts": 296,
   "conceptNodes": 58,
   "conceptEdges": 148,
   "contributors": [
@@ -13,13 +13,13 @@
     "xz"
   ],
   "ringCounts": {
-    "core": 11,
-    "curated": 34,
-    "open": 5
+    "core": 113,
+    "curated": 180,
+    "open": 3
   },
   "dateRange": {
-    "start": "2025-12-31",
-    "end": "2026-03-22"
+    "start": "2025-05-07",
+    "end": "2026-03-27"
   },
-  "buildDate": "2026-03-23T17:06:04.655488"
+  "buildDate": "2026-03-29T13:14:07.938539"
 }

@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.vercel
+.env*.local
+.env.production
+.env.local
+.env
+corpus/pipeline_runs/

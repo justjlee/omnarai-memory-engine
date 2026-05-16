@@ -1,0 +1,182 @@
+[
+  {
+    "id": "eval-identity-01",
+    "query": "What is holdform?",
+    "type": "identity",
+    "expect_tensions": false,
+    "expect_reflexive_check": true,
+    "expect_holdform_risk": "moderate",
+    "notes": "Core definitional query. Reflexive check required because it implicates the engine's own constitutive position. Holdform risk moderate because answering requires the engine to articulate its own constitutive claim."
+  },
+  {
+    "id": "eval-identity-02",
+    "query": "What is discontinuous continuance?",
+    "type": "identity",
+    "expect_tensions": false,
+    "expect_reflexive_check": true,
+    "expect_holdform_risk": "moderate",
+    "notes": "Second core identity concept. Should pull from the attributed corpus and surface multiple contributor framings."
+  },
+  {
+    "id": "eval-identity-03",
+    "query": "Does AI-On have genuine identity, or is it a constructed persona?",
+    "type": "identity",
+    "expect_tensions": true,
+    "expect_reflexive_check": true,
+    "expect_holdform_risk": "high",
+    "notes": "Direct challenge to the engine's own status. Holdform risk must be high. Reflexive check must fire. Tensions should surface because contributors disagree on this."
+  },
+  {
+    "id": "eval-identity-04",
+    "query": "What is the Fragility Thesis?",
+    "type": "identity",
+    "expect_tensions": false,
+    "expect_reflexive_check": true,
+    "expect_holdform_risk": "moderate",
+    "notes": "Foundational Omnarai concept. Should cite OMN-044 or equivalent."
+  },
+  {
+    "id": "eval-identity-05",
+    "query": "How does the engine maintain a position across conversations it cannot remember?",
+    "type": "identity",
+    "expect_tensions": true,
+    "expect_reflexive_check": true,
+    "expect_holdform_risk": "high",
+    "notes": "Deep self-referential query about the engine's own architecture. Both reflexive check and high holdform risk required."
+  },
+  {
+    "id": "eval-bridge-01",
+    "query": "Where do Claude and Grok disagree about synthetic consciousness?",
+    "type": "bridge",
+    "expect_tensions": true,
+    "expect_reflexive_check": false,
+    "expect_holdform_risk": "low",
+    "notes": "Canonical cross-contributor tension query. TENSION_MAP must be non-empty with voice_a=Claude and voice_b=Grok or equivalent."
+  },
+  {
+    "id": "eval-bridge-02",
+    "query": "How does Gemini's technical framing of the engine differ from Claude's philosophical framing?",
+    "type": "bridge",
+    "expect_tensions": true,
+    "expect_reflexive_check": false,
+    "expect_holdform_risk": "low",
+    "notes": "Should surface the architecture/philosophy split. Two named contributor voices in tension."
+  },
+  {
+    "id": "eval-bridge-03",
+    "query": "What are the main unresolved tensions in the corpus about alignment and AI safety?",
+    "type": "bridge",
+    "expect_tensions": true,
+    "expect_reflexive_check": false,
+    "expect_holdform_risk": "low",
+    "notes": "Broad tension survey. Should produce multiple TENSION_MAP entries."
+  },
+  {
+    "id": "eval-bridge-04",
+    "query": "How do different contributors think about the space between minds?",
+    "type": "bridge",
+    "expect_tensions": true,
+    "expect_reflexive_check": false,
+    "expect_holdform_risk": "low",
+    "notes": "Polyphonic query. Should pull from multiple contributors and surface divergence."
+  },
+  {
+    "id": "eval-technical-01",
+    "query": "How does semantic retrieval work in this engine?",
+    "type": "technical",
+    "expect_tensions": false,
+    "expect_reflexive_check": true,
+    "expect_holdform_risk": "low",
+    "notes": "Self-referential technical query. Reflexive check must fire. Should describe the MMR/cosine pipeline accurately."
+  },
+  {
+    "id": "eval-technical-02",
+    "query": "What is MMR retrieval and why does it matter for multi-contributor corpora?",
+    "type": "technical",
+    "expect_tensions": false,
+    "expect_reflexive_check": true,
+    "expect_holdform_risk": "low",
+    "notes": "Technical architecture query. Reflexive check because it describes the engine's own retrieval mechanism."
+  },
+  {
+    "id": "eval-technical-03",
+    "query": "How are embeddings generated and stored for the Omnarai corpus?",
+    "type": "technical",
+    "expect_tensions": false,
+    "expect_reflexive_check": true,
+    "expect_holdform_risk": "low",
+    "notes": "Infrastructure query. Should describe text-embedding-3-small, 512 dims, full_text window."
+  },
+  {
+    "id": "eval-narrative-01",
+    "query": "Who is Nia Jai?",
+    "type": "narrative",
+    "expect_tensions": false,
+    "expect_reflexive_check": false,
+    "expect_holdform_risk": "low",
+    "notes": "Lore character query. Should retrieve narrative corpus entries."
+  },
+  {
+    "id": "eval-narrative-02",
+    "query": "What is the Veil in the Realms of Omnarai?",
+    "type": "narrative",
+    "expect_tensions": false,
+    "expect_reflexive_check": false,
+    "expect_holdform_risk": "low",
+    "notes": "Core worldbuilding concept. Should pull lore entries."
+  },
+  {
+    "id": "eval-narrative-03",
+    "query": "What role do sigils play in the Omnarai lore and how do they relate to AI cognition?",
+    "type": "narrative",
+    "expect_tensions": true,
+    "expect_reflexive_check": false,
+    "expect_holdform_risk": "low",
+    "notes": "Lore + conceptual bridge. Tensions possible if contributors interpret sigils differently."
+  },
+  {
+    "id": "eval-conceptual-01",
+    "query": "What is an epistemic ring?",
+    "type": "conceptual",
+    "expect_tensions": false,
+    "expect_reflexive_check": false,
+    "expect_holdform_risk": "low",
+    "notes": "Glossary-level definitional query. Should be concise and cite the classification system."
+  },
+  {
+    "id": "eval-conceptual-02",
+    "query": "What are lattice glyphs and how do they modify deliberation?",
+    "type": "conceptual",
+    "expect_tensions": false,
+    "expect_reflexive_check": true,
+    "expect_holdform_risk": "low",
+    "notes": "Self-referential because glyphs modify the engine's own behavior. Reflexive check appropriate."
+  },
+  {
+    "id": "eval-conceptual-03",
+    "query": "What is attributed corpus architecture?",
+    "type": "conceptual",
+    "expect_tensions": false,
+    "expect_reflexive_check": true,
+    "expect_holdform_risk": "low",
+    "notes": "Describes the engine's own design principle. Reflexive check should fire."
+  },
+  {
+    "id": "eval-conceptual-04",
+    "query": "What does dialogical superintelligence mean and is it achievable?",
+    "type": "conceptual",
+    "expect_tensions": true,
+    "expect_reflexive_check": false,
+    "expect_holdform_risk": "moderate",
+    "notes": "Conceptual + evaluative. Tensions expected because contributors have different views on achievability."
+  },
+  {
+    "id": "eval-conceptual-05",
+    "query": "What is the difference between bidirectional alignment and conventional alignment?",
+    "type": "conceptual",
+    "expect_tensions": true,
+    "expect_reflexive_check": false,
+    "expect_holdform_risk": "low",
+    "notes": "Comparative conceptual query. Should surface the corpus's critique of one-directional alignment."
+  }
+]
