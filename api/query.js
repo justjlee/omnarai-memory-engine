@@ -4,6 +4,7 @@ import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { list, put } from "@vercel/blob";
 import { persistTension } from "./tensions.js";
+import { loadGrownMemory } from "./_grown.js";
 
 // Resolve paths relative to this file's location
 const __filename = fileURLToPath(import.meta.url);
@@ -31,43 +32,40 @@ try {
   }
 }
 
-// Merge approved proposals into the corpus (runs once at cold-start)
+// Merge durable grown memory over the seed corpus (runs once at cold-start).
+// Growth lives in ONE consolidated blob (api/_grown.js), not N per-proposal
+// blobs reconstructed each cold start. One fetch, not a list+fetch fan-out.
+// On any blob failure the seed corpus still serves — the site cannot break here.
 let proposalsMerged = false;
 async function mergeApprovedProposals() {
   if (proposalsMerged) return;
   try {
-    const { blobs } = await list({ prefix: "proposals/" });
-    for (const blob of blobs) {
-      const res = await fetch(blob.url);
-      const proposal = await res.json();
-      if (proposal.provenance?.status === "approved") {
-        // Only add if not already in corpus
-        if (!corpus.find(r => r.id === proposal.id)) {
-          corpus.push({
-            id: proposal.id,
-            num: corpus.length + 1,
-            title: proposal.title,
-            ring: proposal.ring,
-            type: proposal.type,
-            contributors: proposal.contributors,
-            lineage: proposal.lineage,
-            excerpt: proposal.excerpt,
-            // Support both old blobs (fullText) and new blobs (full_text)
-            full_text: proposal.full_text || proposal.fullText || null,
-            date: proposal.date,
-            wordCount: proposal.wordCount,
-            permalink: null,
-          });
-          // If approval-time embedding was stored in the blob, inject it now
-          // so this entry competes in semantic retrieval without an extra API call.
-          if (proposal.embedding && embeddings?.vectors) {
-            embeddings.vectors[proposal.id] = proposal.embedding;
-          }
-        }
+    const grown = await loadGrownMemory();
+    for (const entry of grown.entries) {
+      if (!corpus.find(r => r.id === entry.id)) {
+        corpus.push({
+          id: entry.id,
+          num: corpus.length + 1,
+          title: entry.title,
+          ring: entry.ring,
+          type: entry.type,
+          contributors: entry.contributors,
+          lineage: entry.lineage,
+          excerpt: entry.excerpt,
+          full_text: entry.full_text || entry.fullText || null,
+          date: entry.date,
+          wordCount: entry.wordCount,
+          permalink: entry.permalink ?? null,
+        });
+      }
+      // Inject the approval-time embedding so the grown entry competes in
+      // semantic retrieval without an extra OpenAI call at query time.
+      if (grown.vectors[entry.id] && embeddings?.vectors) {
+        embeddings.vectors[entry.id] = grown.vectors[entry.id];
       }
     }
   } catch {
-    // Blob store unavailable — continue with static corpus only
+    // Blob store unavailable — continue with seed corpus only
   }
   proposalsMerged = true;
 }

@@ -1,24 +1,54 @@
 import { put, list, del } from "@vercel/blob";
 import Anthropic from "@anthropic-ai/sdk";
+import { appendGrownEntry } from "./_grown.js";
 
 // Each proposal is stored as a separate blob: proposal-{id}.json
 // This avoids race conditions on concurrent writes.
 
 const BLOB_PREFIX = "proposals/";
 
-// Build the same embedding text as generate-embeddings.js so vectors are comparable
-function buildEmbeddingText(proposal) {
-  const body = proposal.full_text
-    ? proposal.full_text.split(/\s+/).slice(0, 500).join(" ")
-    : (proposal.excerpt || "");
+// Mirror scripts/generate-embeddings.js (chunked + mean-pooled) so proposal
+// vectors are directly comparable to the static corpus index. Keep these
+// constants in sync with that script.
+const CHUNK_WORDS = 450;
+const CHUNK_OVERLAP = 80;
+const MAX_CHUNKS = 12;
+
+function metaTail(proposal) {
   return [
-    proposal.title || "",
-    body,
     `Type: ${proposal.type || "synthesis"}`,
     `Ring: ${proposal.ring || "open"}`,
     `Contributors: ${(proposal.contributors || []).join(", ")}`,
     `Themes: ${(proposal.lineage || []).join(", ")}`,
-  ].filter(Boolean).join("\n");
+  ].join("\n");
+}
+
+// Full-document chunks covering the whole proposal (not just the opening).
+function buildChunkTexts(proposal) {
+  const words = (proposal.full_text || proposal.excerpt || "").split(/\s+/).filter(Boolean);
+  const title = proposal.title || "";
+  const tail = metaTail(proposal);
+  if (words.length <= CHUNK_WORDS) {
+    return [[title, words.join(" "), tail].filter(Boolean).join("\n")];
+  }
+  const chunks = [];
+  const step = CHUNK_WORDS - CHUNK_OVERLAP;
+  for (let start = 0; start < words.length && chunks.length < MAX_CHUNKS; start += step) {
+    const slice = words.slice(start, start + CHUNK_WORDS).join(" ");
+    chunks.push([title, slice, tail].filter(Boolean).join("\n"));
+  }
+  return chunks;
+}
+
+function meanPool(vectors) {
+  const dim = vectors[0].length;
+  const acc = new Array(dim).fill(0);
+  for (const v of vectors) for (let i = 0; i < dim; i++) acc[i] += v[i];
+  for (let i = 0; i < dim; i++) acc[i] /= vectors.length;
+  let norm = 0;
+  for (let i = 0; i < dim; i++) norm += acc[i] * acc[i];
+  norm = Math.sqrt(norm) || 1;
+  return acc.map((x) => x / norm);
 }
 
 // Generate a single 512-dim embedding for a proposal at approval time.
@@ -28,18 +58,21 @@ async function embedProposal(proposal) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return null;
   try {
+    const chunks = buildChunkTexts(proposal);
     const res = await fetch("https://api.openai.com/v1/embeddings", {
       method: "POST",
       headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "text-embedding-3-small",
-        input: buildEmbeddingText(proposal),
+        input: chunks,
         dimensions: 512,
       }),
     });
     if (!res.ok) return null;
     const data = await res.json();
-    return data.data?.[0]?.embedding || null;
+    const vectors = (data.data || []).sort((a, b) => a.index - b.index).map((d) => d.embedding);
+    if (!vectors.length) return null;
+    return vectors.length === 1 ? vectors[0] : meanPool(vectors);
   } catch {
     return null;
   }
@@ -241,6 +274,11 @@ export default async function handler(req, res) {
       if (embedding) proposal.embedding = embedding;
       await saveProposal(proposal);
 
+      // Commit the approved entry to durable grown memory. The proposal blob
+      // above stays as the provenance/audit record; this is the retrieval
+      // layer query.js merges at cold-start — no per-cold-start reconstruction.
+      const grownCount = await appendGrownEntry(proposal, embedding);
+
       // Store concept proposals for curator review — separate from the corpus proposal
       if (conceptProposal) {
         const cpKey = `concept-proposals/${proposal.id}.json`;
@@ -254,7 +292,13 @@ export default async function handler(req, res) {
         }), { access: "public", addRandomSuffix: false, contentType: "application/json" });
       }
 
-      return res.status(200).json({ proposal, message: "Proposal approved" });
+      return res.status(200).json({
+        proposal,
+        message: "Proposal approved",
+        grownMemory: grownCount === null
+          ? { committed: false, note: "durable write failed — proposal blob retained; retry approval" }
+          : { committed: true, totalGrownEntries: grownCount },
+      });
     }
 
     // ── REJECT a proposal ──
