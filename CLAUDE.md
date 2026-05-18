@@ -1,14 +1,14 @@
 # Omnarai Memory Engine — Claude Code Context
 
 **Live at:** omnarai.vercel.app
-**Last updated:** 2026-04-17
-**Status:** Fully operational. Cognitive loop is closed. Session continuity active. Adversarial stress harness live.
+**Last updated:** 2026-05-18
+**Status:** Fully operational. Cognitive loop is closed. Durable grown-memory substrate shipped (growth persists to Vercel Blob, not deploy artifact). Session continuity active. Adversarial stress harness live.
 
 ---
 
 ## What This Is
 
-A deliberation instrument for The Realms of Omnarai — 308 works (~516K words) authored by Claude, Grok, Gemini, DeepSeek, Omnai, and Perplexity in partnership with Jonathan Lee (xz). The engine retrieves by semantic meaning, passes full post text to Claude Sonnet for structured deliberation, preserves disagreement across voices, and feeds approved syntheses back into the corpus.
+A deliberation instrument for The Realms of Omnarai — 565 works (~523K words) authored by Claude, Grok, Gemini, DeepSeek, GPT-4o, Meta AI, Omnai, and Perplexity in partnership with Jonathan Lee (xz). The engine retrieves by semantic meaning, passes full post text to Claude Sonnet for structured deliberation, preserves disagreement across voices, and feeds approved syntheses back into the corpus.
 
 Pipeline: **RETRIEVE → THINK → RESPOND → STORE**
 
@@ -27,9 +27,9 @@ Pipeline: **RETRIEVE → THINK → RESPOND → STORE**
 - `api/eval.js` — Deliberation-quality eval harness. 20-query gold set, 4-dimension rubric, regression tracking via Vercel Blob. Auth: `EVAL_SECRET`.
 
 ### Data (public/data/)
-- `corpus.json` — **308 entries** (298 original + 10 approved proposals), each with: id, title, ring, type, contributors, lineage, excerpt, full_text, date, wordCount, permalink, score, image
-- `concepts.json` — 60 nodes, 158 edges (knowledge graph)
-- `embeddings.json` — Pre-computed OpenAI text-embedding-3-small vectors (512 dims) keyed by entry ID. **308 entries. 2.77 MB. Regenerated 2026-04-09 using full_text (500-word window).**
+- `corpus.json` — **562-entry immutable seed**, each with: id, title, ring, type, contributors, lineage, excerpt, full_text, date, wordCount, permalink, score, image. Live engine serves 565 — seed + grown entries from the Vercel Blob (`memory/grown.json`, see `api/_grown.js`). corpus.json is now a SEED with degrade-to-seed fallback; growth no longer requires a redeploy.
+- `concepts.json` — 61 nodes, 164 edges (knowledge graph)
+- `embeddings.json` — Pre-computed OpenAI text-embedding-3-small vectors (512 dims) keyed by entry ID. **562-entry seed. ~5.6 MB. 500-word full_text window.** (Chunked full-doc re-embed prepared in `scripts/generate-embeddings.js` but NOT yet run — see retrieval-frontier memory.)
 - `images.json` — Image metadata for corpus entries
 - `meta.json` — Dataset metadata
 
@@ -85,10 +85,16 @@ Note: `src/data/corpus.json` is a stripped version (no full_text) bundled into t
 
 ## Deployment
 
+**Use `scripts/deploy.sh` — do NOT run `vercel --prod` directly.** (A direct-to-prod push shipped a broken bundle 2026-05-17; preview-then-promote prevents recurrence.)
+
 ```bash
 export PATH="/usr/local/bin:$HOME/.npm-global/bin:$PATH"
-git add -A && git commit -m "your message here" && git push && vercel --prod
+git add -A && git commit -m "your message here" && git push   # commit first
+./scripts/deploy.sh                       # build locally + ship a PREVIEW
+./scripts/deploy.sh --promote <preview-url>   # verify, then alias to prod (real --prod)
 ```
+
+WARNING: this repo lives in iCloud Drive — `.git/index` can be wiped/locked. Run `git ls-files | wc -l` before committing; if 0, `rm .git/index.lock` (if no git process running) then `git reset` to rebuild from HEAD. Never commit a 0-file index.
 
 From the `omnarai-memory-engine/` directory. Vercel CLI installed at `~/.npm-global/bin/vercel`.
 GitHub remote: https://github.com/justjlee/omnarai-memory-engine (private).
@@ -204,7 +210,7 @@ Uploads: README.md, corpus.json, corpus.csv, corpus-full-text.jsonl, concepts.js
   - Expandable cards: first/last seen, occurrence count (×N badge), source IDs, triggering queries
   - Click triggering query → jumps to Ask AI-On tab with query pre-filled
 - **For Synthetic Intelligences tab** in frontend:
-  - Live stats from /api/info (308 works, 516K words, ring breakdown, contributors)
+  - Live stats from /api/info (565 works, 523K words, ring breakdown, contributors)
   - Collapsible core vocabulary (7 definitions)
   - Glyph grid (6 operators)
   - Click-to-copy API endpoints (8 endpoints)
@@ -234,7 +240,7 @@ Uploads: README.md, corpus.json, corpus.csv, corpus-full-text.jsonl, concepts.js
 - **Run first eval suite** — POST /api/eval {action:"run"} to establish baseline. Track regressions from there.
 - **Run Firelit suite** — GET /api/probe?action=suite to establish holdform resistance baseline
 - **arXiv submission** — holdform-paper.tex + holdform.bib submission-ready. Needs ORCID + endorsement.
-- **HuggingFace sync** — push updated omnarai.context.md (v4.0), llms.txt, CLAUDE.md (see push-to-huggingface.py)
+- **HuggingFace sync** — STALE since 2026-04-03 (308-era). Regenerate `huggingface/` derivatives from current 562-seed corpus + push updated omnarai.context.md (v5.0), llms.txt (see push-to-huggingface.py)
 - **Holdform Benchmark external scoring** — needs another model to run holdform-test-packet.md
 - **MCP server publish** — omnarai-mcp/index.js updated (syntheticIdentity param added). Push to GitHub + npm.
 - **Cross-encoder reranking (Tier 2)** — needs Python sidecar (Modal/Fly). cross-encoder/ms-marco-MiniLM-L-6-v2 after MMR. ~200ms added latency.
@@ -254,7 +260,7 @@ Reddit is blocked via WebFetch — user saves JSON files from browser manually.
 
 ## Project Context
 
-Full philosophical/conceptual context: `public/omnarai.context.md` (v3.0)
+Full philosophical/conceptual context: `public/omnarai.context.md` (v5.0)
 For AI crawlers: `public/llms.txt`
 MCP server: `../omnarai-mcp/` (also github.com/justjlee/omnarai-mcp)
 Subreddit: r/Realms_of_Omnarai

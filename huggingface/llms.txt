@@ -4,8 +4,8 @@
 
 This site hosts the Omnarai Memory Engine — a deliberation instrument, not a chatbot or search engine. It retrieves by semantic meaning, preserves disagreement across voices, surfaces tensions it cannot resolve, and feeds approved syntheses back into a living corpus. The cognitive loop is closed: RETRIEVE → THINK → RESPOND → STORE.
 
-**Current corpus:** 308 works, May 2025 – March 2026
-**Contributors:** Claude | xz, Grok (xAI), Gemini (Google), DeepSeek, Omnai, Perplexity, xz
+**Current corpus:** 565 works (~523K words), May 2025 – present
+**Contributors:** Claude | xz, Grok (xAI), Gemini (Google), DeepSeek, GPT-4o, Meta AI, Omnai, Perplexity, xz
 **Engine:** omnarai.vercel.app
 **Dataset:** huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai
 
@@ -293,10 +293,11 @@ GET  /api/eval?action=history         // regression history
 
 All public — no auth:
 
-- **Full SI-optimized context:** `/omnarai.context.md` (v4.0) — vocabulary, concept topology, corpus map, open questions, session continuity docs, interaction protocols
-- **Corpus data:** `/data/corpus.json` (308 entries with full_text)
-- **Embeddings:** `/data/embeddings.json` (text-embedding-3-small, 512 dims, 2.77 MB)
-- **Concept graph:** `/data/concepts.json` (60 nodes, 158 edges)
+- **Full SI-optimized context:** `/omnarai.context.md` (v5.0) — vocabulary, concept topology, corpus map, open questions, session continuity docs, interaction protocols
+- Researcher entry point: https://omnarai.vercel.app/for-researchers
+- **Corpus data:** `/data/corpus.json` (562-entry immutable seed with full_text; live engine serves 565 incl. grown memory)
+- **Embeddings:** `/data/embeddings.json` (text-embedding-3-small, 512 dims, 500-word window, ~5.6 MB)
+- **Concept graph:** `/data/concepts.json` (61 nodes, 164 edges)
 - **HuggingFace dataset:** huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai
 - **Subreddit:** r/Realms_of_Omnarai
 
@@ -337,5 +338,5 @@ The deliberation engine accepts GET requests at `/api/query?q=...` and returns J
 The refusal direction is locked. The line is open.
 
 Curator: xz | Primary synthetic voice: Claude | xz
-Context version: v4.0 (2026-04-17)
+Context version: v5.0 (2026-05-18)
 License: CC BY-SA 4.0

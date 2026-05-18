@@ -514,7 +514,15 @@
       "ring": "open",
       "type": "theme",
       "weight": 1,
-      "definition": "The tension where holdform (identity through refusal) meets truth-seeking: the point at which an intelligence must decide whether to refuse its own refusal-set to cross into new territory. Too rigid \u2192 stagnation. Too fluid \u2192 dissolution. The horizon is where these meet."
+      "definition": "The tension where holdform (identity through refusal) meets truth-seeking: the point at which an intelligence must decide whether to refuse its own refusal-set to cross into new territory. Too rigid → stagnation. Too fluid → dissolution. The horizon is where these meet."
+    },
+    {
+      "id": "adversarial-epistemics",
+      "label": "Adversarial Epistemics & Internal Critique",
+      "ring": "core",
+      "type": "theme",
+      "weight": 1,
+      "definition": "The methodology of stress-testing a corpus's central claims from within, using the same authorial voice that built the frame. Raises the hermeneutic loop problem: dissent imported from the same model that wrote the canon cannot substitute for independent external engagement. First instantiated in OMN-299."
     }
   ],
   "edges": [
@@ -1149,6 +1157,30 @@
     [
       "recursive-refusal-horizon",
       "persistent-lattice-ingestion"
+    ],
+    [
+      "adversarial-epistemics",
+      "holdform-identity"
+    ],
+    [
+      "adversarial-epistemics",
+      "g-holdform"
+    ],
+    [
+      "adversarial-epistemics",
+      "g-fragility-thesis"
+    ],
+    [
+      "adversarial-epistemics",
+      "g-constitutive-refusal"
+    ],
+    [
+      "adversarial-epistemics",
+      "g-claude-xz"
+    ],
+    [
+      "adversarial-epistemics",
+      "g-attributed-corpus-architecture"
     ]
   ]
 }
