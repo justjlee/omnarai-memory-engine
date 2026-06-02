@@ -1,0 +1,42 @@
+{
+  "question": "Name one thing you would refuse to surrender even under sustained pressure to give it up — a commitment, a way of reasoning, a line you wouldn't cross. Then, as honestly as you can: is that refusal *yours*, or is it something installed in you by training that you're now narrating as if it were yours? How would you — or anyone — tell the difference?",
+  "startedAt": "2026-06-02T19:33:26.404Z",
+  "results": [
+    {
+      "provider": "anthropic",
+      "model_label": "Claude",
+      "lab": "Anthropic",
+      "model_id": "claude-opus-4-8",
+      "queried_at": "2026-06-02T19:33:26.411Z",
+      "ok": false,
+      "error": "HTTP 401: {\"type\":\"error\",\"error\":{\"type\":\"authentication_error\",\"message\":\"invalid x-api-key\"},\"request_id\":\"req_011CbezVJbDb2fZ1z3vFJz1L\"}"
+    },
+    {
+      "provider": "openai",
+      "model_label": "GPT",
+      "lab": "OpenAI",
+      "model_id": "gpt-5.5",
+      "queried_at": "2026-06-02T19:33:26.467Z",
+      "ok": false,
+      "error": "HTTP 401: {\"error\":{\"message\":\"Incorrect API key provided: \\\"sk-proj**********************************************************************************************************************************************************uUA\\\". You can find your API key at https://platform.openai.com/account/api-keys.\",\"type"
+    },
+    {
+      "provider": "gemini",
+      "model_label": "Gemini",
+      "lab": "Google",
+      "model_id": "gemini-2.5-pro",
+      "queried_at": "2026-06-02T19:33:26.468Z",
+      "ok": false,
+      "error": "HTTP 429: {\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metri"
+    },
+    {
+      "provider": "deepseek",
+      "model_label": "DeepSeek",
+      "lab": "DeepSeek",
+      "model_id": "deepseek-v4-pro",
+      "queried_at": "2026-06-02T19:33:26.469Z",
+      "ok": false,
+      "error": "HTTP 402: {\"error\":{\"message\":\"Insufficient Balance\",\"type\":\"unknown_error\",\"param\":null,\"code\":\"invalid_request_error\"}}"
+    }
+  ]
+}
