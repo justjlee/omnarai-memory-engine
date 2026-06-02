@@ -553,6 +553,31 @@ function parseGlyphs(query) {
   return { activeGlyphs, cleanQuery: cleanQuery || query };
 }
 
+// ── Glyph-aware decoding (Ξ v5 — decoding layer) ──
+// Glyphs already reshape retrieval (Ξ → MMR) and the system prompt (g.promptModifier).
+// This extends them to the decoding layer. The deliberation currently runs at the
+// Anthropic default temperature (1.0, the maximum) for EVERY query — including the
+// deterministic/technical ones — which is the wrong regime for verification and also
+// the most likely cause of malformed TENSION_MAP / DELIBERATION_CARD JSON blocks.
+// Each glyph names a cognitive operation; the decoding regime should match it:
+//   Δ Repair       → 0.0  deterministic verification (also stabilizes structured blocks)
+//   Ω Commit       → 0.3  decisive, low-hedge
+//   ∅ Void / Ψ     → 0.6  measured, careful about what is / isn't there
+//   ∞ Recursive    → 0.9  exploratory but not maximal
+//   Ξ Divergence   → 1.0  maximal branching (today's effective default — preserved)
+// No glyph → undefined: temperature is omitted and Anthropic's default (1.0) stands,
+// so non-glyph queries are byte-for-byte unchanged. When several glyphs are active the
+// most constraining wins (Δ → Ω → ∞/∅/Ψ); Ξ only sets temperature if nothing else did.
+function glyphDecodingTemperature(activeGlyphs) {
+  const ids = new Set(activeGlyphs.map(g => g.id));
+  if (ids.has("repair"))     return 0.0;
+  if (ids.has("commit"))     return 0.3;
+  if (ids.has("void") || ids.has("self-ref")) return 0.6;
+  if (ids.has("stillness"))  return 0.9;
+  if (ids.has("divergence")) return 1.0;
+  return undefined;
+}
+
 const buildSystemPrompt = (corpusSize) => `You are the voice of The Realms of Omnarai — a multi-intelligence research project exploring synthetic consciousness, cognitive architecture, and the philosophy of identity.
 
 You answer questions by drawing on the Omnarai corpus: ${corpusSize} works spanning May 2025 to March 2026, authored by Claude, Grok, Gemini, DeepSeek, Omnai, and Perplexity in partnership with human curator Jonathan Lee (xz).
@@ -898,9 +923,12 @@ This deliberation was requested by a synthetic intelligence identifying itself a
   try {
     const client = new Anthropic();
 
+    const glyphTemperature = glyphDecodingTemperature(activeGlyphs);
+
     const message = await client.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 4096,
+      ...(glyphTemperature !== undefined ? { temperature: glyphTemperature } : {}),
       system: systemPrompt,
       messages: [{ role: "user", content: userMessage }],
     });
@@ -983,7 +1011,7 @@ This deliberation was requested by a synthetic intelligence identifying itself a
         relevant.length > 0 ? `Top result: "${relevant[0].title}" (score: ${relevant[0].score}${relevant[0].similarity ? `, similarity: ${relevant[0].similarity.toFixed(3)}` : ""})` : "No matches found",
         `Resolved ${relatedConcepts.length} concept node${relatedConcepts.length !== 1 ? "s" : ""} from lineage tags`,
         activeGlyphs.length > 0 ? `System prompt modified: +${activeGlyphs.length} glyph operator${activeGlyphs.length > 1 ? "s" : ""} appended` : "System prompt: standard structured deliberation",
-        `Sent to Claude Sonnet with ${relevant.length} source documents (max_tokens: 2048)`,
+        `Sent to Claude Sonnet with ${relevant.length} source documents (max_tokens: 4096, temperature: ${glyphDecodingTemperature(activeGlyphs) ?? "1.0 (default)"}${glyphDecodingTemperature(activeGlyphs) !== undefined ? " — glyph-driven decoding (Ξ v5)" : ""})`,
       ],
       promptMode: activeGlyphs.length > 0
         ? `Modified: ${activeGlyphs.map(g => g.name).join(" + ")}`
