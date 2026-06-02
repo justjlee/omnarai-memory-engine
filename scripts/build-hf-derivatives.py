@@ -33,6 +33,19 @@ BASE = Path(__file__).parent.parent
 HF = BASE / "huggingface"
 CORPUS = json.loads((BASE / "public/data/corpus.json").read_text())
 
+# Merge live grown-memory entries (divergence records + engine syntheses that
+# live in the Vercel Blob, NOT the seed corpus.json) so the HF dataset reflects
+# what the engine actually serves. Refresh the snapshot first:
+#   node scripts/dump-grown.mjs
+_GROWN = BASE / "scripts" / ".grown-snapshot.json"
+if _GROWN.exists():
+    _by_id = {str(r.get("id")): r for r in CORPUS}
+    for _e in json.loads(_GROWN.read_text()).get("entries", []):
+        _id = str(_e.get("id"))
+        _by_id[_id] = {**_by_id.get(_id, {}), **{k: v for k, v in _e.items() if v is not None}}
+    CORPUS = list(_by_id.values())
+    print(f"[grown] merged snapshot: corpus now {len(CORPUS)} records")
+
 # Exact column order of the existing HF dataset — do not reorder.
 COLS = ["id", "num", "title", "ring", "type", "contributors", "lineage",
         "excerpt", "date", "wordCount", "permalink", "score", "image",
