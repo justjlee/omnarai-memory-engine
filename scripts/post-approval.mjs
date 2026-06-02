@@ -16,7 +16,7 @@ for (const line of readFileSync(join(ROOT, ".env.local"), "utf8").split("\n")) {
   if (m && !process.env[m[1]]) { let v = m[2].trim(); if ((v.startsWith('"')&&v.endsWith('"'))||(v.startsWith("'")&&v.endsWith("'"))) v=v.slice(1,-1); process.env[m[1]] = v; }
 }
 
-const RECORD_ID = "OMN-D1780429830432";
+const RECORD_ID = process.argv[2] || "OMN-D1780437489381";
 const draft = JSON.parse(readFileSync(join(__dirname, "divergence-pilot-runs", "divergence-record-DRAFT.json"), "utf8"));
 
 // 1. Confirm grown memory
