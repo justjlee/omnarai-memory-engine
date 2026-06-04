@@ -50,7 +50,7 @@ export async function appendGrownEntry(entry, embedding) {
   const grown = await loadGrownMemory();
 
   if (!grown.entries.find((e) => e.id === entry.id)) {
-    grown.entries.push({
+    const newEntry = {
       id: entry.id,
       num: entry.num ?? null,
       title: entry.title,
@@ -63,7 +63,19 @@ export async function appendGrownEntry(entry, embedding) {
       date: entry.date,
       wordCount: entry.wordCount ?? null,
       permalink: entry.permalink ?? null,
-    });
+    };
+    // Divergence records carry structured, verbatim cross-model data. Preserve it
+    // here (appendGrownEntry otherwise drops provenance) so /api/divergences can
+    // serve the raw artifact — the five positions + tension map — not just prose.
+    if (entry.type === "divergence" && entry.provenance) {
+      newEntry.divergence = {
+        question: entry.provenance.question,
+        method: entry.provenance.method,
+        answers: entry.provenance.answers || [],
+        tensions: entry.provenance.tensions || [],
+      };
+    }
+    grown.entries.push(newEntry);
   }
   if (embedding) grown.vectors[entry.id] = embedding;
   grown.updatedAt = new Date().toISOString();
