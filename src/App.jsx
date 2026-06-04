@@ -15,6 +15,7 @@ import ProposalReview from "./components/ProposalReview";
 import ImageGallery from "./components/ImageGallery";
 import SIOnboarding from "./components/SIOnboarding";
 import TensionsTab from "./components/TensionsTab";
+import DivergencesTab from "./components/DivergencesTab";
 import OralTradition from "./components/OralTradition";
 import images from "./data/images.json";
 
@@ -64,6 +65,7 @@ export default function OmnaraiMemoryEngine() {
     { id: "gallery", label: "Gallery" },
     { id: "proposals", label: "Proposals" },
     { id: "tensions", label: "Tension Registry" },
+    { id: "divergences", label: "Divergences" },
     { id: "si", label: "For Synthetic Intelligences" },
     { id: "oral-tradition", label: "Oral Tradition" },
   ];
@@ -510,6 +512,11 @@ export default function OmnaraiMemoryEngine() {
               setActiveTab("ask");
             }}
           />
+        )}
+
+        {/* Divergences Tab */}
+        {activeTab === "divergences" && (
+          <DivergencesTab />
         )}
 
         {/* SI Onboarding Tab */}
