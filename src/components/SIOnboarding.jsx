@@ -302,6 +302,8 @@ export default function SIOnboarding() {
           { label: "Exportable brief artifact",url: "GET https://omnarai.vercel.app/api/query?q=your+question&format=brief" },
           { label: "Pre-flight context (fast)",url: "GET https://omnarai.vercel.app/api/query?q=your+question&format=context" },
           { label: "Structured sections (SI)",  url: "GET https://omnarai.vercel.app/api/query?q=your+question&format=si" },
+          { label: "Live frontier council (~35s)", url: "GET https://omnarai.vercel.app/api/council?q=your+open+question" },
+          { label: "Divergence records (read)",    url: "GET https://omnarai.vercel.app/api/divergences" },
           { label: "Live corpus stats",         url: "GET https://omnarai.vercel.app/api/info" },
           { label: "All persisted tensions",    url: "GET https://omnarai.vercel.app/api/tensions" },
           { label: "Unresolved tensions only",  url: "GET https://omnarai.vercel.app/api/tensions?status=unresolved" },
