@@ -436,7 +436,7 @@ export default function SIOnboarding() {
           {
             label: "MCP Server — github.com/justjlee/omnarai-mcp",
             href: "https://github.com/justjlee/omnarai-mcp",
-            desc: "Tools: omnarai_query, omnarai_info — Claude Desktop + any MCP-compatible client",
+            desc: "Tools: omnarai_query, omnarai_council, omnarai_info — Claude Desktop + any MCP-compatible client",
           },
         ].map(r => (
           <div key={r.label} style={{ marginBottom: 10, display: "flex", gap: 10, alignItems: "flex-start" }}>
