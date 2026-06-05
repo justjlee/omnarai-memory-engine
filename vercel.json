@@ -1,5 +1,8 @@
 {
   "framework": "vite",
+  "functions": {
+    "api/*.js": { "maxDuration": 60 }
+  },
   "rewrites": [
     { "source": "/api/query", "destination": "/api/query" },
     { "source": "/api/store", "destination": "/api/store" },

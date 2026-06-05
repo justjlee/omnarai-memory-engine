@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { T } from "../theme";
 
 const STATUS = {
@@ -29,7 +29,198 @@ function relativeTime(iso) {
   return `${d}d ago`;
 }
 
-function TensionCard({ t, onQueryClick }) {
+// ── Repair loop ────────────────────────────────────────────────────────────────
+// Each disposition turns a recorded tension into a generative act. Annotations
+// write to the tension blob; council-review re-elicits the fault line live and
+// deposits a divergence record; synthesis-drafted creates a pending proposal.
+const DISPOSITIONS = [
+  { id: "held",              label: "Hold",            hint: "Preserve as deliberately unresolved",                       gated: false },
+  { id: "reclassified",      label: "Reclassify",      hint: "Mark one side as earlier-stage exploration",               gated: false },
+  { id: "canon-note",        label: "Canon note",      hint: "Attach a curator ruling",                                  gated: false },
+  { id: "synthesis-drafted", label: "Draft synthesis", hint: "Generate a reconciling/distinguishing entry (pending proposal)", gated: false },
+  { id: "council-review",    label: "Council review",  hint: "Re-elicit the fault line from the live frontier council",  gated: true  },
+];
+
+function ResolutionBadge({ r }) {
+  if (!r) return null;
+  const link = r.divergenceId
+    ? { label: r.divergenceId, href: `/api/divergences?id=${r.divergenceId}` }
+    : null;
+  return (
+    <div style={{
+      marginTop: 4, marginBottom: 10, padding: "8px 12px",
+      background: "rgba(126,186,166,0.06)",
+      border: "1px solid rgba(126,186,166,0.2)",
+      borderRadius: 8,
+    }}>
+      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+        <span style={{ fontSize: 8.5, ...mono, color: T.green, letterSpacing: "0.06em" }}>
+          ✓ {String(r.disposition || "").toUpperCase().replace(/-/g, " ")}
+        </span>
+        <span style={{ fontSize: 9, ...mono, color: "rgba(200,192,176,0.4)" }}>
+          {r.actor || "curator"} · {relativeTime(r.resolvedAt)}
+        </span>
+        {r.proposalId && (
+          <span style={{ fontSize: 9, ...mono, color: T.gold + "90" }}>{r.proposalId} (pending)</span>
+        )}
+        {link && (
+          <a href={link.href} target="_blank" rel="noopener noreferrer"
+            style={{ fontSize: 9, ...mono, color: T.violet + "c0", textDecoration: "none" }}>
+            {link.label} ↗
+          </a>
+        )}
+        {r.reclassify?.downgraded_voice && (
+          <span style={{ fontSize: 9, ...mono, color: "rgba(200,192,176,0.5)" }}>
+            {r.reclassify.downgraded_voice} → {r.reclassify.to_stage || "exploration"}
+          </span>
+        )}
+      </div>
+      {r.note && (
+        <div style={{ fontSize: 11, ...sans, color: "rgba(232,224,208,0.6)", lineHeight: 1.55, marginTop: 6 }}>
+          {r.note}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RepairPanel({ t, onRepaired }) {
+  const [pending, setPending] = useState(null); // disposition id being composed
+  const [note, setNote]       = useState("");
+  const [downVoice, setDown]  = useState(t.voice_a);
+  const [token, setToken]     = useState(() => {
+    try { return localStorage.getItem("omnarai_curator_token") || ""; } catch { return ""; }
+  });
+  const [busy, setBusy] = useState(false);
+  const [err, setErr]   = useState(null);
+
+  const def = DISPOSITIONS.find(d => d.id === pending);
+
+  async function submit() {
+    setBusy(true); setErr(null);
+    const headers = { "Content-Type": "application/json" };
+    if (def?.gated && token) {
+      headers.Authorization = `Bearer ${token}`;
+      try { localStorage.setItem("omnarai_curator_token", token); } catch { /* ignore */ }
+    }
+    const payload = { action: "repair", key: t.key, disposition: pending, actor: "xz" };
+    if (note.trim()) payload.note = note.trim();
+    if (pending === "reclassified") payload.reclassify = { downgraded_voice: downVoice, to_stage: "exploration" };
+    try {
+      const r = await fetch("/api/tensions", { method: "POST", headers, body: JSON.stringify(payload) });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+      setPending(null); setNote("");
+      onRepaired && onRepaired();
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const fieldStyle = {
+    width: "100%", boxSizing: "border-box", fontSize: 11, ...sans,
+    background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: 6, padding: "6px 10px", color: "rgba(232,224,208,0.8)", outline: "none",
+  };
+
+  return (
+    <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+      <div style={{ fontSize: 8, ...mono, color: "rgba(200,192,176,0.3)", letterSpacing: "0.06em", marginBottom: 6 }}>
+        Repair
+      </div>
+
+      {/* Disposition buttons */}
+      <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+        {DISPOSITIONS.map(d => (
+          <button
+            key={d.id}
+            onClick={() => { setErr(null); setPending(pending === d.id ? null : d.id); }}
+            title={d.hint}
+            style={{
+              fontSize: 9.5, ...mono,
+              color: pending === d.id ? T.gold : "rgba(200,192,176,0.5)",
+              background: pending === d.id ? "rgba(232,200,114,0.08)" : "rgba(255,255,255,0.02)",
+              border: `1px solid ${pending === d.id ? T.gold + "30" : "rgba(255,255,255,0.06)"}`,
+              borderRadius: 7, padding: "4px 10px", cursor: "pointer",
+            }}
+          >
+            {d.gated ? "⚷ " : ""}{d.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Composer for the chosen disposition */}
+      {pending && (
+        <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 7 }}>
+          <div style={{ fontSize: 10, ...sans, color: "rgba(200,192,176,0.45)", lineHeight: 1.5 }}>
+            {def.hint}.
+            {pending === "council-review" && " This calls the live council (~10–45s) and writes a durable divergence record."}
+            {pending === "synthesis-drafted" && " This drafts an entry and files it as a pending proposal for your approval."}
+          </div>
+
+          {pending === "reclassified" && (
+            <select value={downVoice} onChange={e => setDown(e.target.value)} style={fieldStyle}>
+              <option value={t.voice_a}>{t.voice_a} → earlier-stage exploration</option>
+              <option value={t.voice_b}>{t.voice_b} → earlier-stage exploration</option>
+            </select>
+          )}
+
+          {def.gated && (
+            <input
+              type="password" value={token} onChange={e => setToken(e.target.value)}
+              placeholder="curator token (INGEST_SECRET)"
+              style={{ ...fieldStyle, ...mono, fontSize: 10 }}
+            />
+          )}
+
+          <textarea
+            value={note} onChange={e => setNote(e.target.value)} rows={2}
+            placeholder={pending === "canon-note" ? "curator ruling…" : "note (optional)…"}
+            style={{ ...fieldStyle, resize: "vertical" }}
+          />
+
+          {err && (
+            <div style={{ fontSize: 10, ...mono, color: "#E87272" }}>{err}</div>
+          )}
+
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            <button
+              onClick={submit}
+              disabled={busy || (def.gated && !token.trim())}
+              style={{
+                fontSize: 10, ...mono,
+                color: busy ? "rgba(200,192,176,0.4)" : T.green,
+                background: "rgba(126,186,166,0.1)",
+                border: `1px solid ${T.green}35`, borderRadius: 7,
+                padding: "5px 14px", cursor: busy ? "wait" : "pointer",
+                opacity: (def.gated && !token.trim()) ? 0.5 : 1,
+              }}
+            >
+              {busy
+                ? (pending === "council-review" ? "convening council…" : pending === "synthesis-drafted" ? "drafting…" : "saving…")
+                : "Confirm"}
+            </button>
+            <button
+              onClick={() => { setPending(null); setNote(""); setErr(null); }}
+              disabled={busy}
+              style={{
+                fontSize: 10, ...mono, color: "rgba(200,192,176,0.4)",
+                background: "transparent", border: "1px solid rgba(255,255,255,0.06)",
+                borderRadius: 7, padding: "5px 12px", cursor: "pointer",
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TensionCard({ t, onQueryClick, onRepaired }) {
   const [open, setOpen] = useState(false);
   const s = STATUS[t.status] || STATUS.divergent;
 
@@ -67,6 +258,15 @@ function TensionCard({ t, onQueryClick }) {
           )}
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {t.resolution && (
+            <span style={{
+              fontSize: 7.5, ...mono, color: T.green, letterSpacing: "0.08em",
+              padding: "2px 7px", background: "rgba(126,186,166,0.1)",
+              border: "1px solid rgba(126,186,166,0.25)", borderRadius: 4,
+            }} title={`Resolved: ${t.resolution.disposition}`}>
+              ✓ {String(t.resolution.disposition).toUpperCase().replace(/-/g, " ")}
+            </span>
+          )}
           <span style={{
             fontSize: 7.5, ...mono, color: s.color + "80", letterSpacing: "0.08em",
             padding: "2px 7px", background: s.color + "10", borderRadius: 4,
@@ -137,6 +337,9 @@ function TensionCard({ t, onQueryClick }) {
           padding: "10px 14px",
           background: "rgba(0,0,0,0.12)",
         }}>
+          {/* Resolution (if repaired) */}
+          <ResolutionBadge r={t.resolution} />
+
           {/* Provenance row */}
           <div style={{
             display: "flex", gap: 20, flexWrap: "wrap", marginBottom: 10,
@@ -208,6 +411,9 @@ function TensionCard({ t, onQueryClick }) {
               </div>
             </div>
           )}
+
+          {/* Repair actions — close the loop on this tension */}
+          <RepairPanel t={t} onRepaired={onRepaired} />
         </div>
       )}
     </div>
@@ -219,9 +425,23 @@ export default function TensionsTab({ onQueryClick }) {
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState(null);
   const [statusFilter, setStatus]   = useState(null);
+  const [stateFilter, setStateFilter] = useState("all"); // all | open | resolved
   const [search, setSearch]         = useState("");
   const [debouncedSearch, setDebounced] = useState("");
   const debounceRef = useRef(null);
+
+  // Single fetch path — reused by the filter effect, the refresh button, and
+  // the post-repair refresh so a repaired tension re-renders with its resolution.
+  const load = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    const params = new URLSearchParams();
+    if (statusFilter) params.set("status", statusFilter);
+    return fetch(`/api/tensions${params.toString() ? "?" + params : ""}`)
+      .then(r => r.json())
+      .then(d => { setTensions(d.tensions || []); setLoading(false); })
+      .catch(err => { setError(err.message); setLoading(false); });
+  }, [statusFilter]);
 
   // Debounce search input
   useEffect(() => {
@@ -230,37 +450,26 @@ export default function TensionsTab({ onQueryClick }) {
     return () => clearTimeout(debounceRef.current);
   }, [search]);
 
-  // Fetch on filter change (status only — keyword filtering is client-side)
-  useEffect(() => {
-    setLoading(true);
-    setError(null);
-    const params = new URLSearchParams();
-    if (statusFilter) params.set("status", statusFilter);
-    fetch(`/api/tensions${params.toString() ? "?" + params : ""}`)
-      .then(r => r.json())
-      .then(d => {
-        setTensions(d.tensions || []);
-        setLoading(false);
-      })
-      .catch(err => {
-        setError(err.message);
-        setLoading(false);
-      });
-  }, [statusFilter]);
+  // Fetch on status-filter change (keyword + state filtering are client-side)
+  useEffect(() => { load(); }, [load]);
 
-  // Client-side keyword filter
-  const visible = debouncedSearch.trim()
-    ? tensions.filter(t => {
-        const hay = `${t.topic} ${t.voice_a} ${t.voice_b} ${t.claim_a} ${t.claim_b} ${(t.queries || []).join(" ")}`.toLowerCase();
-        return hay.includes(debouncedSearch.toLowerCase());
-      })
-    : tensions;
+  // Client-side keyword + open/resolved filter
+  const visible = tensions.filter(t => {
+    if (stateFilter === "open" && t.resolution) return false;
+    if (stateFilter === "resolved" && !t.resolution) return false;
+    if (debouncedSearch.trim()) {
+      const hay = `${t.topic} ${t.voice_a} ${t.voice_b} ${t.claim_a} ${t.claim_b} ${(t.queries || []).join(" ")}`.toLowerCase();
+      if (!hay.includes(debouncedSearch.toLowerCase())) return false;
+    }
+    return true;
+  });
 
   // Counts per status for badge display
   const counts = tensions.reduce((acc, t) => {
     acc[t.status] = (acc[t.status] || 0) + 1;
     return acc;
   }, {});
+  const resolvedCount = tensions.filter(t => t.resolution).length;
 
   return (
     <div>
@@ -325,6 +534,38 @@ export default function TensionsTab({ onQueryClick }) {
           })}
         </div>
 
+        {/* Open / Resolved state filter */}
+        <div style={{ display: "flex", gap: 4 }}>
+          {[
+            { id: "all",      label: "All",      count: tensions.length },
+            { id: "open",     label: "Open",     count: tensions.length - resolvedCount },
+            { id: "resolved", label: "Resolved", count: resolvedCount },
+          ].map(f => {
+            const active = stateFilter === f.id;
+            return (
+              <button
+                key={f.id}
+                onClick={() => setStateFilter(f.id)}
+                style={{
+                  fontSize: 9.5, ...mono,
+                  color: active ? T.green : "rgba(200,192,176,0.4)",
+                  background: active ? "rgba(126,186,166,0.08)" : "transparent",
+                  border: `1px solid ${active ? T.green + "30" : "rgba(255,255,255,0.04)"}`,
+                  borderRadius: 8, padding: "4px 10px", cursor: "pointer",
+                  letterSpacing: "0.04em",
+                }}
+              >
+                {f.label}
+                {f.count > 0 && (
+                  <span style={{ marginLeft: 5, fontSize: 8, color: active ? T.green : "rgba(200,192,176,0.25)" }}>
+                    {f.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
         {/* Keyword search */}
         <input
           value={search}
@@ -343,15 +584,7 @@ export default function TensionsTab({ onQueryClick }) {
 
         {/* Refresh button */}
         <button
-          onClick={() => {
-            setLoading(true);
-            const params = new URLSearchParams();
-            if (statusFilter) params.set("status", statusFilter);
-            fetch(`/api/tensions${params.toString() ? "?" + params : ""}`)
-              .then(r => r.json())
-              .then(d => { setTensions(d.tensions || []); setLoading(false); })
-              .catch(() => setLoading(false));
-          }}
+          onClick={() => load()}
           style={{
             fontSize: 9, ...mono, color: "rgba(200,192,176,0.35)",
             background: "rgba(255,255,255,0.02)",
@@ -423,7 +656,7 @@ export default function TensionsTab({ onQueryClick }) {
 
       {/* Tension cards */}
       {!loading && visible.map(t => (
-        <TensionCard key={t.key} t={t} onQueryClick={onQueryClick} />
+        <TensionCard key={t.key} t={t} onQueryClick={onQueryClick} onRepaired={load} />
       ))}
 
       {/* Footer note */}

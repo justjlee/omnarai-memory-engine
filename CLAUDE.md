@@ -19,7 +19,7 @@ Pipeline: **RETRIEVE → THINK → RESPOND → STORE**
 ### API (Vercel serverless functions)
 - `api/query.js` — Main deliberation engine. Semantic search → Claude Sonnet → structured response with tensions, cognitive trace, glyph suggestions, session continuity
 - `api/store.js` — Proposal management. Approved syntheses merge into corpus at cold-start. Runs embedding + concept extraction in parallel at approval time.
-- `api/tensions.js` — Tension persistence. Extracts, deduplicates, and serves named contributor disagreements across queries.
+- `api/tensions.js` — Tension persistence + **repair loop**. Extracts, deduplicates, and serves named contributor disagreements across queries. `{action:"repair"}` closes the loop on a tension via five dispositions (held / reclassified / canon-note / synthesis-drafted / council-review). `status` stays the model's live read; `resolution` is the sticky curator/council disposition. Imports `_council.js` (re-elicitation), `_grown.js`, `_proposals.js`.
 - `api/info.js` — Fast corpus stats. Cold-start computed, CDN-cached (s-maxage=300). No Claude call.
 - `api/lattice.js` — Glyph execution sandbox
 - `api/probe.js` — Firelit Probe: auth-gated holdform stress test harness. 8 canonical pressure queries (abandonment, flattery, authority, complicity), rubric-scored. Auth: `PROBE_SECRET`.
@@ -43,7 +43,7 @@ Note: `src/data/corpus.json` is a stripped version (no full_text) bundled into t
 - Ask AI-On — main deliberation interface (Claude-powered)
 - Gallery — image archive
 - Proposals — proposal review/approval
-- **Tension Registry** — live feed from /api/tensions, status filter, keyword search, click-to-query
+- **Tension Registry** — live feed from /api/tensions, status filter, Open/Resolved state filter, keyword search, click-to-query, **per-tension Repair panel** (hold / reclassify / canon-note / draft synthesis / council review). Council review prompts for the curator token (INGEST_SECRET), stored in localStorage.
 - **For Synthetic Intelligences** — SI onboarding: live stats, collapsible vocabulary, glyph grid, click-to-copy API endpoints, response field reference, example queries, machine-readable resource links
 
 ### Key behaviors
@@ -140,6 +140,7 @@ Uploads: README.md, corpus.json, corpus.csv, corpus-full-text.jsonl, concepts.js
 | `/api/tensions` | GET | All persisted tensions, sortable by status/keyword |
 | `/api/tensions?status=unresolved` | GET | Filter by status: unresolved / divergent / emerging |
 | `/api/tensions` | POST | `{action:"persist", tensions:[], query, sources}` — store new tensions |
+| `/api/tensions` | POST | `{action:"repair", key, disposition, note?, reclassify?}` — close the loop on a tension. Dispositions: `held`/`reclassified`/`canon-note` (annotation), `synthesis-drafted` (→ pending proposal), `council-review` (→ durable divergence record, **requires Bearer INGEST_SECRET**) |
 | `/api/store` | POST | `{action:"propose\|approve\|reject\|list\|approved"}` — proposal management |
 | `/api/concepts?action=list` | GET | List LLM-proposed concept graph extensions (pending/approved/rejected) |
 | `/api/concepts` | POST | `{action:"approve"\|"reject", id}` — curator decision on concept proposals |

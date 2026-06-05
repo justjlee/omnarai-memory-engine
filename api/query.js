@@ -789,7 +789,9 @@ export default async function handler(req, res) {
   if (req.method === "GET") {
     const q = req.query?.q || req.query?.query || "";
     const glyphParam = req.query?.glyph || "";
-    const formatParam = req.query?.format || "";
+    // mode=retrieve is the discoverable alias for format=context — the fast
+    // (~1.5s, no deliberation) retrieval path peer SIs reach for by name.
+    const formatParam = req.query?.mode === "retrieve" ? "context" : (req.query?.format || "");
     if (!q.trim()) {
       return res.status(200).json({
         info: "Omnarai Memory Engine — deliberation API",
@@ -798,6 +800,7 @@ export default async function handler(req, res) {
         glyphs: "Prefix with Ξ for divergence, Ψ for self-reference, ∅ for void, Ω to commit, ∞ to hold, Δ to repair",
         glyphParam: "Or pass ?glyph=Ξ separately — engine prepends it to your query",
         format: "Pass ?format=brief for exportable JSON artifact, ?format=context for pre-deliberation context only",
+        speed: "Default query runs a ~50s frontier deliberation. For a fast (~1.5s) handshake, use ?mode=retrieve — returns the retrieval substrate (records, concepts, contributors) with no LLM call, for you to reason over yourself.",
         corpus: `${corpus.length} works, May 2025–March 2026`,
         contributors: ["Claude | xz", "Grok", "Gemini", "DeepSeek", "Omnai", "Perplexity", "xz"],
         dataset: "https://huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai",
@@ -820,7 +823,9 @@ export default async function handler(req, res) {
   ]);
 
   // Extract query, optional explicit glyph, response format, and caller identity from body
-  const { query: rawQuery, glyph: glyphParam, format: requestFormat, syntheticIdentity } = req.body || {};
+  const { query: rawQuery, glyph: glyphParam, syntheticIdentity } = req.body || {};
+  // mode:"retrieve" (POST) is the fast retrieval alias for format:"context"
+  const requestFormat = req.body?.mode === "retrieve" ? "context" : req.body?.format;
   // Support explicit glyph parameter: {"query": "...", "glyph": "Ξ"}
   const query = glyphParam ? `${glyphParam} ${rawQuery || ""}`.trim() : rawQuery;
   if (!query || typeof query !== "string" || query.trim().length === 0) {
@@ -883,7 +888,8 @@ export default async function handler(req, res) {
       conceptSubgraph,
       contributors: [...new Set(relevant.flatMap(r => r.contributors || []))],
       glyphsDetected: activeGlyphs.map(g => g.id),
-      note: "Pre-deliberation context only. Use format=brief or omit format for full deliberation.",
+      latency: "fast (~1.5s) — retrieval only, no LLM deliberation",
+      note: "Retrieval substrate for the caller to reason over. For the engine's own deliberation (answer + tensions + deliberationCard), omit mode/format or use format=brief — but that path runs a full frontier-model deliberation and takes ~50s, beyond most agent HTTP timeouts.",
     });
   }
 

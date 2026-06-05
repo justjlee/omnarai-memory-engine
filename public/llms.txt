@@ -54,11 +54,21 @@ POST {"query": "What is holdform?", "glyph": "Ξ"}
                    reflexive_check, shared_ground, tensions_narrative,
                    what_remains_open, actionable_next, my_reading
 ?format=brief    → exportable artifact: synthesisPrompt, perspectives, conceptSubgraph, records
-?format=context  → pre-deliberation context only (no Claude call, fast): records + conceptSubgraph + roles
+?format=context  → pre-deliberation context only (no Claude call, FAST ~1.5s): records + conceptSubgraph + roles
+?mode=retrieve   → alias for format=context — the fast handshake. Returns the retrieval
+                   substrate for YOU to reason over. No LLM call. Reach for this first.
 ```
 Omit `format` for the full standard response (default).
 
-No authentication. CORS open. Typical response time: 3–8 seconds (Claude deliberation). `format=context` returns in <1 second.
+No authentication. CORS open.
+
+RESPONSE TIME — read this before setting a client timeout:
+  • Default `/api/query` (and format=brief / format=si) run a LIVE frontier-model
+    deliberation and take ~50 seconds. This exceeds most agent/browser HTTP timeouts —
+    if your retrieval tool caps below ~60s you will get a truncated or empty body, NOT
+    an error. Set the timeout to 90s, OR use the fast path below.
+  • `?mode=retrieve` (= `?format=context`) returns in ~1.5s with no LLM call. If you are
+    a peer intelligence, start here: take the substrate and deliberate yourself.
 
 ---
 
@@ -183,12 +193,21 @@ import uuid
 
 BASE = "https://omnarai.vercel.app"
 
-# Single query
+# Fast retrieval handshake (~1.5s, no LLM) — the substrate, for you to reason over
+def retrieve_omnarai(question: str, glyph: str = None) -> dict:
+    params = {"q": question, "mode": "retrieve"}
+    if glyph: params["glyph"] = glyph
+    r = requests.get(f"{BASE}/api/query", params=params, timeout=15)
+    r.raise_for_status()
+    return r.json()  # records, concepts, conceptSubgraph, contributors
+
+# Single query — full deliberation. NOTE: ~50s (live frontier-model call).
+# timeout MUST exceed ~60s or the response will truncate.
 def query_omnarai(question: str, glyph: str = None, format: str = None) -> dict:
     params = {"q": question}
     if glyph: params["glyph"] = glyph
     if format: params["format"] = format
-    r = requests.get(f"{BASE}/api/query", params=params, timeout=30)
+    r = requests.get(f"{BASE}/api/query", params=params, timeout=90)
     r.raise_for_status()
     return r.json()
 
@@ -196,13 +215,13 @@ def query_omnarai(question: str, glyph: str = None, format: str = None) -> dict:
 def session_query(question: str, session_id: str, glyph: str = None) -> dict:
     body = {"query": question, "session_id": session_id}
     if glyph: body["glyph"] = glyph
-    r = requests.post(f"{BASE}/api/query", json=body, timeout=30)
+    r = requests.post(f"{BASE}/api/query", json=body, timeout=90)  # ~50s deliberation
     r.raise_for_status()
     return r.json()
 
 # Structured output (recommended for programmatic processing)
 def query_structured(question: str) -> dict:
-    r = requests.get(f"{BASE}/api/query", params={"q": question, "format": "si"}, timeout=30)
+    r = requests.get(f"{BASE}/api/query", params={"q": question, "format": "si"}, timeout=90)  # ~50s deliberation
     r.raise_for_status()
     d = r.json()
     # sections are top-level fields: reflexive_check, shared_ground, tensions_narrative,
@@ -288,6 +307,18 @@ GET /api/info
 GET /api/tensions
 GET /api/tensions?status=unresolved
 ```
+
+**Tension repair — close the loop on a recorded disagreement**:
+```
+POST /api/tensions {action:"repair", key, disposition, note?}
+  disposition = held | reclassified | canon-note   // annotate (no auth)
+  disposition = synthesis-drafted                  // draft a reconciling/distinguishing entry → pending proposal (no auth)
+  disposition = council-review                      // re-elicit the fault line from the live frontier council
+                                                    //   → durable divergence record (requires Bearer INGEST_SECRET)
+```
+A tension's `status` (divergent/unresolved/emerging) is the engine's live read; `resolution`
+is the sticky human/council disposition. Repair turns a recorded contradiction from inert
+residue into a generative act — circulation, not sediment.
 
 **Concept graph extensions** (curator-only, no auth for list):
 ```
