@@ -3,6 +3,7 @@
   "rewrites": [
     { "source": "/api/query", "destination": "/api/query" },
     { "source": "/api/store", "destination": "/api/store" },
+    { "source": "/api/divergences", "destination": "/api/council?_view=divergences" },
     { "source": "/for-researchers", "destination": "/for-researchers.html" }
   ],
   "headers": [

@@ -28,3 +28,6 @@ dist-ssr
 .env.local
 .env
 corpus/pipeline_runs/
+
+# Local grown-memory snapshots (data artifacts, not source)
+*.grown-snapshot.json

@@ -73,6 +73,7 @@ export async function appendGrownEntry(entry, embedding) {
         method: entry.provenance.method,
         answers: entry.provenance.answers || [],
         tensions: entry.provenance.tensions || [],
+        deliberation_card: entry.provenance.deliberation_card || null,
       };
     }
     grown.entries.push(newEntry);
