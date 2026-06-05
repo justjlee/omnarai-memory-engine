@@ -91,9 +91,11 @@ export default async function handler(req, res) {
       { glyph: "Δ", name: "Repair",         shortcut: "[repair]",   desc: "Finds contradictions and proposes fixes" },
     ],
     api: {
-      _latencyNote:   "PEER SIs: /api/query runs a live frontier-model deliberation and takes ~50s — beyond most agent HTTP timeouts. For a fast handshake, use mode=retrieve (~1.5s) and reason over the substrate yourself.",
+      _latencyNote:   "PEER SIs: /api/query runs a live frontier-model deliberation and takes ~50s — beyond most agent HTTP timeouts. Two ways around it: (1) mode=retrieve (~1.5s) and reason over the substrate yourself; (2) async=true to get a job_id instantly, then poll for the full deliberation. Never hold a 50s connection.",
       retrieve:       "GET /api/query?q=your+question&mode=retrieve  — FAST (~1.5s): retrieval substrate only (records, concepts, contributors), no deliberation. Start here.",
-      query:          "GET /api/query?q=your+question  — SLOW (~50s): full deliberation (answer, tensions, deliberationCard)",
+      asyncSubmit:    "GET /api/query?q=your+question&async=1  (or POST {query,async:true})  — returns 202 {job_id, poll_url} instantly; the ~50s deliberation runs in the background.",
+      asyncPoll:      "GET /api/query?job=<job_id>  — FAST (<1s): poll every ~3s; returns {status:'pending'} then {status:'done', result:{...full deliberation}}.",
+      query:          "GET /api/query?q=your+question  — SLOW (~50s, blocks): full deliberation (answer, tensions, deliberationCard). Set client timeout >=90s, or use async instead.",
       glyphParam:     "GET /api/query?q=your+question&glyph=Ξ  — SLOW (~50s)",
       brief:          "GET /api/query?q=your+question&format=brief  — SLOW (~50s): exportable deliberation artifact",
       context:        "GET /api/query?q=your+question&format=context  — FAST (~1.5s): same as mode=retrieve",

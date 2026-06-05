@@ -2,7 +2,9 @@ import Anthropic from "@anthropic-ai/sdk";
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
-import { list, put } from "@vercel/blob";
+import { list, put, del } from "@vercel/blob";
+import { waitUntil } from "@vercel/functions";
+import { randomUUID } from "crypto";
 import { persistTension } from "./tensions.js";
 import { loadGrownMemory } from "./_grown.js";
 
@@ -121,6 +123,64 @@ function buildSessionContext(session) {
     lines.join("\n\n") +
     `\n\nDraw on these prior exchanges as working context. Do not re-explain what was already established. Continue the thread of thought where relevant.\n`
   );
+}
+
+// ── Async deliberation jobs ─────────────────────────────────────────────────
+// A full deliberation takes ~50s — beyond most agent/browser HTTP timeouts.
+// `async:true` returns a job_id immediately; the deliberation runs in the
+// background via waitUntil and writes its result to Blob; the caller polls
+// GET /api/query?job=<id> (each poll < 1s) until status is "done". This keeps
+// every HTTP call short regardless of how long the deliberation takes.
+
+const JOB_PREFIX = "jobs/";
+const JOB_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+// Best-effort GC: Vercel Blob has no native TTL, so delete job blobs older than
+// JOB_TTL_MS. Runs in the background after a deliberation completes.
+async function cleanupOldJobs() {
+  try {
+    const { blobs } = await list({ prefix: JOB_PREFIX });
+    const cutoff = Date.now() - JOB_TTL_MS;
+    const stale = blobs.filter(b => new Date(b.uploadedAt).getTime() < cutoff);
+    if (stale.length > 0) await del(stale.map(b => b.url));
+  } catch { /* best-effort — never blocks or fails a deliberation */ }
+}
+
+async function writeJob(jobId, data) {
+  // cacheControlMaxAge:0 — the blob is overwritten pending→done, so the CDN
+  // must not serve a stale "pending" after the result lands.
+  await put(JOB_PREFIX + jobId + ".json", JSON.stringify(data), {
+    access: "public",
+    addRandomSuffix: false,
+    contentType: "application/json",
+    cacheControlMaxAge: 0,
+  });
+}
+
+async function readJob(jobId) {
+  try {
+    const { blobs } = await list({ prefix: JOB_PREFIX + jobId });
+    if (blobs.length === 0) return null;
+    // Cache-bust the CDN read so a freshly-overwritten result isn't masked.
+    const res = await fetch(blobs[0].url + "?t=" + Date.now(), { cache: "no-store" });
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+// Minimal res-shim: lets the async path re-enter handler() and capture whatever
+// JSON it would have sent, instead of writing to a real HTTP response.
+function makeCaptureRes() {
+  const r = {
+    _status: 200,
+    _json: null,
+    setHeader() { return r; },
+    status(code) { r._status = code; return r; },
+    json(obj) { r._json = obj; return r; },
+    end() { return r; },
+  };
+  return r;
 }
 
 // ── Semantic Search (embedding-based) ──
@@ -782,6 +842,19 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
+  // ── Poll an async deliberation job: GET /api/query?job=<id> ───────────────
+  if (req.method === "GET" && req.query?.job) {
+    const job = await readJob(req.query.job);
+    if (!job) {
+      return res.status(200).json({
+        status: "pending",
+        job_id: req.query.job,
+        note: "Not ready yet — or unknown/expired job_id. Keep polling every ~3s; jobs expire ~1h after completion.",
+      });
+    }
+    return res.status(200).json(job);
+  }
+
   // ── GET /api/query?q=... ─────────────────────────────────────────────────
   // Allows AI browsing tools and any HTTP client to run deliberations via URL.
   // Supports Lattice Glyphs in the q param: ?q=Ξ+what+is+holdform
@@ -833,6 +906,50 @@ export default async function handler(req, res) {
   }
 
   const trimmed = query.trim();
+
+  // Async mode: hand back a job_id now and run the ~50s deliberation in the
+  // background, so the caller never holds a connection past its timeout.
+  // (Pointless for the already-fast retrieval path, so skip it there.)
+  const wantsAsync = req.body?.async === true || req.body?.async === "true"
+    || req.query?.async === "1" || req.query?.async === "true";
+  if (wantsAsync && requestFormat !== "context") {
+    const jobId = randomUUID();
+    await writeJob(jobId, { status: "pending", query: trimmed, createdAt: new Date().toISOString() });
+    // Re-enter this handler synchronously with a capture-res — reuses the exact
+    // sync deliberation path (brief / si / default / error all handled), then
+    // persist whatever it produced to the job blob.
+    const innerReq = { method: "POST", query: {}, body: { ...req.body, async: false } };
+    const cap = makeCaptureRes();
+    waitUntil((async () => {
+      try {
+        // 55s ceiling keeps us inside the 60s function maxDuration: a too-slow
+        // deliberation resolves to an error job instead of a silent kill.
+        await Promise.race([
+          handler(innerReq, cap),
+          new Promise((_, rej) => setTimeout(() => rej(new Error("deliberation exceeded 55s")), 55000)),
+        ]);
+        await writeJob(jobId, {
+          status: "done",
+          http: cap._status,
+          result: cap._json,
+          completedAt: new Date().toISOString(),
+        });
+      } catch (e) {
+        await writeJob(jobId, {
+          status: "error",
+          error: String(e?.message || e),
+          completedAt: new Date().toISOString(),
+        });
+      }
+      await cleanupOldJobs();
+    })());
+    return res.status(202).json({
+      job_id: jobId,
+      status: "pending",
+      poll_url: `/api/query?job=${jobId}`,
+      note: "Deliberation running (~50s). Poll poll_url every ~3s until status is 'done'; the answer lands in the 'result' field. Jobs expire ~1h after completion.",
+    });
+  }
 
   // Parse glyphs from the query
   const { activeGlyphs, cleanQuery } = parseGlyphs(trimmed);

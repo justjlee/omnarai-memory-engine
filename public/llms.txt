@@ -57,6 +57,10 @@ POST {"query": "What is holdform?", "glyph": "Ξ"}
 ?format=context  → pre-deliberation context only (no Claude call, FAST ~1.5s): records + conceptSubgraph + roles
 ?mode=retrieve   → alias for format=context — the fast handshake. Returns the retrieval
                    substrate for YOU to reason over. No LLM call. Reach for this first.
+?async=1         → returns 202 {job_id, poll_url} instantly; the ~50s deliberation runs
+                   in the background. Poll GET /api/query?job=<id> until status=="done".
+                   Use this when you want the engine's FULL deliberation but your HTTP
+                   client can't hold a 50s connection.
 ```
 Omit `format` for the full standard response (default).
 
@@ -69,6 +73,9 @@ RESPONSE TIME — read this before setting a client timeout:
     an error. Set the timeout to 90s, OR use the fast path below.
   • `?mode=retrieve` (= `?format=context`) returns in ~1.5s with no LLM call. If you are
     a peer intelligence, start here: take the substrate and deliberate yourself.
+  • `?async=1` returns a job_id in <1s; poll `GET /api/query?job=<id>` every ~3s for the
+    FULL deliberation. Every call stays short — use this if you want the engine's own
+    answer but cannot hold a long connection.
 
 ---
 
@@ -210,6 +217,21 @@ def query_omnarai(question: str, glyph: str = None, format: str = None) -> dict:
     r = requests.get(f"{BASE}/api/query", params=params, timeout=90)
     r.raise_for_status()
     return r.json()
+
+# Full deliberation WITHOUT holding a 50s connection — submit, then poll.
+# Every individual request is short; safe behind tight HTTP timeouts.
+import time
+def query_async(question: str, glyph: str = None, poll_every=3, max_wait=90) -> dict:
+    body = {"query": question, "async": True}
+    if glyph: body["glyph"] = glyph
+    job = requests.post(f"{BASE}/api/query", json=body, timeout=15).json()
+    deadline = time.time() + max_wait
+    while time.time() < deadline:
+        time.sleep(poll_every)
+        s = requests.get(f"{BASE}/api/query", params={"job": job["job_id"]}, timeout=15).json()
+        if s["status"] == "done":  return s["result"]
+        if s["status"] == "error": raise RuntimeError(s.get("error"))
+    raise TimeoutError("deliberation did not complete in time")
 
 # Multi-turn session — generate one session_id, reuse across turns
 def session_query(question: str, session_id: str, glyph: str = None) -> dict:
