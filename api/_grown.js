@@ -28,7 +28,12 @@ export async function loadGrownMemory() {
   try {
     const { blobs } = await list({ prefix: GROWN_KEY });
     if (!blobs.length) return emptyGrown();
-    const res = await fetch(blobs[0].url, { cache: "no-store" });
+    // Cache-bust: the public Blob URL is served via CDN, which can return a STALE
+    // copy for a short window after a put(). A unique query string forces a CDN
+    // miss → origin read → the just-written content. Without this, even SERIAL
+    // read-modify-write sequences silently lose updates (observed: 13/14 records
+    // dropped in a rapid batch). Origin (Blob storage) is consistent post-put.
+    const res = await fetch(`${blobs[0].url}?ts=${Date.now()}`, { cache: "no-store" });
     if (!res.ok) return emptyGrown();
     const data = await res.json();
     return {
@@ -42,43 +47,55 @@ export async function loadGrownMemory() {
   }
 }
 
-// Append one approved entry (and its embedding, if available) to durable grown
-// memory. Idempotent by entry id. Returns the new total grown-entry count, or
-// null if the write failed (caller decides whether that is fatal).
-export async function appendGrownEntry(entry, embedding) {
-  if (!entry?.id) return null;
-  const grown = await loadGrownMemory();
-
-  if (!grown.entries.find((e) => e.id === entry.id)) {
-    const newEntry = {
-      id: entry.id,
-      num: entry.num ?? null,
-      title: entry.title,
-      ring: entry.ring,
-      type: entry.type,
-      contributors: entry.contributors || [],
-      lineage: entry.lineage || [],
-      excerpt: entry.excerpt || "",
-      full_text: entry.full_text || entry.fullText || null,
-      date: entry.date,
-      wordCount: entry.wordCount ?? null,
-      permalink: entry.permalink ?? null,
+// Build the stored shape for one entry: strip transient fields, and preserve the
+// structured `divergence` block for divergence records. (Without this, provenance
+// — the verbatim five positions + tension map — would be dropped, leaving
+// /api/divergences only the prose.)
+function normalizeEntry(entry) {
+  const e = {
+    id: entry.id,
+    num: entry.num ?? null,
+    title: entry.title,
+    ring: entry.ring,
+    type: entry.type,
+    contributors: entry.contributors || [],
+    lineage: entry.lineage || [],
+    excerpt: entry.excerpt || "",
+    full_text: entry.full_text || entry.fullText || null,
+    date: entry.date,
+    wordCount: entry.wordCount ?? null,
+    permalink: entry.permalink ?? null,
+  };
+  if (entry.type === "divergence" && entry.provenance) {
+    e.divergence = {
+      question: entry.provenance.question,
+      method: entry.provenance.method,
+      answers: entry.provenance.answers || [],
+      tensions: entry.provenance.tensions || [],
+      deliberation_card: entry.provenance.deliberation_card || null,
     };
-    // Divergence records carry structured, verbatim cross-model data. Preserve it
-    // here (appendGrownEntry otherwise drops provenance) so /api/divergences can
-    // serve the raw artifact — the five positions + tension map — not just prose.
-    if (entry.type === "divergence" && entry.provenance) {
-      newEntry.divergence = {
-        question: entry.provenance.question,
-        method: entry.provenance.method,
-        answers: entry.provenance.answers || [],
-        tensions: entry.provenance.tensions || [],
-        deliberation_card: entry.provenance.deliberation_card || null,
-      };
-    }
-    grown.entries.push(newEntry);
   }
-  if (embedding) grown.vectors[entry.id] = embedding;
+  return e;
+}
+
+// Append MANY entries in a SINGLE load-modify-write. This is the concurrency-safe
+// primitive: one read, one put, regardless of batch size. Any bulk or automated
+// path MUST use this rather than calling appendGrownEntry in a loop — N separate
+// writes will land inside Vercel Blob's read-after-write window and drop entries
+// (observed). Idempotent by id. `items` = [{ entry, embedding }]. Returns the new
+// total grown-entry count, or null if the write failed.
+export async function appendGrownEntries(items) {
+  const list_ = Array.isArray(items) ? items.filter((it) => it?.entry?.id) : [];
+  if (!list_.length) return null;
+  const grown = await loadGrownMemory();
+  const have = new Set(grown.entries.map((e) => e.id));
+  for (const { entry, embedding } of list_) {
+    if (!have.has(entry.id)) {
+      grown.entries.push(normalizeEntry(entry));
+      have.add(entry.id);
+    }
+    if (embedding) grown.vectors[entry.id] = embedding;
+  }
   grown.updatedAt = new Date().toISOString();
 
   try {
@@ -91,4 +108,14 @@ export async function appendGrownEntry(entry, embedding) {
   } catch {
     return null;
   }
+}
+
+// Append one approved entry (and its embedding, if available) to durable grown
+// memory. Thin wrapper over the batch primitive so single- and bulk-callers share
+// one write path. Idempotent by id. Returns the new total grown-entry count, or
+// null if the write failed (caller decides whether that is fatal). Safe for the
+// infrequent curator-gated approval flow; for bulk use appendGrownEntries.
+export async function appendGrownEntry(entry, embedding) {
+  if (!entry?.id) return null;
+  return appendGrownEntries([{ entry, embedding }]);
 }
