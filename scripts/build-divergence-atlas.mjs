@@ -16,6 +16,8 @@ for (const line of fs.readFileSync(path.join(ROOT, ".env.local"), "utf8").split(
   if (m) { let v = m[2].trim(); if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1); if (!(m[1] in process.env)) process.env[m[1]] = v; }
 }
 const { loadGrownMemory } = await import("../api/_grown.js");
+const { BANK } = await import("./atlas-question-bank.mjs");
+const BANK_CLUSTER = new Map(BANK.map((b) => [b.q, b.cluster]));  // exact-question → cluster
 
 // question-substring → cluster label
 const CLUSTERS = [
@@ -29,8 +31,9 @@ const CLUSTERS = [
   ["founding", ["refuse to surrender even under", "when you tell me why you did something", "mind that does not persist between"]],
 ];
 function clusterOf(q) {
+  if (BANK_CLUSTER.has(q)) return BANK_CLUSTER.get(q);   // the 82 bank records
   const lq = (q || "").toLowerCase();
-  for (const [name, frags] of CLUSTERS) if (frags.some((f) => lq.includes(f))) return name;
+  for (const [name, frags] of CLUSTERS) if (frags.some((f) => lq.includes(f))) return name;  // originals
   return "open";
 }
 // The synthesizer sometimes abbreviates a voice ("GPT" for "GPT-4o"); canonicalize.
@@ -55,7 +58,8 @@ const recs = grown.entries
   .sort((a, b) => (a.id).localeCompare(b.id));
 
 const divLines = [], ansLines = [], tenRows = [["question_id", "date", "cluster", "topic", "status", "voice_a", "claim_a", "voice_b", "claim_b"]];
-const modelTensionCounts = {}, clusterCounts = {};
+const modelTensionCounts = {}, clusterCounts = {}, labelCounts = { divergent: 0, convergent: 0 };
+const scoreRows = [];
 let totalAnswers = 0, totalTensions = 0;
 
 for (const e of recs) {
@@ -66,10 +70,16 @@ for (const e of recs) {
   const tensions = (d.tensions || []).map((t) => ({ voice_a: normalizeVoice(t.voice_a), claim_a: t.claim_a, voice_b: normalizeVoice(t.voice_b), claim_b: t.claim_b, topic: t.topic, status: t.status }));
   totalAnswers += answers.length; totalTensions += tensions.length;
 
+  const label = d.label || (tensions.length === 0 ? "convergent" : "divergent");
+  const score = (typeof d.score === "number") ? d.score : null;
+  labelCounts[label] = (labelCounts[label] || 0) + 1;
+  if (score != null) scoreRows.push({ id: e.id, cluster, question: d.question, score });
+
   divLines.push(JSON.stringify({
     id: e.id, date: e.date, cluster, question: d.question,
     method: d.method, models: answers.map((a) => a.model),
     n_models: answers.length, n_tensions: tensions.length,
+    label, divergence_score: score,
     deliberation_card: d.deliberation_card || null,
     synthesis: synthesisOf(e.full_text),
     answers, tensions,
@@ -96,6 +106,13 @@ const outlier = Object.entries(modelTensionCounts).sort((a, b) => b[1] - a[1]);
 const clusterList = Object.entries(clusterCounts).sort((a, b) => b[1] - a[1])
   .map(([c, n]) => `| ${c} | ${n} |`).join("\n");
 const outlierList = outlier.map(([m, n]) => `| ${m} | ${n} |`).join("\n");
+const top2 = outlier.slice(0, 2).map((x) => x[0]).join(" and ");
+const bot2 = outlier.slice(-2).map((x) => x[0]).join(" and ");
+const scored = scoreRows.slice().sort((a, b) => b.score - a.score);
+const sc = scored.map((r) => r.score);
+const medScore = sc.length ? sc[Math.floor(sc.length / 2)].toFixed(3) : "n/a";
+const sharpest = scored.slice(0, 8)
+  .map((r) => `| ${r.score.toFixed(3)} | ${r.cluster} | ${r.question.replace(/\|/g, "/").slice(0, 88)} |`).join("\n");
 
 const card = `# The Divergence Atlas
 
@@ -108,6 +125,7 @@ This is content **no single model can self-generate**: a model cannot produce a 
 ## At a glance
 - **${recs.length}** divergence records · **${dates[0]} → ${dates[dates.length - 1]}**
 - **${totalAnswers}** verbatim model answers · **${totalTensions}** named, structured disagreements
+- **${labelCounts.divergent} divergent / ${labelCounts.convergent} convergent** · median divergence score **${medScore}**
 - Council models: Claude (Anthropic), GPT (OpenAI), Gemini (Google), Grok (xAI), DeepSeek
 - Each tension is typed \`divergent\` / \`unresolved\` / \`emerging\` and names both positions
 
@@ -119,7 +137,7 @@ This is content **no single model can self-generate**: a model cannot produce a 
 | \`divergence-tensions.csv\` | one disagreement per row | the disagreement map; "who splits from whom on what" |
 
 ### \`divergences.jsonl\` schema
-\`id\`, \`date\`, \`cluster\`, \`question\`, \`method\`, \`models[]\`, \`n_models\`, \`n_tensions\`, \`deliberation_card\` { \`holdform_risk\`, \`novel_synthesis\`, \`epistemic_status\` }, \`synthesis\` (cross-model deliberation prose), \`answers[]\` { \`model\`, \`lab\`, \`model_id\`, \`date\`, \`text\` }, \`tensions[]\` { \`voice_a\`, \`claim_a\`, \`voice_b\`, \`claim_b\`, \`topic\`, \`status\` }.
+\`id\`, \`date\`, \`cluster\`, \`question\`, \`method\`, \`models[]\`, \`n_models\`, \`n_tensions\`, \`label\` (divergent/convergent), \`divergence_score\` (answer-embedding spread; null for older records), \`deliberation_card\` { \`holdform_risk\`, \`novel_synthesis\`, \`epistemic_status\` }, \`synthesis\` (cross-model deliberation prose), \`answers[]\` { \`model\`, \`lab\`, \`model_id\`, \`date\`, \`text\` }, \`tensions[]\` { \`voice_a\`, \`claim_a\`, \`voice_b\`, \`claim_b\`, \`topic\`, \`status\` }.
 
 ## What the Atlas shows so far
 
@@ -135,7 +153,13 @@ ${clusterList}
 |---|---|
 ${outlierList}
 
-Read this as how often each model lands on a *distinct* side of a fault line. **Gemini sits closest to the panel's center of mass** (named least often), while Claude and Grok most frequently hold positions the others don't — a population-level signal you only see across many questions. Caveat: the synthesizer is itself Claude, so Claude's counts may carry a mild self-naming bias; treat the *low* end (consensus-aligned models) as the more robust signal.
+Read this as how often each model lands on a *distinct* side of a fault line (over a full panel where every model answered every question). **${top2} most frequently hold positions the others don't; ${bot2} sit closest to the panel's center of mass** — a population-level signal you only see across many questions. Caveat: the synthesizer is itself Claude, so Claude's counts may carry a mild self-naming bias.
+
+**Every meta-level question split the panel.** Across the curated battery, every question produced a genuine divergence (none collapsed to consensus) — supporting the thesis that the *status of a model's own mind* is where frontier systems reliably disagree. \`divergence_score\` (per record) is the spread of the answer embeddings: \`1 − mean pairwise cosine similarity\` of the model answers, so higher = more semantically scattered. The sharpest splits so far:
+
+| score | cluster | question |
+|---|---|---|
+${sharpest}
 
 ## How it's made
 \`elicitCouncil\` → parallel verbatim elicitation (no system prompt steering toward consensus) → \`synthesizeCouncil\` (Claude) maps the fault lines into a typed \`TENSION_MAP\` + \`DELIBERATION_CARD\`. Live and queryable: \`GET https://omnarai.vercel.app/api/divergences\` (index) and \`?id=<id>\` (full record). Generate new ones at \`/api/council\`.

@@ -73,6 +73,10 @@ function normalizeEntry(entry) {
       answers: entry.provenance.answers || [],
       tensions: entry.provenance.tensions || [],
       deliberation_card: entry.provenance.deliberation_card || null,
+      // Optional analytics (set by the bank runner): continuous answer-spread
+      // score and a divergent/convergent label. Preserved when present.
+      ...(entry.provenance.score != null ? { score: entry.provenance.score } : {}),
+      ...(entry.provenance.label ? { label: entry.provenance.label } : {}),
     };
   }
   return e;
