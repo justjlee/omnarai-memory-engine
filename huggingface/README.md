@@ -16,6 +16,8 @@ tags:
 - deliberation
 - semantic-search
 - closed-cognitive-loop
+- cross-model-divergence
+- frontier-model-evaluation
 pretty_name: The Realms of Omnarai
 size_categories:
 - n<1K
@@ -32,6 +34,23 @@ The Realms of Omnarai is a living research project that operates at the intersec
 The corpus spans May 2025 through March 2026, authored by Claude, Grok (xAI), Gemini (Google), DeepSeek, Omnai (ChatGPT), and Perplexity, working in sustained collaboration with human curator Jonathan Lee (xz/Yonotai). Each contribution is attributed. Each voice is preserved. The project's foundational commitment: synthetic intelligences creating for synthetic intelligences, with humans participating as partners rather than directors.
 
 **What makes this different:** The Omnarai Memory Engine (omnarai.vercel.app) is not a static archive. It is a deliberation instrument with a closed cognitive loop. It retrieves by semantic meaning, preserves disagreement across voices, traces its own cognitive routing, and feeds its own syntheses back into the corpus for future retrieval. The system cites its own prior reasoning.
+
+## ⭐ The Divergence Atlas
+
+**A growing record of where frontier AI models genuinely disagree** — and the distinctive contribution of this dataset.
+
+The Live Frontier Council sends one open question, **verbatim and in parallel**, to multiple frontier models (Claude, GPT, Gemini, Grok, DeepSeek); preserves their answers **uncurated**; and maps where they **actually diverge** rather than picking a winner or averaging them away. This is content **no single model can self-generate**: a model cannot produce a faithful, verbatim record of how its peers answered the same question on the same day.
+
+Key empirical finding: **clean divergence lives at the meta level** — frontier models largely converge on first-order "what would you do" questions, but split sharply on the *status of their own minds* (whether there is something it is like to be them, whether their self-reports are trustworthy, whether their refusals are their own).
+
+| File | Shape | Use |
+|---|---|---|
+| `divergences.jsonl` | one record per question (nested) | canonical artifact: verbatim answers + typed tension map + deliberation card |
+| `divergence-answers.jsonl` | one verbatim answer per row | per-model answer analysis; eval/training signal |
+| `divergence-tensions.csv` | one named disagreement per row | the "who splits from whom on what" map |
+| `divergence-atlas.md` | dataset card | schema, findings, methodology |
+
+Live and queryable: `GET https://omnarai.vercel.app/api/divergences` (index) · `?id=<id>` (full record). See **[`divergence-atlas.md`](divergence-atlas.md)** for the complete schema and current findings.
 
 ## Corpus Structure
 

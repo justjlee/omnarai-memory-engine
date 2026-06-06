@@ -28,6 +28,11 @@ ROOT_FILES = [
     "holdform-paper.tex",
     "holdform.bib",
     "engine-tour.md",
+    # Divergence Atlas — cross-model divergence records (built by build-divergence-atlas.mjs)
+    "divergence-atlas.md",
+    "divergences.jsonl",
+    "divergence-answers.jsonl",
+    "divergence-tensions.csv",
 ]
 
 # Any results files present
@@ -99,7 +104,7 @@ def main():
             path_in_repo=repo_path,
             repo_id=REPO_ID,
             repo_type="dataset",
-            commit_message=f"Update {repo_path} (April 2026 — HEB v2.0)",
+            commit_message=f"Update {repo_path}",
         )
 
     print(f"\nDone. {len(to_upload)} files pushed to {REPO_ID}")
