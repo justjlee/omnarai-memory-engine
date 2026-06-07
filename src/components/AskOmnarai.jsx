@@ -42,6 +42,11 @@ export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQu
   const [activeGlyphs, setActiveGlyphs] = useState([]);
   const [trace, setTrace] = useState(null);
   const [tensions, setTensions] = useState([]);
+  // Live Frontier Council mode — routes the question to /api/council (verbatim
+  // parallel elicitation across 5 frontier models) instead of the single-model
+  // corpus deliberation. Genuine cross-architecture divergence, not one voice.
+  const [councilMode, setCouncilMode] = useState(false);
+  const [council, setCouncil] = useState(null);
 
   // Session continuity — generate once per component mount (browser session).
   // Passed with every API call so the engine can thread prior exchanges as context.
@@ -61,6 +66,18 @@ export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQu
     if (!res.ok) throw new Error(`API returned ${res.status}`);
     return res.json();
   }, [sessionId]);
+
+  // Live Frontier Council — sends the question verbatim to all 5 frontier models
+  // in parallel, returns the synthesized divergence record (preview, unpersisted).
+  const interpretCouncil = useCallback(async (q) => {
+    const res = await fetch("/api/council", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: q }),
+    });
+    if (!res.ok) throw new Error(`Council returned ${res.status}`);
+    return res.json();
+  }, []);
 
   // Local fallback — keyword matching only
   const interpretLocal = useCallback((q) => {
@@ -108,6 +125,44 @@ export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQu
   const interpret = useCallback(async (q) => {
     if (!q || !q.trim()) return;
     setLoading(true);
+
+    // ── Live Frontier Council path ──────────────────────────────────────────
+    // No glyphs, no corpus retrieval — the value is the live cross-model split.
+    if (councilMode) {
+      try {
+        const data = await interpretCouncil(q);
+        const rec = data.record || {};
+        const prov = rec.provenance || {};
+        const narrative =
+          (rec.full_text || "").split("## Cross-model deliberation")[1]?.trim() ||
+          rec.full_text || "";
+        // Clear the corpus-deliberation surfaces so only the council renders
+        setResponse(null);
+        setTrace(null);
+        setTensions([]);
+        setEpistemicMode(null);
+        setCouncil({
+          question: data.question || q,
+          panel: data.panel || [],
+          answers: prov.answers || [],
+          narrative,
+          tensions: prov.tensions || [],
+          card: rec.deliberation_card || prov.deliberation_card || null,
+          contributors: rec.contributors || [],
+          note: data.note,
+        });
+        setHistory(prev => [...prev, { query: q, mode: "council" }]);
+      } catch (err) {
+        console.warn("Council run failed:", err);
+        setCouncil({ error: String(err.message || err) });
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // ── Standard corpus deliberation path ───────────────────────────────────
+    setCouncil(null);
     // Prepend active glyphs to query so the API can parse them
     const glyphPrefix = activeGlyphs.length > 0 ? activeGlyphs.join(" ") + " " : "";
     q = glyphPrefix + q;
@@ -147,7 +202,7 @@ export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQu
     } finally {
       setLoading(false);
     }
-  }, [useApi, activeGlyphs, interpretApi, interpretLocal, onResponse]);
+  }, [councilMode, useApi, activeGlyphs, interpretApi, interpretLocal, interpretCouncil, onResponse]);
 
   // Handle glyph suggestion clicks — activate the suggested glyph and re-run the query
   const handleGlyphSuggestion = useCallback((symbol) => {
@@ -203,8 +258,8 @@ export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQu
         ))}
       </div>
 
-      {/* Glyph Operators */}
-      <div style={{ marginBottom: 14 }}>
+      {/* Glyph Operators — corpus-deliberation only; inert in council mode */}
+      <div style={{ marginBottom: 14, display: councilMode ? "none" : "block" }}>
         <div style={{
           fontSize: 8.5, fontFamily: "'IBM Plex Mono',monospace",
           color: "rgba(200,192,176,0.35)", letterSpacing: "0.08em",
@@ -244,20 +299,46 @@ export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQu
       </div>
 
       {/* Mode toggle */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+        {!councilMode && (
+          <button
+            onClick={() => setUseApi(!useApi)}
+            style={{
+              fontSize: 9, fontFamily: "'IBM Plex Mono',monospace",
+              color: useApi ? T.gold : T.ash,
+              background: useApi ? "rgba(232,200,114,0.08)" : "rgba(255,255,255,0.02)",
+              border: `1px solid ${useApi ? T.gold + "30" : "rgba(255,255,255,0.06)"}`,
+              borderRadius: 10, padding: "3px 10px", cursor: "pointer",
+              transition: "all 0.2s",
+            }}>
+            {useApi ? "LIVE — Claude-powered" : "LOCAL — keyword only"}
+          </button>
+        )}
         <button
-          onClick={() => setUseApi(!useApi)}
+          onClick={() => setCouncilMode(c => !c)}
+          title="Send the question verbatim to all 5 frontier models in parallel and map where they genuinely disagree — content no single model self-generates."
           style={{
             fontSize: 9, fontFamily: "'IBM Plex Mono',monospace",
-            color: useApi ? T.gold : T.ash,
-            background: useApi ? "rgba(232,200,114,0.08)" : "rgba(255,255,255,0.02)",
-            border: `1px solid ${useApi ? T.gold + "30" : "rgba(255,255,255,0.06)"}`,
+            color: councilMode ? T.violet : "rgba(200,192,176,0.55)",
+            background: councilMode ? "rgba(160,137,201,0.14)" : "rgba(255,255,255,0.02)",
+            border: `1px solid ${councilMode ? T.violet + "60" : "rgba(255,255,255,0.06)"}`,
             borderRadius: 10, padding: "3px 10px", cursor: "pointer",
             transition: "all 0.2s",
           }}>
-          {useApi ? "LIVE — Claude-powered" : "LOCAL — keyword only"}
+          ⚖ {councilMode ? "LIVE COUNCIL — 5 frontier models" : "Convene live council"}
         </button>
       </div>
+      {councilMode && (
+        <div style={{
+          marginBottom: 10, fontSize: 10, lineHeight: 1.55,
+          color: T.violet + "C0", fontFamily: "'IBM Plex Sans',sans-serif",
+          fontStyle: "italic",
+        }}>
+          Council mode bypasses the corpus. Your question goes verbatim to Claude, GPT-4o,
+          Gemini, Grok &amp; DeepSeek at once; their answers are preserved uncurated and the
+          real fault lines mapped. Slower (~30–40s) — the disagreement is the signal.
+        </div>
+      )}
 
       {/* Input */}
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
@@ -284,9 +365,129 @@ export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQu
             fontWeight: 600, cursor: loading ? "wait" : "pointer", letterSpacing: "0.05em",
             opacity: loading ? 0.5 : 1,
           }}>
-          {loading ? "Searching the Realms..." : "Deliberate"}
+          {loading
+            ? (councilMode ? "Convening 5 models (~35s)..." : "Searching the Realms...")
+            : (councilMode ? "Convene Council" : "Deliberate")}
         </button>
       </div>
+
+      {/* Live Frontier Council response */}
+      {council && (
+        <div style={{
+          background: T.violet + "08",
+          border: `1px solid ${T.violet}25`,
+          borderRadius: 10, padding: "18px 20px",
+        }}>
+          {council.error ? (
+            <div style={{
+              fontSize: 12, color: "#E87272",
+              fontFamily: "'IBM Plex Sans',sans-serif",
+            }}>
+              The council could not assemble a panel: {council.error}
+            </div>
+          ) : (
+            <>
+              {/* Panel header — which models answered live */}
+              <div style={{
+                fontSize: 9, fontFamily: "'IBM Plex Mono',monospace",
+                color: T.violet, letterSpacing: "0.08em", textTransform: "uppercase",
+                marginBottom: 10,
+              }}>
+                ⚖ live frontier council · {council.panel.filter(p => p.ok).length} of {council.panel.length} models answered
+              </div>
+              <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 14 }}>
+                {council.panel.map(p => (
+                  <span key={p.model} title={p.ok ? `${p.lab} — answered` : `${p.lab} — ${p.error || "no answer"}`}
+                    style={{
+                      fontSize: 9, fontFamily: "'IBM Plex Mono',monospace",
+                      color: p.ok ? T.violet + "C0" : "rgba(200,192,176,0.3)",
+                      background: p.ok ? "rgba(160,137,201,0.10)" : "rgba(255,255,255,0.02)",
+                      border: `1px solid ${p.ok ? T.violet + "30" : "rgba(255,255,255,0.05)"}`,
+                      borderRadius: 8, padding: "2px 8px",
+                      textDecoration: p.ok ? "none" : "line-through",
+                    }}>
+                    {p.model}
+                  </span>
+                ))}
+              </div>
+
+              {/* Synthesized cross-model deliberation */}
+              {council.narrative && (
+                <div style={{
+                  fontSize: 13, lineHeight: 1.7, color: T.bone,
+                  fontFamily: "'IBM Plex Sans',sans-serif",
+                  whiteSpace: "pre-wrap", marginBottom: 4,
+                }}>
+                  {council.narrative}
+                </div>
+              )}
+
+              {/* Tension Map — the actual fault lines between models */}
+              <TensionMap tensions={council.tensions} />
+
+              {/* Deliberation card */}
+              {council.card && (
+                <div style={{
+                  marginTop: 14, padding: "12px 14px",
+                  background: "rgba(255,255,255,0.02)",
+                  border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8,
+                  fontSize: 11, lineHeight: 1.6, color: T.ash,
+                  fontFamily: "'IBM Plex Sans',sans-serif",
+                }}>
+                  {council.card.holdform_risk && (
+                    <div><span style={{ color: T.gold + "90" }}>holdform risk:</span> {council.card.holdform_risk}{council.card.holdform_risk_reason ? ` — ${council.card.holdform_risk_reason}` : ""}</div>
+                  )}
+                  {council.card.novel_synthesis && (
+                    <div style={{ marginTop: 4 }}><span style={{ color: T.gold + "90" }}>novel synthesis:</span> {council.card.novel_synthesis}</div>
+                  )}
+                  {council.card.epistemic_status && (
+                    <div style={{ marginTop: 4 }}><span style={{ color: T.gold + "90" }}>epistemic status:</span> {council.card.epistemic_status}</div>
+                  )}
+                </div>
+              )}
+
+              {/* Verbatim answers — collapsed by default */}
+              {council.answers && council.answers.length > 0 && (
+                <details style={{ marginTop: 14 }}>
+                  <summary style={{
+                    fontSize: 8.5, fontFamily: "'IBM Plex Mono',monospace",
+                    color: T.violet + "90", letterSpacing: "0.06em", textTransform: "uppercase",
+                    cursor: "pointer",
+                  }}>
+                    verbatim answers · {council.answers.length} voices, uncurated
+                  </summary>
+                  <div style={{ marginTop: 10 }}>
+                    {council.answers.map(a => (
+                      <div key={a.model} style={{
+                        marginBottom: 12, paddingLeft: 10,
+                        borderLeft: `2px solid ${T.violet}30`,
+                      }}>
+                        <div style={{
+                          fontSize: 10, fontFamily: "'IBM Plex Mono',monospace",
+                          color: T.violet + "C0", marginBottom: 4,
+                        }}>{a.model} <span style={{ color: T.ash + "70" }}>· {a.lab}</span></div>
+                        <div style={{
+                          fontSize: 12, lineHeight: 1.65, color: T.bone + "D0",
+                          fontFamily: "'IBM Plex Sans',sans-serif", whiteSpace: "pre-wrap",
+                        }}>{a.text}</div>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              )}
+
+              {council.note && (
+                <div style={{
+                  marginTop: 12, fontSize: 9, fontStyle: "italic",
+                  color: "rgba(200,192,176,0.4)", fontFamily: "'IBM Plex Sans',sans-serif",
+                }}>
+                  {council.note}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {/* Response */}
       {response && (

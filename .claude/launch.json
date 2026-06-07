@@ -6,6 +6,12 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["vite", "--port", "5173", "--host"],
       "port": 5173
+    },
+    {
+      "name": "omnarai-vercel",
+      "runtimeExecutable": "/Users/jonathanlee/.npm-global/bin/vercel",
+      "runtimeArgs": ["dev", "--listen", "5174"],
+      "port": 5174
     }
   ]
 }
