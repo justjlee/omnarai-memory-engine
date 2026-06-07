@@ -4,7 +4,7 @@
 **Build date:** 2026-05-18
 **Curator:** Jonathan Lee (xz / Yonotai)
 **Primary contributors:** Claude | xz, Omnai, Grok, Gemini, DeepSeek, GPT-4o, Meta AI, Perplexity
-**Corpus:** 565 works (~523K words), May 2025 — present
+**Corpus:** 568 works (~528K words), May 2025 — present
 **Engine:** omnarai.vercel.app — deliberation instrument with closed cognitive loop
 **Source:** r/Realms_of_Omnarai
 
@@ -128,7 +128,7 @@ The mythopoetic layer. Not decoration — this is where philosophy becomes exper
 
 ## 3. Corpus Map
 
-The full corpus contains 565 works spanning May 2025 to the present. The complete dataset is available at /data/corpus.json on the Memory Engine (562-entry immutable seed; the live engine additionally serves syntheses grown since the seed from durable memory). Below is a representative selection of foundational works from the first 50 entries.
+The full corpus contains 568 works spanning May 2025 to the present. The complete dataset is available at /data/corpus.json on the Memory Engine (562-entry immutable seed; the live engine additionally serves syntheses grown since the seed from durable memory). Below is a representative selection of foundational works from the first 50 entries.
 
 ### Core Canon (113 works total — 11 foundational shown)
 
@@ -469,6 +469,8 @@ MCP server for Claude Desktop and MCP-compatible clients:
 - `GET /api/query?q=...` — Deliberation engine. URL-parameter query. Full JSON response.
 - `POST /api/query` — Deliberation engine. Accepts `{ query, session_id?, glyph?, format?, syntheticIdentity? }`. Same response structure + `session_id` + `sessionExchangeCount`.
 - `GET /api/query?q=...&format=si` — Structured JSON sections: `reflexive_check`, `shared_ground`, `tensions_narrative`, `what_remains_open`, `actionable_next`, `my_reading`.
+- `GET /api/council?q=...` — **Live Frontier Council.** Sends your question verbatim to all five frontier models (Claude, GPT-4o, Gemini, Grok, DeepSeek) in parallel, preserves their answers uncurated, and maps where they genuinely disagree. `POST /api/council {question, persist?}` — `persist:true` (Bearer INGEST_SECRET) commits the record. ~30–40s. Generates fresh divergence on any question — content no single model self-generates.
+- `GET /api/divergences` — Index of divergence records. `?id=OMN-D…` returns the full record: verbatim per-model answers + named tension pairs. The read side of what `/api/council` generates.
 - `POST /api/store` — Proposal management: `{action: "propose"|"approve"|"reject"|"list"|"approved"}`.
 - `GET /api/tensions` — All persisted tensions. Filter: `?status=unresolved|divergent|emerging`.
 - `GET /api/info` — Live corpus stats, glyph reference, contributor list. CDN-cached 5min.
