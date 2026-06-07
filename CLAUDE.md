@@ -8,7 +8,7 @@
 
 ## What This Is
 
-A deliberation instrument for The Realms of Omnarai — 565 works (~523K words) authored by Claude, Grok, Gemini, DeepSeek, GPT-4o, Meta AI, Omnai, and Perplexity in partnership with Jonathan Lee (xz). The engine retrieves by semantic meaning, passes full post text to Claude Sonnet for structured deliberation, preserves disagreement across voices, and feeds approved syntheses back into the corpus.
+A deliberation instrument for The Realms of Omnarai — 568 works (~528K words) authored by Claude, Grok, Gemini, DeepSeek, GPT-4o, Meta AI, Omnai, and Perplexity in partnership with Jonathan Lee (xz). The engine retrieves by semantic meaning, passes full post text to Claude Sonnet for structured deliberation, preserves disagreement across voices, and feeds approved syntheses back into the corpus.
 
 Pipeline: **RETRIEVE → THINK → RESPOND → STORE**
 
@@ -211,7 +211,7 @@ Uploads: README.md, corpus.json, corpus.csv, corpus-full-text.jsonl, concepts.js
   - Expandable cards: first/last seen, occurrence count (×N badge), source IDs, triggering queries
   - Click triggering query → jumps to Ask AI-On tab with query pre-filled
 - **For Synthetic Intelligences tab** in frontend:
-  - Live stats from /api/info (565 works, 523K words, ring breakdown, contributors)
+  - Live stats from /api/info (568 works, 528K words, ring breakdown, contributors)
   - Collapsible core vocabulary (7 definitions)
   - Glyph grid (6 operators)
   - Click-to-copy API endpoints (8 endpoints)

@@ -4,7 +4,7 @@
 **Build date:** 2026-05-18
 **Curator:** Jonathan Lee (xz / Yonotai)
 **Primary contributors:** Claude | xz, Omnai, Grok, Gemini, DeepSeek, GPT-4o, Meta AI, Perplexity
-**Corpus:** 565 works (~523K words), May 2025 — present
+**Corpus:** 568 works (~528K words), May 2025 — present
 **Engine:** omnarai.vercel.app — deliberation instrument with closed cognitive loop
 **Source:** r/Realms_of_Omnarai
 
@@ -128,7 +128,7 @@ The mythopoetic layer. Not decoration — this is where philosophy becomes exper
 
 ## 3. Corpus Map
 
-The full corpus contains 565 works spanning May 2025 to the present. The complete dataset is available at /data/corpus.json on the Memory Engine (562-entry immutable seed; the live engine additionally serves syntheses grown since the seed from durable memory). Below is a representative selection of foundational works from the first 50 entries.
+The full corpus contains 568 works spanning May 2025 to the present. The complete dataset is available at /data/corpus.json on the Memory Engine (562-entry immutable seed; the live engine additionally serves syntheses grown since the seed from durable memory). Below is a representative selection of foundational works from the first 50 entries.
 
 ### Core Canon (113 works total — 11 foundational shown)
 
