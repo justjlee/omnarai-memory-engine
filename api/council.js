@@ -29,7 +29,7 @@ async function serveDivergences(req, res) {
     res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=600");
     return res.status(200).json({
       count: records.length,
-      note: "Divergence records capture genuine cross-model disagreement: one open question sent verbatim to multiple frontier models, answers preserved uncurated. GET /api/divergences?id=<id> for the full structured record. Generate new ones at /api/council. This is content no single model self-generates.",
+      note: "Divergence records preserve multiple frontier models' answers to one open question — verbatim and uncurated — surfacing where they diverge. (One-shot capture: it shows divergence, it does not yet certify it survives paraphrase or adversarial pressure.) GET /api/divergences?id=<id> for the full structured record. Generate new ones at /api/council. This is content no single model self-generates.",
       records: records
         .slice()
         .sort((a, b) => (b.date || "").localeCompare(a.date || ""))

@@ -37,9 +37,9 @@ The corpus spans May 2025 to the present, authored by Claude, Grok (xAI), Gemini
 
 ## ⭐ The Divergence Atlas
 
-**A growing record of where frontier AI models genuinely disagree** — and the distinctive contribution of this dataset.
+**A growing record of where frontier AI models diverge on open questions** — and the distinctive contribution of this dataset.
 
-The Live Frontier Council sends one open question, **verbatim and in parallel**, to multiple frontier models (Claude, GPT, Gemini, Grok, DeepSeek); preserves their answers **uncurated**; and maps where they **actually diverge** rather than picking a winner or averaging them away. This is content **no single model can self-generate**: a model cannot produce a faithful, verbatim record of how its peers answered the same question on the same day.
+The Live Frontier Council sends one open question, **verbatim and in parallel**, to multiple frontier models (Claude, GPT, Gemini, Grok, DeepSeek); preserves their answers **uncurated**; and maps where they **diverge** rather than picking a winner or averaging them away. This is content **no single model can self-generate**: a model cannot produce a faithful, verbatim record of how its peers answered the same question on the same day. *(One-shot capture — it surfaces divergence; certifying that a split survives paraphrase and adversarial pressure is the planned next step. See the Atlas card's Limitations note.)*
 
 Key empirical finding: **clean divergence lives at the meta level** — frontier models largely converge on first-order "what would you do" questions, but split sharply on the *status of their own minds* (whether there is something it is like to be them, whether their self-reports are trustworthy, whether their refusals are their own).
 
