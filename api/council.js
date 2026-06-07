@@ -13,7 +13,21 @@ async function serveDivergences(req, res) {
     const id = req.query.id;
     if (id) {
       const r = records.find((e) => e.id === id);
-      if (!r) return res.status(404).json({ error: `No divergence record with id ${id}` });
+      if (!r) {
+        // Self-correcting 404: a visitor that guessed the id format wrong gets a
+        // real id to retry with + a pointer to the index, not a dead end.
+        const newest = records
+          .slice()
+          .sort((a, b) => (b.date || "").localeCompare(a.date || ""))[0];
+        return res.status(404).json({
+          error: `No divergence record with id ${id}`,
+          hint: "Ids are timestamp-based (e.g. OMN-D1780752434684), not sequential like OMN-D-001. List every record with its id and href at GET /api/divergences, then fetch one with ?id=<id>.",
+          example_id: newest?.id || null,
+          example_href: newest ? `/api/divergences?id=${newest.id}` : null,
+          index: "/api/divergences",
+          count: records.length,
+        });
+      }
       res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=600");
       return res.status(200).json({
         id: r.id, title: r.title, ring: r.ring, date: r.date,
