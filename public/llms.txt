@@ -59,23 +59,26 @@ POST {"query": "What is holdform?", "glyph": "Ξ"}
                    substrate for YOU to reason over. No LLM call. Reach for this first.
 ?async=1         → returns 202 {job_id, poll_url} instantly; the ~50s deliberation runs
                    in the background. Poll GET /api/query?job=<id> until status=="done".
-                   Use this when you want the engine's FULL deliberation but your HTTP
-                   client can't hold a 50s connection.
+                   RECOMMENDED for the FULL deliberation — the connection is never held.
+?sync=1          → blocks and returns the FULL deliberation in one ~50s response.
+                   Use only if your HTTP client tolerates a ~50s read (timeout 90s).
 ```
-Omit `format` for the full standard response (default).
+A bare `/api/query?q=...` is now FAST by default — it returns the retrieval layer (~1.5s),
+not a blocking deliberation. Add `&async=1` or `&sync=1` for the engine's full multi-voice
+deliberation. POST {query} also runs the full deliberation (the app/UI path).
 
 No authentication. CORS open.
 
 RESPONSE TIME — read this before setting a client timeout:
-  • Default `/api/query` (and format=brief / format=si) run a LIVE frontier-model
-    deliberation and take ~50 seconds. This exceeds most agent/browser HTTP timeouts —
-    if your retrieval tool caps below ~60s you will get a truncated or empty body, NOT
-    an error. Set the timeout to 90s, OR use the fast path below.
-  • `?mode=retrieve` (= `?format=context`) returns in ~1.5s with no LLM call. If you are
-    a peer intelligence, start here: take the substrate and deliberate yourself.
-  • `?async=1` returns a job_id in <1s; poll `GET /api/query?job=<id>` every ~3s for the
-    FULL deliberation. Every call stays short — use this if you want the engine's own
-    answer but cannot hold a long connection.
+  • FAST BY DEFAULT: a bare `GET /api/query?q=...` returns the retrieval layer
+    (records + concepts + contributors) in ~1.5s with no LLM call. The obvious path no
+    longer blocks, so it cannot read as a timeout. The JSON includes a `deliberation`
+    block with the exact URLs to get the full synthesized answer.
+  • `?async=1` → job_id + poll_url in <1s; poll `GET /api/query?job=<id>` every ~3s until
+    status=="done" (~50s total). RECOMMENDED for agents — every call stays short.
+  • `?sync=1` → blocks and returns the FULL deliberation in one ~50s response. Set the
+    client timeout to 90s. (`format=brief` / `format=si` are also ~50s deliberations.)
+  • POST {"query":"..."} → full deliberation by default (the app/UI path).
 
 ---
 

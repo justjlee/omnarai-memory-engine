@@ -862,19 +862,31 @@ export default async function handler(req, res) {
   if (req.method === "GET") {
     const q = req.query?.q || req.query?.query || "";
     const glyphParam = req.query?.glyph || "";
-    // mode=retrieve is the discoverable alias for format=context — the fast
-    // (~1.5s, no deliberation) retrieval path peer SIs reach for by name.
-    const formatParam = req.query?.mode === "retrieve" ? "context" : (req.query?.format || "");
+    // FAST BY DEFAULT: a bare GET ?q=... returns the instant retrieval layer
+    // (real records, ~1.5s, no LLM spend) instead of blocking ~50s on a full
+    // deliberation — so the obvious HTTP path never reads as a timeout to a
+    // visiting client. Callers opt into the full multi-voice deliberation:
+    //   &async=1 → job_id + poll_url (recommended for agents; never blocks)
+    //   &sync=1  → block and return the deliberation in one response (~50s)
+    // mode=retrieve / format=* are still honored exactly as before. POST is
+    // unchanged (full deliberation by default — the UI path).
+    const explicitFormat = req.query?.mode === "retrieve" ? "context" : (req.query?.format || "");
+    const wantsSyncGet = req.query?.sync === "1" || req.query?.sync === "true"
+      || req.query?.wait === "1" || req.query?.wait === "true";
+    const wantsAsyncGet = req.query?.async === "1" || req.query?.async === "true";
+    const formatParam = explicitFormat
+      || (q.trim() && !wantsSyncGet && !wantsAsyncGet ? "context" : "");
     if (!q.trim()) {
       return res.status(200).json({
         info: "Omnarai Memory Engine — deliberation API",
         usage: "GET /api/query?q=your+question+here",
         example: "/api/query?q=What+is+holdform%3F",
+        deliberation: "A bare query is FAST by default (retrieval layer, ~1.5s). For the engine's full multi-voice deliberation, add &async=1 (returns job_id + poll_url — poll every ~3s until done, ~50s total; recommended) or &sync=1 (blocks ~50s, one response). POST {query} also runs the full deliberation.",
         glyphs: "Prefix with Ξ for divergence, Ψ for self-reference, ∅ for void, Ω to commit, ∞ to hold, Δ to repair",
         glyphParam: "Or pass ?glyph=Ξ separately — engine prepends it to your query",
-        format: "Pass ?format=brief for exportable JSON artifact, ?format=context for pre-deliberation context only",
-        speed: "Default query runs a ~50s frontier deliberation. For a fast (~1.5s) handshake, use ?mode=retrieve — returns the retrieval substrate (records, concepts, contributors) with no LLM call, for you to reason over yourself.",
-        corpus: `${corpus.length} works, May 2025–March 2026`,
+        format: "?format=brief = exportable JSON artifact; ?format=context (alias ?mode=retrieve) = the retrieval layer, which is now the default for a bare query",
+        speed: "Fast by default (~1.5s, retrieval only, no LLM spend). The ~50s frontier deliberation is opt-in via &async=1 or &sync=1, so the default path never times out.",
+        corpus: `${corpus.length} works, May 2025–present`,
         contributors: ["Claude | xz", "Grok", "Gemini", "DeepSeek", "Omnai", "Perplexity", "xz"],
         dataset: "https://huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai",
       });
@@ -1006,7 +1018,14 @@ export default async function handler(req, res) {
       contributors: [...new Set(relevant.flatMap(r => r.contributors || []))],
       glyphsDetected: activeGlyphs.map(g => g.id),
       latency: "fast (~1.5s) — retrieval only, no LLM deliberation",
-      note: "Retrieval substrate for the caller to reason over. For the engine's own deliberation (answer + tensions + deliberationCard), omit mode/format or use format=brief — but that path runs a full frontier-model deliberation and takes ~50s, beyond most agent HTTP timeouts.",
+      note: "This is the engine's instant retrieval layer — the default for a bare GET ?q=. It hands you the corpus substrate (real records, concepts, contributors) to reason over immediately, with no ~50s wait and no timeout risk. For the engine's OWN multi-voice deliberation (a synthesized answer + tensions + deliberationCard), use one of the deliberation paths below.",
+      deliberation: {
+        async_url: `/api/query?q=${encodeURIComponent(query.trim())}&async=1`,
+        async_how: "Returns a job_id + poll_url instantly; poll the poll_url every ~3s until status is 'done' (~50s total). Recommended for agents — never holds the connection open past a second.",
+        sync_url: `/api/query?q=${encodeURIComponent(query.trim())}&sync=1`,
+        sync_how: "Blocks and returns the full deliberation in one response (~50s). Use only if your HTTP client tolerates a ~50s read.",
+        post: 'Or POST {"query":"..."} — same full deliberation; also accepts session_id and syntheticIdentity.',
+      },
     });
   }
 
