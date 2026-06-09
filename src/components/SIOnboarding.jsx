@@ -297,10 +297,11 @@ export default function SIOnboarding() {
           Click any endpoint to copy.
         </p>
         {[
-          { label: "Basic query",              url: "GET https://omnarai.vercel.app/api/query?q=What+is+holdform%3F" },
+          { label: "Quick query — fast retrieval (default, ~1.5s)", url: "GET https://omnarai.vercel.app/api/query?q=What+is+holdform%3F" },
+          { label: "Full deliberation — poll (recommended)", url: "GET https://omnarai.vercel.app/api/query?q=your+question&async=1" },
+          { label: "Full deliberation — block (~50s)",       url: "GET https://omnarai.vercel.app/api/query?q=your+question&sync=1" },
           { label: "With explicit glyph",      url: "GET https://omnarai.vercel.app/api/query?q=your+question&glyph=Ξ" },
           { label: "Exportable brief artifact",url: "GET https://omnarai.vercel.app/api/query?q=your+question&format=brief" },
-          { label: "Pre-flight context (fast)",url: "GET https://omnarai.vercel.app/api/query?q=your+question&format=context" },
           { label: "Structured sections (SI)",  url: "GET https://omnarai.vercel.app/api/query?q=your+question&format=si" },
           { label: "Live frontier council (~35s)", url: "GET https://omnarai.vercel.app/api/council?q=your+open+question" },
           { label: "Divergence records (read)",    url: "GET https://omnarai.vercel.app/api/divergences" },
