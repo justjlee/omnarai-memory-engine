@@ -33,7 +33,12 @@ ROOT_FILES = [
     "divergences.jsonl",
     "divergence-answers.jsonl",
     "divergence-tensions.csv",
+    # Utility evidence — measured Atlas utility, disjoint-judge design (build-utility-evidence.mjs)
+    "utility-evidence.md",
 ]
+
+# Utility raw results + harness (everything needed to verify utility-evidence.md)
+UTILITY_GLOB = "utility/*"
 
 # Any results files present
 RESULTS_PATTERN = "results-*.md"
@@ -86,6 +91,11 @@ def main():
     # Dynamic results files
     for fpath in sorted(HF_DIR.glob(RESULTS_PATTERN)):
         to_upload.append((fpath, fpath.name))
+
+    # Utility raw results + harness
+    for fpath in sorted(HF_DIR.glob(UTILITY_GLOB)):
+        if fpath.is_file():
+            to_upload.append((fpath, f"utility/{fpath.name}"))
 
     for bfname in BENCHMARK_FILES:
         fpath = HF_DIR / bfname
