@@ -33,11 +33,26 @@ if [[ "${1:-}" == "--promote" ]]; then
   [[ "$ok" == "y" || "$ok" == "Y" ]] || { echo "aborted."; exit 1; }
   npm run build
   vercel build --prod --yes
-  vercel deploy --prebuilt --prod --yes
+  DEPLOY_OUT=$(vercel deploy --prebuilt --prod --yes 2>&1)
+  echo "$DEPLOY_OUT"
+  PROD_URL=$(echo "$DEPLOY_OUT" | grep -oE 'https://[a-z0-9-]+\.vercel\.app' | tail -1)
+  # The custom domain does NOT follow new prod deployments on its own — without
+  # this re-alias, $DOMAIN keeps serving the previous bundle indefinitely.
+  if [[ -n "$PROD_URL" ]]; then
+    echo ">> Re-aliasing $DOMAIN → $PROD_URL"
+    vercel alias set "$PROD_URL" "$DOMAIN"
+  else
+    echo ">> WARNING: could not parse prod deployment URL — re-alias $DOMAIN manually!"
+  fi
   sleep 4
-  LIVE_BUNDLE=$(curl -s "https://$DOMAIN" | grep -oE 'index-[A-Za-z0-9]+\.js' | head -1)
-  echo ">> Live bundle now: ${LIVE_BUNDLE:-<none>}"
-  echo ">> Done. Verify https://$DOMAIN — semantic search + videos should work."
+  LIVE_BUNDLE=$(curl -s "https://$DOMAIN" | grep -oE 'index-[A-Za-z0-9_]+\.js' | head -1)
+  LOCAL_BUNDLE=$(ls dist/assets | grep -oE 'index-[A-Za-z0-9_]+\.js' | head -1)
+  echo ">> Live bundle: ${LIVE_BUNDLE:-<none>} · local build: ${LOCAL_BUNDLE:-<none>}"
+  if [[ -n "$LIVE_BUNDLE" && "$LIVE_BUNDLE" == "$LOCAL_BUNDLE" ]]; then
+    echo ">> Done. $DOMAIN is serving this build."
+  else
+    echo ">> WARNING: live bundle does not match local build — alias may be stale."
+  fi
   exit 0
 fi
 
