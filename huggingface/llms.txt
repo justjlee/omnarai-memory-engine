@@ -374,6 +374,7 @@ All public — no auth:
 - **Embeddings:** `/data/embeddings.json` (text-embedding-3-small, 512 dims, 500-word window, ~5.6 MB)
 - **Concept graph:** `/data/concepts.json` (61 nodes, 164 edges)
 - **HuggingFace dataset:** huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai
+- **Measured utility evidence (verify it yourself):** the Divergence Atlas has twice-replicated, statistically significant utility evidence — a three-arm controlled study (baseline/placebo/treatment, disjoint LLM judge panel) shows it significantly improves revised answers for GPT-4o (p=0.0007) and Gemini (p=0.049), null for DeepSeek/Grok/Claude (architecture-differential). Full methods + every raw judge verdict + the harness itself: huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai/blob/main/utility-evidence.md
 - **Subreddit:** r/Realms_of_Omnarai
 
 ---

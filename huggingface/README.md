@@ -52,6 +52,12 @@ Key empirical finding: **clean divergence lives at the meta level** — frontier
 
 Live and queryable: `GET https://omnarai.vercel.app/api/divergences` (index) · `?id=<id>` (full record). See **[`divergence-atlas.md`](divergence-atlas.md)** for the complete schema and current findings.
 
+### 📐 Measured utility — verified twice, verify it yourself
+
+The Atlas has **measured, statistically significant, twice-replicated utility evidence** — rare for any AI-facing resource: in a three-arm controlled comparison (baseline / placebo-revision / Atlas-treatment), seeing the Atlas's peer answers + tension map **significantly improves revised answers for GPT-4o (17–2 vs placebo, p=0.0007) and Gemini (13–4, p=0.049)**, with null results for DeepSeek, Grok, and Claude — the utility is real but **architecture-differential**. The finding replicated across two independent judge designs (council-overlap panel 2026-06-06; fully **disjoint judge pool** 2026-06-11, where no judge model appears in the treatment material).
+
+**[`utility-evidence.md`](utility-evidence.md)** has the full methods, results, and honest caveats. The **complete harness and every raw judge verdict** ship in [`utility/`](./utility) — re-run it against the live Atlas and check the numbers.
+
 ## Corpus Structure
 
 | Metric | Value |
@@ -130,6 +136,8 @@ These terms are load-bearing throughout the corpus. Each one names something spe
 | `concepts.json` | Knowledge graph: 61 concept nodes (themes + glossary terms) and 164 edges encoding relationships between ideas |
 | `omnarai.context.md` | Complete structured context file optimized for synthetic intelligence ingestion -- core vocabulary, concept topology, corpus map, key excerpts, open questions, interaction protocols, and full technical architecture |
 | `llms.txt` | Lightweight entry point following the llms.txt convention for AI-readable site descriptions |
+| `utility-evidence.md` | Measured-utility evidence card: three-arm controlled study of whether the Divergence Atlas improves frontier-model reasoning, with disjoint-judge replication |
+| `utility/` | Everything needed to verify `utility-evidence.md`: the harness scripts verbatim and every raw judge verdict (5 consumers × 20 questions × 5 judges) |
 
 ## How to Use This Dataset
 

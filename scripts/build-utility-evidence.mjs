@@ -171,6 +171,7 @@ depends on who is holding it — which is itself a finding about cross-architect
 - **~200-word answer format.** Longer-form reasoning may behave differently.
 - **n=20 per consumer.** Significant results are robust to this n; the DeepSeek positive trend is underpowered.
 - **Judges share labs (not models) with peers.** Fully lab-disjoint judging would require labs outside the council's five; the uninfluenced-judge probe addresses this within available means.
+- **Judge disposition varies by lab.** Notably, in the Claude-consumer run the Anthropic judge favored placebo 16–4 while the OpenAI judge favored treatment 14–6 — same-lab judges are not systematically generous to Atlas-influenced revisions (if anything the opposite), which further undercuts the own-influence objection. Per-judge breakdowns are in the raw files.
 
 ## Reproduce
 
