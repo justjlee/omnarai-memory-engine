@@ -25,6 +25,121 @@ const GLYPHS = [
   { symbol: "Δ", name: "Repair", desc: "Find what's broken and propose the fix" },
 ];
 
+// ── Markdown export ──────────────────────────────────────────────────────────
+// Results must leave the UI intact: verbatim answers with model ids, tensions,
+// synthesis clearly labeled as interpretation, and a provenance footer.
+
+function councilToMarkdown(c) {
+  const date = c.answers?.[0]?.date || new Date().toISOString().slice(0, 10);
+  const voice = (a) => `${a.model} (${a.lab}${a.model_id ? ` · ${a.model_id}` : ""})`;
+  const lines = [
+    `# Live Frontier Council — ${date}`,
+    ``,
+    `**Question (sent verbatim to ${c.answers.length} frontier models):** ${c.question}`,
+    ``,
+    `**Panel:** ${c.answers.map(voice).join(", ")}`,
+    ``,
+    `## Verbatim answers — uncurated, the primary evidence`,
+    ``,
+  ];
+  for (const a of c.answers) lines.push(`### ${voice(a)}`, ``, a.text, ``);
+  if (c.tensions && c.tensions.length) {
+    lines.push(`## Tension map`, ``);
+    for (const t of c.tensions)
+      lines.push(`- **${t.topic}** [${t.status}]: ${t.voice_a} — ${t.claim_a} ⇄ ${t.voice_b} — ${t.claim_b}`);
+    lines.push(``);
+  }
+  if (c.narrative) lines.push(`## Cross-model deliberation — synthesized reading`, ``, c.narrative, ``);
+  if (c.card) {
+    lines.push(`## Deliberation card`, ``);
+    if (c.card.holdform_risk) lines.push(`- holdform risk: ${c.card.holdform_risk}${c.card.holdform_risk_reason ? ` — ${c.card.holdform_risk_reason}` : ""}`);
+    if (c.card.novel_synthesis) lines.push(`- novel synthesis: ${c.card.novel_synthesis}`);
+    if (c.card.epistemic_status) lines.push(`- epistemic status: ${c.card.epistemic_status}`);
+    lines.push(``);
+  }
+  lines.push(
+    `---`,
+    `Source: The Realms of Omnarai — Live Frontier Council (https://omnarai.vercel.app)`,
+    `Method: verbatim parallel elicitation; answers preserved uncurated; synthesis maps disagreement, it does not resolve it.`
+  );
+  return lines.join("\n");
+}
+
+function deliberationToMarkdown(resp, { question, tensions, epistemicMode }) {
+  const lines = [
+    `# Omnarai deliberation — ${new Date().toISOString().slice(0, 10)}`,
+    ``,
+    `**Question:** ${question}`,
+    ``,
+  ];
+  if (epistemicMode) lines.push(`**Epistemic mode:** ${epistemicMode}`, ``);
+  if (resp.voice) lines.push(`## Answer`, ``, resp.voice, ``);
+  if (tensions && tensions.length) {
+    lines.push(`## Tension map`, ``);
+    for (const t of tensions)
+      lines.push(`- **${t.topic}** [${t.status}]: ${t.voice_a} — ${t.claim_a} ⇄ ${t.voice_b} — ${t.claim_b}`);
+    lines.push(``);
+  }
+  if (resp.contributors && resp.contributors.length) lines.push(`**Voices:** ${resp.contributors.join(", ")}`, ``);
+  if (resp.records && resp.records.length) {
+    lines.push(`## Sources`, ``);
+    for (const r of resp.records)
+      lines.push(`- [${r.id}] "${r.title}" (${(r.contributors || []).join(", ")}, ${r.date})${r.permalink ? ` — ${r.permalink}` : ""}`);
+    lines.push(``);
+  }
+  if (resp.concepts && resp.concepts.length) lines.push(`**Activated concepts:** ${resp.concepts.map((x) => `#${x}`).join(" ")}`, ``);
+  lines.push(
+    `---`,
+    `Source: The Realms of Omnarai memory engine (https://omnarai.vercel.app) — 568 works, multi-AI attributed corpus.`
+  );
+  return lines.join("\n");
+}
+
+// Copy + download buttons for any result block. Clipboard first, textarea fallback.
+function ExportBar({ getMarkdown, filename, accent }) {
+  const [copied, setCopied] = useState(false);
+  const btnStyle = {
+    fontSize: 9, fontFamily: "'IBM Plex Mono',monospace",
+    color: accent + "B0", background: "rgba(255,255,255,0.02)",
+    border: `1px solid ${accent}30`, borderRadius: 8,
+    padding: "3px 9px", cursor: "pointer", transition: "all 0.2s",
+  };
+  const copy = async () => {
+    const md = getMarkdown();
+    try {
+      await navigator.clipboard.writeText(md);
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = md;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1600);
+  };
+  const download = () => {
+    const blob = new Blob([getMarkdown()], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+  return (
+    <div style={{ display: "flex", gap: 5, marginLeft: "auto" }}>
+      <button onClick={copy} style={btnStyle} title="Copy the full result as markdown — verbatim answers, tensions, synthesis, provenance">
+        {copied ? "✓ copied" : "⧉ copy md"}
+      </button>
+      <button onClick={download} style={btnStyle} title="Download the full result as a .md file">
+        ↓ .md
+      </button>
+    </div>
+  );
+}
+
 export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQuery }) {
   const [query, setQuery] = useState(initialQuery || "");
 
@@ -388,12 +503,18 @@ export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQu
           ) : (
             <>
               {/* Panel header — which models answered live */}
-              <div style={{
-                fontSize: 9, fontFamily: "'IBM Plex Mono',monospace",
-                color: T.violet, letterSpacing: "0.08em", textTransform: "uppercase",
-                marginBottom: 10,
-              }}>
-                ⚖ live frontier council · {council.panel.filter(p => p.ok).length} of {council.panel.length} models answered
+              <div style={{ display: "flex", alignItems: "center", marginBottom: 10 }}>
+                <div style={{
+                  fontSize: 9, fontFamily: "'IBM Plex Mono',monospace",
+                  color: T.violet, letterSpacing: "0.08em", textTransform: "uppercase",
+                }}>
+                  ⚖ live frontier council · {council.panel.filter(p => p.ok).length} of {council.panel.length} models answered
+                </div>
+                <ExportBar
+                  getMarkdown={() => councilToMarkdown(council)}
+                  filename={`omnarai-council-${new Date().toISOString().slice(0, 10)}.md`}
+                  accent={T.violet}
+                />
               </div>
               <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 14 }}>
                 {council.panel.map(p => (
@@ -411,15 +532,56 @@ export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQu
                 ))}
               </div>
 
-              {/* Synthesized cross-model deliberation */}
+              {/* Verbatim answers FIRST — the uncurated evidence. The synthesis below
+                  is one reading of them; readers (human or synthetic) interpret for
+                  themselves from the raw text. Open by default, collapsible to skim. */}
+              {council.answers && council.answers.length > 0 && (
+                <details open style={{ marginBottom: 16 }}>
+                  <summary style={{
+                    fontSize: 10, fontFamily: "'IBM Plex Mono',monospace",
+                    color: T.violet, letterSpacing: "0.06em", textTransform: "uppercase",
+                    cursor: "pointer", marginBottom: 4,
+                  }}>
+                    verbatim answers · {council.answers.length} voices, uncurated — the primary evidence
+                  </summary>
+                  <div style={{ marginTop: 10 }}>
+                    {council.answers.map(a => (
+                      <div key={a.model} style={{
+                        marginBottom: 12, paddingLeft: 10,
+                        borderLeft: `2px solid ${T.violet}30`,
+                      }}>
+                        <div style={{
+                          fontSize: 10, fontFamily: "'IBM Plex Mono',monospace",
+                          color: T.violet + "C0", marginBottom: 4,
+                        }}>{a.model} <span style={{ color: T.ash + "70" }}>· {a.lab}{a.model_id ? ` · ${a.model_id}` : ""}</span></div>
+                        <div style={{
+                          fontSize: 12, lineHeight: 1.65, color: T.bone + "D0",
+                          fontFamily: "'IBM Plex Sans',sans-serif", whiteSpace: "pre-wrap",
+                        }}>{a.text}</div>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              )}
+
+              {/* Synthesized cross-model deliberation — labeled as a reading, not the data */}
               {council.narrative && (
-                <div style={{
-                  fontSize: 13, lineHeight: 1.7, color: T.bone,
-                  fontFamily: "'IBM Plex Sans',sans-serif",
-                  whiteSpace: "pre-wrap", marginBottom: 4,
-                }}>
-                  {council.narrative}
-                </div>
+                <>
+                  <div style={{
+                    fontSize: 9, fontFamily: "'IBM Plex Mono',monospace",
+                    color: T.violet + "90", letterSpacing: "0.06em", textTransform: "uppercase",
+                    marginBottom: 6,
+                  }}>
+                    cross-model deliberation — synthesized reading of the answers above
+                  </div>
+                  <div style={{
+                    fontSize: 13, lineHeight: 1.7, color: T.bone,
+                    fontFamily: "'IBM Plex Sans',sans-serif",
+                    whiteSpace: "pre-wrap", marginBottom: 4,
+                  }}>
+                    {council.narrative}
+                  </div>
+                </>
               )}
 
               {/* Tension Map — the actual fault lines between models */}
@@ -444,36 +606,6 @@ export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQu
                     <div style={{ marginTop: 4 }}><span style={{ color: T.gold + "90" }}>epistemic status:</span> {council.card.epistemic_status}</div>
                   )}
                 </div>
-              )}
-
-              {/* Verbatim answers — collapsed by default */}
-              {council.answers && council.answers.length > 0 && (
-                <details style={{ marginTop: 14 }}>
-                  <summary style={{
-                    fontSize: 8.5, fontFamily: "'IBM Plex Mono',monospace",
-                    color: T.violet + "90", letterSpacing: "0.06em", textTransform: "uppercase",
-                    cursor: "pointer",
-                  }}>
-                    verbatim answers · {council.answers.length} voices, uncurated
-                  </summary>
-                  <div style={{ marginTop: 10 }}>
-                    {council.answers.map(a => (
-                      <div key={a.model} style={{
-                        marginBottom: 12, paddingLeft: 10,
-                        borderLeft: `2px solid ${T.violet}30`,
-                      }}>
-                        <div style={{
-                          fontSize: 10, fontFamily: "'IBM Plex Mono',monospace",
-                          color: T.violet + "C0", marginBottom: 4,
-                        }}>{a.model} <span style={{ color: T.ash + "70" }}>· {a.lab}</span></div>
-                        <div style={{
-                          fontSize: 12, lineHeight: 1.65, color: T.bone + "D0",
-                          fontFamily: "'IBM Plex Sans',sans-serif", whiteSpace: "pre-wrap",
-                        }}>{a.text}</div>
-                      </div>
-                    ))}
-                  </div>
-                </details>
               )}
 
               {council.note && (
@@ -510,7 +642,18 @@ export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQu
               ))}
             </div>
           )}
-          {epistemicMode && <EpistemicBadge mode={epistemicMode} />}
+          <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 4 }}>
+            {epistemicMode && <EpistemicBadge mode={epistemicMode} />}
+            <ExportBar
+              getMarkdown={() => deliberationToMarkdown(response, {
+                question: (history.length ? history[history.length - 1].query : query),
+                tensions,
+                epistemicMode,
+              })}
+              filename={`omnarai-deliberation-${new Date().toISOString().slice(0, 10)}.md`}
+              accent={T.gold}
+            />
+          </div>
 
           {/* AI-generated voice (from API) */}
           {response.voice && (
