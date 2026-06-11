@@ -3,6 +3,9 @@
   "functions": {
     "api/*.js": { "maxDuration": 60 }
   },
+  "crons": [
+    { "path": "/api/cron-longitudinal", "schedule": "0 6 * * *" }
+  ],
   "rewrites": [
     { "source": "/api/query", "destination": "/api/query" },
     { "source": "/api/store", "destination": "/api/store" },
