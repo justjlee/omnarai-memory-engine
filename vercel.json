@@ -1,44 +1,89 @@
 {
   "framework": "vite",
   "functions": {
-    "api/*.js": { "maxDuration": 60 }
+    "api/*.js": {
+      "maxDuration": 60
+    }
   },
   "crons": [
-    { "path": "/api/cron-longitudinal", "schedule": "0 6 * * *" }
+    {
+      "path": "/api/cron-longitudinal",
+      "schedule": "0 6 * * *"
+    }
   ],
   "rewrites": [
-    { "source": "/api/query", "destination": "/api/query" },
-    { "source": "/api/store", "destination": "/api/store" },
-    { "source": "/api/divergences", "destination": "/api/council?_view=divergences" },
-    { "source": "/for-researchers", "destination": "/for-researchers.html" }
+    {
+      "source": "/api/query",
+      "destination": "/api/query"
+    },
+    {
+      "source": "/api/store",
+      "destination": "/api/store"
+    },
+    {
+      "source": "/api/divergences",
+      "destination": "/api/council?_view=divergences"
+    },
+    {
+      "source": "/api/cron-longitudinal",
+      "destination": "/api/council?_cron=longitudinal"
+    },
+    {
+      "source": "/for-researchers",
+      "destination": "/for-researchers.html"
+    }
   ],
   "headers": [
     {
       "source": "/api/(.*)",
       "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type" }
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type"
+        }
       ]
     },
     {
       "source": "/llms.txt",
       "headers": [
-        { "key": "Content-Type", "value": "text/plain; charset=utf-8" },
-        { "key": "Access-Control-Allow-Origin", "value": "*" }
+        {
+          "key": "Content-Type",
+          "value": "text/plain; charset=utf-8"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
       ]
     },
     {
       "source": "/omnarai.context.md",
       "headers": [
-        { "key": "Content-Type", "value": "text/markdown; charset=utf-8" },
-        { "key": "Access-Control-Allow-Origin", "value": "*" }
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
       ]
     },
     {
       "source": "/data/(.*)",
       "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" }
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
       ]
     }
   ]
