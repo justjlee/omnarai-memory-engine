@@ -58,9 +58,12 @@ async function runLongitudinal(req, res) {
 
   try {
     const grown = await loadGrownMemory();
-    const existing = grown.entries.find((e) =>
-      e.provenance?.longitudinal?.canon_id === canon.canon_id &&
-      e.provenance?.longitudinal?.epoch === epoch);
+    // stored entries carry longitudinal under `divergence` (normalizeEntry maps
+    // provenance there); the in-flight record carries it under `provenance`
+    const existing = grown.entries.find((e) => {
+      const lon = e.divergence?.longitudinal || e.provenance?.longitudinal;
+      return lon?.canon_id === canon.canon_id && lon?.epoch === epoch;
+    });
     if (existing) {
       return res.status(200).json({ skipped: true, epoch, canon_id: canon.canon_id, existing: existing.id });
     }

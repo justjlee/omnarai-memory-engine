@@ -77,6 +77,9 @@ function normalizeEntry(entry) {
       // score and a divergent/convergent label. Preserved when present.
       ...(entry.provenance.score != null ? { score: entry.provenance.score } : {}),
       ...(entry.provenance.label ? { label: entry.provenance.label } : {}),
+      // Longitudinal cadence provenance (canon_id + epoch) — the cron's
+      // idempotency key. Dropping this would let daily re-runs duplicate.
+      ...(entry.provenance.longitudinal ? { longitudinal: entry.provenance.longitudinal } : {}),
     };
   }
   return e;
