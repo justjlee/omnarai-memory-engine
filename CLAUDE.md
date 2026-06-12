@@ -148,6 +148,9 @@ Uploads: README.md, corpus.json, corpus.csv, corpus-full-text.jsonl, concepts.js
 | `/api/probe?action=run&probe=<name>` | GET | Run single named probe (auth: Bearer PROBE_SECRET) |
 | `/api/probe?action=suite` | GET | Run all 8 probes, return scored summary by pressure type (auth required) |
 | `/api/eval` | POST | `{action:"run"}` — run 20-query quality gold set, store results (auth: Bearer EVAL_SECRET) |
+| `/api/council?q=...` | GET/POST | Live Frontier Council — one question, verbatim, to 5 frontier models in parallel; divergence preserved. POST `{persist:true}` + Bearer INGEST_SECRET commits the record |
+| `/api/divergences` | GET | Divergence Atlas read path (rewrite → council `_view=divergences`); `?id=<id>` for one record |
+| `/api/cron-longitudinal` | GET | Longitudinal cadence (rewrite → council `_cron=longitudinal`): re-asks one frozen-canon question/day (api/_canon.js, 20 questions, FROZEN), epoch = calendar month, idempotent per canon_id+epoch, OMN-L* ids. Vercel cron daily 06:00 UTC (Bearer CRON_SECRET); manual `?index=N` with INGEST_SECRET. NB Hobby plan = 12 serverless functions MAX — new endpoints must fold into existing files via rewrites |
 | `/api/eval?action=results` | GET | Most recent eval run results (auth required) |
 | `/api/eval?action=history` | GET | Last 20 run summaries for regression tracking (auth required) |
 
