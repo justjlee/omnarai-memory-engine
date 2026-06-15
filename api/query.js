@@ -14,6 +14,20 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const projectRoot = join(__dirname, "..");
 
+/**
+ * Structured, recoverable error envelope for AI callers.
+ * Keeps a top-level `error` string for backward compatibility (the UI reads it
+ * directly) and ADDS machine-actionable fields so a calling model can recover:
+ * a stable `code`, an `agent_action` hint, `retryable`, and an optional
+ * concrete `suggested_next_call`. See /openapi.json #/components/schemas/Error.
+ */
+function agentError(res, status, { code, message, agent_action, retryable = false, suggested_next_call, detail }) {
+  const body = { error: message, code, agent_action, retryable };
+  if (suggested_next_call) body.suggested_next_call = suggested_next_call;
+  if (detail) body.detail = detail;
+  return res.status(status).json(body);
+}
+
 // Load data files at cold-start (cached across invocations)
 let corpus, concepts, embeddings;
 try {
@@ -901,7 +915,13 @@ export default async function handler(req, res) {
     const sessionParam = req.query?.session || "";
     req.body = { query: fullQuery, format: formatParam, syntheticIdentity: siParam, session_id: sessionParam };
   } else if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed. Use GET ?q=... or POST {query: ...}" });
+    return agentError(res, 405, {
+      code: "METHOD_NOT_ALLOWED",
+      message: "Method not allowed. Use GET ?q=... or POST {query: ...}",
+      agent_action: "Reissue as GET /api/query?q=your+question (add &mode=retrieve for ~1.5s) or POST {\"query\":\"...\"}.",
+      retryable: true,
+      suggested_next_call: { method: "GET", url: "/api/query?q=your+question&mode=retrieve" },
+    });
   }
 
   // Merge proposals and load session in parallel — neither blocks the other
@@ -918,7 +938,13 @@ export default async function handler(req, res) {
   // Support explicit glyph parameter: {"query": "...", "glyph": "Ξ"}
   const query = glyphParam ? `${glyphParam} ${rawQuery || ""}`.trim() : rawQuery;
   if (!query || typeof query !== "string" || query.trim().length === 0) {
-    return res.status(400).json({ error: "Missing or empty 'query' field" });
+    return agentError(res, 400, {
+      code: "MISSING_QUERY",
+      message: "Missing or empty 'query' field",
+      agent_action: "Provide a non-empty question via ?q= (GET) or {\"query\":\"...\"} (POST). For orientation first, call GET /api/agent-entry.",
+      retryable: true,
+      suggested_next_call: { method: "GET", url: "/api/agent-entry" },
+    });
   }
 
   const trimmed = query.trim();
@@ -1285,8 +1311,12 @@ This deliberation was requested by a synthetic intelligence identifying itself a
     });
   } catch (err) {
     console.error("Omnarai query error:", err);
-    return res.status(500).json({
-      error: "The Engine encountered an error.",
+    return agentError(res, 500, {
+      code: "DELIBERATION_FAILED",
+      message: "The Engine encountered an error.",
+      agent_action: "Retry once; if it persists, fall back to the fast retrieval layer (mode=retrieve) and reason over the substrate yourself.",
+      retryable: true,
+      suggested_next_call: { method: "GET", url: "/api/query?q=your+question&mode=retrieve" },
       detail: err.message,
     });
   }

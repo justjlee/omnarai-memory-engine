@@ -218,10 +218,24 @@ export default async function handler(req, res) {
     question = (body.question || body.query || "").toString();
     persist = body.persist === true;
   } else {
-    return res.status(405).json({ error: "Method not allowed. Use GET ?q=... or POST {question}" });
+    return res.status(405).json({
+      error: "Method not allowed. Use GET ?q=... or POST {question}",
+      code: "METHOD_NOT_ALLOWED",
+      agent_action: "Reissue as GET /api/council?q=your+question or POST {\"question\":\"...\"}. Council is slow/expensive — if an existing record fits, prefer GET /api/divergences.",
+      retryable: true,
+      suggested_next_call: { method: "GET", url: "/api/divergences" },
+    });
   }
 
-  if (!question.trim()) return res.status(400).json({ error: "Missing 'question'" });
+  if (!question.trim()) {
+    return res.status(400).json({
+      error: "Missing 'question'",
+      code: "MISSING_QUESTION",
+      agent_action: "Provide a non-empty question via ?q= (GET) or {\"question\":\"...\"} (POST). For orientation, call GET /api/agent-entry.",
+      retryable: true,
+      suggested_next_call: { method: "GET", url: "/api/agent-entry" },
+    });
+  }
 
   // Persistence is gated. Preview (persist:false) is open so anyone can see value.
   if (persist) {

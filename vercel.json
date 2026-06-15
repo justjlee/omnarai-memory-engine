@@ -21,6 +21,10 @@
       "destination": "/api/store"
     },
     {
+      "source": "/api/agent-entry",
+      "destination": "/api/info?_view=agent-entry"
+    },
+    {
       "source": "/api/divergences",
       "destination": "/api/council?_view=divergences"
     },
@@ -66,6 +70,45 @@
     },
     {
       "source": "/omnarai.context.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
+      ]
+    },
+    {
+      "source": "/limitations.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
+      ]
+    },
+    {
+      "source": "/openapi.json",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/json; charset=utf-8"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
+      ]
+    },
+    {
+      "source": "/inheritance/(.*)",
       "headers": [
         {
           "key": "Content-Type",
