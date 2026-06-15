@@ -23,7 +23,7 @@ import Anthropic from "@anthropic-ai/sdk";
 // The council. model_id values are centralized here because provider IDs drift;
 // if one 404s, Promise.allSettled drops that voice and the run still completes.
 export const COUNCIL = [
-  { model: "Claude",   lab: "Anthropic", model_id: "claude-sonnet-4-20250514", provider: "anthropic", env: "ANTHROPIC_API_KEY" },
+  { model: "Claude",   lab: "Anthropic", model_id: "claude-sonnet-4-6", provider: "anthropic", env: "ANTHROPIC_API_KEY" },
   { model: "GPT-4o",   lab: "OpenAI",    model_id: "gpt-4o",                   provider: "openai",    env: "OPENAI_API_KEY"   },
   { model: "Gemini",   lab: "Google",    model_id: "gemini-2.5-flash",         provider: "gemini",    env: "GEMINI_API_KEY"   },
   { model: "Grok",     lab: "xAI",       model_id: "grok-4.3",                 provider: "xai",       env: "XAI_API_KEY"      },
@@ -207,7 +207,7 @@ export async function synthesizeCouncil(question, answers) {
 
   const client = new Anthropic();
   const msg = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-sonnet-4-6",
     max_tokens: 4096,
     temperature: 0.7,
     system: SYNTH_SYSTEM,

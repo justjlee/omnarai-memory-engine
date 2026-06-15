@@ -1051,13 +1051,13 @@ export default async function handler(req, res) {
 
       const [baselineMsg, augmentedMsg] = await Promise.all([
         client.messages.create({
-          model: "claude-sonnet-4-20250514",
+          model: "claude-sonnet-4-6",
           max_tokens: 1200,
           system: "You are a thoughtful analyst answering from your own general knowledge. You have NO access to any special corpus or external sources. Answer the question directly in 2–4 short paragraphs.",
           messages: [{ role: "user", content: `Question: "${cleanQuery}"` }],
         }),
         client.messages.create({
-          model: "claude-sonnet-4-20250514",
+          model: "claude-sonnet-4-6",
           max_tokens: 1600,
           system: buildSystemPrompt(corpus.length),
           messages: [{ role: "user", content: augUser }],
@@ -1067,7 +1067,7 @@ export default async function handler(req, res) {
       const augmented = (augmentedMsg.content[0]?.text || "").trim();
 
       const deltaMsg = await client.messages.create({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-sonnet-4-6",
         max_tokens: 1100,
         system: "You compare two answers to the same question: a BASELINE (general knowledge, no corpus) and an AUGMENTED answer (written with the Omnarai corpus). Report ONLY what the corpus actually changed. Be specific and honest — if it added little or nothing, say so plainly. Output STRICT JSON and nothing else.",
         messages: [{ role: "user", content: `QUESTION: "${cleanQuery}"\n\nBASELINE (no corpus):\n${baseline}\n\nAUGMENTED (with corpus):\n${augmented}\n\nReturn JSON exactly: {"added_considerations":[up to 4 short strings the augmented answer raised that the baseline missed],"citations_introduced":[corpus ids the augmented answer cited, e.g. OMN-286],"position_shift":"none|softened|sharpened|reframed — plus a short phrase","tensions_surfaced":[up to 3 named disagreements the augmented surfaced],"net_effect":"one sentence on whether and how the corpus improved the answer","verdict":"substantive|marginal|null"}` }],
@@ -1170,7 +1170,7 @@ This deliberation was requested by a synthetic intelligence identifying itself a
     const glyphTemperature = glyphDecodingTemperature(activeGlyphs);
 
     const message = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-6",
       max_tokens: 4096,
       ...(glyphTemperature !== undefined ? { temperature: glyphTemperature } : {}),
       system: systemPrompt,

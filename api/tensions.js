@@ -148,7 +148,7 @@ async function draftSynthesis(tension) {
   try {
     const client = new Anthropic();
     const msg = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-6",
       max_tokens: 1200,
       system: `You are the deliberation engine of The Realms of Omnarai. You are given two genuinely divergent claims from the corpus. Produce a corpus-worthy synthesis that does EXACTLY ONE of:
 (a) RECONCILE — name the higher-order frame in which both claims simultaneously hold; or
