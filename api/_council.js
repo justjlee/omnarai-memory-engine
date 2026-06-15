@@ -208,7 +208,10 @@ export async function synthesizeCouncil(question, answers) {
   const client = new Anthropic();
   const msg = await client.messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 4096,
+    // 2048, not 4096: claude-sonnet-4-6 runs ~45 tok/s; a 4096-token synthesis can
+    // exceed the 60s function ceiling once member calls are added. 2048 is ample
+    // for the agreement/disagreement map and keeps council under the wall.
+    max_tokens: 2048,
     temperature: 0.7,
     system: SYNTH_SYSTEM,
     messages: [{ role: "user", content: userMessage }],

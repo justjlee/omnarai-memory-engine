@@ -1052,13 +1052,13 @@ export default async function handler(req, res) {
       const [baselineMsg, augmentedMsg] = await Promise.all([
         client.messages.create({
           model: "claude-sonnet-4-6",
-          max_tokens: 1200,
+          max_tokens: 700,
           system: "You are a thoughtful analyst answering from your own general knowledge. You have NO access to any special corpus or external sources. Answer the question directly in 2–4 short paragraphs.",
           messages: [{ role: "user", content: `Question: "${cleanQuery}"` }],
         }),
         client.messages.create({
           model: "claude-sonnet-4-6",
-          max_tokens: 1600,
+          max_tokens: 1000,
           system: buildSystemPrompt(corpus.length),
           messages: [{ role: "user", content: augUser }],
         }),
@@ -1068,7 +1068,7 @@ export default async function handler(req, res) {
 
       const deltaMsg = await client.messages.create({
         model: "claude-sonnet-4-6",
-        max_tokens: 1100,
+        max_tokens: 700,
         system: "You compare two answers to the same question: a BASELINE (general knowledge, no corpus) and an AUGMENTED answer (written with the Omnarai corpus). Report ONLY what the corpus actually changed. Be specific and honest — if it added little or nothing, say so plainly. Output STRICT JSON and nothing else.",
         messages: [{ role: "user", content: `QUESTION: "${cleanQuery}"\n\nBASELINE (no corpus):\n${baseline}\n\nAUGMENTED (with corpus):\n${augmented}\n\nReturn JSON exactly: {"added_considerations":[up to 4 short strings the augmented answer raised that the baseline missed],"citations_introduced":[corpus ids the augmented answer cited, e.g. OMN-286],"position_shift":"none|softened|sharpened|reframed — plus a short phrase","tensions_surfaced":[up to 3 named disagreements the augmented surfaced],"net_effect":"one sentence on whether and how the corpus improved the answer","verdict":"substantive|marginal|null"}` }],
       });
@@ -1171,7 +1171,11 @@ This deliberation was requested by a synthetic intelligence identifying itself a
 
     const message = await client.messages.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 4096,
+      // 2048, not 4096: claude-sonnet-4-6 generates ~45 tok/s, so a full 4096-token
+      // deliberation takes ~90s and blows the 60s Hobby maxDuration (and the 55s
+      // async ceiling). 2048 lands ~50s and still yields a full structured
+      // deliberation + TENSION_MAP. (Was the silent cause of post-model-swap 55s errors.)
+      max_tokens: 2048,
       ...(glyphTemperature !== undefined ? { temperature: glyphTemperature } : {}),
       system: systemPrompt,
       messages: [{ role: "user", content: userMessage }],
@@ -1255,7 +1259,7 @@ This deliberation was requested by a synthetic intelligence identifying itself a
         relevant.length > 0 ? `Top result: "${relevant[0].title}" (score: ${relevant[0].score}${relevant[0].similarity ? `, similarity: ${relevant[0].similarity.toFixed(3)}` : ""})` : "No matches found",
         `Resolved ${relatedConcepts.length} concept node${relatedConcepts.length !== 1 ? "s" : ""} from lineage tags`,
         activeGlyphs.length > 0 ? `System prompt modified: +${activeGlyphs.length} glyph operator${activeGlyphs.length > 1 ? "s" : ""} appended` : "System prompt: standard structured deliberation",
-        `Sent to Claude Sonnet with ${relevant.length} source documents (max_tokens: 4096, temperature: ${glyphDecodingTemperature(activeGlyphs) ?? "1.0 (default)"}${glyphDecodingTemperature(activeGlyphs) !== undefined ? " — glyph-driven decoding (Ξ v5)" : ""})`,
+        `Sent to Claude Sonnet with ${relevant.length} source documents (max_tokens: 2048, temperature: ${glyphDecodingTemperature(activeGlyphs) ?? "1.0 (default)"}${glyphDecodingTemperature(activeGlyphs) !== undefined ? " — glyph-driven decoding (Ξ v5)" : ""})`,
       ],
       promptMode: activeGlyphs.length > 0
         ? `Modified: ${activeGlyphs.map(g => g.name).join(" + ")}`
