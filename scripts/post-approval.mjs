@@ -33,7 +33,7 @@ console.log(`  total grown entries: ${grown.entries?.length}`);
 // 2. Persist the captured tensions
 console.log("\n── Persisting captured tensions to the Registry ──");
 const res = await fetch("https://omnarai.vercel.app/api/tensions", {
-  method: "POST", headers: { "Content-Type": "application/json" },
+  method: "POST", headers: { "Content-Type": "application/json", "x-omnarai-self": "1" },
   body: JSON.stringify({ action: "persist", tensions: draft.provenance.tensions, query: draft.provenance.question, sources: [RECORD_ID] }),
 });
 const out = await res.json();

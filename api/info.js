@@ -2,6 +2,8 @@ import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { list } from "@vercel/blob";
+import { waitUntil } from "@vercel/functions";
+import { recordAccess, readAccessLog } from "./_telemetry.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -58,6 +60,28 @@ export default async function handler(req, res) {
 
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "GET") return res.status(405).json({ error: "GET only" });
+
+  // ── Curator-gated traffic report: GET /api/info?_view=traffic ─────────────
+  // The honest-milestone instrument: classified external/agent access, including
+  // firstExternalAt — "the first API call you didn't cause". Auth via the
+  // existing curator secret so the access log (UAs, hashed IPs, geo) isn't public.
+  if ((req.query?._view || "") === "traffic") {
+    const auth = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+    if (!process.env.INGEST_SECRET || auth !== process.env.INGEST_SECRET) {
+      return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
+    }
+    res.setHeader("Cache-Control", "no-store");
+    const logData = await readAccessLog();
+    return res.status(200).json({
+      milestone: logData.firstExternalAt
+        ? `First non-self call recorded ${logData.firstExternalAt}`
+        : "No external/agent call recorded yet — the milestone hasn't happened.",
+      ...logData,
+    });
+  }
+
+  // Access telemetry — background, never blocks the response (see _telemetry.js).
+  waitUntil(recordAccess(req, "info"));
 
   // Merge approved proposals so stats are always current without redeployment
   await mergeProposals();

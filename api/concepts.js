@@ -12,6 +12,8 @@
  */
 
 import { put, list } from "@vercel/blob";
+import { waitUntil } from "@vercel/functions";
+import { recordAccess } from "./_telemetry.js";
 
 const CP_PREFIX = "concept-proposals/";
 
@@ -55,6 +57,9 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") return res.status(200).end();
+
+  // Access telemetry — background, never blocks the response (see _telemetry.js).
+  waitUntil(recordAccess(req, "concepts"));
 
   const action = req.query.action || req.body?.action;
 

@@ -7,6 +7,7 @@ import { waitUntil } from "@vercel/functions";
 import { randomUUID } from "crypto";
 import { persistTension } from "./tensions.js";
 import { loadGrownMemory } from "./_grown.js";
+import { recordAccess } from "./_telemetry.js";
 
 // Resolve paths relative to this file's location
 const __filename = fileURLToPath(import.meta.url);
@@ -841,6 +842,9 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
+
+  // Access telemetry — background, never blocks the response (see _telemetry.js).
+  waitUntil(recordAccess(req, "query"));
 
   // ── Poll an async deliberation job: GET /api/query?job=<id> ───────────────
   if (req.method === "GET" && req.query?.job) {

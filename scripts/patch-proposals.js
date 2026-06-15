@@ -102,7 +102,7 @@ async function embedBatch(texts) {
 async function main() {
   // ── 1. Fetch approved proposals ──────────────────────────────────────────
   console.log("Fetching approved proposals from store API...");
-  const storeRes = await fetch(STORE_API);
+  const storeRes = await fetch(STORE_API, { headers: { "x-omnarai-self": "1" } });
   if (!storeRes.ok) throw new Error(`Store API error: ${storeRes.status}`);
   const storeData = await storeRes.json();
   const approved = (storeData.proposals || []).filter(

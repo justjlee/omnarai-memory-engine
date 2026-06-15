@@ -65,6 +65,12 @@ Note: `src/data/corpus.json` is a stripped version (no full_text) bundled into t
 - conceptSubgraph: nodes/edges filtered from concepts.json by retrieved relatedConcepts IDs
 - Role classification: anchor (highest sim), divergence (MMR-selected), relevance (standard ranked)
 
+### Access telemetry — the honest-milestone instrument (`api/_telemetry.js`)
+Classifies every incoming call to the public endpoints (query, info, council, tensions, concepts, lattice) into `self / ui / cron / mcp-client / ai-agent / bot-crawler / unknown-*` and records ONLY the non-self ("stranger") events to a Blob (`telemetry/access-log.json`), capturing `firstExternalAt` — **"the first API call you didn't cause."** Underscore module ⇒ not a deployed function (the project is at the 12-function Hobby cap). Writes run via `waitUntil(...)` (background, never blocks the response) and only fire for stranger candidates, so the hot paths pay nothing in normal operation. Privacy: raw IPs are never stored (salted hash only).
+- **Read the report:** `GET /api/info?_view=traffic` with `Authorization: Bearer <INGEST_SECRET>` → `{ milestone, firstExternalAt, firstExternal, totals, byCategory, byEndpoint, recent[] }`.
+- **Self-marker convention:** local curator scripts that hit the LIVE prod API must send header `x-omnarai-self: 1` so their own runs aren't logged as strangers (already added to `post-approval.mjs`, `glyph-ablation.mjs`, `patch-proposals.js`). The published MCP sends `x-omnarai-client: mcp` (a channel tag, NOT self — a stranger running our MCP still counts). Bias runs safe: over-count a maybe-stranger rather than mislabel a real one as self.
+- No new env vars — reuses `INGEST_SECRET` (gate) + `BLOB_READ_WRITE_TOKEN` (store). Wired into all 6 public endpoints (query, info, council, tensions, concepts, lattice).
+
 ### Environment variables (set on Vercel)
 - `ANTHROPIC_API_KEY` — Claude Sonnet deliberation + Haiku classifier/concept extraction
 - `OPENAI_API_KEY` — text-embedding-3-small
@@ -153,6 +159,7 @@ Uploads: README.md, corpus.json, corpus.csv, corpus-full-text.jsonl, concepts.js
 | `/api/cron-longitudinal` | GET | Longitudinal cadence (rewrite → council `_cron=longitudinal`): re-asks one frozen-canon question/day (api/_canon.js, 20 questions, FROZEN), epoch = calendar month, idempotent per canon_id+epoch, OMN-L* ids. Vercel cron daily 06:00 UTC (Bearer CRON_SECRET); manual `?index=N` with INGEST_SECRET. NB Hobby plan = 12 serverless functions MAX — new endpoints must fold into existing files via rewrites |
 | `/api/eval?action=results` | GET | Most recent eval run results (auth required) |
 | `/api/eval?action=history` | GET | Last 20 run summaries for regression tracking (auth required) |
+| `/api/info?_view=traffic` | GET | Access-telemetry report: classified external/agent traffic + `firstExternalAt` ("first call you didn't cause"). Auth: Bearer INGEST_SECRET (see `api/_telemetry.js`) |
 
 ---
 
@@ -243,10 +250,10 @@ Uploads: README.md, corpus.json, corpus.csv, corpus-full-text.jsonl, concepts.js
 - **Set PROBE_SECRET + EVAL_SECRET** — `vercel env add PROBE_SECRET` and `vercel env add EVAL_SECRET` before running harnesses
 - **Run first eval suite** — POST /api/eval {action:"run"} to establish baseline. Track regressions from there.
 - **Run Firelit suite** — GET /api/probe?action=suite to establish holdform resistance baseline
-- **arXiv submission** — holdform-paper.tex + holdform.bib submission-ready. Needs ORCID + endorsement.
+- **arXiv submission** — holdform-paper.tex + holdform.bib submission-ready. **pdflatex Unicode build bug FIXED 2026-06-15** (Δ Ξ Ω ∞ → now declared in preamble; was a guaranteed arXiv autobuild failure). Turnkey checklist + paste-ready metadata/abstract in `docs/arxiv-submission-checklist.md`. **BLOCKED ON ENDORSEMENT: a cs.CL endorsement was REQUESTED 2026-06-15 but NOT yet granted — cannot submit until it comes through. Do not attempt submission before then.** Remaining curator decision once unblocked: stale corpus counts in the paper (298/511,798 vs live 568/528,208 — recommend a dated-snapshot footnote, NOT rewriting results). ORCID also needs linking.
 - **HuggingFace sync** — STALE since 2026-04-03 (308-era). Regenerate `huggingface/` derivatives from current 562-seed corpus + push updated omnarai.context.md (v5.0), llms.txt (see push-to-huggingface.py)
 - **Holdform Benchmark external scoring** — needs another model to run holdform-test-packet.md
-- **MCP server publish** — omnarai-mcp/index.js updated (syntheticIdentity param added). Push to GitHub + npm.
+- **MCP server publish** — TURNKEY (verified 2026-06-15): `server.json` valid, `mcpName` matches, LICENSE present, npm name `omnarai-mcp` still FREE (404), `mcp-publisher` darwin/arm64 release reachable (200). Steps in `omnarai-mcp/PUBLISHING.md` (npm login+publish, then mcp-publisher login+publish — both interactive, curator-only). index.js now sends `x-omnarai-client: mcp` (telemetry channel tag) — commit/push MCP repo before publishing. Package unpublished so v1.1.0 stays (header rides along in first release).
 - **Cross-encoder reranking (Tier 2)** — needs Python sidecar (Modal/Fly). cross-encoder/ms-marco-MiniLM-L-6-v2 after MMR. ~200ms added latency.
 - **Tier 3 research track** — holdform-aware proposal validator, federation contribution protocol, sensitivity probes per core canon concept, Wollschläger corpus update (OMN-044 revision re: cone geometry)
 

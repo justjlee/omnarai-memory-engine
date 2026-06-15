@@ -12,6 +12,16 @@
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 
+% arXiv autobuilds with pdflatex; the body uses literal Unicode glyphs for the
+% Lattice operators (and a rightarrow). pdflatex+utf8 leaves these undefined and
+% the build fails, so map each to a math equivalent. \ensuremath works in both
+% text and math mode, so no body edits are needed.
+\DeclareUnicodeCharacter{0394}{\ensuremath{\Delta}}      % Δ  Repair
+\DeclareUnicodeCharacter{039E}{\ensuremath{\Xi}}         % Ξ  Divergence
+\DeclareUnicodeCharacter{03A9}{\ensuremath{\Omega}}      % Ω  Commit
+\DeclareUnicodeCharacter{221E}{\ensuremath{\infty}}      % ∞  Recursive Hold
+\DeclareUnicodeCharacter{2192}{\ensuremath{\rightarrow}} % →
+
 \hypersetup{
   colorlinks=true,
   linkcolor=blue,

@@ -1,6 +1,8 @@
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+import { waitUntil } from "@vercel/functions";
+import { recordAccess } from "./_telemetry.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -24,6 +26,9 @@ export default function handler(req, res) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
 
   if (req.method === "OPTIONS") return res.status(200).end();
+
+  // Access telemetry — background, never blocks the response (see _telemetry.js).
+  waitUntil(recordAccess(req, "lattice"));
 
   const ringCounts = { core: 0, curated: 0, open: 0 };
   corpus.forEach(r => { ringCounts[r.ring] = (ringCounts[r.ring] || 0) + 1; });

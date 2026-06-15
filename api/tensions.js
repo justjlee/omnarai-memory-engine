@@ -3,6 +3,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { elicitCouncil, synthesizeCouncil, buildDivergenceRecord, embedRecord } from "./_council.js";
 import { appendGrownEntry } from "./_grown.js";
 import { buildSynthesisProposal, saveProposal } from "./_proposals.js";
+import { waitUntil } from "@vercel/functions";
+import { recordAccess } from "./_telemetry.js";
 
 /**
  * Omnarai Tensions API
@@ -279,6 +281,9 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") return res.status(200).end();
+
+  // Access telemetry — background, never blocks the response (see _telemetry.js).
+  waitUntil(recordAccess(req, "tensions"));
 
   // ── GET — list tensions ──────────────────────────────────────────────────
   if (req.method === "GET") {

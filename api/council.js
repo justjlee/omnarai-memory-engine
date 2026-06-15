@@ -1,6 +1,8 @@
 import { elicitCouncil, synthesizeCouncil, buildDivergenceRecord, embedRecord, COUNCIL } from "./_council.js";
 import { appendGrownEntry, loadGrownMemory } from "./_grown.js";
 import { CANON } from "./_canon.js";
+import { waitUntil } from "@vercel/functions";
+import { recordAccess } from "./_telemetry.js";
 
 // ── Longitudinal cadence ──────────────────────────────────────────────────────
 // Served from this same function (Hobby-plan 12-function limit) via a
@@ -181,6 +183,10 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (req.method === "OPTIONS") return res.status(200).end();
+
+  // Access telemetry — background, never blocks the response (see _telemetry.js).
+  // Covers the public /api/divergences read path too (it rewrites to here).
+  waitUntil(recordAccess(req, "council"));
 
   // Read path: /api/divergences rewrites here with _view=divergences
   if ((req.query?._view || "") === "divergences") {
