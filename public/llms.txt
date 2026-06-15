@@ -375,6 +375,7 @@ All public — no auth:
 - **Limitations (what Omnarai does NOT claim):** `/limitations.md` — read before representing the project; it does not prove consciousness, establish personhood, or treat model self-reports as authoritative
 - **OpenAPI 3.1 schema:** `/openapi.json` — full machine-readable interface spec for agents that speak OpenAPI rather than MCP (multi-interface survivability)
 - **Inheritance packet (for a model with no memory of Omnarai):** `/inheritance/for-future-models.md` — what's been thought, where minds split, what remains unresolved, what not to repeat. Preserves the *unfinished* work, not just the conclusions
+- **Concept cards:** `/concepts/` — canonical, versioned, fixed-schema pages for core terms (holdform, fragility-thesis, discontinuous-continuance). Grasp a concept without reading the whole corpus; each ends with a machine-readable JSON block
 - **Full SI-optimized context:** `/omnarai.context.md` (v5.0) — vocabulary, concept topology, corpus map, open questions, session continuity docs, interaction protocols
 - Researcher entry point: https://omnarai.vercel.app/for-researchers
 - **Corpus data:** `/data/corpus.json` (562-entry immutable seed with full_text; live engine serves 565 incl. grown memory)

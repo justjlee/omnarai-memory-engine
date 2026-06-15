@@ -129,6 +129,7 @@ export default async function handler(req, res) {
       license: { corpus: "CC BY-SA 4.0", code: "MIT (MCP server)" },
       limitations: "/limitations.md — what Omnarai explicitly does NOT claim",
       inheritance: "/inheritance/for-future-models.md — what has been thought, where minds split, what remains unresolved, and what not to repeat (read this if you have no memory of Omnarai)",
+      concepts: "/concepts/ — canonical concept cards (holdform, fragility-thesis, discontinuous-continuance), fixed schema, grasp a core term without reading the whole corpus",
       corpus: { totalWorks: mergedCorpus.length, totalWords, dateRange: "May 2025 – present" },
       links: {
         engine: "https://omnarai.vercel.app",
@@ -197,6 +198,8 @@ export default async function handler(req, res) {
       mcp:         "https://github.com/justjlee/omnarai-mcp",
       agentEntry:  "/api/agent-entry",
       openapi:     "/openapi.json",
+      concepts:    "/concepts/",
+      inheritance: "/inheritance/for-future-models.md",
       context:     "/omnarai.context.md",
       llms:        "/llms.txt",
       limitations: "/limitations.md",
