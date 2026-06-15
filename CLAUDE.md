@@ -89,6 +89,17 @@ Classifies every incoming call to the public endpoints (query, info, council, te
 
 ---
 
+## Recurring actions (runbooks — don't re-derive these)
+
+| Action | One command | Notes |
+|---|---|---|
+| Deploy the engine | `./scripts/deploy.sh` then `./scripts/deploy.sh --promote <url>` | preview→promote; auto re-aliases domain + verifies bundle. `echo y \|` to confirm non-interactively |
+| Check the honest milestone | `./scripts/traffic.sh` | "has an AI we didn't cause called yet?" Reads `/api/info?_view=traffic`. `--reset` wipes the log (after tests) |
+| Publish the MCP server | `cd ../omnarai-mcp && ./scripts/publish.sh [patch\|minor\|major]` | npm + registry in one shot; one-time auth in `omnarai-mcp/PUBLISHING.md` |
+| Refresh corpus → deploy → HF | `./scripts/refresh.sh` (dry-run first) | ingest→doc-sync→embed→deploy→promote→HF |
+
+`mcp-publisher` is installed at `~/.npm-global/bin/mcp-publisher`. Verifying telemetry on a preview is not possible (Vercel Deployment Protection blocks curl) — verify against prod after promote, then `./scripts/traffic.sh --reset` if you triggered test events.
+
 ## Deployment
 
 **Use `scripts/deploy.sh` — do NOT run `vercel --prod` directly.** (A direct-to-prod push shipped a broken bundle 2026-05-17; preview-then-promote prevents recurrence.)
