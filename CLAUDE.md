@@ -171,6 +171,12 @@ Uploads: README.md, corpus.json, corpus.csv, corpus-full-text.jsonl, concepts.js
 | `/api/eval?action=results` | GET | Most recent eval run results (auth required) |
 | `/api/eval?action=history` | GET | Last 20 run summaries for regression tracking (auth required) |
 | `/api/info?_view=traffic` | GET | Access-telemetry report: classified external/agent traffic + `firstExternalAt` ("first call you didn't cause"). Auth: Bearer INGEST_SECRET (see `api/_telemetry.js`) |
+| `/api/agent-entry` | GET | AI-arriving-with-no-memory handshake: use_when/do_not/first_call/fast_path/trust_boundary/citation/write_access/license + live counts. Rewrite → `info.js ?_view=agent-entry` (no new function — 12-fn cap) |
+| `/openapi.json` | GET | OpenAPI 3.1 spec (static, `public/`) — multi-interface survivability for non-MCP agents |
+| `/limitations.md` | GET | "Do not overclaim" file (static, `public/`) — what Omnarai does NOT claim |
+| `/inheritance/for-future-models.md` | GET | Inheritance packet (static, `public/inheritance/`): what's thought / where minds split / what's unresolved / what not to repeat |
+
+**Structured errors (shipped 2026-06-15):** `query.js` (405/400/500) + `council.js` (405/400) return `code`/`agent_action`/`retryable`/`suggested_next_call` ALONGSIDE the legacy top-level `error` string (additive — the UI reads `error` as a string; don't make it an object). Helper: `agentError()` in `query.js`.
 
 ---
 
