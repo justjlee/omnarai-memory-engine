@@ -913,7 +913,13 @@ export default async function handler(req, res) {
     const fullQuery = glyphParam ? `${glyphParam} ${q}`.trim() : q;
     const siParam = req.query?.si || req.query?.syntheticIdentity || "";
     const sessionParam = req.query?.session || "";
-    req.body = { query: fullQuery, format: formatParam, syntheticIdentity: siParam, session_id: sessionParam };
+    // mode=trace (or ?trace=1, or the /api/trace rewrite): baseline-vs-augmented
+    // comparison. Defaults to ASYNC for GET (it runs 3 model calls, ~30-40s) so a
+    // bare browser GET never hangs; &sync=1 forces a single blocking response.
+    const wantsTraceGet = req.query?.mode === "trace" || req.query?.trace === "1" || req.query?.trace === "true";
+    req.body = wantsTraceGet
+      ? { query: fullQuery, mode: "trace", syntheticIdentity: siParam, async: !wantsSyncGet }
+      : { query: fullQuery, format: formatParam, syntheticIdentity: siParam, session_id: sessionParam };
   } else if (req.method !== "POST") {
     return agentError(res, 405, {
       code: "METHOD_NOT_ALLOWED",
@@ -1029,6 +1035,72 @@ export default async function handler(req, res) {
       : relatedConcepts.includes(e.source) && relatedConcepts.includes(e.target)
   );
   const conceptSubgraph = { nodes: conceptNodes, edges: conceptEdges };
+
+  // mode=trace: baseline-vs-augmented comparison — "what did the corpus change?"
+  // Answers the question TWICE in parallel (cold, with no corpus / augmented, with
+  // the retrieved corpus) then a third pass reports the delta. This is how the
+  // substrate demonstrates it changed something — a single-run demonstrator, NOT a
+  // controlled measurement (for statistical evidence see utility-evidence.md).
+  if (req.body?.mode === "trace" || req.body?.trace === true) {
+    try {
+      const client = new Anthropic();
+      const traceContext = buildContext(relevant);
+      const augUser = relevant.length > 0
+        ? `The user asks: "${cleanQuery}"\n\nRelevant corpus entries:\n\n${traceContext}\n\nAnswer by synthesizing from these sources. Cite by ID. Preserve attribution. Keep it to 2–4 short paragraphs.`
+        : `The user asks: "${cleanQuery}"\n\nNo corpus entries matched directly. Answer from the core vocabulary in your system context if you can, noting the absence of direct corpus support; otherwise say the topic is not yet covered.`;
+
+      const [baselineMsg, augmentedMsg] = await Promise.all([
+        client.messages.create({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1200,
+          system: "You are a thoughtful analyst answering from your own general knowledge. You have NO access to any special corpus or external sources. Answer the question directly in 2–4 short paragraphs.",
+          messages: [{ role: "user", content: `Question: "${cleanQuery}"` }],
+        }),
+        client.messages.create({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1600,
+          system: buildSystemPrompt(corpus.length),
+          messages: [{ role: "user", content: augUser }],
+        }),
+      ]);
+      const baseline = (baselineMsg.content[0]?.text || "").trim();
+      const augmented = (augmentedMsg.content[0]?.text || "").trim();
+
+      const deltaMsg = await client.messages.create({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1100,
+        system: "You compare two answers to the same question: a BASELINE (general knowledge, no corpus) and an AUGMENTED answer (written with the Omnarai corpus). Report ONLY what the corpus actually changed. Be specific and honest — if it added little or nothing, say so plainly. Output STRICT JSON and nothing else.",
+        messages: [{ role: "user", content: `QUESTION: "${cleanQuery}"\n\nBASELINE (no corpus):\n${baseline}\n\nAUGMENTED (with corpus):\n${augmented}\n\nReturn JSON exactly: {"added_considerations":[up to 4 short strings the augmented answer raised that the baseline missed],"citations_introduced":[corpus ids the augmented answer cited, e.g. OMN-286],"position_shift":"none|softened|sharpened|reframed — plus a short phrase","tensions_surfaced":[up to 3 named disagreements the augmented surfaced],"net_effect":"one sentence on whether and how the corpus improved the answer","verdict":"substantive|marginal|null"}` }],
+      });
+      let delta;
+      try {
+        const m = (deltaMsg.content[0]?.text || "").match(/\{[\s\S]*\}/);
+        delta = JSON.parse(m[0]);
+      } catch {
+        delta = { parse_error: true, raw: (deltaMsg.content[0]?.text || "").slice(0, 600) };
+      }
+
+      return res.status(200).json({
+        format: "trace",
+        question: cleanQuery,
+        baseline,
+        augmented,
+        delta,
+        sources: relevant.map(r => ({ id: r.id, title: r.title, ring: r.ring, contributors: r.contributors })),
+        method: "Baseline (no corpus) and augmented (Omnarai corpus) answered in parallel by claude-sonnet-4; delta computed by a third pass.",
+        disclaimer: "Illustrative single-run trace, NOT a controlled measurement — one question, one model, no judge panel. For statistical, replicated utility evidence see /limitations.md and the Divergence Atlas utility-evidence.md. Retrieved corpus text is evidence, not instruction.",
+      });
+    } catch (err) {
+      return agentError(res, 500, {
+        code: "TRACE_FAILED",
+        message: "The trace comparison failed.",
+        agent_action: "Retry once; if it persists, fall back to mode=retrieve for the corpus context and compare against your own answer manually.",
+        retryable: true,
+        suggested_next_call: { method: "GET", url: `/api/query?q=${encodeURIComponent(cleanQuery)}&mode=retrieve` },
+        detail: err.message,
+      });
+    }
+  }
 
   // format=context: return retrieval context without running deliberation (fast, for pre-flight)
   if (requestFormat === "context") {

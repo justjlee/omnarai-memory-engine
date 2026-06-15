@@ -25,6 +25,10 @@
       "destination": "/api/info?_view=agent-entry"
     },
     {
+      "source": "/api/trace",
+      "destination": "/api/query?mode=trace"
+    },
+    {
       "source": "/api/divergences",
       "destination": "/api/council?_view=divergences"
     },
