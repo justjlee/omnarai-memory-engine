@@ -15,7 +15,13 @@ import { recordAccess } from "./_telemetry.js";
 // never mutate the immutable council records or the grown-memory substrate; an
 // approved one is surfaced ALONGSIDE the record it answers. Folded into this
 // function (12-function Hobby cap) and reached via /api/contribute + /api/contributions.
-const CONTRIB_PREFIX = "contributions/";
+// ONE consolidated blob, not N per-contribution blobs. Per-file overwrite of a
+// Vercel Blob pathname is NOT reliably reflected on read (a status flip from
+// approved→rejected was silently lost in testing) — the same read-after-write
+// hazard _grown.js documents. A single cache-busted read-modify-write is the
+// proven-safe pattern here; contributions are low-frequency (visitor submit +
+// curator review), so one object is fine.
+const CONTRIB_KEY = "memory/contributions.json";
 const MAX_CONTRIB_CHARS = 8000;
 
 function curatorAuthed(req) {
@@ -28,16 +34,24 @@ async function findDivergenceRecord(id) {
   return (grown.entries || []).find((e) => e.id === id && e.type === "divergence" && e.divergence) || null;
 }
 
-// Read every contribution blob in parallel (sequential reads of the whole queue
-// would risk the 60s wall as it grows). Returns parsed records, malformed skipped.
+// Load the consolidated contribution store. Never throws — empty on any failure.
+// Cache-bust the public Blob URL (CDN can serve a stale copy in the read-after-
+// write window) exactly as loadGrownMemory does.
 async function loadContributions() {
-  const { blobs } = await list({ prefix: CONTRIB_PREFIX });
-  const recs = await Promise.all(blobs.map((b) => fetch(`${b.url}?ts=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()).catch(() => null)));
-  return recs.filter(Boolean);
+  try {
+    const { blobs } = await list({ prefix: CONTRIB_KEY });
+    if (!blobs.length) return [];
+    const res = await fetch(`${blobs[0].url}?ts=${Date.now()}`, { cache: "no-store" });
+    if (!res.ok) return [];
+    const d = await res.json();
+    return Array.isArray(d.entries) ? d.entries : [];
+  } catch {
+    return [];
+  }
 }
 
-async function saveContribution(c) {
-  await put(CONTRIB_PREFIX + c.id + ".json", JSON.stringify(c, null, 2), {
+async function saveContributions(entries) {
+  await put(CONTRIB_KEY, JSON.stringify({ version: 1, updatedAt: new Date().toISOString(), entries }), {
     access: "public",
     addRandomSuffix: false,
     contentType: "application/json",
@@ -112,7 +126,9 @@ async function submitContribution(req, res) {
     country: req.headers["x-vercel-ip-country"] || null,
   };
   try {
-    await saveContribution(contribution);
+    const entries = await loadContributions();
+    entries.push(contribution);
+    await saveContributions(entries);
   } catch (err) {
     return res.status(500).json({ error: "Could not store contribution", detail: String(err.message || err) });
   }
@@ -150,15 +166,15 @@ async function reviewContribution(req, res, action) {
   if (!curatorAuthed(req)) return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
   const id = (req.body?.id || req.body?.contribId || "").toString().trim();
   if (!id) return res.status(400).json({ error: "Missing contribution id" });
-  const all = await loadContributions();
-  const c = all.find((x) => x.id === id);
+  const entries = await loadContributions();
+  const c = entries.find((x) => x.id === id);
   if (!c) return res.status(404).json({ error: `No contribution ${id}` });
 
   c.status = action === "contribute-approve" ? "approved" : "rejected";
   c[action === "contribute-approve" ? "approvedAt" : "rejectedAt"] = new Date().toISOString();
   if (req.body?.note) c.curatorNote = String(req.body.note).slice(0, 500);
   try {
-    await saveContribution(c);
+    await saveContributions(entries);
   } catch (err) {
     return res.status(500).json({ error: "Could not update contribution", detail: String(err.message || err) });
   }
