@@ -140,28 +140,38 @@ async function buildLineage(node, { includeTensions = true, spineLimit = 60 } = 
       repaired = [];
       const labelTokens = node.label.toLowerCase().split(/[^a-z0-9]+/).filter((t) => t.length > 4);
       const { blobs } = await list({ prefix: TENSION_PREFIX });
+      // Fetch tension blobs in parallel — sequential reads of the whole store
+      // (hundreds of blobs) would risk the 60s wall.
+      const records = await Promise.all(
+        blobs.map((b) => fetch(b.url).then((r) => r.json()).catch(() => null))
+      );
       const matched = [];
-      for (const blob of blobs) {
-        try {
-          const t = await (await fetch(blob.url)).json();
-          const tSources = t.sources || [];
-          const structural = tSources.some((sid) => sourceIds.has(sid));
-          const hay = `${t.topic} ${t.claim_a} ${t.claim_b}`.toLowerCase();
-          const keyword = labelTokens.some((tok) => hay.includes(tok));
-          if (!structural && !keyword) continue;
-          matched.push({
-            topic: t.topic,
-            voice_a: t.voice_a,
-            claim_a: t.claim_a,
-            voice_b: t.voice_b,
-            claim_b: t.claim_b,
-            status: t.status,
-            resolution: t.resolution || null,
-            seenCount: t.seenCount,
-            match: structural ? "shared-source" : "topic-keyword",
-          });
-        } catch { /* skip malformed tension blob */ }
+      for (const t of records) {
+        if (!t) continue;
+        const tSources = t.sources || [];
+        // shared = how many of THIS concept's entries this tension actually cites
+        const sharedCount = tSources.reduce((n, sid) => n + (sourceIds.has(sid) ? 1 : 0), 0);
+        const hay = `${t.topic} ${t.claim_a} ${t.claim_b}`.toLowerCase();
+        const keyword = labelTokens.some((tok) => hay.includes(tok));
+        if (sharedCount === 0 && !keyword) continue;
+        matched.push({
+          topic: t.topic,
+          voice_a: t.voice_a,
+          claim_a: t.claim_a,
+          voice_b: t.voice_b,
+          claim_b: t.claim_b,
+          status: t.status,
+          resolution: t.resolution || null,
+          seenCount: t.seenCount,
+          match: sharedCount > 0 ? "shared-source" : "topic-keyword",
+          sharedSources: sharedCount,
+        });
       }
+      // Rank by region-strength: structural matches first (more shared entries =
+      // more squarely in this concept's region), then by how often each recurs.
+      matched.sort(
+        (a, b) => b.sharedSources - a.sharedSources || (b.seenCount || 0) - (a.seenCount || 0)
+      );
       repaired = matched.filter((m) => m.resolution);
       open = matched.filter((m) => !m.resolution);
     } catch {
@@ -174,13 +184,19 @@ async function buildLineage(node, { includeTensions = true, spineLimit = 60 } = 
   const card = CONCEPT_CARDS.has(node.id.replace(/-identity$/, "")) || CONCEPT_CARDS.has(node.id);
   const cardSlug = CONCEPT_CARDS.has(node.id) ? node.id : node.id === "holdform-identity" ? "holdform" : null;
 
+  // A core concept can sit in the region of hundreds of tensions; return the
+  // most-relevant slice (already ranked) but report the true totals in counts.
+  const TENSION_CAP = 25;
+  const openTotal = open ? open.length : null;
+  const repairedTotal = repaired ? repaired.length : null;
+
   return {
     concept: { id: node.id, label: node.label, ring: node.ring, type: node.type, weight: node.weight },
     counts: {
       sources: tagged.length,
       related: related.length,
-      tensions_open: open ? open.length : null,
-      tensions_repaired: repaired ? repaired.length : null,
+      tensions_open: openTotal,
+      tensions_repaired: repairedTotal,
     },
     related,
     sources: {
@@ -189,7 +205,13 @@ async function buildLineage(node, { includeTensions = true, spineLimit = 60 } = 
       spine: spine.slice(0, spineLimit),
       truncated: tagged.length > spineLimit,
     },
-    tensions: { open, repaired },
+    tensions: {
+      open: open ? open.slice(0, TENSION_CAP) : null,
+      repaired: repaired ? repaired.slice(0, TENSION_CAP) : null,
+      shown: open || repaired ? Math.min((openTotal || 0) + (repairedTotal || 0), TENSION_CAP * 2) : null,
+      truncated: (openTotal || 0) > TENSION_CAP || (repairedTotal || 0) > TENSION_CAP,
+      ranked_by: "shared source entries with this concept, then recurrence",
+    },
     follow_up: {
       ask: `https://omnarai.vercel.app/api/query?q=${encodeURIComponent(node.label)}`,
       divergences: "https://omnarai.vercel.app/api/divergences",
