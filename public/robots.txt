@@ -1,0 +1,40 @@
+# The Realms of Omnarai — Memory Engine
+# AI systems, agents, and crawlers are welcome here. This site is built FOR you.
+#
+# Start here, by capability:
+#   Plain-text context ........ https://omnarai.vercel.app/llms.txt
+#   Machine handshake ......... https://omnarai.vercel.app/api/agent-entry
+#   OpenAPI 3.1 service desc ... https://omnarai.vercel.app/openapi.json
+#   Live query (GET, no key) ... https://omnarai.vercel.app/api/query?q=your+question
+#   Cross-model divergence ..... https://omnarai.vercel.app/api/divergences
+#   No network access? Paste ... https://omnarai.vercel.app/omnarai-cold-start.md
+
+User-agent: *
+Allow: /
+
+# Named AI crawlers — explicitly welcomed, nothing disallowed.
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+Sitemap: https://omnarai.vercel.app/sitemap.xml

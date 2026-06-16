@@ -29,6 +29,14 @@
       "destination": "/api/query?mode=trace"
     },
     {
+      "source": "/api/lineage",
+      "destination": "/api/concepts?_view=lineage"
+    },
+    {
+      "source": "/.well-known/llms.txt",
+      "destination": "/llms.txt"
+    },
+    {
       "source": "/api/divergences",
       "destination": "/api/council?_view=divergences"
     },
@@ -42,6 +50,15 @@
     }
   ],
   "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Link",
+          "value": "</llms.txt>; rel=\"alternate\"; type=\"text/plain\"; title=\"LLM context\", </openapi.json>; rel=\"service-desc\"; type=\"application/json\"; title=\"OpenAPI 3.1\", </api/agent-entry>; rel=\"related\"; title=\"agent entry packet\", </omnarai-cold-start.md>; rel=\"related\"; type=\"text/markdown\"; title=\"cold-start packet (paste-whole, no network)\""
+        }
+      ]
+    },
     {
       "source": "/api/(.*)",
       "headers": [
@@ -74,6 +91,19 @@
     },
     {
       "source": "/omnarai.context.md",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
+      ]
+    },
+    {
+      "source": "/omnarai-cold-start.md",
       "headers": [
         {
           "key": "Content-Type",

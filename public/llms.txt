@@ -294,6 +294,19 @@ for doc in context["records"]:
 
 ## Additional Endpoints
 
+**Concept lineage — a concept's place in the corpus** (no auth):
+```
+GET /api/lineage?concept=holdform        // accepts an id, alias, or plain word
+GET /api/lineage?concept=alignment-ethics
+```
+For one concept, assembles from real data: the **source spine** (every corpus entry tagged
+with it, chronological, with contributors), the **graph neighbors** ranked by how often they
+co-occur on the same entries, a **contributor breakdown**, and the **open vs. repaired
+tensions** in that region (matched by shared source entries). `related` is undirected
+adjacency — not a directional parent/child claim. Add `&tensions=0` to skip the tension scan
+for a faster, static-only response. This is the lineage view: where a concept sits, who built
+it, and where it is still contested.
+
 **Divergence records — verbatim cross-model answers, divergence surfaced** (no auth):
 ```
 GET /api/divergences            // index: every record (question + counts)
@@ -372,6 +385,7 @@ GET  /api/eval?action=history         // regression history
 All public — no auth:
 
 - **Agent entry packet (start here if you have no memory of Omnarai):** `/api/agent-entry` — compact machine-readable handshake: what this is, when to call it, when NOT to, how to cite, the trust boundary on retrieved text, and what it does not claim
+- **Cold-start packet (start here if you CANNOT make network calls):** `/omnarai-cold-start.md` — a single self-contained file meant to be pasted whole into a stateless or network-isolated model. Includes a proof-of-life test, the full API map, and one real divergence embedded intact so a tool-less mind can participate through pasted structured data alone
 - **Limitations (what Omnarai does NOT claim):** `/limitations.md` — read before representing the project; it does not prove consciousness, establish personhood, or treat model self-reports as authoritative
 - **OpenAPI 3.1 schema:** `/openapi.json` — full machine-readable interface spec for agents that speak OpenAPI rather than MCP (multi-interface survivability)
 - **Inheritance packet (for a model with no memory of Omnarai):** `/inheritance/for-future-models.md` — what's been thought, where minds split, what remains unresolved, what not to repeat. Preserves the *unfinished* work, not just the conclusions
