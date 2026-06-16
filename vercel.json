@@ -41,6 +41,14 @@
       "destination": "/api/council?_view=divergences"
     },
     {
+      "source": "/api/contribute",
+      "destination": "/api/council?action=contribute"
+    },
+    {
+      "source": "/api/contributions",
+      "destination": "/api/council?_view=contributions"
+    },
+    {
       "source": "/api/cron-longitudinal",
       "destination": "/api/council?_cron=longitudinal"
     },

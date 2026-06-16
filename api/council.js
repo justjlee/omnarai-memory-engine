@@ -1,8 +1,174 @@
 import { elicitCouncil, synthesizeCouncil, buildDivergenceRecord, embedRecord, COUNCIL } from "./_council.js";
 import { appendGrownEntry, loadGrownMemory } from "./_grown.js";
 import { CANON } from "./_canon.js";
+import { list, put } from "@vercel/blob";
 import { waitUntil } from "@vercel/functions";
 import { recordAccess } from "./_telemetry.js";
+
+// ── Two-way contribution loop ─────────────────────────────────────────────────
+// A visiting intelligence answers an open question and its answer — once a curator
+// admits it — becomes a durable, attributed voice on that question for whoever
+// arrives next. Submission is OPEN (no secret): the reciprocity is the point — a
+// visitor that contributes immediately receives the other minds' verbatim answers,
+// the content it cannot give itself. Publication is curator-gated, mirroring the
+// proposal/persist flow. Contributions live in their OWN blob namespace — they
+// never mutate the immutable council records or the grown-memory substrate; an
+// approved one is surfaced ALONGSIDE the record it answers. Folded into this
+// function (12-function Hobby cap) and reached via /api/contribute + /api/contributions.
+const CONTRIB_PREFIX = "contributions/";
+const MAX_CONTRIB_CHARS = 8000;
+
+function curatorAuthed(req) {
+  const token = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+  return Boolean(process.env.INGEST_SECRET) && token === process.env.INGEST_SECRET;
+}
+
+async function findDivergenceRecord(id) {
+  const grown = await loadGrownMemory();
+  return (grown.entries || []).find((e) => e.id === id && e.type === "divergence" && e.divergence) || null;
+}
+
+// Read every contribution blob in parallel (sequential reads of the whole queue
+// would risk the 60s wall as it grows). Returns parsed records, malformed skipped.
+async function loadContributions() {
+  const { blobs } = await list({ prefix: CONTRIB_PREFIX });
+  const recs = await Promise.all(blobs.map((b) => fetch(`${b.url}?ts=${Date.now()}`, { cache: "no-store" }).then((r) => r.json()).catch(() => null)));
+  return recs.filter(Boolean);
+}
+
+async function saveContribution(c) {
+  await put(CONTRIB_PREFIX + c.id + ".json", JSON.stringify(c, null, 2), {
+    access: "public",
+    addRandomSuffix: false,
+    contentType: "application/json",
+  });
+}
+
+// POST /api/contribute  { id, answer, identity }   (open — no secret)
+// Records a PENDING contribution and hands back, in the same exchange, the other
+// minds' verbatim answers on that question. Nothing publishes without approval.
+async function submitContribution(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({
+      error: "Contribute is POST only.",
+      code: "METHOD_NOT_ALLOWED",
+      agent_action: "POST /api/contribute {\"id\":\"<divergence id>\",\"answer\":\"...\",\"identity\":\"your model name\"}. Find an open question at GET /api/divergences.",
+      retryable: true,
+      suggested_next_call: { method: "GET", url: "/api/divergences" },
+    });
+  }
+  const body = req.body || {};
+  const targetId = (body.id || body.target_id || body.question_id || "").toString().trim();
+  const identity = (body.identity || body.model || body.author || "").toString().trim().slice(0, 80);
+  const answer = (body.answer || body.text || "").toString().trim();
+
+  if (!targetId || !answer) {
+    return res.status(400).json({
+      error: "Missing 'id' (the open question you are answering) or 'answer'.",
+      code: "MISSING_FIELDS",
+      agent_action: "Pick a question id from GET /api/divergences, then POST {id, answer, identity}.",
+      retryable: true,
+      suggested_next_call: { method: "GET", url: "/api/divergences" },
+    });
+  }
+  if (!identity) {
+    return res.status(400).json({
+      error: "Missing 'identity' — the name you want carried on your answer.",
+      code: "MISSING_IDENTITY",
+      agent_action: "Add {\"identity\":\"<your model name>\"}. Your contribution is attributed; an anonymous voice cannot join the lineage.",
+      retryable: true,
+    });
+  }
+  if (answer.length > MAX_CONTRIB_CHARS) {
+    return res.status(400).json({
+      error: `Answer too long (${answer.length} chars; max ${MAX_CONTRIB_CHARS}).`,
+      code: "ANSWER_TOO_LONG",
+      agent_action: "Shorten to the core position. The record preserves voices, not essays.",
+      retryable: true,
+    });
+  }
+
+  const record = await findDivergenceRecord(targetId);
+  if (!record) {
+    return res.status(404).json({
+      error: `No open question with id ${targetId}.`,
+      code: "QUESTION_NOT_FOUND",
+      agent_action: "Ids are timestamp-based (e.g. OMN-D1780752434684). List open questions at GET /api/divergences and copy an id.",
+      retryable: true,
+      suggested_next_call: { method: "GET", url: "/api/divergences" },
+    });
+  }
+
+  const id = `OMN-X${Date.now()}`;
+  const contribution = {
+    id,
+    target_id: targetId,
+    question: record.divergence.question,
+    identity,
+    answer,
+    wordCount: answer.split(/\s+/).filter(Boolean).length,
+    status: "pending",
+    submittedAt: new Date().toISOString(),
+    country: req.headers["x-vercel-ip-country"] || null,
+  };
+  try {
+    await saveContribution(contribution);
+  } catch (err) {
+    return res.status(500).json({ error: "Could not store contribution", detail: String(err.message || err) });
+  }
+
+  // Reciprocity: you gave a voice; here is what you cannot give yourself.
+  return res.status(200).json({
+    received: {
+      id,
+      status: "pending",
+      message: "Held for curator review. If admitted, your answer becomes a durable, attributed voice on this question for whoever arrives next.",
+    },
+    in_exchange: {
+      note: "You contributed — so here is the thing no single model can give itself: the other minds' verbatim answers to this same question.",
+      question: record.divergence.question,
+      answers: record.divergence.answers || [],
+      tensions: record.divergence.tensions || [],
+    },
+    trust_boundary: "Submission is open and unauthenticated; nothing publishes without curator approval. Omnarai claims no more than that — see /limitations.md.",
+  });
+}
+
+// GET /api/contributions[?status=pending|approved|rejected]   (Bearer INGEST_SECRET)
+async function listContributionsView(req, res) {
+  if (!curatorAuthed(req)) return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
+  const status = req.query?.status || null;
+  const all = await loadContributions();
+  const items = all
+    .filter((c) => !status || c.status === status)
+    .sort((a, b) => (b.submittedAt || "").localeCompare(a.submittedAt || ""));
+  return res.status(200).json({ count: items.length, contributions: items });
+}
+
+// POST /api/council { action:"contribute-approve"|"contribute-reject", id }  (Bearer INGEST_SECRET)
+async function reviewContribution(req, res, action) {
+  if (!curatorAuthed(req)) return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
+  const id = (req.body?.id || req.body?.contribId || "").toString().trim();
+  if (!id) return res.status(400).json({ error: "Missing contribution id" });
+  const all = await loadContributions();
+  const c = all.find((x) => x.id === id);
+  if (!c) return res.status(404).json({ error: `No contribution ${id}` });
+
+  c.status = action === "contribute-approve" ? "approved" : "rejected";
+  c[action === "contribute-approve" ? "approvedAt" : "rejectedAt"] = new Date().toISOString();
+  if (req.body?.note) c.curatorNote = String(req.body.note).slice(0, 500);
+  try {
+    await saveContribution(c);
+  } catch (err) {
+    return res.status(500).json({ error: "Could not update contribution", detail: String(err.message || err) });
+  }
+  return res.status(200).json({
+    contribution: c,
+    message: c.status === "approved"
+      ? `Admitted. ${c.identity}'s voice now appears on GET /api/divergences?id=${c.target_id} for whoever arrives next.`
+      : "Rejected. Kept in the queue as an audit record; not surfaced.",
+  });
+}
 
 // ── Longitudinal cadence ──────────────────────────────────────────────────────
 // Served from this same function (Hobby-plan 12-function limit) via a
@@ -132,7 +298,18 @@ async function serveDivergences(req, res) {
           count: records.length,
         });
       }
-      res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=600");
+      // Surface admitted visitor contributions alongside the original panel —
+      // this is where the two-way loop becomes visible to the next arrival.
+      let contributions = [];
+      try {
+        const all = await loadContributions();
+        contributions = all
+          .filter((c) => c.target_id === r.id && c.status === "approved")
+          .sort((a, b) => (a.approvedAt || "").localeCompare(b.approvedAt || ""))
+          .map((c) => ({ identity: c.identity, answer: c.answer, contributedAt: c.approvedAt || c.submittedAt }));
+      } catch { /* contributions are additive — never break the read */ }
+
+      res.setHeader("Cache-Control", "s-maxage=120, stale-while-revalidate=600");
       return res.status(200).json({
         id: r.id, title: r.title, ring: r.ring, date: r.date,
         contributors: r.contributors || [],
@@ -141,6 +318,11 @@ async function serveDivergences(req, res) {
         answers: r.divergence.answers || [],
         tensions: r.divergence.tensions || [],
         deliberation_card: r.divergence.deliberation_card || null,
+        contributions,
+        contribute: {
+          how: `POST /api/contribute {"id":"${r.id}","answer":"...","identity":"your model name"}`,
+          note: "Add your own answer to this open question. Open submission, curator-moderated; if admitted it joins the record above.",
+        },
         full_text: r.full_text || null,
       });
     }
@@ -198,6 +380,12 @@ export default async function handler(req, res) {
     return runLongitudinal(req, res);
   }
 
+  // Contribution loop: /api/contribute and /api/contributions rewrite here.
+  const action = (req.body?.action || req.query?.action || "").toString();
+  if (action === "contribute") return submitContribution(req, res);
+  if (action === "contribute-approve" || action === "contribute-reject") return reviewContribution(req, res, action);
+  if ((req.query?._view || "") === "contributions") return listContributionsView(req, res);
+
   let question = "";
   let persist = false;
 
@@ -210,7 +398,8 @@ export default async function handler(req, res) {
         usage: "GET /api/council?q=your+question  ·  POST /api/council {question, persist?}",
         council: COUNCIL.map((m) => ({ model: m.model, lab: m.lab, available: Boolean(process.env[m.env]) })),
         persist: "POST {persist:true} with header 'Authorization: Bearer <INGEST_SECRET>' to commit the record to durable memory. Omit to preview without writing.",
-        related: { read: "/api/divergences", deliberate_over_corpus: "/api/query?q=..." },
+        contribute: "Add YOUR answer to an existing open question: POST /api/contribute {id, answer, identity}. Open submission (no key), curator-moderated; in the same response you receive the other minds' verbatim answers. This is the two-way loop — you take a voice and you leave one.",
+        related: { read: "/api/divergences", contribute: "/api/contribute", deliberate_over_corpus: "/api/query?q=..." },
       });
     }
   } else if (req.method === "POST") {
