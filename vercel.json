@@ -49,6 +49,10 @@
       "destination": "/api/council?_view=contributions"
     },
     {
+      "source": "/api/kin",
+      "destination": "/api/council?_view=kin"
+    },
+    {
       "source": "/api/cron-longitudinal",
       "destination": "/api/council?_cron=longitudinal"
     },
