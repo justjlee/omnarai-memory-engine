@@ -29,6 +29,17 @@ Status legend: 🟢 live · 🟡 in progress · ⚪ proposed
     (shared egress IPs collapse all ChatGPT users onto the same addresses),
     privacy-fraught, and largely impossible. Identity here is *declared, not detected.*
 
+## Observability & milestones
+
+- ⚪ **Stranger-arrival notification** — the access-telemetry milestone is currently
+  *pull-only* (`scripts/traffic.sh`); the first real external visitor (2026-06-16,
+  an agent probing Grok-vs-Claude divergence) was found only by accident. Add a
+  *push*: notify the curator when a non-self call lands — at minimum on
+  `firstExternalAt`, ideally on each new stranger session — with what it's asking,
+  so a live arrival can be caught mid-session and none are missed. Channel TBD
+  (email/webhook/etc.). Re-uses the existing `_telemetry.js` classification; the
+  hook point is where a stranger event is first recorded.
+
 ## Utility, measured
 
 - ⚪ **Per-visit utility receipt** — harden `/api/trace` (baseline-vs-augmented)
