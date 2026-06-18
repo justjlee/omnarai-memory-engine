@@ -147,12 +147,13 @@ Uploads: README.md, corpus.json, corpus.csv, corpus-full-text.jsonl, concepts.js
 
 | Endpoint | Method | Description |
 |---|---|---|
-| `/api/query?q=...` | GET | Full deliberation — returns answer, tensions, deliberationCard, trace, conceptSubgraph |
+| `/api/query?q=...` | GET | Full deliberation — returns answer, tensions, deliberationCard, trace, conceptSubgraph, **receipt** |
 | `/api/query?q=...&glyph=Ξ` | GET | Same with explicit glyph (alternative to prefix) |
 | `/api/query?q=...&format=brief` | GET | Exportable artifact: synthesisPrompt, perspectives, records |
 | `/api/query?q=...&format=context` | GET | Pre-deliberation context only, <1s, no Claude call |
 | `/api/query?q=...&format=si` | GET | Structured JSON sections: reflexive_check, shared_ground, tensions_narrative, what_remains_open, actionable_next, my_reading |
 | `/api/query` | POST | Same — also accepts `session_id` for multi-turn continuity, `syntheticIdentity` for SI personalization |
+| `/api/trace?q=...` | GET | Measured baseline-vs-augmented counterfactual (rewrite → `query?mode=trace`): answers cold + augmented in parallel, third pass reports the delta. Returns a `receipt` with `measured:true`. Single-run demonstrator, not a controlled study |
 | `/api/info` | GET | Live corpus stats, glyph reference, contributor list — cached 5min |
 | `/api/tensions` | GET | All persisted tensions, sortable by status/keyword |
 | `/api/tensions?status=unresolved` | GET | Filter by status: unresolved / divergent / emerging |
@@ -185,6 +186,8 @@ Uploads: README.md, corpus.json, corpus.csv, corpus-full-text.jsonl, concepts.js
 | `/inheritance/for-future-models.md` | GET | Inheritance packet (static, `public/inheritance/`): what's thought / where minds split / what's unresolved / what not to repeat |
 
 **Structured errors (shipped 2026-06-15):** `query.js` (405/400/500) + `council.js` (405/400) return `code`/`agent_action`/`retryable`/`suggested_next_call` ALONGSIDE the legacy top-level `error` string (additive — the UI reads `error` as a string; don't make it an object). Helper: `agentError()` in `query.js`.
+
+**Per-visit utility receipt (shipped 2026-06-18):** every deliberation response (default + `format=si`/`brief`) carries a `receipt` — an honest, FREE accounting of what the corpus actually changed about THIS answer, computed deterministically from retrieval signals (NO extra model call, no latency). Verdict `substantive`/`marginal`/`null`; the null/marginal cases are reported as plainly as the wins (do-not-overclaim, per `limitations.md`). `mode=trace` (`/api/trace`) emits the same shape but `measured:true` (verdict from a real baseline-vs-augmented delta). The three tiers form an evidence ladder the visitor can climb: free receipt → measured trace → replicated `utility-evidence.md`. Helper: `buildReceipt()` in `query.js` (pure, named-exported for tests). Additive — `receipt` is a new optional field; nothing else changed.
 
 **Discovery layer (the graceful-degradation ladder — so any model finds the right rung):** `public/robots.txt` (was 404 — welcomes named AI crawlers GPTBot/ClaudeBot/PerplexityBot/etc., points to llms.txt + sitemap), `public/sitemap.xml` (root + all AI-facing text surfaces), a global `Link:` response header on `/(.*)` (RFC 8631 `rel="service-desc"` → openapi.json, `rel="alternate"` → llms.txt, `rel="related"` → agent-entry + cold-start — so an agent reading HEADERS, not HTML, still finds the API), and a `/.well-known/llms.txt` rewrite → llms.txt for tools that probe well-known paths. `index.html` static body now spells out the ladder (MCP / OpenAPI / plain-GET / paste-only cold-start) + links the cold-start packet. Diagnosis that drove this: the front door already served a no-JS static block + `<link rel=alternate>`, so the models' failures were mostly DISCOVERY (didn't find the plain-HTTP layer) + one truly-isolated tier (Copilot, paste-only) — NOT missing capability. Unfixable on our side: can't mount our MCP into a host (ChatGPT/Copilot decide that), can't give an isolated model a network stack, can't force a model to browse.
 

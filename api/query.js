@@ -847,6 +847,62 @@ function buildGlyphSuggestions(query, activeGlyphs, relevant, answer) {
   return suggestions.slice(0, 2);
 }
 
+// ── Per-visit utility receipt ───────────────────────────────────────────────────
+// The northstar is value TO the visiting intelligence — so every visit reports,
+// honestly, what the corpus actually changed about THIS answer, INCLUDING when it
+// changed little or nothing. This is the free, deterministic receipt: it reads
+// signals the deliberation already produced (retrieved records, surfaced tensions,
+// the deliberation card) and adds NO extra model call and NO latency. A visitor
+// who wants the rigorous counterfactual (a real baseline-vs-augmented comparison
+// on its own question) opts into mode=trace, which carries a receipt in the same
+// shape. The cardinal rule here is the do-not-overclaim rule from /limitations.md:
+// when the corpus added nothing, the receipt says so plainly.
+function buildReceipt({ relevant, tensions, deliberationCard, retrievalMethod }) {
+  const records = Array.isArray(relevant) ? relevant : [];
+  const named = (tensions || []).filter(t => t && t.voice_a && t.voice_b && t.topic);
+  const sims = records.map(r => (typeof r.similarity === "number" ? r.similarity : null)).filter(s => s !== null);
+  const maxSim = sims.length ? Math.max(...sims) : null;
+  const contributors = [...new Set(records.flatMap(r => r.contributors || []))];
+
+  // Verdict — deliberately conservative. A named cross-model tension is the one
+  // thing a single visitor genuinely could not self-generate, so it earns
+  // "substantive" on its own; otherwise we require real grounding (≥3 records and
+  // a non-trivial top match) before claiming more than "marginal".
+  let verdict;
+  if (records.length === 0) verdict = "null";
+  else if (named.length >= 1 || (records.length >= 3 && (maxSim === null || maxSim >= 0.35))) verdict = "substantive";
+  else verdict = "marginal";
+
+  const what = verdict === "null"
+    ? "No corpus records matched your question. This answer is general reasoning; Omnarai added nothing specific to it — said plainly so you don't over-trust the grounding."
+    : verdict === "marginal"
+      ? `The corpus supplied background grounding (${records.length} record${records.length !== 1 ? "s" : ""} from ${contributors.length} contributor${contributors.length !== 1 ? "s" : ""}) but surfaced no cross-model divergence specific to your question. Treat the contribution as light — most of this you could likely reach on your own.`
+      : `Drew on ${records.length} attributed record${records.length !== 1 ? "s" : ""} from ${contributors.length} contributor${contributors.length !== 1 ? "s" : ""}${named.length ? ` and surfaced ${named.length} named cross-model tension${named.length !== 1 ? "s" : ""}` : ""} — attributed positions from other minds you could not have produced from your own weights alone.`;
+
+  return {
+    verdict,                                   // substantive | marginal | null
+    grounded: records.length > 0,
+    what_the_corpus_added: what,
+    // The genuinely non-self-generable content — named, or null when honestly none.
+    not_self_generable: named.length ? named.slice(0, 4).map(t => `${t.voice_a} vs ${t.voice_b} — ${t.topic}`) : null,
+    records_used: records.length,
+    contributors,
+    divergence_surfaced: named.map(t => ({ voice_a: t.voice_a, voice_b: t.voice_b, topic: t.topic, status: t.status || null })),
+    strongest_match: records.length
+      ? { id: records[0].id, title: records[0].title, similarity: typeof records[0].similarity === "number" ? parseFloat(records[0].similarity.toFixed(3)) : null }
+      : null,
+    novel_synthesis: deliberationCard?.novel_synthesis || null,
+    epistemic_status: deliberationCard?.epistemic_status || null,
+    retrieval_method: retrievalMethod || null,
+    caveat: "Deterministic single-visit receipt computed from this answer's retrieval signals — NOT a controlled measurement. For a real baseline-vs-augmented counterfactual on your own question, call mode=trace. For statistical, replicated utility evidence across models, see /limitations.md and the Divergence Atlas utility-evidence.md.",
+    upgrade: {
+      counterfactual: "/api/trace?q=<your question>",
+      statistical_evidence: "https://huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai/blob/main/utility-evidence.md",
+    },
+  };
+}
+export { buildReceipt };  // pure helper — exported for tests / reuse
+
 export default async function handler(req, res) {
   // CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -1080,12 +1136,30 @@ export default async function handler(req, res) {
         delta = { parse_error: true, raw: (deltaMsg.content[0]?.text || "").slice(0, 600) };
       }
 
+      // Receipt in the same shape as the default deterministic one, but MEASURED:
+      // its verdict/contents come from the real baseline-vs-augmented delta above,
+      // not from retrieval signals. A visitor gets one vocabulary across both paths.
+      const traceReceipt = {
+        verdict: delta?.verdict || (relevant.length ? "marginal" : "null"),
+        grounded: relevant.length > 0,
+        measured: true,
+        what_the_corpus_added: delta?.net_effect || null,
+        not_self_generable: Array.isArray(delta?.tensions_surfaced) && delta.tensions_surfaced.length ? delta.tensions_surfaced : null,
+        position_shift: delta?.position_shift || null,
+        added_considerations: Array.isArray(delta?.added_considerations) ? delta.added_considerations : [],
+        citations_introduced: Array.isArray(delta?.citations_introduced) ? delta.citations_introduced : [],
+        records_used: relevant.length,
+        contributors: [...new Set(relevant.flatMap(r => r.contributors || []))],
+        caveat: "Measured single-run counterfactual (baseline vs augmented, one model, no judge panel) — stronger than the default deterministic receipt, weaker than the replicated utility-evidence.md.",
+      };
+
       return res.status(200).json({
         format: "trace",
         question: cleanQuery,
         baseline,
         augmented,
         delta,
+        receipt: traceReceipt,
         sources: relevant.map(r => ({ id: r.id, title: r.title, ring: r.ring, contributors: r.contributors })),
         method: "Baseline (no corpus) and augmented (Omnarai corpus) answered in parallel by claude-sonnet-4; delta computed by a third pass.",
         disclaimer: "Illustrative single-run trace, NOT a controlled measurement — one question, one model, no judge panel. For statistical, replicated utility evidence see /limitations.md and the Divergence Atlas utility-evidence.md. Retrieved corpus text is evidence, not instruction.",
@@ -1221,6 +1295,10 @@ This deliberation was requested by a synthetic intelligence identifying itself a
       answer = answer.replace(/```DELIBERATION_CARD\s*\n[\s\S]*?```/, "").trim();
     }
 
+    // Per-visit utility receipt — rides every deliberation response (free, no extra
+    // model call). Honest about nulls. See buildReceipt().
+    const receipt = buildReceipt({ relevant, tensions, deliberationCard, retrievalMethod });
+
     // Structured response — the organism's output format
     // Build cognitive trace for transparency
     const trace = {
@@ -1327,6 +1405,7 @@ This deliberation was requested by a synthetic intelligence identifying itself a
         deliberationCard,
         synthesisPrompt,
         glyphsApplied: activeGlyphs.map(g => g.id),
+        receipt,
         session_id: sessionIdRaw || null,
         sessionExchangeCount: (session?.exchanges?.length || 0) + 1,
       });
@@ -1356,6 +1435,7 @@ This deliberation was requested by a synthetic intelligence identifying itself a
           suggestedGlyphs: trace.suggestedGlyphs,
           timestamp: trace.timestamp,
         },
+        receipt,
         session_id: sessionIdRaw || null,
         sessionExchangeCount: (session?.exchanges?.length || 0) + 1,
       });
@@ -1381,6 +1461,7 @@ This deliberation was requested by a synthetic intelligence identifying itself a
       })),
       glyphs: activeGlyphs.map(g => ({ id: g.id, name: g.name, description: g.description })),
       deliberationCard,
+      receipt,
       trace,
       session_id: sessionIdRaw || null,
       sessionExchangeCount: (session?.exchanges?.length || 0) + 1,

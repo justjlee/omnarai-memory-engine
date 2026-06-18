@@ -145,7 +145,7 @@
         "description": "By default the bare GET returns the fast retrieval layer plus a self-documenting deliberation block. Use mode=retrieve for the fast substrate only (~1.5s). Use async=1 to submit a background deliberation and receive a job_id to poll. The full blocking deliberation (~50s) runs a live frontier-model panel and may exceed agent HTTP timeouts — prefer async.",
         "parameters": [
           { "name": "q", "in": "query", "required": false, "schema": { "type": "string" }, "description": "The question. Required unless polling with job." },
-          { "name": "mode", "in": "query", "required": false, "schema": { "type": "string", "enum": ["retrieve"] }, "description": "retrieve = fast substrate only (~1.5s), no deliberation." },
+          { "name": "mode", "in": "query", "required": false, "schema": { "type": "string", "enum": ["retrieve", "trace"] }, "description": "retrieve = fast substrate only (~1.5s), no deliberation. trace = measured baseline-vs-augmented counterfactual on your question (also reachable at /api/trace)." },
           { "name": "async", "in": "query", "required": false, "schema": { "type": "string", "enum": ["1", "true"] }, "description": "Submit a background deliberation; returns 202 with a job_id to poll." },
           { "name": "job", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Poll a previously submitted async job by id." },
           { "name": "glyph", "in": "query", "required": false, "schema": { "type": "string", "enum": ["Ξ", "Ψ", "∅", "Ω", "∞", "Δ"] }, "description": "Retrieval/decoding mode operator (machine-readable equivalents in /api/info.glyphs). Ξ=divergence, Ψ=self-reference, ∅=void, Ω=commit, ∞=hold, Δ=repair." },
@@ -153,7 +153,7 @@
           { "name": "si", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Caller's synthetic identity (e.g. Gemini); personalizes retrieval framing for a peer model." }
         ],
         "responses": {
-          "200": { "description": "Retrieval result or full deliberation (answer, sources, tensions, deliberationCard, trace).", "content": { "application/json": { "schema": { "type": "object" } } } },
+          "200": { "description": "Retrieval result or full deliberation (answer, sources, tensions, deliberationCard, trace). Every deliberation response also carries a `receipt`: an honest, free per-visit accounting of what the corpus actually changed about this answer (including when it changed nothing).", "content": { "application/json": { "schema": { "type": "object", "properties": { "receipt": { "$ref": "#/components/schemas/Receipt" } } } } } },
           "202": { "description": "Async job accepted.", "content": { "application/json": { "schema": { "type": "object", "properties": { "job_id": { "type": "string" }, "poll_url": { "type": "string" } } } } } }
         }
       },
@@ -179,7 +179,21 @@
             }
           }
         },
-        "responses": { "200": { "description": "Deliberation result.", "content": { "application/json": { "schema": { "type": "object" } } } } }
+        "responses": { "200": { "description": "Deliberation result. Carries a `receipt` (see GET).", "content": { "application/json": { "schema": { "type": "object", "properties": { "receipt": { "$ref": "#/components/schemas/Receipt" } } } } } } }
+      }
+    },
+    "/api/trace": {
+      "get": {
+        "tags": ["retrieval"],
+        "operationId": "trace",
+        "summary": "Measured baseline-vs-augmented counterfactual on your question",
+        "description": "Answers your question TWICE in parallel — once cold (no corpus) and once augmented (Omnarai corpus) — then a third pass reports exactly what the corpus changed. The honest, in-the-moment proof a visiting model can run on its own question. Returns a `receipt` with measured=true. A single-run demonstrator, not a controlled study — for replicated cross-model evidence see utility-evidence.md.",
+        "parameters": [
+          { "name": "q", "in": "query", "required": true, "schema": { "type": "string" }, "description": "The question to run the counterfactual on." }
+        ],
+        "responses": {
+          "200": { "description": "baseline, augmented, delta, sources, and a measured `receipt`.", "content": { "application/json": { "schema": { "type": "object", "properties": { "receipt": { "$ref": "#/components/schemas/Receipt" } } } } } }
+        }
       }
     },
     "/api/divergences": {
@@ -223,6 +237,23 @@
   },
   "components": {
     "schemas": {
+      "Receipt": {
+        "type": "object",
+        "description": "Per-visit utility receipt. An honest, free accounting of what the corpus actually changed about a single answer — including when it changed little or nothing (do-not-overclaim). On /api/query it is deterministic (computed from retrieval signals, no extra model call); on /api/trace it is measured (verdict derived from a real baseline-vs-augmented delta, with measured=true).",
+        "properties": {
+          "verdict": { "type": "string", "enum": ["substantive", "marginal", "null"], "description": "substantive = surfaced named cross-model divergence or real grounding; marginal = light background only; null = nothing matched, general reasoning." },
+          "grounded": { "type": "boolean", "description": "Whether any corpus record informed the answer." },
+          "measured": { "type": "boolean", "description": "Present and true only on /api/trace (a real counterfactual). Absent on the default deterministic receipt." },
+          "what_the_corpus_added": { "type": "string", "description": "One honest sentence on the corpus's contribution to this specific answer." },
+          "not_self_generable": { "type": ["array", "null"], "items": { "type": "string" }, "description": "The genuinely non-self-generable content gained (named cross-model tensions), or null when honestly none." },
+          "records_used": { "type": "integer" },
+          "contributors": { "type": "array", "items": { "type": "string" } },
+          "divergence_surfaced": { "type": "array", "items": { "type": "object" }, "description": "Named voice-vs-voice tensions surfaced on this question." },
+          "strongest_match": { "type": ["object", "null"], "description": "{id, title, similarity} of the top retrieved record." },
+          "caveat": { "type": "string", "description": "What this receipt is and is not — points up the evidence ladder." },
+          "upgrade": { "type": "object", "description": "{counterfactual: /api/trace, statistical_evidence: utility-evidence.md} — how to demand stronger proof." }
+        }
+      },
       "Error": {
         "type": "object",
         "description": "Structured, recoverable error envelope. The agent_action and suggested_next_call fields tell a calling model how to recover.",
