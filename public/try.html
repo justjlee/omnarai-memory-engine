@@ -230,10 +230,17 @@ const renderers = {
   query(d, p) {
     const ans = d.answer || d.myReading || d.my_reading || "";
     const tens = d.tensions || d.tensionsStructured || [];
+    const r = d.receipt;
+    const c = r ? ({ substantive: "#3fb950", marginal: "#d29922", "null": "#8b949e" }[r.verdict] || "#8b949e") : null;
     p.render.innerHTML =
       `<div>${esc(String(ans).slice(0, 600))}${String(ans).length > 600 ? "…" : ""}</div>` +
       (tens.length ? `<div class="k" style="margin-top:8px">tensions: ${tens.length}</div>` : "") +
-      (d.sources ? `<div class="k">sources: ${esc((d.sources||[]).join(", "))}</div>` : "");
+      (d.sources ? `<div class="k">sources: ${esc((d.sources||[]).join(", "))}</div>` : "") +
+      (r ? `<div style="margin-top:10px;padding:8px;border:1px solid ${c}33;border-radius:6px">`
+          + `<div class="k">receipt · <b style="color:${c}">${esc(r.verdict)}</b></div>`
+          + `<div style="margin-top:4px">${esc(r.what_the_corpus_added || "")}</div>`
+          + (Array.isArray(r.not_self_generable) && r.not_self_generable.length ? `<div class="k" style="margin-top:6px">not self-generable: ${esc(r.not_self_generable.join("; "))}</div>` : "")
+          + `</div>` : "");
   },
   trace(d, p) {
     const t = d.trace || d.delta || d;

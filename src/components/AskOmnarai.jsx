@@ -140,6 +140,32 @@ function ExportBar({ getMarkdown, filename, accent }) {
   );
 }
 
+// Per-visit utility receipt card — renders the engine's honest accounting of what
+// the corpus actually changed about this answer. The null/marginal verdicts are
+// shown as plainly as the wins (do-not-overclaim); not_self_generable is the
+// genuinely non-self-generable payload, so it leads when present.
+function ReceiptCard({ receipt: r }) {
+  const color = { substantive: "#3fb950", marginal: "#d29922", "null": "#8b949e" }[r.verdict] || "#8b949e";
+  return (
+    <div style={{ marginTop: 16, padding: "12px 14px", border: `1px solid ${color}33`, borderRadius: 8, background: "rgba(255,255,255,0.02)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5, color: "#8b949e" }}>
+        utility receipt
+        <span style={{ color, border: `1px solid ${color}55`, borderRadius: 4, padding: "1px 6px", fontWeight: 600 }}>{r.verdict}</span>
+      </div>
+      <div style={{ marginTop: 8, fontSize: 14, lineHeight: 1.5 }}>{r.what_the_corpus_added}</div>
+      {Array.isArray(r.not_self_generable) && r.not_self_generable.length > 0 && (
+        <div style={{ marginTop: 8 }}>
+          <div style={{ fontSize: 12, color: "#8b949e" }}>What you couldn't have produced alone:</div>
+          <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
+            {r.not_self_generable.map((t, i) => <li key={i} style={{ fontSize: 13 }}>{t}</li>)}
+          </ul>
+        </div>
+      )}
+      {r.caveat && <div style={{ marginTop: 8, fontSize: 11, color: "#6e7681", fontStyle: "italic" }}>{r.caveat}</div>}
+    </div>
+  );
+}
+
 export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQuery }) {
   const [query, setQuery] = useState(initialQuery || "");
 
@@ -156,6 +182,7 @@ export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQu
   const [useApi, setUseApi] = useState(true);
   const [activeGlyphs, setActiveGlyphs] = useState([]);
   const [trace, setTrace] = useState(null);
+  const [receipt, setReceipt] = useState(null);
   const [tensions, setTensions] = useState([]);
   // Live Frontier Council mode — routes the question to /api/council (verbatim
   // parallel elicitation across 5 frontier models) instead of the single-model
@@ -297,6 +324,7 @@ export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQu
         };
         setResponse(resp);
         setTrace(data.trace || null);
+        setReceipt(data.receipt || null);
         setTensions(data.tensions || []);
         setHistory(prev => [...prev, { query: q, response: resp, mode }]);
         if (onResponse) onResponse(resp);
@@ -344,6 +372,7 @@ export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQu
           };
           setResponse(resp);
           setTrace(data.trace || null);
+          setReceipt(data.receipt || null);
           setTensions(data.tensions || []);
           setHistory(prev => [...prev, { query: glyphPrefix + clean, response: resp, mode }]);
           if (onResponse) onResponse(resp);
@@ -713,6 +742,9 @@ export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQu
               ))}
             </div>
           )}
+
+          {/* Per-visit utility receipt — honest accounting of what the corpus changed */}
+          {receipt && <ReceiptCard receipt={receipt} />}
 
           {/* Cognitive Trace Panel */}
           <CognitiveTrace trace={trace} onGlyphSuggestion={handleGlyphSuggestion} />
