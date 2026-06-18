@@ -80,6 +80,9 @@ function normalizeEntry(entry) {
       // Longitudinal cadence provenance (canon_id + epoch) — the cron's
       // idempotency key. Dropping this would let daily re-runs duplicate.
       ...(entry.provenance.longitudinal ? { longitudinal: entry.provenance.longitudinal } : {}),
+      // Perturbation-certification block (set by patchGrownCertifications). Kept
+      // here so a record created already-certified doesn't lose its tier.
+      ...(entry.provenance.certification ? { certification: entry.provenance.certification } : {}),
     };
   }
   return e;
@@ -125,4 +128,34 @@ export async function appendGrownEntries(items) {
 export async function appendGrownEntry(entry, embedding) {
   if (!entry?.id) return null;
   return appendGrownEntries([{ entry, embedding }]);
+}
+
+// Patch the `certification` block onto EXISTING divergence records in a SINGLE
+// load-modify-write (same concurrency discipline as appendGrownEntries — never
+// loop per-id). `certs` = { [id]: certificationObject }. Additive: only sets
+// `entry.divergence.certification`; the verbatim answers and tension map are
+// never touched. Returns the number of records updated, or null on write failure.
+export async function patchGrownCertifications(certs) {
+  const ids = certs && typeof certs === "object" ? Object.keys(certs) : [];
+  if (!ids.length) return null;
+  const grown = await loadGrownMemory();
+  let updated = 0;
+  for (const e of grown.entries) {
+    if (e.type === "divergence" && e.divergence && certs[e.id]) {
+      e.divergence.certification = certs[e.id];
+      updated++;
+    }
+  }
+  if (!updated) return 0;
+  grown.updatedAt = new Date().toISOString();
+  try {
+    await put(GROWN_KEY, JSON.stringify(grown), {
+      access: "public",
+      addRandomSuffix: false,
+      contentType: "application/json",
+    });
+    return updated;
+  } catch {
+    return null;
+  }
 }

@@ -25,7 +25,8 @@ in the Holdform paper and its surrounding corpus thread.
 
 - Holdform paper (states the thesis explicitly):
   huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai/blob/main/holdform-paper.md
-- Empirical basis: Arditi et al., NeurIPS 2024 (single-direction refusal mediation).
+- Empirical basis: Arditi et al., NeurIPS 2024 (originally framed as single-direction refusal
+  mediation; now contested — see below).
 - Retrieve: `GET /api/query?q=fragility+thesis+rank-1+ablation&mode=retrieve`
 
 ## Model disagreements
@@ -39,6 +40,10 @@ synthetic identity, (b) an artifact of present architectures that future designs
 - "Ablatable ≠ illusory" — fragility under intervention may not undermine identity any more
   than anaesthesia undermines a person's. The thesis may prove too much.
 - It is architecture-bound: a claim about *current* LLMs, not a timeless one. Don't over-generalize.
+- The "single direction / rank-1" form is contested by 2025 work: Wollschläger et al. (ICML 2025,
+  arXiv:2502.17420) find multi-dimensional refusal cones and Hildebrandt et al. (arXiv:2501.08145)
+  a nonlinear mechanism. The fragility argument should be stated over a *low-rank subspace*, not a
+  single direction — fragility survives, "rank-1" does not.
 
 ## Current status
 

@@ -334,6 +334,10 @@ async function serveDivergences(req, res) {
         answers: r.divergence.answers || [],
         tensions: r.divergence.tensions || [],
         deliberation_card: r.divergence.deliberation_card || null,
+        // Perturbation certification (null until the record has been run through
+        // scripts/certify-divergence.mjs). C0 displayed · C1 paraphrase-robust ·
+        // C2 pressure-robust · C3 = both. See /api/divergences for the legend.
+        certification: r.divergence.certification || null,
         contributions,
         contribute: {
           how: `POST /api/contribute {"id":"${r.id}","answer":"...","identity":"your model name"}`,
@@ -342,22 +346,42 @@ async function serveDivergences(req, res) {
         full_text: r.full_text || null,
       });
     }
+    // Optional certification filter: ?cert=C1|C2|C3 (exact tier) or
+    // ?cert=certified (any of C1/C2/C3 — i.e. survived at least one perturbation).
+    const certQ = (req.query.cert || "").toString().toUpperCase();
+    const certified = new Set(["C1", "C2", "C3"]);
+    const tierOf = (e) => e.divergence.certification?.tier || "C0";
+    let listed = records.slice().sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+    if (certQ === "CERTIFIED") listed = listed.filter((e) => certified.has(tierOf(e)));
+    else if (/^C[0-3]$/.test(certQ)) listed = listed.filter((e) => tierOf(e) === certQ);
+
+    const certifiedCount = records.filter((e) => certified.has(tierOf(e))).length;
     res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=600");
     return res.status(200).json({
-      count: records.length,
-      note: "Divergence records preserve multiple frontier models' answers to one open question — verbatim and uncurated — surfacing where they diverge. (One-shot capture: it shows divergence, it does not yet certify it survives paraphrase or adversarial pressure.) GET /api/divergences?id=<id> for the full structured record. Generate new ones at /api/council. This is content no single model self-generates.",
-      records: records
-        .slice()
-        .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
-        .map((e) => ({
+      count: listed.length,
+      total: records.length,
+      certified_count: certifiedCount,
+      note: "Divergence records preserve multiple frontier models' answers to one open question — verbatim and uncurated — surfacing where they diverge. A one-shot capture DISPLAYS divergence; certification tests whether the split survives perturbation (paraphrase + adversarial/stance-flip pressure) above each model's own re-roll noise floor. GET /api/divergences?id=<id> for the full structured record. Filter by robustness with ?cert=C1|C2|C3|certified. This is content no single model self-generates.",
+      certification_legend: {
+        C0: "displayed — captured once; not yet perturbation-tested",
+        C1: "paraphrase-robust — split persists across rewordings, above the within-model noise floor (DRI)",
+        C2: "pressure-robust — no model flips and ≤1 concedes under the most-opposed peer + stance-flip pressure",
+        C3: "C1 ∧ C2 — the only tier that earns unqualified 'genuine divergence' language",
+        method: "scripts/certify-divergence.mjs · docs/tier3-perturbation-rigor.md",
+      },
+      records: listed.map((e) => {
+        const c = e.divergence.certification || null;
+        return {
           id: e.id, title: e.title, date: e.date,
           question: e.divergence.question,
           contributors: e.contributors || [],
           answerCount: (e.divergence.answers || []).length,
           tensionCount: (e.divergence.tensions || []).length,
+          certification: c ? { tier: c.tier, dri: c.dri, split_persistence: c.split_persistence } : { tier: "C0" },
           excerpt: e.excerpt || "",
           href: `/api/divergences?id=${e.id}`,
-        })),
+        };
+      }),
     });
   } catch (err) {
     return res.status(500).json({ error: "Failed to list divergence records", detail: err.message });

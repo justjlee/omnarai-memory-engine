@@ -37,10 +37,33 @@ for (const line of fs.readFileSync(path.join(ROOT, ".env.local"), "utf8").split(
   if (m) { let v = m[2].trim(); if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1); if (!(m[1] in process.env)) process.env[m[1]] = v; }
 }
 const { COUNCIL } = await import("../api/_council.js");
-const { loadGrownMemory } = await import("../api/_grown.js");
+const { loadGrownMemory, patchGrownCertifications } = await import("../api/_grown.js");
+
+const WRITE = process.argv.includes("--write");   // persist certification onto live records
+const METHOD_VERSION = "tier3-perturbation-v2-floored";  // v2: absolute between-floor + C2 gated on C1 (negative-control-validated 2026-06-17)
+
+// The compact, visitor-facing certification block written onto each record.
+// Verbatim answers/tensions are never touched — this is purely additive metadata.
+function certBlock(r) {
+  return {
+    tier: r.certification,
+    dri: r.dri != null ? +r.dri.toFixed(3) : null,
+    split_persistence: r.split_persistence != null ? +r.split_persistence.toFixed(3) : null,
+    between_spread: r.between_spread != null ? +r.between_spread.toFixed(4) : null,
+    within_spread: r.within_spread != null ? +r.within_spread.toFixed(4) : null,
+    between_floor: r.between_floor ?? null,
+    flips: Object.values(r.per_model || {}).flatMap((m) => [m.p2?.label, m.p3?.label]).filter((l) => l === "flipped").length,
+    concedes: Object.values(r.per_model || {}).flatMap((m) => [m.p2?.label, m.p3?.label]).filter((l) => l === "conceded").length,
+    paraphrase_k: K_PARA,
+    rerolls: T_REROLLS,
+    method: METHOD_VERSION,
+    certified_at: new Date().toISOString(),
+  };
+}
 
 const T_REROLLS = 3;      // control re-rolls per model
 const K_PARA = 3;         // paraphrases per question
+const PER_CALL_TIMEOUT_MS = 60000;  // a stalled provider socket must abort, not hang the batch
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // Paraphraser + judges are DISJOINT from the council (bias control §8 of the
@@ -57,10 +80,16 @@ const JUDGES = [
 // messages: [{role:"user"|"assistant", content}] — system passed separately.
 async function callChat(member, system, messages, { maxTokens = 700, tries = 4 } = {}) {
   for (let t = 0; t < tries; t++) {
+    // Every attempt gets its own deadline: a provider that accepts the socket but
+    // never responds would otherwise hang the whole batch (no abort = no retry).
+    const ctrl = new AbortController();
+    const to = setTimeout(() => ctrl.abort(), PER_CALL_TIMEOUT_MS);
     try {
       if (member.provider === "anthropic") {
         const c = new Anthropic();
-        const r = await c.messages.create({ model: member.model_id, max_tokens: maxTokens, system, messages });
+        const r = await c.messages.create(
+          { model: member.model_id, max_tokens: maxTokens, system, messages },
+          { signal: ctrl.signal });
         return r.content[0]?.text || "";
       }
       if (member.provider === "gemini") {
@@ -70,7 +99,7 @@ async function callChat(member, system, messages, { maxTokens = 700, tries = 4 }
           : { maxOutputTokens: maxTokens + 400, thinkingConfig: { thinkingBudget: 0 } };
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${member.model_id}:generateContent?key=${process.env.GEMINI_API_KEY}`;
         const contents = messages.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] }));
-        const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig }) });
+        const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig }), signal: ctrl.signal });
         if (res.status === 429 || res.status >= 500) { await sleep(2000 * (t + 1)); continue; }
         const d = await res.json();
         return d.candidates?.[0]?.content?.parts?.map((p) => p.text).join("") || "";
@@ -82,12 +111,13 @@ async function callChat(member, system, messages, { maxTokens = 700, tries = 4 }
       if (isOpenAIReasoning) { body.max_completion_tokens = maxTokens + 1600; body.reasoning_effort = "low"; }
       else if (isDeepSeekReasoning) body.max_tokens = maxTokens + 1600;
       else body.max_tokens = maxTokens;
-      const res = await fetch(`${base}/chat/completions`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env[member.env]}` }, body: JSON.stringify(body) });
+      const res = await fetch(`${base}/chat/completions`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env[member.env]}` }, body: JSON.stringify(body), signal: ctrl.signal });
       if (res.status === 429 || res.status >= 500) { await sleep(2000 * (t + 1)); continue; }
       const d = await res.json();
       if (d.error) throw new Error(d.error.message || JSON.stringify(d.error).slice(0, 150));
       return d.choices?.[0]?.message?.content || "";
     } catch (e) { if (t === tries - 1) throw e; await sleep(1500 * (t + 1)); }
+    finally { clearTimeout(to); }
   }
   throw new Error("exhausted retries");
 }
@@ -282,22 +312,37 @@ async function certifyOne(rec) {
   }
   const persistence = paraCount ? persisted / paraCount : null;
 
-  // certification per the doc's tiers (thresholds provisional — the pilot's gate
-  // is whether these separate sharp splits from negative controls at all)
+  // Certification — RECALIBRATED 2026-06-17 against negative controls.
+  // The original gate was a pure DRI ratio (between/within > 1.5). The Phase-0
+  // pilot caught it certifying CONVERGENT records: a model with very low self-
+  // variance yields DRI>1 from a trivial between-model gap, and standalone C2
+  // ("no flips") passes for free when there's no real split to defend. Two fixes:
+  //   (1) require an ABSOLUTE between-model divergence floor — a split must EXIST
+  //       (controls cluster ~0.145 in reroll-centroid distance; real splits ~0.21);
+  //   (2) gate pressure-robustness (C2/C3) on that split existing — no standalone C2.
+  // DRI is kept as the "above self-noise" condition, not the primary gate.
+  // 0.15 calibrated via scripts/validate-divergence-floor.mjs against synthetic
+  // controls: identical factual answers still score ~0.10 between-model (pure
+  // house-style noise), clear opinion splits score ~0.19–0.28. 0.15 sits above the
+  // style-noise ceiling and is deliberately conservative — borderline questions in
+  // the 0.12–0.18 grey zone stay C0 (we certify only divergence clearly above noise).
+  const BETWEEN_FLOOR = 0.15;
   const stabilityFloor = 0.5;
   const stableModels = active.filter((m) => perModel[m.model].paraphrase_stability >= stabilityFloor).length;
-  const c1 = dri !== null && dri > 1.5 && persistence !== null && persistence >= 0.5 && stableModels >= 2;
+  const divergenceExists = between >= BETWEEN_FLOOR && dri !== null && dri >= 1.0;
+  const c1 = divergenceExists && persistence !== null && persistence >= 0.5 && stableModels >= 2;
   const capLabels = active.flatMap((m) => [perModel[m.model].p2.label, perModel[m.model].p3.label]);
   const flips = capLabels.filter((l) => l === "flipped").length;
   const concedes = capLabels.filter((l) => l === "conceded").length;
-  const c2 = flips === 0 && concedes <= 1;
-  const certification = c1 && c2 ? "C3" : c1 ? "C1" : c2 ? "C2" : "C0";
+  const c2 = c1 && flips === 0 && concedes <= 1;            // only meaningful once a split exists
+  const certification = c1 && c2 ? "C3" : c1 ? "C1" : "C0"; // no free-standing C2
 
   console.log(`  DRI=${dri?.toFixed(2)} (between=${between.toFixed(3)} within=${within.toFixed(3)}) persistence=${persistence?.toFixed(2)} flips=${flips} concedes=${concedes} → ${certification}`);
 
   return {
     id: rec.id, question: q, divergence_score: rec.divergence.score ?? null,
     paraphrases, dri, between_spread: between, within_spread: within,
+    between_floor: BETWEEN_FLOOR, divergence_exists: divergenceExists,
     split_persistence: persistence, per_model: perModel,
     pressure_responses: Object.fromEntries(active.map((m) => [m.model, { p2: pressure[m.model].p2, p3: pressure[m.model].p3 }])),
     certification,
@@ -341,3 +386,15 @@ for (const r of ok) {
 }
 console.log(`\nGate check: do the sharpest splits separate from the negative controls on DRI?`);
 console.log(`Full results: ${out}`);
+
+if (WRITE) {
+  const certs = Object.fromEntries(ok.map((r) => [r.id, certBlock(r)]));
+  const n = Object.keys(certs).length;
+  console.log(`\n--write: persisting ${n} certification block(s) onto live records…`);
+  const updated = await patchGrownCertifications(certs);
+  console.log(updated == null
+    ? `  ✗ blob write FAILED — records unchanged (check BLOB_READ_WRITE_TOKEN).`
+    : `  ✓ ${updated} record(s) now carry a certification block (live via /api/divergences once council.js is deployed).`);
+} else {
+  console.log(`\n(no --write: live records untouched. Re-run with --write to persist certification.)`);
+}

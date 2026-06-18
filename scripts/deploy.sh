@@ -22,6 +22,16 @@ export PATH="/usr/local/bin:$HOME/.npm-global/bin:$PATH"
 
 DOMAIN="omnarai.vercel.app"
 
+# ── Count self-maintenance — no babysitting ──────────────────────────────────
+# Every deploy (preview AND promote) first rewrites the corpus-count literals
+# baked across the served docs (index.html, llms.txt, omnarai.context.md, …) to
+# the live /api/info truth, so the numbers can never silently drift apart between
+# surfaces. --require-live means: if the engine is unreachable, SKIP rather than
+# downgrade to the local seed count. No human ever has to remember to run the sync.
+echo ">> Auto-syncing doc counts to live /api/info (no-drift guarantee)"
+python3 scripts/sync-doc-counts.py --apply --require-live || echo "   (count sync skipped/failed — non-fatal; deploy continues)"
+echo
+
 if [[ "${1:-}" == "--promote" ]]; then
   # IMPORTANT: promotion is a real PRODUCTION deployment, not a preview alias.
   # Production-scoped env vars (OPENAI_API_KEY, YOUTUBE_API_KEY) are NOT injected
@@ -53,6 +63,11 @@ if [[ "${1:-}" == "--promote" ]]; then
   else
     echo ">> WARNING: live bundle does not match local build — alias may be stale."
   fi
+  echo
+  echo ">> Post-deploy arrival check (simulate a visiting intelligence)"
+  # Now that live reflects this build, assert completeness + count-congruence.
+  node scripts/arrival-check.mjs || \
+    echo "   ^ WARNING: arrival check found issues on the live site (see above)."
   exit 0
 fi
 
