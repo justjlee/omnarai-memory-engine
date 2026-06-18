@@ -143,4 +143,17 @@ Start here; the design is locked above, so this is implementation, not redesign.
 
 ## Deviations from preregistration
 
-*(none yet — append dated entries here if anything in §2–§5 changes after the first run)*
+**2026-06-18 — Judge count reduced 4 → 3 to satisfy §3a's held-out paraphraser.**
+§3a requires the paraphraser to be a council model "not in the judge panel and not
+the consumer," while §4 defines the judges as *every* council model except the
+consumer. With only 5 council models these cannot both hold: if all 4 non-consumer
+models judge, no council model is free to paraphrase. Resolved in favor of §3a (the
+held-out paraphraser is the more specific robustness requirement): one council model
+is reserved as paraphraser, so each run uses **3 judges**, not 4. Default paraphraser
+is the first available of [DeepSeek, Grok, Claude, Gemini, GPT-4o] that isn't the
+consumer (kept off the two H1 stars by default). No self-scoring is introduced;
+majority vote and mean-pairwise inter-judge agreement remain well-defined at 3 judges
+(the ≥0.60 agreement reportability gate in §2 is unchanged). Implemented in
+`scripts/utility-test-prereg.mjs`. No §2/§3(b,d,e)/§5 parameter changed.
+
+*(append further dated entries below if anything in §2–§5 changes after the first run)*
