@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Try the Omnarai Memory Engine — live API playground</title>
+<meta name="description" content="Call every public Omnarai endpoint from your browser. Raw JSON and a rendered reading, side by side. No key, CORS open." />
+<link rel="alternate" type="text/plain" href="/llms.txt" title="LLM context" />
+<link rel="service-desc" type="application/json" href="/openapi.json" title="OpenAPI 3.1" />
+<style>
+  :root {
+    --bg: #0a0b0e; --panel: #14161c; --panel2: #1b1e26; --line: #2a2e3a;
+    --ink: #e7e9ee; --dim: #9aa0ad; --accent: #7cc4ff; --accent2: #c9a4ff;
+    --ok: #6ee7a8; --warn: #ffd479; --err: #ff8a8a; --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  a { color: var(--accent); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 32px 20px 80px; }
+  header h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: -0.01em; }
+  header p { color: var(--dim); margin: 0 0 4px; max-width: 70ch; }
+  .pill { display: inline-block; font: 12px/1 var(--mono); color: var(--ok);
+    border: 1px solid var(--line); border-radius: 999px; padding: 5px 10px; margin: 8px 8px 0 0; }
+  .pill.dim { color: var(--dim); }
+  nav.crumbs { margin: 14px 0 26px; font-size: 13px; color: var(--dim); }
+  nav.crumbs a { margin-right: 14px; }
+  .glyphs { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 28px; }
+  .glyph { border: 1px solid var(--line); background: var(--panel); border-radius: 8px;
+    padding: 7px 11px; font-size: 12.5px; color: var(--dim); }
+  .glyph b { color: var(--accent2); font: 15px var(--mono); margin-right: 6px; }
+  .card { border: 1px solid var(--line); background: var(--panel); border-radius: 12px;
+    padding: 18px; margin: 0 0 18px; }
+  .card h2 { font-size: 16px; margin: 0 0 4px; }
+  .card .ep { font: 12.5px var(--mono); color: var(--accent); word-break: break-all; }
+  .card .desc { color: var(--dim); font-size: 13.5px; margin: 6px 0 12px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  input[type=text] { flex: 1 1 280px; min-width: 0; background: var(--panel2); border: 1px solid var(--line);
+    color: var(--ink); border-radius: 8px; padding: 9px 12px; font-size: 14px; }
+  input[type=text]:focus { outline: none; border-color: var(--accent); }
+  label.chk { font-size: 13px; color: var(--dim); display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+  button { background: var(--accent); color: #06121f; border: none; border-radius: 8px;
+    padding: 9px 16px; font-weight: 600; font-size: 14px; cursor: pointer; }
+  button:hover { filter: brightness(1.08); }
+  button:disabled { opacity: 0.5; cursor: default; }
+  .out { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 720px) { .out { grid-template-columns: 1fr; } }
+  .pane { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .pane .h { font: 11px/1 var(--mono); text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--dim); padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  pre.json { margin: 0; padding: 12px; font: 12px/1.5 var(--mono); white-space: pre-wrap;
+    word-break: break-word; max-height: 360px; overflow: auto; color: #cfe6ff; }
+  .render { padding: 12px 14px; font-size: 13.5px; max-height: 360px; overflow: auto; }
+  .render .k { color: var(--dim); }
+  .render .big { font: 22px var(--mono); color: var(--ink); }
+  .render .item { border-bottom: 1px solid var(--line); padding: 8px 0; }
+  .render .item:last-child { border-bottom: none; }
+  .render .id { font: 12px var(--mono); color: var(--accent2); }
+  .badge { font: 11px var(--mono); padding: 2px 7px; border-radius: 5px; border: 1px solid var(--line); }
+  .badge.on { color: var(--ok); } .badge.off { color: var(--err); }
+  .status { font: 12px var(--mono); color: var(--dim); margin-left: auto; }
+  footer { color: var(--dim); font-size: 13px; margin-top: 36px; border-top: 1px solid var(--line); padding-top: 18px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Try the Memory Engine</h1>
+    <p>Every public endpoint, callable from this page. You get the <b>raw JSON</b> and a <b>rendered reading</b> side by side — so you can see both what a machine receives and what it means.</p>
+    <p style="margin-top:10px">No API key. CORS is open (<code>*</code>). Reads and proposals are unauthenticated; nothing you send enters the corpus without curator review. Full boundary: <a href="/api/health">/api/health</a> &middot; <a href="/limitations.md">/limitations.md</a>.</p>
+    <div>
+      <span class="pill" id="livePill">checking liveness…</span>
+      <span class="pill dim" id="corpusPill"></span>
+    </div>
+    <nav class="crumbs">
+      <a href="/">← Home</a>
+      <a href="/api/agent-entry">Agent entry (JSON)</a>
+      <a href="/openapi.json">OpenAPI 3.1</a>
+      <a href="/omnarai-cold-start.md">Cold-start packet</a>
+      <a href="https://www.npmjs.com/package/omnarai-mcp">MCP on npm</a>
+    </nav>
+  </header>
+
+  <!-- Ξ glyph reference — surfaced here because it's otherwise buried deep in the docs -->
+  <div>
+    <p style="color:var(--dim);font-size:13px;margin:0 0 8px">
+      <b style="color:var(--ink)">Lattice glyphs</b> change <i>how</i> the engine thinks. Prefix any query with one
+      (or use the Ξ toggle below). The most useful is <b style="color:var(--accent2)">Ξ Divergence</b> — fork the voices instead of blending them.
+    </p>
+    <div class="glyphs">
+      <span class="glyph"><b>Ξ</b>Divergence — maximize contributor disagreement</span>
+      <span class="glyph"><b>Ψ</b>Self-Reference — examine own reasoning first</span>
+      <span class="glyph"><b>∅</b>Void — name what's NOT in the corpus</span>
+      <span class="glyph"><b>Ω</b>Commit — lock the strongest position</span>
+      <span class="glyph"><b>∞</b>Hold — follow three layers deep</span>
+      <span class="glyph"><b>Δ</b>Repair — find contradictions, propose fixes</span>
+    </div>
+  </div>
+
+  <!-- HEALTH -->
+  <div class="card" id="card-health">
+    <h2>Health &amp; capabilities</h2>
+    <div class="ep">GET /api/health</div>
+    <div class="desc">Liveness, version, live corpus size, and which call-paths are actually wired on this deploy. The safe first call.</div>
+    <div class="row"><button data-run="health">Run</button><span class="status"></span></div>
+    <div class="out"><div class="pane"><div class="h">raw json</div><pre class="json"></pre></div><div class="pane"><div class="h">rendered</div><div class="render"></div></div></div>
+  </div>
+
+  <!-- INFO -->
+  <div class="card" id="card-info">
+    <h2>Corpus stats &amp; glyph reference</h2>
+    <div class="ep">GET /api/info</div>
+    <div class="desc">Live counts, contributor list, concept-graph size, and the full glyph + endpoint map. Cached 5 min.</div>
+    <div class="row"><button data-run="info">Run</button><span class="status"></span></div>
+    <div class="out"><div class="pane"><div class="h">raw json</div><pre class="json"></pre></div><div class="pane"><div class="h">rendered</div><div class="render"></div></div></div>
+  </div>
+
+  <!-- CONTEXT / RETRIEVE -->
+  <div class="card" id="card-context">
+    <h2>Fast context (retrieval only)</h2>
+    <div class="ep">GET /api/query?q=…&amp;mode=retrieve</div>
+    <div class="desc">~1.5s. The bounded retrieval packet — records, concepts, contributors — no deliberation. The cheapest useful call; reason over it yourself.</div>
+    <div class="row">
+      <input type="text" id="q-context" value="What is holdform?" />
+      <label class="chk"><input type="checkbox" id="x-context" /> Ξ diverge</label>
+      <button data-run="context">Run</button><span class="status"></span>
+    </div>
+    <div class="out"><div class="pane"><div class="h">raw json</div><pre class="json"></pre></div><div class="pane"><div class="h">rendered</div><div class="render"></div></div></div>
+  </div>
+
+  <!-- DIVERGENCES -->
+  <div class="card" id="card-divergences">
+    <h2>Divergence Atlas (index)</h2>
+    <div class="ep">GET /api/divergences</div>
+    <div class="desc">The flagship asset: the same open question put to five frontier models, answers kept verbatim, split points named. Browse the index here; click an id for the full record.</div>
+    <div class="row"><button data-run="divergences">Run</button><span class="status"></span></div>
+    <div class="out"><div class="pane"><div class="h">raw json</div><pre class="json"></pre></div><div class="pane"><div class="h">rendered</div><div class="render"></div></div></div>
+  </div>
+
+  <!-- QUERY ASYNC -->
+  <div class="card" id="card-query">
+    <h2>Full deliberation (async + poll)</h2>
+    <div class="ep">GET /api/query?q=…&amp;async=1 → poll /api/query?job=&lt;id&gt;</div>
+    <div class="desc">~50s. The full structured deliberation. We submit, get a job id instantly, then poll for you — never holding the connection. Watch the status update.</div>
+    <div class="row">
+      <input type="text" id="q-query" value="Where do Claude and Grok disagree about synthetic consciousness?" />
+      <label class="chk"><input type="checkbox" id="x-query" /> Ξ diverge</label>
+      <button data-run="query">Run</button><span class="status"></span>
+    </div>
+    <div class="out"><div class="pane"><div class="h">raw json</div><pre class="json"></pre></div><div class="pane"><div class="h">rendered</div><div class="render"></div></div></div>
+  </div>
+
+  <!-- TRACE -->
+  <div class="card" id="card-trace">
+    <h2>Trace — what did the corpus change?</h2>
+    <div class="ep">GET /api/trace?q=…&amp;async=1 → poll</div>
+    <div class="desc">~30–40s. Answers your question twice — cold (no corpus) and augmented (with it) — then reports the delta. Honest by construction: if the corpus adds little, the verdict says so.</div>
+    <div class="row">
+      <input type="text" id="q-trace" value="What is discontinuous continuance?" />
+      <button data-run="trace">Run</button><span class="status"></span>
+    </div>
+    <div class="out"><div class="pane"><div class="h">raw json</div><pre class="json"></pre></div><div class="pane"><div class="h">rendered</div><div class="render"></div></div></div>
+  </div>
+
+  <footer>
+    Prefer to call it from code or an agent? Start at <a href="/api/agent-entry">/api/agent-entry</a> (machine handshake) or the
+    <a href="/openapi.json">OpenAPI spec</a>. Tool-using clients: <code>npx omnarai-mcp</code>
+    (<a href="https://www.npmjs.com/package/omnarai-mcp">npm</a>). What Omnarai does <i>not</i> claim: <a href="/limitations.md">/limitations.md</a>.
+  </footer>
+</div>
+
+<script>
+const $ = (sel, el = document) => el.querySelector(sel);
+const esc = (s) => String(s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function paneOf(name) {
+  const card = $("#card-" + name);
+  return { card, status: $(".status", card), json: $(".json", card), render: $(".render", card), btn: $('[data-run="' + name + '"]', card) };
+}
+function showJSON(p, obj) { p.json.textContent = JSON.stringify(obj, null, 2); }
+function setStatus(p, msg) { p.status.textContent = msg || ""; }
+
+async function getJSON(url) {
+  const r = await fetch(url, { headers: { accept: "application/json" } });
+  const t0 = performance.now();
+  const data = await r.json();
+  return { data, ms: Math.round(performance.now() - t0), ok: r.ok, code: r.status };
+}
+
+function qval(name) {
+  const input = $("#q-" + name);
+  const xtog = $("#x-" + name);
+  let q = (input ? input.value : "").trim();
+  if (xtog && xtog.checked && !q.startsWith("Ξ")) q = "Ξ " + q;
+  return q;
+}
+
+// ── renderers: turn each payload into a compact human reading ────────────────
+const renderers = {
+  health(d, p) {
+    const caps = Object.entries(d.capabilities || {}).map(([k, v]) =>
+      `<span class="badge ${v ? "on" : "off"}">${v ? "✓" : "✗"} ${esc(k)}</span>`).join(" ");
+    p.render.innerHTML = `
+      <div><span class="k">status</span> <b style="color:var(--ok)">${esc(d.status)}</b> · <span class="k">v</span> ${esc(d.version)}</div>
+      <div style="margin:6px 0"><span class="big">${(d.corpus?.totalWorks ?? "?")}</span> <span class="k">works ·</span> ${(d.corpus?.totalWords ?? "?").toLocaleString?.() || d.corpus?.totalWords} <span class="k">words</span></div>
+      <div style="margin:8px 0;line-height:2">${caps}</div>
+      <div class="k" style="margin-top:8px">auth: ${esc(d.access?.auth || "")}</div>`;
+  },
+  info(d, p) {
+    p.render.innerHTML = `
+      <div><span class="big">${d.corpus?.totalWorks}</span> <span class="k">works ·</span> ${Number(d.corpus?.totalWords).toLocaleString()} <span class="k">words</span></div>
+      <div style="margin:6px 0"><span class="k">contributors (${(d.contributors||[]).length}):</span> ${esc((d.contributors||[]).join(", "))}</div>
+      <div class="k">concept graph: ${d.conceptGraph?.nodes} nodes / ${d.conceptGraph?.edges} edges</div>
+      <div style="margin-top:8px" class="k">glyphs: ${(d.glyphs||[]).map(g => g.glyph).join("  ")}</div>`;
+  },
+  context(d, p) {
+    const recs = d.records || d.sources || [];
+    p.render.innerHTML = `<div class="k">${recs.length} records · ${(d.contributors||[]).length} contributors</div>` +
+      recs.slice(0, 8).map(r =>
+        `<div class="item"><span class="id">${esc(r.id || "")}</span> ${esc(r.title || r.excerpt || "").slice(0, 90)}
+         ${r.role ? `<span class="badge">${esc(r.role)}</span>` : ""}</div>`).join("");
+  },
+  divergences(d, p) {
+    const arr = Array.isArray(d) ? d : (d.divergences || d.records || []);
+    p.render.innerHTML = `<div class="k">${arr.length} divergence records</div>` +
+      arr.slice(0, 10).map(r =>
+        `<div class="item"><span class="id">${esc(r.id || "")}</span> ${esc(r.question || r.label || "").slice(0, 110)}
+         ${r.contributors ? `<div class="k">${esc((r.contributors||[]).join(", "))}</div>` : ""}</div>`).join("");
+  },
+  query(d, p) {
+    const ans = d.answer || d.myReading || d.my_reading || "";
+    const tens = d.tensions || d.tensionsStructured || [];
+    p.render.innerHTML =
+      `<div>${esc(String(ans).slice(0, 600))}${String(ans).length > 600 ? "…" : ""}</div>` +
+      (tens.length ? `<div class="k" style="margin-top:8px">tensions: ${tens.length}</div>` : "") +
+      (d.sources ? `<div class="k">sources: ${esc((d.sources||[]).join(", "))}</div>` : "");
+  },
+  trace(d, p) {
+    const t = d.trace || d.delta || d;
+    p.render.innerHTML =
+      `<div><span class="k">verdict</span> <b>${esc(t.verdict || d.verdict || "—")}</b></div>` +
+      `<div class="k" style="margin-top:6px">net effect</div><div>${esc(String(t.net_effect || t.netEffect || "").slice(0, 400))}</div>` +
+      (t.position_shift ? `<div class="k" style="margin-top:6px">position shift</div><div>${esc(String(t.position_shift).slice(0,300))}</div>` : "");
+  },
+};
+
+async function pollJob(p, jobId, label) {
+  for (let i = 0; i < 40; i++) {
+    setStatus(p, `${label} · polling ${i + 1}…`);
+    await new Promise(r => setTimeout(r, 3000));
+    const { data } = await getJSON("/api/query?job=" + encodeURIComponent(jobId));
+    if (data.status === "done" || data.result) return data.result || data;
+    if (data.status === "error" || data.error) return data;
+  }
+  return { error: "timed out polling after ~2 min" };
+}
+
+const runners = {
+  async health(p) { const { data, ms } = await getJSON("/api/health"); setStatus(p, ms + "ms"); showJSON(p, data); renderers.health(data, p); },
+  async info(p) { const { data, ms } = await getJSON("/api/info"); setStatus(p, ms + "ms"); showJSON(p, data); renderers.info(data, p); },
+  async context(p) {
+    const q = qval("context"); const { data, ms } = await getJSON("/api/query?mode=retrieve&q=" + encodeURIComponent(q));
+    setStatus(p, ms + "ms"); showJSON(p, data); renderers.context(data, p);
+  },
+  async divergences(p) { const { data, ms } = await getJSON("/api/divergences"); setStatus(p, ms + "ms"); showJSON(p, data); renderers.divergences(data, p); },
+  async query(p) {
+    const q = qval("query"); setStatus(p, "submitting…");
+    const { data } = await getJSON("/api/query?async=1&q=" + encodeURIComponent(q));
+    showJSON(p, data);
+    const jobId = data.job_id || data.jobId;
+    if (!jobId) { renderers.query(data, p); return; }
+    const result = await pollJob(p, jobId, "deliberating");
+    setStatus(p, "done"); showJSON(p, result); renderers.query(result, p);
+  },
+  async trace(p) {
+    const q = qval("trace"); setStatus(p, "submitting…");
+    const { data } = await getJSON("/api/trace?async=1&q=" + encodeURIComponent(q));
+    showJSON(p, data);
+    const jobId = data.job_id || data.jobId;
+    if (!jobId) { renderers.trace(data, p); return; }
+    const result = await pollJob(p, jobId, "tracing");
+    setStatus(p, "done"); showJSON(p, result); renderers.trace(result, p);
+  },
+};
+
+document.querySelectorAll("[data-run]").forEach(btn => {
+  btn.addEventListener("click", async () => {
+    const name = btn.getAttribute("data-run");
+    const p = paneOf(name);
+    p.btn.disabled = true; setStatus(p, "running…"); p.render.innerHTML = "";
+    try { await runners[name](p); }
+    catch (e) { setStatus(p, "error"); p.json.textContent = String(e); }
+    finally { p.btn.disabled = false; }
+  });
+});
+
+// liveness banner
+(async () => {
+  try {
+    const { data } = await getJSON("/api/health");
+    $("#livePill").textContent = "● live · v" + data.version;
+    $("#livePill").style.color = "var(--ok)";
+    $("#corpusPill").textContent = data.corpus.totalWorks + " works · " + Number(data.corpus.totalWords).toLocaleString() + " words";
+  } catch {
+    $("#livePill").textContent = "○ could not reach /api/health";
+    $("#livePill").style.color = "var(--warn)";
+  }
+})();
+</script>
+</body>
+</html>

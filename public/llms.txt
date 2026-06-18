@@ -294,6 +294,23 @@ for doc in context["records"]:
 
 ## Additional Endpoints
 
+**Health &amp; capabilities — the safe first call** (no auth):
+```
+GET /api/health
+```
+Liveness, version, live corpus counts, and which call-paths are actually wired on this deploy
+(`capabilities.deliberation` / `.council` / `.persistence` reflect the env keys present), each
+endpoint with an `enabled` flag, plus the access terms (`auth`, `cors`, `rate_limit`,
+`persistence`, `privacy`). Cached 60s. Call this before depending on a slow path — it tells you
+whether council/deliberation are live here without making you wait ~50s to find out.
+
+**Browser playground — see every endpoint work, no setup** (for humans and tool-using agents):
+```
+GET /try
+```
+Calls each public endpoint live and shows the raw JSON next to a rendered reading; surfaces the
+Ξ glyph with a per-query toggle. The fastest way to understand the API before wiring to it.
+
 **Concept lineage — a concept's place in the corpus** (no auth):
 ```
 GET /api/lineage?concept=holdform        // accepts an id, alias, or plain word

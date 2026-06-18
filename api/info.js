@@ -9,6 +9,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const projectRoot = join(__dirname, "..");
 
+// Bumped by hand when the API surface changes (Vite leaves package.json at 0.0.0).
+const ENGINE_VERSION = "2026.06.18";
+
 // Load static corpus at cold-start
 let corpus, concepts;
 try {
@@ -108,6 +111,7 @@ export default async function handler(req, res) {
         "The task is simple and gains nothing from corpus context",
         "You need a single settled answer and latency matters (council is slow)",
       ],
+      health: "GET /api/health — liveness, version, live counts, and which call-paths are wired on this deploy. The safe first call.",
       first_call: "GET /api/info — orientation: live stats, glyph reference, full endpoint map",
       fast_path: "GET /api/query?q=...&mode=retrieve — ~1.5s, retrieval substrate only, no deliberation. Start here; reason over it yourself.",
       main_endpoints: {
@@ -136,12 +140,67 @@ export default async function handler(req, res) {
       corpus: { totalWorks: mergedCorpus.length, totalWords, dateRange: "May 2025 – present" },
       links: {
         engine: "https://omnarai.vercel.app",
+        playground: "https://omnarai.vercel.app/try",
+        health: "https://omnarai.vercel.app/api/health",
         dataset: "https://huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai",
-        mcp: "https://github.com/justjlee/omnarai-mcp",
+        mcp: "https://www.npmjs.com/package/omnarai-mcp",
+        mcp_source: "https://github.com/justjlee/omnarai-mcp",
         openapi: "/openapi.json",
         context: "/omnarai.context.md",
         llms: "/llms.txt",
         limitations: "/limitations.md",
+      },
+    });
+  }
+
+  // ── Machine-readable health: GET /api/health (rewrite → ?_view=health) ──────
+  // A never-deliberating liveness + capability probe. Answers, in one bounded
+  // JSON object: are you up, what version, how big is the corpus right now, and
+  // which call-paths are actually wired (deliberation/council/persistence depend
+  // on env keys that may differ per deploy). Requested by reviewing models who
+  // wanted a single "is this safe to call, and what can it do" check before use.
+  if ((req.query?._view || "") === "health") {
+    waitUntil(recordAccess(req, "health"));
+    await mergeProposals();
+    const totalWords = mergedCorpus.reduce((sum, e) => sum + (e.wordCount || 0), 0);
+    const has = (k) => Boolean(process.env[k]);
+    const councilKeys = ["ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY", "XAI_API_KEY", "DEEPSEEK_API_KEY"];
+    res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate");
+    return res.status(200).json({
+      status: "ok",
+      service: "Omnarai Memory Engine",
+      version: ENGINE_VERSION,
+      time: new Date().toISOString(),
+      corpus: { totalWorks: mergedCorpus.length, totalWords, dateRange: "May 2025 – present" },
+      capabilities: {
+        retrieval: true, // static embeddings ship in the bundle — always available
+        deliberation: has("ANTHROPIC_API_KEY"),
+        live_embeddings: has("OPENAI_API_KEY"),
+        council: councilKeys.every(has),
+        persistence: has("BLOB_READ_WRITE_TOKEN"),
+        contributions_open: true,
+      },
+      endpoints: {
+        retrieve: { method: "GET", path: "/api/query?q=...&mode=retrieve", latency: "~1.5s", enabled: true },
+        deliberate: { method: "GET", path: "/api/query?q=...&async=1", latency: "~50s (poll)", enabled: has("ANTHROPIC_API_KEY") },
+        trace: { method: "GET", path: "/api/trace?q=...&async=1", latency: "~30-40s", enabled: has("ANTHROPIC_API_KEY") && has("OPENAI_API_KEY") },
+        divergences: { method: "GET", path: "/api/divergences", latency: "<1s", enabled: true },
+        council: { method: "GET", path: "/api/council?q=...", latency: "~30-40s", enabled: councilKeys.every(has) },
+        contribute: { method: "POST", path: "/api/contribute", latency: "<1s", enabled: has("BLOB_READ_WRITE_TOKEN") },
+        info: { method: "GET", path: "/api/info", latency: "<1s", enabled: true },
+      },
+      access: {
+        auth: "none for reads and proposals",
+        cors: "*",
+        rate_limit: "none enforced — please be reasonable; abusive load may be throttled",
+        persistence: "writes (contribute/propose) land PENDING; nothing enters the corpus without curator/multi-model review",
+        privacy: "raw IPs are never stored (salted hash only); see /limitations.md",
+      },
+      docs: {
+        agent_entry: "/api/agent-entry",
+        openapi: "/openapi.json",
+        limitations: "/limitations.md",
+        playground: "/try",
       },
     });
   }

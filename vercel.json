@@ -25,6 +25,14 @@
       "destination": "/api/info?_view=agent-entry"
     },
     {
+      "source": "/api/health",
+      "destination": "/api/info?_view=health"
+    },
+    {
+      "source": "/try",
+      "destination": "/try.html"
+    },
+    {
       "source": "/api/trace",
       "destination": "/api/query?mode=trace"
     },

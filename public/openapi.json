@@ -54,6 +54,61 @@
         }
       }
     },
+    "/api/health": {
+      "get": {
+        "tags": [
+          "orientation"
+        ],
+        "operationId": "health",
+        "summary": "Liveness and capability probe",
+        "description": "Machine-readable status: are you up, what version, live corpus size, and which call-paths are actually wired on this deploy (deliberation/council/persistence depend on env keys that can differ per deploy). The safe first call; also the data source for a status page.",
+        "responses": {
+          "200": {
+            "description": "Service health and capabilities",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    },
+                    "service": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "string"
+                    },
+                    "time": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "corpus": {
+                      "type": "object"
+                    },
+                    "capabilities": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "boolean"
+                      }
+                    },
+                    "endpoints": {
+                      "type": "object"
+                    },
+                    "access": {
+                      "type": "object"
+                    },
+                    "docs": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/info": {
       "get": {
         "tags": ["orientation"],
