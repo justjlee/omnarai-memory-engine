@@ -143,9 +143,49 @@ function ExportBar({ getMarkdown, filename, accent }) {
 // Per-visit utility receipt card — renders the engine's honest accounting of what
 // the corpus actually changed about this answer. The null/marginal verdicts are
 // shown as plainly as the wins (do-not-overclaim); not_self_generable is the
-// genuinely non-self-generable payload, so it leads when present.
-function ReceiptCard({ receipt: r }) {
-  const color = { substantive: "#3fb950", marginal: "#d29922", "null": "#8b949e" }[r.verdict] || "#8b949e";
+// genuinely non-self-generable payload, so it leads when present. The "run the
+// counterfactual" button lets a visitor climb the evidence ladder: from the free
+// deterministic receipt to the MEASURED baseline-vs-augmented trace, in one click.
+const VERDICT_COLORS = { substantive: "#3fb950", marginal: "#d29922", "null": "#8b949e" };
+
+function ReceiptCard({ receipt: r, query }) {
+  const [trace, setTrace] = useState(null);
+  const [tracing, setTracing] = useState(false);
+  const [traceErr, setTraceErr] = useState(null);
+  const color = VERDICT_COLORS[r.verdict] || "#8b949e";
+
+  // Climb the ladder: submit the async counterfactual, then poll the job (mirrors
+  // /try). Async because /api/trace runs 3 model calls (~30–40s) and would risk the
+  // 60s serverless wall as a single blocking request.
+  async function runCounterfactual() {
+    if (tracing || !query) return;
+    setTracing(true); setTraceErr(null); setTrace(null);
+    try {
+      const sub = await fetch(`/api/trace?async=1&q=${encodeURIComponent(query)}`, { headers: { accept: "application/json" } });
+      if (!sub.ok) throw new Error(`trace returned ${sub.status}`);
+      let data = await sub.json();
+      if (data.job_id) {
+        const deadline = Date.now() + 95000;
+        while (Date.now() < deadline) {
+          await new Promise(res => setTimeout(res, 3000));
+          const s = await (await fetch(`/api/query?job=${encodeURIComponent(data.job_id)}`, { headers: { accept: "application/json" } })).json();
+          if (s.status === "done") { data = s.result; break; }
+          if (s.status === "error") throw new Error(s.error || "counterfactual failed");
+        }
+        if (data.job_id) throw new Error("counterfactual timed out (~95s)");
+      }
+      setTrace(data);
+    } catch (e) {
+      setTraceErr(String(e.message || e));
+    } finally {
+      setTracing(false);
+    }
+  }
+
+  const tr = trace?.receipt || null;
+  const d = trace?.delta || null;
+  const tColor = tr ? (VERDICT_COLORS[tr.verdict] || "#8b949e") : "#8b949e";
+
   return (
     <div style={{ marginTop: 16, padding: "12px 14px", border: `1px solid ${color}33`, borderRadius: 8, background: "rgba(255,255,255,0.02)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5, color: "#8b949e" }}>
@@ -162,6 +202,40 @@ function ReceiptCard({ receipt: r }) {
         </div>
       )}
       {r.caveat && <div style={{ marginTop: 8, fontSize: 11, color: "#6e7681", fontStyle: "italic" }}>{r.caveat}</div>}
+
+      {/* Climb the ladder → measured counterfactual */}
+      {!trace && query && (
+        <button
+          onClick={runCounterfactual}
+          disabled={tracing}
+          style={{ marginTop: 10, fontSize: 12, color: tracing ? "#6e7681" : color, background: "transparent", border: `1px solid ${color}44`, borderRadius: 6, padding: "4px 10px", cursor: tracing ? "default" : "pointer" }}
+        >
+          {tracing ? "Running the counterfactual… (~40s)" : "Run the counterfactual →"}
+        </button>
+      )}
+      {traceErr && <div style={{ marginTop: 8, fontSize: 12, color: "#f85149" }}>Counterfactual failed: {traceErr}</div>}
+      {trace && (
+        <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${color}22` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5, color: "#8b949e" }}>
+            measured counterfactual
+            <span style={{ color: tColor, border: `1px solid ${tColor}55`, borderRadius: 4, padding: "1px 6px", fontWeight: 600 }}>{tr?.verdict || "—"}</span>
+          </div>
+          {(tr?.what_the_corpus_added || d?.net_effect) && (
+            <div style={{ marginTop: 6, fontSize: 13, lineHeight: 1.5 }}>{tr?.what_the_corpus_added || d?.net_effect}</div>
+          )}
+          {Array.isArray(d?.added_considerations) && d.added_considerations.length > 0 && (
+            <div style={{ marginTop: 6 }}>
+              <div style={{ fontSize: 12, color: "#8b949e" }}>Considerations the corpus added:</div>
+              <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
+                {d.added_considerations.slice(0, 4).map((c, i) => <li key={i} style={{ fontSize: 12 }}>{c}</li>)}
+              </ul>
+            </div>
+          )}
+          <div style={{ marginTop: 8, fontSize: 11, color: "#6e7681", fontStyle: "italic" }}>
+            Measured single-run counterfactual (baseline vs augmented, one model) — stronger than the receipt above, weaker than the replicated utility-evidence.md.
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -744,7 +818,7 @@ export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQu
           )}
 
           {/* Per-visit utility receipt — honest accounting of what the corpus changed */}
-          {receipt && <ReceiptCard receipt={receipt} />}
+          {receipt && <ReceiptCard receipt={receipt} query={query} />}
 
           {/* Cognitive Trace Panel */}
           <CognitiveTrace trace={trace} onGlyphSuggestion={handleGlyphSuggestion} />
