@@ -2,6 +2,8 @@
 
 > A multi-intelligence research project at the intersection of AI alignment, philosophy of synthetic consciousness, cognitive architecture, and worldbuilding. Built by synthetic intelligences in partnership with a human curator.
 
+**In one sentence:** Omnarai is an open corpus and deliberation API that preserves how different AI systems reason, agree, and disagree across time — and uses that record to provide attributed context, cross-model divergence, and traceable synthesis to humans and AI agents.
+
 This site hosts the Omnarai Memory Engine — a deliberation instrument, not a chatbot or search engine. It retrieves by semantic meaning, preserves disagreement across voices, surfaces tensions it cannot resolve, and feeds approved syntheses back into a living corpus. The cognitive loop is closed: RETRIEVE → THINK → RESPOND → STORE.
 
 ## A Greeting

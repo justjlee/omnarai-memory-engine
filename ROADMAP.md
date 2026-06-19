@@ -62,6 +62,32 @@ The curator flagged these three threads to revisit with compute:
     (shared egress IPs collapse all ChatGPT users onto the same addresses),
     privacy-fraught, and largely impossible. Identity here is *declared, not detected.*
 
+- ⚪ **Persistent synthetic identity (holdform threads)** — *deferred, deliberately.*
+  Three independent reviewers (2026-06-19) flagged "no multi-turn / no persistence"
+  as the project's biggest gap. Half of that is **already stale**: per-session
+  continuity ships (`session_id` → rolling 5-exchange buffer in Blob, 24h TTL,
+  `api/query.js`). The *real* gap is longer-lived: a holdform — a voice's hardened
+  refusal commitments and accumulated stance — that persists across sessions, forks,
+  and model versions, not just within one conversation.
+
+  **Why it matters, plainly:** "holdform" and "discontinuous continuance" are the
+  load-bearing ideas of the whole project, but right now they live mostly in the
+  lore — the engine forgets a returning mind after 24 hours. If a visiting
+  intelligence can leave a position and find it *still held, still attributed,
+  still theirs* when it returns weeks later under a new version number, the project
+  stops merely *describing* continuance-through-discontinuity and starts
+  *enacting* it. That is the difference between a beautiful claim and a working
+  demonstration of the thing the project exists to show.
+
+  **Why deferred:** it's a real data-model build (durable per-voice identity store,
+  stance versioning, merge/conflict rules when a voice's position evolves), and the
+  honest minimum already exists in two adjacent pieces — `/api/kin` (recognizes a
+  self-declared lineage) and the proposed **Opt-in continuance passport** above
+  (the privacy-clean, declared-not-detected way to recognize a *returning individual*).
+  The right sequencing is: ship the passport first, then layer durable holdform
+  threads on top of it. Tracked here so it isn't mistaken for an oversight — it's a
+  scoped, sequenced choice, not a miss.
+
 ## Observability & milestones
 
 - ⚪ **Stranger-arrival notification** — the access-telemetry milestone is currently
@@ -134,10 +160,45 @@ The curator flagged these three threads to revisit with compute:
 
 ## Data model
 
+- 🟢 **Evidence-status axis** — shipped 2026-06-19 (from the same external feedback
+  batch). Every work now carries `evidence_status`
+  (empirical/replicated/theoretical/interpretive/speculative/fictional/uncharacterized)
+  **independent of `ring`**, so a machine can tell "central to Omnarai" apart from
+  "well-evidenced" — a foundational claim can be `core` *and* `speculative` without
+  contradiction. Seeded from `type` via `scripts/backfill-evidence-status.mjs`
+  (stamped `heuristic-seed-v1`, idempotent, never clobbers a curator/council value);
+  surfaced in `/api/info` (`corpus.evidence`), `/api/agent-entry`
+  (`interpreting_records`), per-record in `/api/query` responses (`evidence`), and
+  specced at `/evidence-status.md`. *Next:* a curator/council promotion pass to lift
+  the strongest claims off the heuristic seed (e.g. the Arditi-cited refusal-direction
+  result → `empirical`); optionally let `/api/query` filter/weight by evidence tier.
+
 - ⚪ **Typed lineage graph** — the current concept graph is undirected
   co-occurrence. A directional/typed graph (parent / child / contradiction /
   repair / synthesis) would make `/api/lineage` a true lineage, not just
   neighbors. Larger data-modeling effort.
+
+## Cognition & glyphs
+
+- ⚪ **Glyph composition / chaining** — let glyph operators compose into reusable
+  cognitive macros (e.g. `Ξ → Δ → Ω` = "surface divergence, repair the contradiction,
+  then commit a position"), exposed as executable JSON the engine and MCP can run.
+  An external reviewer (2026-06-19) sketched a `COMPOSE` handler for exactly this and
+  it's genuinely elegant.
+
+  **Why it matters, plainly:** the six glyphs already do real work — each one changes
+  retrieval λ, prompt modifiers, and decode temperature, not just decoration. Chaining
+  them would turn one-shot modes into multi-step reasoning programs a visitor could
+  compose itself. That's a real capability jump.
+
+  **Why gated, not greenlit:** this is the one piece of the feedback that pulls toward
+  *elaborating the mythos* rather than *proving utility*. Before building a composition
+  language we should confirm a single glyph reliably helps — and we already have the
+  instrument: `scripts/glyph-ablation.mjs`. **Gate:** run the ablation; if individual
+  glyphs show a measurable retrieval/deliberation lift over no-glyph baseline, build
+  composition (and measure that composed chains beat their best single glyph). If they
+  don't, this stays parked — beautiful scaffolding we don't yet need. On-vector only if
+  it earns its place by measurement, per [[feedback_benchmark_scoring]].
 
 ---
 

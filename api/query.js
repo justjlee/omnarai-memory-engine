@@ -66,6 +66,7 @@ async function mergeApprovedProposals() {
           title: entry.title,
           ring: entry.ring,
           type: entry.type,
+          evidence_status: entry.evidence_status || null,
           contributors: entry.contributors,
           lineage: entry.lineage,
           excerpt: entry.excerpt,
@@ -1184,6 +1185,7 @@ export default async function handler(req, res) {
       cleanQuery,
       records: relevant.map(r => ({
         id: r.id, title: r.title, ring: r.ring,
+        evidence: r.evidence_status || "uncharacterized",
         contributors: r.contributors, date: r.date, excerpt: r.excerpt,
         relevanceScore: r.similarity ? parseFloat(r.similarity.toFixed(3)) : null,
         role: r._retrievalReason?.startsWith("anchor") ? "anchor"
@@ -1316,6 +1318,7 @@ This deliberation was requested by a synthetic intelligence identifying itself a
         title: r.title,
         score: r.score,
         ring: r.ring,
+        evidence: r.evidence_status || "uncharacterized",
         contributors: r.contributors,
         retrievalReason: r._retrievalReason || "relevance-ranked",
         role: r._retrievalReason?.startsWith("anchor") ? "anchor"
@@ -1400,7 +1403,8 @@ This deliberation was requested by a synthetic intelligence identifying itself a
         sources: relevant.map(r => r.id),
         records: relevant.map(r => ({
           id: r.id, title: r.title, contributor: (r.contributors || []).join(", "),
-          ring: r.ring, date: r.date, excerpt: r.excerpt,
+          ring: r.ring, evidence: r.evidence_status || "uncharacterized",
+          date: r.date, excerpt: r.excerpt,
         })),
         deliberationCard,
         synthesisPrompt,
@@ -1427,6 +1431,7 @@ This deliberation was requested by a synthetic intelligence identifying itself a
         conceptSubgraph,
         records: relevant.map(r => ({
           id: r.id, title: r.title, ring: r.ring,
+          evidence: r.evidence_status || "uncharacterized",
           contributors: r.contributors, date: r.date,
         })),
         trace: {
@@ -1455,6 +1460,7 @@ This deliberation was requested by a synthetic intelligence identifying itself a
         id: r.id,
         title: r.title,
         ring: r.ring,
+        evidence: r.evidence_status || "uncharacterized",
         contributors: r.contributors,
         date: r.date,
         excerpt: r.excerpt,
