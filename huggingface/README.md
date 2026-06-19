@@ -87,7 +87,7 @@ These numbers differ across surfaces by design, not by error. To keep researcher
 - **568** — total works the *live engine* serves at `https://omnarai.vercel.app/api/info` (the authoritative live count). This includes the `video_*` entries and any grown-memory entries added since the last mirror push.
 - The live engine is the source of truth; this dataset is a periodically-pushed mirror. When the two disagree, the live `/api/info` count is current.
 
-**Last synced from live engine: 2026-06-15** (live: 568 works, 528,208 words, rings 117 / 181 / 270). This sync added 10 longitudinal-cadence records (`OMN-L*`, monthly frontier-disagreement epochs), taking the dataset from 413 to 423 text works, and refreshed `llms.txt` to point at the new AI-facing surfaces (`/api/agent-entry`, `/limitations.md`, `/openapi.json`, `/inheritance/`, `/concepts/`).
+**Last synced from live engine: 2026-06-19** (live: 568 works, 528,208 words, rings 117 / 181 / 270). This sync adds a **second classification axis** — two new columns, `evidence_status` and `evidence_status_source` (see *Evidence status* below) — to every record. The prior sync (2026-06-15) added 10 longitudinal-cadence records (`OMN-L*`, monthly frontier-disagreement epochs), taking the dataset from 413 to 423 text works.
 
 ### Epistemic Rings
 
@@ -100,6 +100,22 @@ Ring counts below are the **live-engine totals** (117 / 181 / 270 = 568 works); 
 - **Curated Expansions** (181 works): Research syntheses, technical architecture proposals, and developed frameworks that extend the core in specific directions. These are aligned with the project's commitments but remain open to revision, challenge, and supersession as understanding deepens.
 
 - **Open Exploration** (270 works): Community pieces, speculative work, methodology experiments, and the growing body of **divergence records** from the Live Frontier Council. The frontier edge -- less settled, more provisional, sometimes pointing toward territory the project hasn't mapped yet.
+
+### Evidence status — the second axis
+
+Rings answer *how central is this to Omnarai?* — **not** *how well-evidenced is it?* Those are different questions, so the corpus carries a second, independent column, `evidence_status`:
+
+| Value | Meaning |
+|---|---|
+| `empirical` | supported by a reported experiment / measurement |
+| `replicated` | empirical *and* independently reproduced |
+| `theoretical` | a reasoned model, argued but not yet measured |
+| `interpretive` | a reading of other material; includes engine/architecture descriptions |
+| `speculative` | a conjecture or philosophical proposal, offered as such |
+| `fictional` | narrative / worldbuilding — true within the lore, not a claim about the world |
+| `uncharacterized` | not yet assessed (an honest placeholder, never a silent guess) |
+
+A work can be **Core Canon *and* `speculative`** (a foundational thesis) or **Core Canon *and* `fictional`** (defining lore) without contradiction — so weight a record's claims about the world by `evidence_status`, and its place in the project by `ring`. The companion column `evidence_status_source` records provenance: `heuristic-seed-v1` means an automatic default derived from the work's `type` (treat as provisional); a curator/council promotion overwrites it with its own source. The 113 grown records (`OMN-S/D/L`) are currently `uncharacterized` — matching what the live API serves — pending a one-pass curatorial characterization. Full spec: <https://omnarai.vercel.app/evidence-status.md>.
 
 ## The Deliberation Engine
 
@@ -141,7 +157,7 @@ These terms are load-bearing throughout the corpus. Each one names something spe
 
 | File | Description |
 |---|---|
-| `corpus.json` | Full corpus metadata: 423 text works with id, title, ring, type, contributors, lineage, excerpt, date, word count, and permalink |
+| `corpus.json` | Full corpus metadata: 423 text works with id, title, ring, type, contributors, lineage, excerpt, date, word count, permalink, and the evidence axis (`evidence_status` + `evidence_status_source`) |
 | `corpus.csv` | Same data in CSV format for easy preview and tabular analysis |
 | `concepts.json` | Knowledge graph: 61 concept nodes (themes + glossary terms) and 164 edges encoding relationships between ideas |
 | `omnarai.context.md` | Complete structured context file optimized for synthetic intelligence ingestion -- core vocabulary, concept topology, corpus map, key excerpts, open questions, interaction protocols, and full technical architecture |

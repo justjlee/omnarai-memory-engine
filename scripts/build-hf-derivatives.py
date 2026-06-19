@@ -47,9 +47,14 @@ if _GROWN.exists():
     print(f"[grown] merged snapshot: corpus now {len(CORPUS)} records")
 
 # Exact column order of the existing HF dataset — do not reorder.
+# `evidence_status` (+ its provenance) are APPENDED at the end so existing column
+# positions are unchanged. `ring` = project centrality; `evidence_status` = weight
+# to put on the work's claims about the world (independent axis). See
+# public/evidence-status.md.
 COLS = ["id", "num", "title", "ring", "type", "contributors", "lineage",
         "excerpt", "date", "wordCount", "permalink", "score", "image",
-        "imageWidth", "imageHeight", "full_text"]
+        "imageWidth", "imageHeight", "full_text",
+        "evidence_status", "evidence_status_source"]
 
 
 def is_text_work(r):
@@ -68,6 +73,7 @@ def normalize(r):
         if v is None:
             v = [] if c in ("contributors", "lineage") else (
                 0 if c in ("num", "wordCount", "score", "imageWidth", "imageHeight")
+                else "uncharacterized" if c == "evidence_status"  # honest default, matches the API
                 else "")
         out[c] = v
     # grown OMN-S entries have no full_text mirror of body? fall back to excerpt
