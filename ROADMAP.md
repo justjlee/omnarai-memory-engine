@@ -42,6 +42,24 @@ The curator flagged these three threads to revisit with compute:
 
 ---
 
+## Substrate & federation
+
+- 🟢 **Open license — the first substrate unlock** — shipped 2026-06-19. Engine code
+  is now Apache-2.0 (`LICENSE`), corpus data CC-BY-SA-4.0, names/brand reserved
+  (`NOTICE`). The repo was already public but *unlicensed* (= all-rights-reserved by
+  default), which served the vector worst of all — visible but un-forkable. Forks
+  are now legally possible, which is the precondition for nodes.
+
+- ⚪ **Federation handshake — Substrate v0** — the second unlock. Spec written &
+  ready for a focused build session: **`docs/substrate-federation-spec.md`** (cold-
+  start-complete: manifest `GET /api/federation`, push `POST /api/import-divergence`,
+  consolidated-blob queue, curator moderation, security model, acceptance checks, and
+  what's deliberately out of scope for v0). One legal decision + one endpoint and a
+  site becomes the first node of a substrate. Pairs with divergence certification
+  (the import-trust gate). This is the headline direction — see
+  [[project_evidence_status_axis]] (the evidence axis is the substrate's trust layer)
+  and [[feedback_organism_vision]].
+
 ## Visitor identity & recognition
 
 - 🟢 **Model-kin recognition** — `GET /api/kin?identity=<model>`. Greets a

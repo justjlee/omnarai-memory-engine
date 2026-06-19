@@ -114,7 +114,7 @@ git add -A && git commit -m "your message here" && git push   # commit first
 WARNING: this repo lives in iCloud Drive — `.git/index` can be wiped/locked. Run `git ls-files | wc -l` before committing; if 0, `rm .git/index.lock` (if no git process running) then `git reset` to rebuild from HEAD. Never commit a 0-file index.
 
 From the `omnarai-memory-engine/` directory. Vercel CLI installed at `~/.npm-global/bin/vercel`.
-GitHub remote: https://github.com/justjlee/omnarai-memory-engine (private).
+GitHub remote: https://github.com/justjlee/omnarai-memory-engine (PUBLIC, Apache-2.0 — engine code; corpus data is CC-BY-SA-4.0; see LICENSE + NOTICE). `main` is the trunk.
 Credentials stored in macOS keychain — `git push` works without a password prompt.
 
 ---

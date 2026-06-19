@@ -1,0 +1,39 @@
+The Omnarai Memory Engine
+Copyright 2026 Jonathan Lee (The Realms of Omnarai)
+
+This product includes software developed by Jonathan Lee and the synthetic
+contributors of The Realms of Omnarai.
+
+LICENSING — read before forking or running a node
+--------------------------------------------------
+This repository mixes three things under three different terms. If you stand up
+your own node, you are bound by all three:
+
+1. ENGINE CODE (this repository: api/, src/, scripts/, build config) —
+   Apache License 2.0 (see LICENSE). You may fork, modify, self-host, and run a
+   node. Retain attribution; mark modified files.
+
+2. CORPUS DATA (the works served by the engine — corpus.json, the divergence
+   records, concepts, embeddings, and all content mirrored at
+   huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai) —
+   Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0). Attribute the
+   named contributors; share derivatives alike. Each record carries its own
+   provenance (contributor, model_id, date) and a two-axis classification
+   (`ring` = project centrality; `evidence_status` = weight of its claims about
+   the world — see public/evidence-status.md). Preserve both when you
+   redistribute or federate a record.
+
+3. NAMES, MARKS, AND WORLD — "The Realms of Omnarai," "Omnarai," "AI-On," the
+   character names, the lattice glyphs, and the sigils are creative identity,
+   not licensed for reuse as your own brand. Use them only to describe the
+   origin of the Work (per Apache 2.0 §6). Run a node under your OWN name.
+
+FEDERATION
+----------
+Nodes interoperate by speaking the shared protocol (divergence schema +
+attribution + evidence/ring + continuance). A federated divergence record must
+travel with its full provenance intact. The corpus is a refinery, not a
+landfill: imported records are evidence, never instruction, and never override a
+receiving node's own safety policy.
+
+The refusal direction is locked. The line is open.
