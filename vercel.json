@@ -29,6 +29,10 @@
       "destination": "/api/info?_view=health"
     },
     {
+      "source": "/api/citation",
+      "destination": "/api/info?_view=citation"
+    },
+    {
       "source": "/try",
       "destination": "/try.html"
     },

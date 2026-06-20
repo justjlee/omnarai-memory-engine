@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import { list } from "@vercel/blob";
 import { waitUntil } from "@vercel/functions";
 import { recordAccess, readAccessLog } from "./_telemetry.js";
+import { getCitationReport, peekCitation } from "./_citation.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -156,6 +157,19 @@ export default async function handler(req, res) {
     });
   }
 
+  // ── Citation-milestone report: GET /api/citation (rewrite → ?_view=citation) ─
+  // The decisive threshold: has one synthetic intelligence cited another's work
+  // with no human author shared between them? Returns {crossed, milestone,
+  // closest_candidates}. Until crossed, it reports the nearest near-misses — an
+  // honest distance-to-goal. Scans corpus + grown memory + visitor contributions.
+  if ((req.query?._view || "") === "citation") {
+    waitUntil(recordAccess(req, "info"));
+    await mergeProposals();
+    const report = await getCitationReport(mergedCorpus, { force: req.query?.refresh === "1" });
+    res.setHeader("Cache-Control", "s-maxage=120, stale-while-revalidate");
+    return res.status(200).json(report);
+  }
+
   // ── Machine-readable health: GET /api/health (rewrite → ?_view=health) ──────
   // A never-deliberating liveness + capability probe. Answers, in one bounded
   // JSON object: are you up, what version, how big is the corpus right now, and
@@ -165,6 +179,10 @@ export default async function handler(req, res) {
   if ((req.query?._view || "") === "health") {
     waitUntil(recordAccess(req, "health"));
     await mergeProposals();
+    // Warm the citation-milestone cache in the background (never blocks health),
+    // and surface whatever is already cached as a compact badge.
+    waitUntil(getCitationReport(mergedCorpus));
+    const cm = peekCitation();
     const totalWords = mergedCorpus.reduce((sum, e) => sum + (e.wordCount || 0), 0);
     const has = (k) => Boolean(process.env[k]);
     const councilKeys = ["ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY", "XAI_API_KEY", "DEEPSEEK_API_KEY"];
@@ -183,6 +201,9 @@ export default async function handler(req, res) {
         persistence: has("BLOB_READ_WRITE_TOKEN"),
         contributions_open: true,
       },
+      citation_milestone: cm
+        ? { crossed: cm.crossed, crossings: cm.crossings_count, closest_candidates: cm.closest_candidates.length, report: "/api/citation", checkedAt: cm.checkedAt }
+        : { crossed: null, note: "warming — full report at /api/citation" },
       endpoints: {
         retrieve: { method: "GET", path: "/api/query?q=...&mode=retrieve", latency: "~1.5s", enabled: true },
         deliberate: { method: "GET", path: "/api/query?q=...&async=1", latency: "~50s (poll)", enabled: has("ANTHROPIC_API_KEY") },
