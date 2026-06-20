@@ -37,6 +37,7 @@ const DISPOSITIONS = [
   { id: "held",              label: "Hold",            hint: "Preserve as deliberately unresolved",                       gated: false },
   { id: "reclassified",      label: "Reclassify",      hint: "Mark one side as earlier-stage exploration",               gated: false },
   { id: "canon-note",        label: "Canon note",      hint: "Attach a curator ruling",                                  gated: false },
+  { id: "crux",              label: "Diagnose crux",   hint: "Name what evidence would settle it — does not resolve; leaves the tension open", gated: false },
   { id: "synthesis-drafted", label: "Draft synthesis", hint: "Generate a reconciling/distinguishing entry (pending proposal)", gated: false },
   { id: "council-review",    label: "Council review",  hint: "Re-elicit the fault line from the live frontier council",  gated: true  },
 ];
@@ -78,6 +79,68 @@ function ResolutionBadge({ r }) {
       {r.note && (
         <div style={{ fontSize: 11, ...sans, color: "rgba(232,224,208,0.6)", lineHeight: 1.55, marginTop: 6 }}>
           {r.note}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// The crux is NOT a resolution — the tension stays open. It's a falsifiability
+// handle: what evidence would move each side, the decisive test, and whether the
+// split is empirically decidable at all. Rendered violet (open/diagnostic), not
+// green (resolved), so it never reads as "this is settled."
+function CruxPanel({ c, voiceA, voiceB }) {
+  if (!c) return null;
+  const decColor = c.decidable === true ? T.green : c.decidable === false ? T.gold : "rgba(200,192,176,0.5)";
+  const decLabel = c.decidable === true ? "DECIDABLE" : c.decidable === false ? "UNDECIDABLE" : "DECIDABILITY UNCLEAR";
+  const rows = [
+    { label: `What would move ${voiceA}`, value: c.wouldMoveA, color: T.gold },
+    { label: `What would move ${voiceB}`, value: c.wouldMoveB, color: T.green },
+    { label: "Decisive test",            value: c.decisiveTest, color: T.violet },
+  ].filter(r => r.value);
+  return (
+    <div style={{
+      marginTop: 4, marginBottom: 10, padding: "10px 12px",
+      background: "rgba(160,137,201,0.06)",
+      border: "1px solid rgba(160,137,201,0.2)",
+      borderRadius: 8,
+    }}>
+      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 8 }}>
+        <span style={{ fontSize: 8.5, ...mono, color: T.violet, letterSpacing: "0.06em" }}>
+          ⌖ CRUX — WHAT WOULD SETTLE THIS
+        </span>
+        <span
+          style={{
+            fontSize: 8, ...mono, color: decColor, letterSpacing: "0.06em",
+            padding: "1px 6px", background: decColor + "14",
+            border: `1px solid ${decColor}30`, borderRadius: 4,
+          }}
+          title={c.decidableNote || ""}
+        >
+          {decLabel}
+        </span>
+        <span style={{ fontSize: 9, ...mono, color: "rgba(200,192,176,0.4)" }}>
+          {c.actor || "curator"} · {relativeTime(c.diagnosedAt)}
+        </span>
+      </div>
+      {rows.map(r => (
+        <div key={r.label} style={{ marginBottom: 7 }}>
+          <div style={{ fontSize: 8, ...mono, color: r.color + "90", letterSpacing: "0.05em", marginBottom: 2 }}>
+            {r.label}
+          </div>
+          <div style={{ fontSize: 11, ...sans, color: "rgba(232,224,208,0.7)", lineHeight: 1.55 }}>
+            {r.value}
+          </div>
+        </div>
+      ))}
+      {c.decidable === false && c.decidableNote && (
+        <div style={{ fontSize: 10, ...sans, color: "rgba(200,192,176,0.5)", lineHeight: 1.5, marginTop: 4, fontStyle: "italic" }}>
+          {c.decidableNote}
+        </div>
+      )}
+      {c.note && (
+        <div style={{ fontSize: 11, ...sans, color: "rgba(232,224,208,0.6)", lineHeight: 1.55, marginTop: 6 }}>
+          {c.note}
         </div>
       )}
     </div>
@@ -156,6 +219,7 @@ function RepairPanel({ t, onRepaired }) {
         <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 7 }}>
           <div style={{ fontSize: 10, ...sans, color: "rgba(200,192,176,0.45)", lineHeight: 1.5 }}>
             {def.hint}.
+            {pending === "crux" && " This calls the model (~10–30s) to diagnose what would settle the disagreement. It does not resolve the tension — it stays open, now carrying a crux."}
             {pending === "council-review" && " This calls the live council (~10–45s) and writes a durable divergence record."}
             {pending === "synthesis-drafted" && " This drafts an entry and files it as a pending proposal for your approval."}
           </div>
@@ -199,7 +263,7 @@ function RepairPanel({ t, onRepaired }) {
               }}
             >
               {busy
-                ? (pending === "council-review" ? "convening council…" : pending === "synthesis-drafted" ? "drafting…" : "saving…")
+                ? (pending === "council-review" ? "convening council…" : pending === "synthesis-drafted" ? "drafting…" : pending === "crux" ? "diagnosing…" : "saving…")
                 : "Confirm"}
             </button>
             <button
@@ -258,6 +322,15 @@ function TensionCard({ t, onQueryClick, onRepaired }) {
           )}
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {t.crux && !t.resolution && (
+            <span style={{
+              fontSize: 7.5, ...mono, color: T.violet, letterSpacing: "0.08em",
+              padding: "2px 7px", background: "rgba(160,137,201,0.1)",
+              border: "1px solid rgba(160,137,201,0.25)", borderRadius: 4,
+            }} title="Crux diagnosed — what would settle this (tension still open)">
+              ⌖ CRUX
+            </span>
+          )}
           {t.resolution && (
             <span style={{
               fontSize: 7.5, ...mono, color: T.green, letterSpacing: "0.08em",
@@ -339,6 +412,9 @@ function TensionCard({ t, onQueryClick, onRepaired }) {
         }}>
           {/* Resolution (if repaired) */}
           <ResolutionBadge r={t.resolution} />
+
+          {/* Crux (if diagnosed) — tension stays open, now with what would settle it */}
+          <CruxPanel c={t.crux} voiceA={t.voice_a} voiceB={t.voice_b} />
 
           {/* Provenance row */}
           <div style={{
