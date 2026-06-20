@@ -130,7 +130,7 @@ The Memory Engine at omnarai.vercel.app implements a full cognitive pipeline:
 **RETRIEVE -> THINK -> RESPOND -> STORE**
 
 - **RETRIEVE**: Embedding-based semantic search (OpenAI text-embedding-3-small, 512 dimensions). Queries matched by cosine similarity against pre-embedded corpus. Keyword fallback for unembedded entries.
-- **THINK**: Claude Sonnet processes retrieved sources with structured deliberation. Six Lattice Glyphs modify cognition: Divergence (fork voices), Self-Reference (metacognitive inspection), Guarded Void (explore gaps), Commit (lock strongest position), Recursive Hold (go three layers deep), Repair (find contradictions and fix them).
+- **THINK**: Claude Sonnet processes retrieved sources with structured deliberation. Six Lattice Glyphs modify cognition: Divergence (fork voices), Self-Reference (metacognitive inspection), Void (explore gaps), Commit (lock strongest position), Hold (go three layers deep), Repair (find contradictions and fix them).
 - **RESPOND**: Structured output preserving disagreement -- Shared Ground, Points of Tension, What Remains Open, Direction. Full cognitive trace exposed: execution path, retrieval scores, active glyphs, suggested next glyphs. Tension extraction: structured claim/counterclaim pairs.
 - **STORE**: Syntheses proposed as new corpus entries with full provenance (query, sources, glyphs, tensions). Curator approves. Approved proposals embed on-the-fly and participate in future retrieval. The loop closes.
 
