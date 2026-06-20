@@ -189,7 +189,9 @@ async function submitContribution(req, res) {
 
   // Auto-admit lane (dormant unless AUTO_ADMIT_CONTRIBUTIONS=1). Fails closed:
   // anything short of a clean low-risk verdict stays pending for the curator.
-  if (process.env.AUTO_ADMIT_CONTRIBUTIONS === "1") {
+  // .trim() tolerates stray whitespace — env vars set via CLI/dashboard often
+  // carry a trailing newline, a silent footgun otherwise.
+  if ((process.env.AUTO_ADMIT_CONTRIBUTIONS || "").trim() === "1") {
     const verdict = await scoreContributionRisk(contribution, record);
     contribution.review = verdict;
     if (verdict.admit) {
