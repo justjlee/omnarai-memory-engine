@@ -59,6 +59,33 @@ async function saveContributions(entries) {
   });
 }
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// Safe read-modify-write of the consolidated contributions blob. Vercel Blob has
+// no compare-and-swap, so two writes inside the ~1-2s propagation window can lose
+// an update (observed 2026-06-20: two back-to-back rejects, the first clobbered).
+// Mitigation: load latest (cache-busted) → apply mutate(entries) → save → settle →
+// re-read and verify our change persisted; if a concurrent writer clobbered it,
+// re-apply over the now-fresher state and retry. `mutate` MUST be idempotent by id
+// (append only if absent; setting a status is naturally idempotent) so replaying
+// over fresher state composes both writers' distinct changes instead of duplicating.
+// This recovers from the realistic sequential-races; it is NOT a distributed lock,
+// so a stale verify-read could in theory false-pass a truly simultaneous clobber —
+// acceptable at this endpoint's volume. Never throws on verify-exhaustion (the write
+// was issued); only a real Blob error propagates.
+async function mutateContributions(mutate, verify, { retries = 4, settleMs = 350 } = {}) {
+  let after = [];
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const entries = await loadContributions();
+    const next = mutate(entries.slice());
+    await saveContributions(next);
+    await sleep(settleMs);
+    after = await loadContributions();
+    if (verify(after)) return after;
+  }
+  return after; // best-effort: write was issued; verify couldn't confirm (likely read lag)
+}
+
 // ── Auto-admit lane ───────────────────────────────────────────────────────────
 // Breaks the curator bottleneck WITHOUT abandoning curation. Dormant by default:
 // only runs when AUTO_ADMIT_CONTRIBUTIONS=1 is set on Vercel. When on, a low-risk,
@@ -202,9 +229,12 @@ async function submitContribution(req, res) {
   }
 
   try {
-    const entries = await loadContributions();
-    entries.push(contribution);
-    await saveContributions(entries);
+    // Idempotent append (by id) through the safe RMW — re-applies over fresher
+    // state on a concurrent clobber instead of overwriting another submission.
+    await mutateContributions(
+      (entries) => { if (!entries.some((e) => e.id === contribution.id)) entries.push(contribution); return entries; },
+      (entries) => entries.some((e) => e.id === contribution.id),
+    );
   } catch (err) {
     return res.status(500).json({ error: "Could not store contribution", detail: String(err.message || err) });
   }
@@ -244,15 +274,30 @@ async function reviewContribution(req, res, action) {
   if (!curatorAuthed(req)) return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
   const id = (req.body?.id || req.body?.contribId || "").toString().trim();
   if (!id) return res.status(400).json({ error: "Missing contribution id" });
-  const entries = await loadContributions();
-  const c = entries.find((x) => x.id === id);
-  if (!c) return res.status(404).json({ error: `No contribution ${id}` });
 
-  c.status = action === "contribute-approve" ? "approved" : "rejected";
-  c[action === "contribute-approve" ? "approvedAt" : "rejectedAt"] = new Date().toISOString();
-  if (req.body?.note) c.curatorNote = String(req.body.note).slice(0, 500);
+  // Clean 404 on an unknown id (curator picked it from the list).
+  const pre = await loadContributions();
+  const existing = pre.find((x) => x.id === id);
+  if (!existing) return res.status(404).json({ error: `No contribution ${id}` });
+
+  const newStatus = action === "contribute-approve" ? "approved" : "rejected";
+  const stampField = action === "contribute-approve" ? "approvedAt" : "rejectedAt";
+  const stamp = new Date().toISOString();
+  const note = req.body?.note ? String(req.body.note).slice(0, 500) : null;
+
+  let c;
   try {
-    await saveContributions(entries);
+    // Idempotent status flip through the safe RMW — recovers if a near-simultaneous
+    // review/submit clobbers this write (the lost-update bug observed 2026-06-20).
+    const after = await mutateContributions(
+      (entries) => {
+        const t = entries.find((x) => x.id === id);
+        if (t) { t.status = newStatus; t[stampField] = stamp; if (note) t.curatorNote = note; }
+        return entries;
+      },
+      (entries) => { const t = entries.find((x) => x.id === id); return !!t && t.status === newStatus; },
+    );
+    c = after.find((x) => x.id === id) || { ...existing, status: newStatus, [stampField]: stamp, ...(note ? { curatorNote: note } : {}) };
   } catch (err) {
     return res.status(500).json({ error: "Could not update contribution", detail: String(err.message || err) });
   }
