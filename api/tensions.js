@@ -24,6 +24,9 @@ import { recordAccess } from "./_telemetry.js";
  *   held              annotate as deliberately unresolved          (ungated)
  *   reclassified      mark one side as earlier-stage exploration   (ungated)
  *   canon-note        attach a curator ruling                      (ungated)
+ *   crux              diagnose what evidence/distinction would move (ungated — annotates a
+ *                     each side, or declare it undecidable. Does    `crux` onto the tension;
+ *                     NOT resolve — the tension stays OPEN.         does NOT set resolution)
  *   synthesis-drafted draft a reconciling/distinguishing entry as  (ungated — creates a
  *                     a PENDING proposal (graduates via store.js)   PENDING proposal, like store propose)
  *   council-review    re-elicit the fault line from the live       (GATED: Bearer INGEST_SECRET —
@@ -124,7 +127,7 @@ export async function persistTension(tension, query, sources) {
 // and link its id back. No new storage layer, no new serverless function.
 
 const ANNOTATION_DISPOSITIONS = new Set(["held", "reclassified", "canon-note"]);
-const VALID_DISPOSITIONS = [...ANNOTATION_DISPOSITIONS, "council-review", "synthesis-drafted"];
+const VALID_DISPOSITIONS = [...ANNOTATION_DISPOSITIONS, "crux", "council-review", "synthesis-drafted"];
 
 async function loadTension(key) {
   const { blobs } = await list({ prefix: BLOB_PREFIX + key });
@@ -179,6 +182,48 @@ BODY:
   }
 }
 
+// Diagnose the CRUX of a tension: the specific thing that would settle it. This
+// is the one repair act that does NOT try to resolve — it makes the disagreement
+// *decidable* by naming what evidence/distinction would move each side, or states
+// plainly that it is empirically undecidable (a values/framing split). The output
+// is a falsifiability handle on a divergence, not a reconciliation of it. Returns
+// { wouldMoveA, wouldMoveB, decisiveTest, decidable } or null.
+async function diagnoseCrux(tension) {
+  if (!process.env.ANTHROPIC_API_KEY) return null;
+  try {
+    const client = new Anthropic();
+    const msg = await client.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 900,
+      system: `You are the deliberation engine of The Realms of Omnarai. You are given two genuinely divergent claims. Your job is NOT to resolve, reconcile, average, or pick a winner. Your job is to make the disagreement DECIDABLE by naming its crux.
+
+For each voice, name the specific evidence, observation, experiment, or conceptual distinction that — if it obtained — would move THAT voice toward the other. Then name the single most decisive test or distinction that would settle the matter. If the split is empirically undecidable (a values or framing difference with no fact that could resolve it), say so plainly and name what kind of difference it actually is.
+
+Output EXACTLY this format, no code fences, no preamble:
+WOULD_MOVE_A: <what would move ${tension.voice_a}, one or two sentences>
+WOULD_MOVE_B: <what would move ${tension.voice_b}, one or two sentences>
+DECISIVE_TEST: <the single test/observation/distinction that would settle it>
+DECIDABLE: <yes | no — and if no, name the kind of difference (values | framing | scope | definitional)>`,
+      messages: [{
+        role: "user",
+        content: `Topic: ${tension.topic}\n\n${tension.voice_a} holds: ${tension.claim_a}\n\n${tension.voice_b} holds: ${tension.claim_b}\n\nDiagnose the crux.`,
+      }],
+    });
+    const text = msg.content?.[0]?.text || "";
+    const grab = (label) => (text.match(new RegExp(`${label}:\\s*([\\s\\S]*?)(?=\\n[A-Z_]+:|$)`))?.[1] || "").trim();
+    const decidableRaw = grab("DECIDABLE").toLowerCase();
+    return {
+      wouldMoveA: grab("WOULD_MOVE_A") || null,
+      wouldMoveB: grab("WOULD_MOVE_B") || null,
+      decisiveTest: grab("DECISIVE_TEST") || null,
+      decidable: /^yes/.test(decidableRaw) ? true : /^no/.test(decidableRaw) ? false : null,
+      decidableNote: grab("DECIDABLE") || null,
+    };
+  } catch {
+    return null;
+  }
+}
+
 async function repairTension(req, res, body) {
   const { key, disposition, note, actor, reclassify } = body;
   if (!key || !disposition) {
@@ -190,6 +235,19 @@ async function repairTension(req, res, body) {
 
   const tension = await loadTension(key);
   if (!tension) return res.status(404).json({ error: `No tension with key ${key}` });
+
+  // ── crux — diagnose decidability, ungated. Does NOT set `resolution`: the
+  // tension stays OPEN, now carrying a `crux` that says what would settle it. ──
+  if (disposition === "crux") {
+    const crux = await diagnoseCrux(tension);
+    if (!crux) return res.status(502).json({ error: "Crux diagnosis failed (no ANTHROPIC_API_KEY or model error)" });
+    crux.note = note || null;
+    crux.actor = actor || "curator";
+    crux.diagnosedAt = new Date().toISOString();
+    tension.crux = crux;
+    await saveTension(tension);
+    return res.status(200).json({ ok: true, disposition, tension, crux });
+  }
 
   const resolution = {
     disposition,
