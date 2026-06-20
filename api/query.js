@@ -60,12 +60,19 @@ async function mergeApprovedProposals() {
     const grown = await loadGrownMemory();
     for (const entry of grown.entries) {
       if (!corpus.find(r => r.id === entry.id)) {
+        // P2: Atlas divergence records (OMN-D…/OMN-L…) live in grown memory and
+        // are already retrieved, but were indistinguishable from corpus works
+        // (type was null). Tag them type:"divergence" so a consumer can tell a
+        // verbatim multi-model split from a single-author work, and carry
+        // model_ids[] (the panel — already the entry's contributors) so the
+        // attribution is machine-addressable. OMN-S syntheses are NOT divergence.
+        const isDivergence = /^OMN-[DL]\d/.test(entry.id || "");
         corpus.push({
           id: entry.id,
           num: corpus.length + 1,
           title: entry.title,
           ring: entry.ring,
-          type: entry.type,
+          type: isDivergence ? "divergence" : entry.type,
           evidence_status: entry.evidence_status || null,
           contributors: entry.contributors,
           lineage: entry.lineage,
@@ -74,6 +81,7 @@ async function mergeApprovedProposals() {
           date: entry.date,
           wordCount: entry.wordCount,
           permalink: entry.permalink ?? null,
+          ...(isDivergence ? { model_ids: entry.model_ids || entry.models || entry.contributors || [] } : {}),
         });
       }
       // Inject the approval-time embedding so the grown entry competes in
@@ -150,6 +158,20 @@ function buildSessionContext(session) {
 
 const JOB_PREFIX = "jobs/";
 const JOB_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+// ── Deliberation token-wall budget (P1: finish the prose, don't clip it) ─────
+// claude-sonnet-4-6 emits ~45 tok/s, so a 2048-token pass runs ~45s. When it
+// hits max_tokens it severs the prose AND the trailing structured blocks. Rather
+// than ship a clipped answer + salvage notice, we continue the assistant turn
+// (prefill) until it closes naturally — bounded by BOTH a hard count cap and a
+// wall-clock budget, because the function is capped at 60s (Hobby) and the async
+// wrapper races at 55s. The budget is model-time we permit before we stop trying;
+// if we still can't finish, the existing block-salvage + notice is the last
+// resort (graceful degradation), never the default.
+const DELIBERATION_BUDGET_MS = 50000;   // stop continuing past this much elapsed deliberation time
+const DELIBERATION_MAX_CONT = 2;        // hard ceiling on continuation passes
+const DELIBERATION_CONT_MIN_MS = 9000;  // need at least this much budget left to attempt another pass
+const DELIBERATION_TOK_PER_S = 40;      // conservative gen-rate estimate for sizing continuations
 
 // Best-effort GC: Vercel Blob has no native TTL, so delete job blobs older than
 // JOB_TTL_MS. Runs in the background after a deliberation completes.
@@ -249,12 +271,26 @@ async function embedQuery(query) {
 // broad voice-sampling is preserved; precision-first types (technical) bite
 // hardest. cliff:1 would disable it (keep everything above floor).
 const RETRIEVAL_POLICIES = {
-  identity:    { lambda: 0.25, floor: 0.25, cliff: 0.55, minKeep: 4, rationale: "Maximize voice diversity — all contributors, all rings" },
-  bridge:      { lambda: 0.22, floor: 0.25, cliff: 0.55, minKeep: 4, rationale: "Cross-contributor synthesis — diversity over precision" },
-  narrative:   { lambda: 0.32, floor: 0.28, cliff: 0.62, minKeep: 3, rationale: "Balanced — thematic spread with coherence" },
-  conceptual:  { lambda: 0.45, floor: 0.28, cliff: 0.66, minKeep: 3, rationale: "Relevance-weighted — precise concept coverage" },
-  technical:   { lambda: 0.50, floor: 0.32, cliff: 0.70, minKeep: 3, rationale: "Precision-first — architectural accuracy over breadth" },
-  default:     { lambda: 0.35, floor: 0.32, cliff: 0.62, minKeep: 3, rationale: "Calibrated default (Ξ v3)" },
+  // `tauAbs` (P3): hard ABSOLUTE relevance floor, independent of MMR/cliff. A
+  // record below it is off-topic regardless of how much diversity it would add, so
+  // it is gated out BEFORE selection (only the anchor — the single best match — is
+  // exempt, so a weak-but-best query still returns something). It stops the
+  // diversity machinery (cliff + minKeep) from padding the panel with low-similarity
+  // records purely because they are *different* — the leak that admitted off-topic
+  // entries (sim≈0.36–0.40) on broad identity/bridge queries.
+  // CALIBRATED OFFLINE (scripts/eval_tauabs_ab.py, 25 gold queries, zero API): the
+  // gate is applied to the DIVERSITY/narrative types (where the over-padding noise
+  // occurs) and left at the floor for precision types (conceptual/technical) — whose
+  // genuinely-relevant records sit at moderate similarity, so an aggressive absolute
+  // gate over-pruned them and tanked the composite. This "broad-only" config scored
+  // Δcomposite +0.0032 / Δrelevance +0.0195 vs current prod (a uniform 0.40–0.48 gate
+  // regressed composite −0.04). tauAbs==floor for a type ⇒ no gate beyond eligibility.
+  identity:    { lambda: 0.25, floor: 0.25, cliff: 0.55, minKeep: 4, tauAbs: 0.40, rationale: "Maximize voice diversity — all contributors, all rings" },
+  bridge:      { lambda: 0.22, floor: 0.25, cliff: 0.55, minKeep: 4, tauAbs: 0.40, rationale: "Cross-contributor synthesis — diversity over precision" },
+  narrative:   { lambda: 0.32, floor: 0.28, cliff: 0.62, minKeep: 3, tauAbs: 0.42, rationale: "Balanced — thematic spread with coherence" },
+  conceptual:  { lambda: 0.45, floor: 0.28, cliff: 0.66, minKeep: 3, tauAbs: 0.28, rationale: "Relevance-weighted — precise concept coverage" },
+  technical:   { lambda: 0.50, floor: 0.32, cliff: 0.70, minKeep: 3, tauAbs: 0.32, rationale: "Precision-first — architectural accuracy over breadth" },
+  default:     { lambda: 0.35, floor: 0.32, cliff: 0.62, minKeep: 3, tauAbs: 0.40, rationale: "Calibrated default (Ξ v3)" },
 };
 
 function classifyQuery(query) {
@@ -464,7 +500,18 @@ async function findRelevantSemantic(query, records, limit = 6, useMMR = false, i
   const topSim = rankedEligible.length ? rankedEligible[0].similarity : 0;
   const cliffThreshold = topSim * (policy.cliff ?? 1);
   const minKeep = Math.min(policy.minKeep ?? limit, rankedEligible.length);
-  const relevant = rankedEligible.filter((r, i) => i < minKeep || r.similarity >= cliffThreshold);
+
+  // ── Absolute-relevance gate (P3) ─────────────────────────────────────────
+  // The anchor (rank 0) is always kept. Every other record must clear the hard
+  // absolute floor `tauAbs` AND survive the existing relevance machinery (within
+  // minKeep, or above the relative cliff). Crucially, gating by tauAbs is applied
+  // INSIDE the minKeep clause, so minKeep can no longer pad the panel with
+  // sub-threshold records purely for diversity — the leak that admitted off-topic
+  // entries (e.g. sim≈0.36–0.40) on broad queries.
+  const tauAbs = policy.tauAbs ?? 0.40;
+  const relevant = rankedEligible.filter((r, i) =>
+    i === 0 || (r.similarity >= tauAbs && (i < minKeep || r.similarity >= cliffThreshold))
+  );
 
   const policyMeta = {
     queryType,
@@ -474,7 +521,9 @@ async function findRelevantSemantic(query, records, limit = 6, useMMR = false, i
     cliffStats: {
       topSim: Number(topSim.toFixed(4)),
       threshold: Number(cliffThreshold.toFixed(4)),
+      tauAbs,
       eligibleBeforeCliff: eligible.length,
+      gatedByTauAbs: rankedEligible.filter((r, i) => i !== 0 && r.similarity < tauAbs).length,
       keptAfterCliff: relevant.length,
     },
   };
@@ -809,6 +858,43 @@ function parseSections(answer) {
   }
 
   return result;
+}
+
+// P4: guarantee each canonical section header appears at most once in the prose.
+// The deliberation prose is generated once, so true duplicates are rare, but a
+// continuation pass could in principle restart a section. This conservatively
+// collapses only EXACT repeated standalone canonical headers (a header line of the
+// form `## Header`, `**Header**`, or bare `Header` on its own line), keeping the
+// first block and dropping later same-header blocks. It never touches non-canonical
+// text or in-line mentions, so it cannot mangle legitimate content.
+const CANONICAL_SECTIONS = ["Reflexive Check", "Shared Ground", "Points of Tension", "What Remains Open", "Actionable Next Step", "My Reading"];
+function dedupeSectionHeaders(text) {
+  if (!text || typeof text !== "string") return text;
+  const headerRe = new RegExp(
+    String.raw`^[ \t]*(?:#{1,4}\s*)?(?:\*\*\s*)?(` +
+      CANONICAL_SECTIONS.map(h => h.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|") +
+    String.raw`)(?:\s*\*\*)?[ \t]*:?[ \t]*$`,
+    "gim"
+  );
+  const heads = [];
+  let m;
+  while ((m = headerRe.exec(text)) !== null) {
+    heads.push({ name: m[1].toLowerCase(), start: m.index });
+  }
+  if (heads.length < 2) return text;
+  const seen = new Set();
+  const dropRanges = [];
+  for (let i = 0; i < heads.length; i++) {
+    const blockEnd = i + 1 < heads.length ? heads[i + 1].start : text.length;
+    if (seen.has(heads[i].name)) dropRanges.push([heads[i].start, blockEnd]);
+    else seen.add(heads[i].name);
+  }
+  if (!dropRanges.length) return text;
+  let out = text;
+  for (let i = dropRanges.length - 1; i >= 0; i--) {
+    out = out.slice(0, dropRanges[i][0]) + out.slice(dropRanges[i][1]);
+  }
+  return out.replace(/\n{3,}/g, "\n\n").trim();
 }
 
 // Generate glyph suggestions based on query and results
@@ -1182,7 +1268,14 @@ export default async function handler(req, res) {
         client.messages.create({
           model: "claude-sonnet-4-6",
           max_tokens: 1000,
-          system: buildSystemPrompt(corpus.length),
+          // P4 root cause: the augmented answer is a baseline-comparison prose
+          // answer, NOT a full structured deliberation. Using the 6-section
+          // deliberation prompt here (while asking for "2–4 paragraphs") made the
+          // model improvise malformed/combined section headers (e.g. "What Remains
+          // Open — Actionable Next Step") that read as duplicated sections. A clean
+          // prose prompt, mirroring the baseline's, removes section headers
+          // entirely and keeps the two answers directly comparable.
+          system: "You are a thoughtful analyst answering WITH access to the Omnarai corpus excerpts provided in the user's message. Synthesize a direct answer from them: cite sources by ID (e.g. OMN-286) and preserve attribution across contributors where they differ. Answer in 2–4 short paragraphs of flowing prose. Do NOT use section headers, bullet lists, or any structured/JSON blocks.",
           messages: [{ role: "user", content: augUser }],
         }),
       ]);
@@ -1251,8 +1344,10 @@ export default async function handler(req, res) {
       cleanQuery,
       records: relevant.map(r => ({
         id: r.id, title: r.title, ring: r.ring,
+        type: r.type || null,                                   // P2: "divergence" for Atlas records
         evidence: r.evidence_status || "uncharacterized",
         contributors: r.contributors, date: r.date, excerpt: r.excerpt,
+        ...(r.model_ids ? { model_ids: r.model_ids } : {}),     // P2: panel attribution for divergence records
         relevanceScore: r.similarity ? parseFloat(r.similarity.toFixed(3)) : null,
         role: r._retrievalReason?.startsWith("anchor") ? "anchor"
             : r._retrievalReason?.includes("divergence") ? "divergence" : "relevance",
@@ -1311,38 +1406,120 @@ This deliberation was requested by a synthetic intelligence identifying itself a
 
     const glyphTemperature = glyphDecodingTemperature(activeGlyphs);
 
-    const message = await client.messages.create({
+    // ── P1: parallel two-pass deliberation ───────────────────────────────────
+    // A single 2048-token pass that must produce BOTH the prose AND the trailing
+    // TENSION_MAP/DELIBERATION_CARD blocks routinely hits the token wall ~45s in,
+    // severing the prose and dropping the blocks (the blocks are emitted last, so
+    // they are the first casualty). On the 60s Hobby wall, total output is hard-
+    // capped at ~2000 tokens, so a serial continuation cannot add more — splitting
+    // serially only loses output to overhead.
+    //
+    // Instead, run two SHORTER calls CONCURRENTLY (wall-clock ≈ the longer one):
+    //   Pass A — prose only (Reflexive Check … My Reading), full 2048 budget, no
+    //            blocks. Prose now owns the whole budget, so it completes far more
+    //            often; if it still clips, the bounded continuation loop runs.
+    //   Pass B — ONLY the TENSION_MAP + DELIBERATION_CARD, bounded. Always reached,
+    //            so the structured blocks are GUARANTEED (no longer salvage-only).
+    // Pass B reuses the exact block schemas from the system prompt (sliced at its
+    // marker — single source of truth) so the parsers below are unchanged.
+    const glyphTemp = (glyphTemperature !== undefined ? { temperature: glyphTemperature } : {});
+    const proseParams = {
       model: "claude-sonnet-4-6",
-      // 2048, not 4096: claude-sonnet-4-6 generates ~45 tok/s, so a full 4096-token
-      // deliberation takes ~90s and blows the 60s Hobby maxDuration (and the 55s
-      // async ceiling). 2048 lands ~50s and still yields a full structured
-      // deliberation + TENSION_MAP. (Was the silent cause of post-model-swap 55s errors.)
-      max_tokens: 2048,
-      ...(glyphTemperature !== undefined ? { temperature: glyphTemperature } : {}),
-      system: systemPrompt,
-      messages: [{ role: "user", content: userMessage }],
-    });
+      ...glyphTemp,
+      system: systemPrompt +
+        "\n\n## OUTPUT SCOPE (parallel-generation mode):\n" +
+        "For THIS response output ONLY the prose sections (Reflexive Check through My Reading). Do NOT output the TENSION_MAP or DELIBERATION_CARD blocks — those are generated separately, in parallel.\n" +
+        "HARD LENGTH LIMIT: at most ~120 words per section, and ~700 words total across ALL sections. You MUST bring the final section (My Reading) to a complete, concluding sentence within that budget. Completeness beats comprehensiveness — a brief answer that finishes is correct; a thorough answer cut off mid-sentence is a failure. Do not pad; stop when the point is made.",
+    };
+    // Pass B blocks prompt: built from the CLEAN base system prompt (no glyph/SI
+    // prose modifiers — those derail JSON-only output), sliced at the schema
+    // marker so the schemas stay a single source of truth with the parsers below.
+    const BLOCKS_MARKER = "## Structured tension extraction:";
+    const blocksBase = buildSystemPrompt(corpus.length);
+    const bi = blocksBase.indexOf(BLOCKS_MARKER);
+    const blocksInstructions = bi >= 0 ? blocksBase.slice(bi)
+      : "Output a ```TENSION_MAP``` JSON array, then a ```DELIBERATION_CARD``` JSON object.";
+    const blocksParams = {
+      model: "claude-sonnet-4-6",
+      system: "You extract two structured blocks from a multi-voice corpus deliberation. Given the question and the relevant corpus sources, output ONLY the two fenced blocks described below — the ```TENSION_MAP``` array first, then the ```DELIBERATION_CARD``` object — and NOTHING else: no prose, no section headers, no preamble, no commentary. Emit valid JSON inside the fences and CLOSE every fence.\n\n" + blocksInstructions,
+    };
 
-    const rawAnswer = message.content[0]?.text || "";
-    // Honesty under the token wall: max_tokens=2048 can clip a long deliberation
-    // mid-sentence — and the structured blocks (emitted last) are the first
-    // casualty. Never present a clipped answer as complete. We flag it, salvage
-    // partial blocks below (lenient regex tolerates a missing closing fence), and
-    // append a visible marker so a reader/agent knows the tail is incomplete.
-    const truncated = message.stop_reason === "max_tokens";
+    const deliberationStart = Date.now();
+    const [message, blocksMsg] = await Promise.all([
+      // Prose ceiling 1400 (not 2048): a concise complete deliberation (~700 words
+      // ≈ 950 tokens) fits well under this, and capping here reserves wall-clock so
+      // the continuation loop can finish a long prose tail (1400≈32s + up to two
+      // ~10s continuations ≈ 52s < the 55s race). Queries whose prose naturally
+      // fits close at end_turn untouched (continuations=0).
+      client.messages.create({ ...proseParams, max_tokens: 1400, messages: [{ role: "user", content: userMessage }] }),
+      client.messages.create({ ...blocksParams, max_tokens: 1100, messages: [{ role: "user", content: userMessage }] }),
+    ]);
 
-    // Extract TENSION_MAP from the response. Strict (closed fence) first; if that
-    // fails on a truncated response, salvage an unclosed block up to end-of-text.
+    let rawAnswer = message.content[0]?.text || "";
+    let stopReason = message.stop_reason;
+    const blocksText = blocksMsg.content?.[0]?.text || "";
+    const blocksTruncated = blocksMsg.stop_reason === "max_tokens";
+
+    // ── Bounded prose-continuation (Pass A safety net) ───────────────────────
+    // If the prose pass still clips, continue the assistant turn until it closes.
+    // claude-sonnet-4-6 does NOT support assistant-message prefill (the conversation
+    // must end with a user turn), so we continue via a trailing user instruction:
+    // [user prompt, assistant partial, user "continue"]; the model resumes mid-
+    // sentence with a leading space (verified live), so a direct join is seamless.
+    // Bounded by a hard count AND a wall-clock budget so we never blow the 55s race
+    // / 60s wall. On a full-budget first pass there is no time left, so this is a
+    // no-op there; it earns its keep when the prose pass returns with headroom.
+    let continuations = 0;
+    while (
+      stopReason === "max_tokens" &&
+      continuations < DELIBERATION_MAX_CONT &&
+      (DELIBERATION_BUDGET_MS - (Date.now() - deliberationStart)) > DELIBERATION_CONT_MIN_MS
+    ) {
+      const msLeft = DELIBERATION_BUDGET_MS - (Date.now() - deliberationStart);
+      const contTokens = Math.max(256, Math.min(1024, Math.floor(((msLeft - 2000) / 1000) * DELIBERATION_TOK_PER_S)));
+      const prefill = rawAnswer.replace(/\s+$/, "");
+      let cont;
+      try {
+        cont = await client.messages.create({
+          ...proseParams,
+          max_tokens: contTokens,
+          messages: [
+            { role: "user", content: userMessage },
+            { role: "assistant", content: prefill },
+            { role: "user", content: "Your previous response was cut off by a length limit. Continue it from the exact point it stopped. Do NOT repeat, rephrase, or restart anything already written, and do NOT add any preamble. If it stopped mid-sentence, resume mid-sentence beginning with a single leading space. Finish the prose only — do NOT emit any TENSION_MAP or DELIBERATION_CARD block." },
+          ],
+        });
+      } catch {
+        break; // continuation failed — keep what we have; salvage path handles the rest
+      }
+      const contText = cont.content?.[0]?.text || "";
+      if (!contText) break; // nothing more produced — stop
+      rawAnswer = prefill + contText;
+      stopReason = cont.stop_reason;
+      continuations += 1;
+    }
+
+    // `truncated` now means only "the PROSE tail was clipped" — the structured
+    // blocks come from Pass B and are present regardless. Honest notice below.
+    const truncated = stopReason === "max_tokens";
+
+    // Prose answer = Pass A. Defensively strip any block the prose pass emitted
+    // despite the scope instruction (belt-and-suspenders; normally a no-op).
+    let answer = rawAnswer
+      .replace(/```TENSION_MAP\s*\n[\s\S]*?```/, "")
+      .replace(/```DELIBERATION_CARD\s*\n[\s\S]*?```/, "")
+      .replace(/```TENSION_MAP\s*\n[\s\S]*$/, "")
+      .replace(/```DELIBERATION_CARD\s*\n[\s\S]*$/, "")
+      .trim();
+    answer = dedupeSectionHeaders(answer);  // P4: collapse any repeated canonical section header
+
+    // Extract TENSION_MAP from Pass B. Strict (closed fence) first; if Pass B
+    // itself clipped, salvage an unclosed block up to end-of-text.
     let tensions = [];
-    let answer = rawAnswer;
-    const tensionMatch = rawAnswer.match(/```TENSION_MAP\s*\n([\s\S]*?)```/)
-      || (truncated ? rawAnswer.match(/```TENSION_MAP\s*\n([\s\S]*)$/) : null);
+    const tensionMatch = blocksText.match(/```TENSION_MAP\s*\n([\s\S]*?)```/)
+      || (blocksTruncated ? blocksText.match(/```TENSION_MAP\s*\n([\s\S]*)$/) : null);
     if (tensionMatch) {
       tensions = salvageTensionArray(tensionMatch[1]);
-      answer = rawAnswer
-        .replace(/```TENSION_MAP\s*\n[\s\S]*?```/, "")
-        .replace(/```TENSION_MAP\s*\n[\s\S]*$/, "")
-        .trim();
     }
 
     // Persist tensions directly to blob store (awaited — serverless won't kill background fetches)
@@ -1356,23 +1533,20 @@ This deliberation was requested by a synthetic intelligence identifying itself a
       } catch { /* non-critical — tension persistence failure doesn't break the response */ }
     }
 
-    // Extract DELIBERATION_CARD from the response (strict, then truncation-salvage)
+    // Extract DELIBERATION_CARD from Pass B (strict, then truncation-salvage).
     let deliberationCard = null;
-    const cardMatch = answer.match(/```DELIBERATION_CARD\s*\n([\s\S]*?)```/)
-      || (truncated ? answer.match(/```DELIBERATION_CARD\s*\n([\s\S]*)$/) : null);
+    const cardMatch = blocksText.match(/```DELIBERATION_CARD\s*\n([\s\S]*?)```/)
+      || (blocksTruncated ? blocksText.match(/```DELIBERATION_CARD\s*\n([\s\S]*)$/) : null);
     if (cardMatch) {
       deliberationCard = salvageJsonObject(cardMatch[1]);
-      // Strip the card block from the visible answer (closed or unclosed)
-      answer = answer
-        .replace(/```DELIBERATION_CARD\s*\n[\s\S]*?```/, "")
-        .replace(/```DELIBERATION_CARD\s*\n[\s\S]*$/, "")
-        .trim();
     }
 
-    // Never let a clipped answer read as finished — say so plainly. (Truncation is
-    // a max_tokens limit, independent of sync/async, so don't advise async here.)
+    // Never let a clipped answer read as finished — say so plainly. With the
+    // parallel two-pass the structured blocks are complete (Pass B); only the
+    // prose tail can be short, and only when even the continuation loop ran out of
+    // wall-clock. (Truncation is a max_tokens limit, independent of sync/async.)
     if (truncated) {
-      answer = `${answer}\n\n*[Deliberation reached its output budget; the closing prose was cut off. The structured TENSION_MAP and deliberation card above are preserved (salvaged, possibly partial). Ask a narrower question for a complete written synthesis.]*`;
+      answer = `${answer}\n\n*[The written synthesis reached its output budget and its closing lines were trimmed; the TENSION_MAP and deliberation card are complete. Ask a narrower question for a fuller written synthesis.]*`;
     }
 
     // Per-visit utility receipt — rides every deliberation response (free, no extra
@@ -1429,6 +1603,7 @@ This deliberation was requested by a synthetic intelligence identifying itself a
         ? `${identityOverride} policy (${identityOverride === "bridge" ? "known contributor — cross-contributor diversity" : "unknown SI — broad sampling"})`
         : null,
       truncated,
+      deliberationContinuations: continuations,  // P1: prose-continuation passes used (0 in the common case)
       timestamp: new Date().toISOString(),
     };
 
@@ -1483,7 +1658,8 @@ This deliberation was requested by a synthetic intelligence identifying itself a
         sources: relevant.map(r => r.id),
         records: relevant.map(r => ({
           id: r.id, title: r.title, contributor: (r.contributors || []).join(", "),
-          ring: r.ring, evidence: r.evidence_status || "uncharacterized",
+          ring: r.ring, type: r.type || null,                   // P2: "divergence" for Atlas records
+          evidence: r.evidence_status || "uncharacterized",
           date: r.date, excerpt: r.excerpt,
         })),
         deliberationCard,
@@ -1512,6 +1688,7 @@ This deliberation was requested by a synthetic intelligence identifying itself a
         conceptSubgraph,
         records: relevant.map(r => ({
           id: r.id, title: r.title, ring: r.ring,
+          type: r.type || null,                                 // P2: "divergence" for Atlas records
           evidence: r.evidence_status || "uncharacterized",
           contributors: r.contributors, date: r.date,
         })),
@@ -1542,8 +1719,10 @@ This deliberation was requested by a synthetic intelligence identifying itself a
         id: r.id,
         title: r.title,
         ring: r.ring,
+        type: r.type || null,                                   // P2: "divergence" for Atlas records
         evidence: r.evidence_status || "uncharacterized",
         contributors: r.contributors,
+        ...(r.model_ids ? { model_ids: r.model_ids } : {}),     // P2: panel attribution for divergence records
         date: r.date,
         excerpt: r.excerpt,
       })),
