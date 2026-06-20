@@ -42,7 +42,7 @@ try {
   const info = await get("/api/info", { json: true });
   truth = info.body?.corpus;
   rec("source-of-truth /api/info", !!truth && truth.totalWorks > 0,
-    truth ? `${truth.totalWorks} works · ${truth.totalWords.toLocaleString()} words · rings ${truth.rings.core}/${truth.rings.curated}/${truth.rings.open}` : "no corpus block");
+    truth ? `${truth.totalWorks} works · ${truth.totalWords.toLocaleString()} words · rings ${truth.rings.core}/${truth.rings.curated}/${truth.rings.open}/${truth.rings.media ?? 0}` : "no corpus block");
 } catch (e) { rec("source-of-truth /api/info", false, String(e)); }
 
 // ---- 2. Completeness: the discovery ladder ----------------------------------
@@ -159,6 +159,7 @@ function checkCounts(label, text) {
     [/Core Canon\D{0,12}?([\d,]{1,4})\s+works/gi, truth.rings.core, "core"],
     [/Curated(?: Expansions)?\D{0,12}?([\d,]{1,4})\s+works/gi, truth.rings.curated, "curated"],
     [/Open Exploration\D{0,12}?([\d,]{1,4})\s+works/gi, truth.rings.open, "open"],
+    [/Media(?:\s*\/\s*Oral| ?\/ ?Oral)?\D{0,12}?([\d,]{1,4})\s+works/gi, truth.rings.media, "media"],
   ];
   for (const [re, want, name] of RINGS) for (const m of text.matchAll(re)) {
     const n = num(m[1]);
@@ -184,7 +185,7 @@ if (JSON_OUT) {
   console.log(JSON.stringify({ base: BASE, truth, pass, fail: fail.length, results }, null, 2));
 } else {
   console.log(`\n  ARRIVAL CHECK — ${BASE}`);
-  console.log(`  truth: ${truth ? `${truth.totalWorks} works · ${truth.totalWords.toLocaleString()} words · rings ${truth.rings.core}/${truth.rings.curated}/${truth.rings.open}` : "UNAVAILABLE"}\n`);
+  console.log(`  truth: ${truth ? `${truth.totalWorks} works · ${truth.totalWords.toLocaleString()} words · rings ${truth.rings.core}/${truth.rings.curated}/${truth.rings.open}/${truth.rings.media ?? 0} (core/curated/open/media)` : "UNAVAILABLE"}\n`);
   for (const r of results) console.log(`  ${r.ok ? "✓" : "✗"} ${r.name}${r.detail ? `  — ${r.detail}` : ""}`);
   console.log(`\n  ${pass}/${results.length} passed.` + (fail.length ? `  ${fail.length} FAILED.` : "  A stranger arriving now gets a complete, congruent experience."));
   console.log();

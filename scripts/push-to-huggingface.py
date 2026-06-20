@@ -21,6 +21,9 @@ ROOT_FILES = [
     "corpus.json",
     "corpus.csv",
     "corpus-full-text.jsonl",
+    # Media split — the video_* corpus (media ring), additive to the text mirror
+    "media-corpus.jsonl",
+    "media-corpus.csv",
     "concepts.json",
     "omnarai.context.md",
     "llms.txt",

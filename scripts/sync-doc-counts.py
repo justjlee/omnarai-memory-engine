@@ -43,6 +43,7 @@ try:
     EDGES = int(info["conceptGraph"].get("edges", EDGES))
     rings = info["corpus"].get("rings", {})
     CORE, CURATED, OPEN = rings.get("core"), rings.get("curated"), rings.get("open")
+    MEDIA = rings.get("media")  # oral/video bucket (added 2026-06-19); may be absent on older deploys
 except Exception as e:
     CORPUS = json.loads((BASE / "public/data/corpus.json").read_text())
     WORKS = len(CORPUS)
@@ -62,6 +63,11 @@ if None not in (CORE, CURATED, OPEN):
         (r"(\*\*Open Exploration\*\* \()\d+( works\))", rf"\g<1>{OPEN}\g<2>"),
         (r"(### Open Exploration \()\d+( works total)", rf"\g<1>{OPEN}\g<2>"),
     ]
+    if MEDIA is not None:
+        _RING_SUBS += [
+            (r"(\*\*Media / Oral\*\* \()\d+( works\))", rf"\g<1>{MEDIA}\g<2>"),
+            (r"(### Media / Oral \()\d+( works total)", rf"\g<1>{MEDIA}\g<2>"),
+        ]
 # "live engine serves N" appears in both context.md and llms.txt and drifted to 565.
 _SERVES = (r"(live engine serves )\d+", rf"\g<1>{WORKS}")
 
@@ -74,6 +80,9 @@ if None not in (CORE, CURATED, OPEN):
         (r"(Curated Expansions \()\d+( works\))", rf"\g<1>{CURATED}\g<2>"),
         (r"(Open Exploration \()\d+( works\))", rf"\g<1>{OPEN}\g<2>"),
     ]
+    if MEDIA is not None:
+        _INDEX_RING_SUBS.append(
+            (r"(Media / Oral \()\d+( works\))", rf"\g<1>{MEDIA}\g<2>"))
 
 # (path, [(regex, replacement), ...]) — patterns are deliberately specific.
 TARGETS = [

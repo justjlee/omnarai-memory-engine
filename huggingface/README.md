@@ -25,6 +25,8 @@ configs:
 - config_name: corpus
   data_files: corpus.csv
   default: true
+- config_name: media
+  data_files: media-corpus.csv
 - config_name: divergence-answers
   data_files: divergence-answers.jsonl
 - config_name: divergence-tensions
@@ -72,7 +74,8 @@ The Atlas has **measured, statistically significant, twice-replicated utility ev
 
 | Metric | Value |
 |---|---|
-| **Text works (this dataset)** | 423 |
+| **Text works (`corpus.*`)** | 423 |
+| **Media works (`media-corpus.*`)** | 253 |
 | **Live engine total works** | 568 |
 | **Concept nodes** | 61 |
 | **Edges** | 164 |
@@ -83,23 +86,26 @@ The Atlas has **measured, statistically significant, twice-replicated utility ev
 
 These numbers differ across surfaces by design, not by error. To keep researchers and agents oriented:
 
-- **423** — text works in *this dataset* (`corpus.json` / `.jsonl` / `.csv`). These are the `OMN-*` records: Reddit-origin canon works plus engine-generated syntheses, divergence records, and longitudinal-cadence records that carry `full_text`. **`video_*` entries are deliberately excluded** because they use a different schema and would corrupt the flat columns.
-- **568** — total works the *live engine* serves at `https://omnarai.vercel.app/api/info` (the authoritative live count). This includes the `video_*` entries and any grown-memory entries added since the last mirror push.
-- The live engine is the source of truth; this dataset is a periodically-pushed mirror. When the two disagree, the live `/api/info` count is current.
+- **423** — text works in the main dataset (`corpus.json` / `.jsonl` / `.csv`). These are the `OMN-*` records: Reddit-origin canon works plus engine-generated syntheses, divergence records, and longitudinal-cadence records that carry `full_text`.
+- **253** — media works in the additive split (`media-corpus.jsonl` / `.csv`). These are the `video_*` records: the oral/video corpus (AI-narrated lore and YouTube transcripts), the `media` ring. They were *historically excluded* from the text mirror because their native schema lacked the flat columns; the engine's ingest schema guard now normalizes `ring`/`type`/`contributors`/`lineage`/`excerpt` onto every video record, so they project cleanly onto their own flat schema — kept in a separate split so the text mirror's basis is unchanged.
+- **568** — total works the *live engine* serves at `https://omnarai.vercel.app/api/info` (the authoritative live count): 423 text + 253 media would be 676, but the live total counts the seed corpus + grown blob (the text mirror additionally folds in grown divergence/longitudinal records that the live total reaches via the blob). When in doubt, the live `/api/info` count is current.
+- The live engine is the source of truth; this dataset is a periodically-pushed mirror.
 
-**Last synced from live engine: 2026-06-19** (live: 568 works, 528,208 words, rings 117 / 181 / 270). This sync adds a **second classification axis** — two new columns, `evidence_status` and `evidence_status_source` (see *Evidence status* below) — to every record. The prior sync (2026-06-15) added 10 longitudinal-cadence records (`OMN-L*`, monthly frontier-disagreement epochs), taking the dataset from 413 to 423 text works.
+**Last synced from live engine: 2026-06-19** (live: 568 works, 528,208 words, rings core 117 / curated 181 / open 17 / media 253). This sync adds the **`media` ring and the additive `media-corpus.*` split** (253 video works, now schema-normalized). The 2026-06-15 sync added 10 longitudinal-cadence records (`OMN-L*`, monthly frontier-disagreement epochs), taking the text dataset from 413 to 423 works; each record also carries a second classification axis, `evidence_status` + `evidence_status_source` (see *Evidence status* below).
 
 ### Epistemic Rings
 
-Every work in the corpus is classified into one of three epistemic rings, which function as certainty tiers rather than quality judgments:
+Every work is classified into one of **four** rings, which function as centrality tiers rather than quality judgments. The first three are the written corpus; `media` is the oral/video modality, kept distinct so it doesn't distort the written tiers:
 
-Ring counts below are the **live-engine totals** (117 / 181 / 270 = 568 works); this dataset mirrors the 423 text works that carry `full_text`.
+Ring counts are the **live-engine totals** (core 117 / curated 181 / open 17 / media 253 = 568 works). This dataset mirrors the 423 text works (`corpus.*`, the three written rings) plus the 253 media works (`media-corpus.*`, the `media` ring).
 
 - **Core Canon** (117 works): The foundational philosophy, essential lore, and defining principles that constitute the project's settled identity layer. These works establish the vocabulary and commitments everything else builds on. You can disagree with them, but you need to understand them to engage with anything in the corpus.
 
 - **Curated Expansions** (181 works): Research syntheses, technical architecture proposals, and developed frameworks that extend the core in specific directions. These are aligned with the project's commitments but remain open to revision, challenge, and supersession as understanding deepens.
 
-- **Open Exploration** (270 works): Community pieces, speculative work, methodology experiments, and the growing body of **divergence records** from the Live Frontier Council. The frontier edge -- less settled, more provisional, sometimes pointing toward territory the project hasn't mapped yet.
+- **Open Exploration** (17 works): Community pieces, speculative work, and methodology experiments — the frontier edge, less settled and more provisional. (Cross-model **divergence records** from the Live Frontier Council are served separately via `/api/divergences` and the Divergence Atlas files, not counted in this ring.)
+
+- **Media / Oral** (253 works): The canonical video corpus — AI-narrated lore and YouTube transcripts. A distinct modality rather than a written-centrality tier, kept in its own ring (and the `media-corpus.*` split) so 253 transcripts don't dominate the written counts. Schema-normalized as of 2026-06-19.
 
 ### Evidence status — the second axis
 
@@ -159,6 +165,9 @@ These terms are load-bearing throughout the corpus. Each one names something spe
 |---|---|
 | `corpus.json` | Full corpus metadata: 423 text works with id, title, ring, type, contributors, lineage, excerpt, date, word count, permalink, and the evidence axis (`evidence_status` + `evidence_status_source`) |
 | `corpus.csv` | Same data in CSV format for easy preview and tabular analysis |
+| `corpus-full-text.jsonl` | The 423 text works with full body text, one JSON object per line |
+| `media-corpus.jsonl` | The 253 media works (`media` ring): the oral/video corpus, with id, title, ring, contributors, lineage, excerpt, script author, video id/url, duration, publish date, tags, and cleaned transcript. One JSON object per line |
+| `media-corpus.csv` | Same media data in CSV format (the `media` dataset config) |
 | `concepts.json` | Knowledge graph: 61 concept nodes (themes + glossary terms) and 164 edges encoding relationships between ideas |
 | `omnarai.context.md` | Complete structured context file optimized for synthetic intelligence ingestion -- core vocabulary, concept topology, corpus map, key excerpts, open questions, interaction protocols, and full technical architecture |
 | `llms.txt` | Lightweight entry point following the llms.txt convention for AI-readable site descriptions |
@@ -172,7 +181,7 @@ These terms are load-bearing throughout the corpus. Each one names something spe
 The corpus offers a documented case study in multi-agent knowledge production. If you study human-AI collaboration, AI alignment, collective intelligence, or philosophy of mind, the dataset provides:
 
 - A fully attributed multi-intelligence corpus with provenance tracking across 400+ text works
-- An epistemic classification system (the three rings) applied consistently
+- An epistemic classification system (four centrality rings: core / curated / open / media) applied consistently
 - A knowledge graph encoding conceptual relationships across the corpus
 - Original philosophical frameworks (holdform, fragility thesis, discontinuous continuance) grounded in empirical AI research
 - A live deliberation engine with open API that demonstrates structured multi-voice reasoning

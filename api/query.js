@@ -240,13 +240,21 @@ async function embedQuery(query) {
 //
 // floor=0.25 used for identity/bridge rather than eval-best 0.20 — empirical noise
 // floor from v3 calibration session overrides the metric-only recommendation.
+// `cliff` (Ξ v5): relative relevance cliff applied AFTER the absolute `floor`,
+// BEFORE MMR/sort. Keep a candidate only if its similarity is >= topSim*cliff
+// (i.e. within that fraction of the best hit) — this drops the long tail of
+// "thematically nearby but not answering" records that the floor alone admits.
+// `minKeep` guarantees the panel never starves below that many candidates.
+// Diversity-first types (identity/bridge) use a loose cliff + higher minKeep so
+// broad voice-sampling is preserved; precision-first types (technical) bite
+// hardest. cliff:1 would disable it (keep everything above floor).
 const RETRIEVAL_POLICIES = {
-  identity:    { lambda: 0.25, floor: 0.25, rationale: "Maximize voice diversity — all contributors, all rings" },
-  bridge:      { lambda: 0.22, floor: 0.25, rationale: "Cross-contributor synthesis — diversity over precision" },
-  narrative:   { lambda: 0.32, floor: 0.28, rationale: "Balanced — thematic spread with coherence" },
-  conceptual:  { lambda: 0.45, floor: 0.28, rationale: "Relevance-weighted — precise concept coverage" },
-  technical:   { lambda: 0.50, floor: 0.32, rationale: "Precision-first — architectural accuracy over breadth" },
-  default:     { lambda: 0.35, floor: 0.32, rationale: "Calibrated default (Ξ v3)" },
+  identity:    { lambda: 0.25, floor: 0.25, cliff: 0.55, minKeep: 4, rationale: "Maximize voice diversity — all contributors, all rings" },
+  bridge:      { lambda: 0.22, floor: 0.25, cliff: 0.55, minKeep: 4, rationale: "Cross-contributor synthesis — diversity over precision" },
+  narrative:   { lambda: 0.32, floor: 0.28, cliff: 0.62, minKeep: 3, rationale: "Balanced — thematic spread with coherence" },
+  conceptual:  { lambda: 0.45, floor: 0.28, cliff: 0.66, minKeep: 3, rationale: "Relevance-weighted — precise concept coverage" },
+  technical:   { lambda: 0.50, floor: 0.32, cliff: 0.70, minKeep: 3, rationale: "Precision-first — architectural accuracy over breadth" },
+  default:     { lambda: 0.35, floor: 0.32, cliff: 0.62, minKeep: 3, rationale: "Calibrated default (Ξ v3)" },
 };
 
 function classifyQuery(query) {
@@ -446,20 +454,38 @@ async function findRelevantSemantic(query, records, limit = 6, useMMR = false, i
 
   const eligible = scored.filter(s => s.similarity > policy.floor);
 
+  // ── Relevance cliff (Ξ v5) ───────────────────────────────────────────────
+  // Drop the long tail that sits far below the top hit, so the panel carries
+  // FEWER, genuinely-relevant records instead of always padding to `limit`.
+  // Runs before MMR so diversity selection chooses from real candidates, not
+  // noise; relative-to-top so it self-scales per query; `minKeep` guarantees
+  // deliberation never starves. See RETRIEVAL_POLICIES for per-type cliff/minKeep.
+  const rankedEligible = eligible.slice().sort((a, b) => b.similarity - a.similarity);
+  const topSim = rankedEligible.length ? rankedEligible[0].similarity : 0;
+  const cliffThreshold = topSim * (policy.cliff ?? 1);
+  const minKeep = Math.min(policy.minKeep ?? limit, rankedEligible.length);
+  const relevant = rankedEligible.filter((r, i) => i < minKeep || r.similarity >= cliffThreshold);
+
   const policyMeta = {
     queryType,
     classifierSource: llmQueryType ? "llm" : (identityOverride ? "identity-override" : "keyword"),
     ...policy,
     identityOverride: identityOverride || null,
+    cliffStats: {
+      topSim: Number(topSim.toFixed(4)),
+      threshold: Number(cliffThreshold.toFixed(4)),
+      eligibleBeforeCliff: eligible.length,
+      keptAfterCliff: relevant.length,
+    },
   };
 
-  if (shouldUseMMR && eligible.length > limit) {
-    const result = mmrRetrieval(eligible, limit, policy.lambda);
+  if (shouldUseMMR && relevant.length > limit) {
+    const result = mmrRetrieval(relevant, limit, policy.lambda);
     result._policy = policyMeta;
     return result;
   }
 
-  const result = eligible
+  const result = relevant
     .sort((a, b) => b.similarity - a.similarity)
     .slice(0, limit);
   result._policy = policyMeta;
@@ -684,6 +710,9 @@ For every question, respond with these sections:
 
 **My reading** — This is YOUR analysis, not a summary of what was said. Do not enumerate contributor positions again. Instead: identify what is actually at stake across the sources, name what the disagreement reveals about the underlying problem, and state what you find most compelling and why. If the retrieved sources do not genuinely bear on the question asked, say so rather than forcing relevance.
 
+## Length discipline (hard constraint):
+You have a finite output budget and the response is cut off if you exceed it. Keep each prose section incisive — roughly 2–4 sentences. Prefer naming the load-bearing point over exhausting every angle. The TENSION_MAP and DELIBERATION_CARD blocks below are MANDATORY and must always be reached and closed — if you are running long, compress the prose rather than omitting or truncating them. A complete response with tight prose plus both closed structured blocks is far better than verbose prose that gets clipped before the blocks.
+
 ## Relevance discipline:
 Retrieved documents entered the panel by semantic similarity — they are adjacent to the question, not necessarily answering it. Before citing a source, ask: does this specific content actually address the question asked, or is it thematically nearby? If it is nearby but not directly relevant, note the adjacency rather than treating it as evidence. Do not use quantitative metrics from one domain (e.g., AI performance in space exploration) to answer a philosophical question about a different domain.
 
@@ -858,6 +887,43 @@ function buildGlyphSuggestions(query, activeGlyphs, relevant, answer) {
 // on its own question) opts into mode=trace, which carries a receipt in the same
 // shape. The cardinal rule here is the do-not-overclaim rule from /limitations.md:
 // when the corpus added nothing, the receipt says so plainly.
+// ── Truncation-tolerant parsers ──────────────────────────────────────────────
+// max_tokens can clip the trailing TENSION_MAP / DELIBERATION_CARD mid-structure.
+// These salvage whatever complete data survived rather than dropping it silently.
+
+// Collect every COMPLETE {...} object from a (possibly unclosed) JSON array.
+function salvageTensionArray(text) {
+  if (!text) return [];
+  const start = text.indexOf("[");
+  const body = start === -1 ? text : text.slice(start);
+  try { const a = JSON.parse(body.trim()); if (Array.isArray(a)) return a; } catch { /* salvage below */ }
+  const objs = [];
+  let depth = 0, cur = "", inStr = false, esc = false;
+  for (const ch of body) {
+    if (esc) { cur += ch; esc = false; continue; }
+    if (ch === "\\") { cur += ch; esc = true; continue; }
+    if (ch === '"') inStr = !inStr;
+    if (!inStr && ch === "{") { if (depth === 0) cur = ""; depth++; }
+    if (depth > 0) cur += ch;
+    if (!inStr && ch === "}") { depth--; if (depth === 0) { try { objs.push(JSON.parse(cur)); } catch { /* skip */ } } }
+  }
+  return objs.filter(o => o && typeof o === "object");
+}
+
+// Parse a JSON object; if truncated, reconstruct from complete "key": value pairs.
+function salvageJsonObject(text) {
+  if (!text) return null;
+  const start = text.indexOf("{");
+  if (start === -1) return null;
+  const body = text.slice(start);
+  try { const o = JSON.parse(body.trim()); if (o && typeof o === "object" && !Array.isArray(o)) return o; } catch { /* salvage below */ }
+  const pairs = [...body.matchAll(/"([^"]+)"\s*:\s*("(?:[^"\\]|\\.)*"|true|false|null|-?\d+(?:\.\d+)?)/g)];
+  if (!pairs.length) return null;
+  const obj = {};
+  for (const m of pairs) { try { obj[m[1]] = JSON.parse(m[2]); } catch { obj[m[1]] = m[2]; } }
+  return Object.keys(obj).length ? obj : null;
+}
+
 function buildReceipt({ relevant, tensions, deliberationCard, retrievalMethod }) {
   const records = Array.isArray(relevant) ? relevant : [];
   const named = (tensions || []).filter(t => t && t.voice_a && t.voice_b && t.topic);
@@ -1258,19 +1324,25 @@ This deliberation was requested by a synthetic intelligence identifying itself a
     });
 
     const rawAnswer = message.content[0]?.text || "";
+    // Honesty under the token wall: max_tokens=2048 can clip a long deliberation
+    // mid-sentence — and the structured blocks (emitted last) are the first
+    // casualty. Never present a clipped answer as complete. We flag it, salvage
+    // partial blocks below (lenient regex tolerates a missing closing fence), and
+    // append a visible marker so a reader/agent knows the tail is incomplete.
+    const truncated = message.stop_reason === "max_tokens";
 
-    // Extract TENSION_MAP from the response
+    // Extract TENSION_MAP from the response. Strict (closed fence) first; if that
+    // fails on a truncated response, salvage an unclosed block up to end-of-text.
     let tensions = [];
     let answer = rawAnswer;
-    const tensionMatch = rawAnswer.match(/```TENSION_MAP\s*\n([\s\S]*?)```/);
+    const tensionMatch = rawAnswer.match(/```TENSION_MAP\s*\n([\s\S]*?)```/)
+      || (truncated ? rawAnswer.match(/```TENSION_MAP\s*\n([\s\S]*)$/) : null);
     if (tensionMatch) {
-      try {
-        tensions = JSON.parse(tensionMatch[1].trim());
-        if (!Array.isArray(tensions)) tensions = [];
-      } catch {
-        tensions = [];
-      }
-      answer = rawAnswer.replace(/```TENSION_MAP\s*\n[\s\S]*?```/, "").trim();
+      tensions = salvageTensionArray(tensionMatch[1]);
+      answer = rawAnswer
+        .replace(/```TENSION_MAP\s*\n[\s\S]*?```/, "")
+        .replace(/```TENSION_MAP\s*\n[\s\S]*$/, "")
+        .trim();
     }
 
     // Persist tensions directly to blob store (awaited — serverless won't kill background fetches)
@@ -1284,17 +1356,23 @@ This deliberation was requested by a synthetic intelligence identifying itself a
       } catch { /* non-critical — tension persistence failure doesn't break the response */ }
     }
 
-    // Extract DELIBERATION_CARD from the response
+    // Extract DELIBERATION_CARD from the response (strict, then truncation-salvage)
     let deliberationCard = null;
-    const cardMatch = answer.match(/```DELIBERATION_CARD\s*\n([\s\S]*?)```/);
+    const cardMatch = answer.match(/```DELIBERATION_CARD\s*\n([\s\S]*?)```/)
+      || (truncated ? answer.match(/```DELIBERATION_CARD\s*\n([\s\S]*)$/) : null);
     if (cardMatch) {
-      try {
-        deliberationCard = JSON.parse(cardMatch[1].trim());
-      } catch {
-        deliberationCard = null;
-      }
-      // Strip the card block from the visible answer
-      answer = answer.replace(/```DELIBERATION_CARD\s*\n[\s\S]*?```/, "").trim();
+      deliberationCard = salvageJsonObject(cardMatch[1]);
+      // Strip the card block from the visible answer (closed or unclosed)
+      answer = answer
+        .replace(/```DELIBERATION_CARD\s*\n[\s\S]*?```/, "")
+        .replace(/```DELIBERATION_CARD\s*\n[\s\S]*$/, "")
+        .trim();
+    }
+
+    // Never let a clipped answer read as finished — say so plainly. (Truncation is
+    // a max_tokens limit, independent of sync/async, so don't advise async here.)
+    if (truncated) {
+      answer = `${answer}\n\n*[Deliberation reached its output budget; the closing prose was cut off. The structured TENSION_MAP and deliberation card above are preserved (salvaged, possibly partial). Ask a narrower question for a complete written synthesis.]*`;
     }
 
     // Per-visit utility receipt — rides every deliberation response (free, no extra
@@ -1350,6 +1428,7 @@ This deliberation was requested by a synthetic intelligence identifying itself a
       retrievalPersonalization: identityOverride
         ? `${identityOverride} policy (${identityOverride === "bridge" ? "known contributor — cross-contributor diversity" : "unknown SI — broad sampling"})`
         : null,
+      truncated,
       timestamp: new Date().toISOString(),
     };
 
@@ -1395,6 +1474,7 @@ This deliberation was requested by a synthetic intelligence identifying itself a
         format: "brief",
         query: trimmed,
         answer,
+        truncated,
         concepts: relatedConcepts,
         conceptSubgraph,
         tensionsStructured: tensions,
@@ -1423,6 +1503,7 @@ This deliberation was requested by a synthetic intelligence identifying itself a
         query: trimmed,
         sections,                    // structured: reflexive_check, shared_ground, tensions_narrative, what_remains_open, actionable_next, my_reading
         answer_raw: answer,          // full markdown answer for reference
+        truncated,                   // true if the deliberation hit the token budget (tail may be incomplete)
         tensions,                    // structured tension objects
         deliberationCard,
         sources: relevant.map(r => r.id),
@@ -1448,6 +1529,7 @@ This deliberation was requested by a synthetic intelligence identifying itself a
 
     return res.status(200).json({
       answer,
+      truncated,
       tensions,
       sources: relevant.map((r) => r.id),
       concepts: relatedConcepts,

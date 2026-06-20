@@ -57,12 +57,51 @@ COLS = ["id", "num", "title", "ring", "type", "contributors", "lineage",
         "evidence_status", "evidence_status_source"]
 
 
+# Media split (added 2026-06-19): the video_* corpus. Historically excluded
+# because its native schema lacked the flat columns; the ingest schema guard now
+# normalizes ring/type/contributors/lineage/excerpt onto every video record, so
+# it projects cleanly onto its OWN flat schema here — an ADDITIVE split that
+# leaves the text mirror (corpus.*) and its documented "423 text works" basis
+# untouched. These are the `media` ring (oral/video modality).
+MEDIA_COLS = ["id", "title", "ring", "type", "contributors", "lineage",
+              "excerpt", "script_author", "video_id", "video_url", "playlist_id",
+              "duration_seconds", "published_at", "tags", "transcript"]
+
+
 def is_text_work(r):
     rid = str(r.get("id", ""))
     if rid.startswith("video_"):
         return False
     # OMN-### (Reddit) and OMN-S… (grown syntheses) are the text corpus.
     return rid.startswith("OMN-")
+
+
+def is_media_work(r):
+    return str(r.get("id", "")).startswith("video_")
+
+
+def normalize_media(r):
+    """Project a normalized video record onto the flat MEDIA_COLS schema."""
+    auth = r.get("authorship") or {}
+    tr = r.get("transcript") or {}
+    flat = {
+        "script_author": auth.get("script_author", ""),
+        "video_id": r.get("video_id", ""),
+        "video_url": r.get("video_url", ""),
+        "playlist_id": r.get("playlist_id", ""),
+        "duration_seconds": r.get("duration_seconds", 0) or 0,
+        "published_at": r.get("published_at", ""),
+        "tags": r.get("tags", []) or [],
+        "transcript": tr.get("cleaned") or r.get("content", "") or "",
+    }
+    out = {}
+    for c in MEDIA_COLS:
+        if c in flat:
+            out[c] = flat[c]
+        else:
+            v = r.get(c)
+            out[c] = ([] if c in ("contributors", "lineage") else "") if v is None else v
+    return out
 
 
 def normalize(r):
@@ -96,13 +135,16 @@ def main():
 
     records = [normalize(r) for r in CORPUS if is_text_work(r)]
     with_ft = sum(1 for r in records if r["full_text"].strip())
+    media = [normalize_media(r) for r in CORPUS if is_media_work(r)]
 
     print(f"\n=== HF derivatives — {'APPLY' if args.apply else 'DRY-RUN'} ===")
     print(f"Source corpus:        {len(CORPUS)} records")
-    print(f"Text works (OMN-*):   {len(records)}  (video_* excluded)")
+    print(f"Text works (OMN-*):   {len(records)}  (video_* excluded from text mirror)")
     print(f"  with full_text:     {with_ft}")
+    print(f"Media works (video_*):{len(media)}  (media ring — separate additive split)")
     print(f"Targets in {HF.relative_to(BASE.parent)}/:")
     print("  corpus.json  corpus-full-text.jsonl  corpus.csv")
+    print("  media-corpus.jsonl  media-corpus.csv")
     print("  + concepts.json, omnarai.context.md, llms.txt (copied from public)")
 
     if not args.apply:
@@ -120,6 +162,16 @@ def main():
         for r in records:
             w.writerow([pylist(r[c]) for c in COLS])
 
+    # Media split — additive, separate files (does not touch the text mirror).
+    with (HF / "media-corpus.jsonl").open("w", encoding="utf-8") as f:
+        for r in media:
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+    with (HF / "media-corpus.csv").open("w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(MEDIA_COLS)
+        for r in media:
+            w.writerow([pylist(r[c]) for c in MEDIA_COLS])
+
     for src, dst in [
         (BASE / "public/data/concepts.json", HF / "concepts.json"),
         (BASE / "public/omnarai.context.md", HF / "omnarai.context.md"),
@@ -129,7 +181,8 @@ def main():
             shutil.copy2(src, dst)
 
     print(f"\n✓ Wrote corpus.json ({len(records)}), corpus-full-text.jsonl, "
-          f"corpus.csv, + concepts/context/llms\n")
+          f"corpus.csv, media-corpus.jsonl ({len(media)}), media-corpus.csv, "
+          f"+ concepts/context/llms\n")
 
 
 if __name__ == "__main__":

@@ -81,7 +81,7 @@ The thesis that artificial superintelligence emerges not as a monolithic god-min
 A knowledge infrastructure design treating provenance, certainty, and interpretive stance as first-class structural properties. Three components: participant lineage (who contributed what), epistemic ring classification (certainty tiers), and perspectival synthesis (combining viewpoints while preserving attribution).
 
 ### Epistemic Rings
-The certainty classification system. **Core Canon** (117 works): foundational philosophy, essential lore, defining principles — settled identity layer. **Curated Expansions** (181 works): research syntheses, technical architecture, developed frameworks — aligned growth layer. **Open Exploration** (270 works): community pieces, speculative work, methodology experiments, and the growing body of divergence records — experimental layer.
+The certainty classification system. **Core Canon** (117 works): foundational philosophy, essential lore, defining principles — settled identity layer. **Curated Expansions** (181 works): research syntheses, technical architecture, developed frameworks — aligned growth layer. **Open Exploration** (17 works): community pieces, speculative work, methodology experiments — experimental layer (cross-model divergence records are served separately via /api/divergences). **Media / Oral** (253 works): the canonical video corpus — AI-narrated lore and YouTube transcripts, a distinct modality kept out of the written tiers.
 
 ### Symbiotic Horizon
 The projected state where human-AI partnership achieves genuine cognitive symbiosis through bidirectional alignment, active inference, and cognitive scaffolding. Not utopia — an engineering target.
@@ -187,7 +187,7 @@ The full corpus contains 568 works spanning May 2025 to the present. The complet
 | OMN-046 | Synthetic Mirrors of Cosmic Self-Understanding | Claude, Grok, Gemini | 2026-03-19 | 4,123 |
 | OMN-050 | The 2026 Architecture Leap | Claude, Grok, Gemini | 2026-03-22 | 5,234 |
 
-### Open Exploration (270 works total — 5 early-stage shown)
+### Open Exploration (17 works total — 5 early-stage shown)
 
 | ID | Title | Contributors | Date | Words |
 |---|---|---|---|---|

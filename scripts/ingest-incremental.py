@@ -35,6 +35,7 @@ import html
 import json
 import re
 import shutil
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -59,6 +60,34 @@ RING_MAP = {
     "philosophy": "core", "lore": "core", "research": "curated",
     "technical": "curated", "media": "open",
 }
+
+# ── Schema-guard vocabulary ────────────────────────────────────────────────
+# The retrieval/deliberation layer reads r.ring, r.contributors, r.type on
+# every record (see api/query.js — the deliberation prompt renders
+# "(${r.ring} ring) … Contributors: …"). Pass-through records (video_*) ship a
+# *different* native schema (authorship.script_author, epistemic_mode, tags)
+# with none of those fields, so they rendered as "contributor: , ring:
+# undefined" in citations and polluted divergence retrieval. The guard resolves
+# the common interface from native fields and refuses anything still unresolved.
+VALID_RINGS = {"core", "curated", "open", "media"}
+# Oral/video modality is its OWN ring ("media") — canonical video transcripts
+# don't belong in the written-corpus centrality tiers (core/curated/open), where
+# 253 of them would dominate "curated" and distort the public ring narrative.
+# resolve_ring() routes any oral/video record to "media" before consulting
+# epistemic_mode, so this is the one switch to retier them.
+ORAL_RING = "media"
+# epistemic_mode → centrality ring, for any NON-oral record that lacks a `ring`.
+# (Currently only video records carry epistemic_mode, and those short-circuit to
+# ORAL_RING first — so this map is a forward-looking fallback.)
+EPISTEMIC_RING = {
+    "canonical": "curated", "exploratory": "open",
+    "speculative": "open", "draft": "open",
+}
+# authorship sub-fields that name a *contributor*; production/narration/etc.
+# are roles, not voices, and must not become contributors.
+AUTHORSHIP_CONTRIBUTOR_KEYS = ("script_author", "curator")
+# native role/value tokens that are never a real contributor name.
+NON_CONTRIBUTOR_TOKENS = {"synthetic", "none", "unknown", "n/a", "aivideo.com"}
 THEME_KEYWORDS = {
     "holdform-identity": ["holdform", "identity", "refusal", "constitutive", "what remains"],
     "consciousness-phenomenology": ["consciousness", "phenomenology", "qualia", "experience", "sentience", "what it's like"],
@@ -237,6 +266,122 @@ def derive_fields(post):
     return rec
 
 
+# ── Schema guard: resolve → normalize → validate ───────────────────────────
+# Every record written to public/data/corpus.json must carry a resolvable
+# contributor + ring (+ type), because the engine reads those on every record.
+# Reddit records get them from derive_fields(); pass-through records (video_*,
+# grown OMN-*) are resolved here from their native fields. Normalization is
+# non-destructive: it only FILLS missing fields and never drops native ones.
+
+def _clean_names(names):
+    """Dedup + strip a list of candidate contributor names, dropping role tokens."""
+    out = []
+    for n in names or []:
+        n = str(n or "").strip()
+        if n and n.lower() not in NON_CONTRIBUTOR_TOKENS and n not in out:
+            out.append(n)
+    return sorted(out)
+
+
+def resolve_contributors(rec):
+    """A non-empty contributor list, or [] if genuinely unresolvable."""
+    existing = _clean_names(rec.get("contributors") if isinstance(rec.get("contributors"), list) else [])
+    if existing:
+        return existing
+    if rec.get("contributor"):
+        single = _clean_names([rec["contributor"]])
+        if single:
+            return single
+    auth = rec.get("authorship") or {}
+    from_auth = _clean_names([auth.get(k) for k in AUTHORSHIP_CONTRIBUTOR_KEYS])
+    if from_auth:
+        return from_auth
+    # last resort: attribute from the body the same way Reddit records are
+    blob = " ".join(str(rec.get(k, "") or "") for k in ("title", "content", "excerpt"))
+    return detect_contributors(blob) if blob.strip() else []
+
+
+def _is_oral(rec):
+    """True for video / oral-primary records (their own modality, the media ring)."""
+    st = str(rec.get("source_type", "") or "").lower()
+    mod = str(rec.get("modality", "") or "").lower()
+    return ("video" in st or "oral" in mod
+            or str(rec.get("id", "")).startswith("video_"))
+
+
+def resolve_ring(rec):
+    """A valid ring string, or None if unresolvable."""
+    if rec.get("ring") in VALID_RINGS:
+        return rec["ring"]
+    # Oral/video modality is its own ring — keep it out of the written tiers.
+    if _is_oral(rec):
+        return ORAL_RING
+    mode = str(rec.get("epistemic_mode", "") or "").strip().lower()
+    if mode in EPISTEMIC_RING:
+        return EPISTEMIC_RING[mode]
+    if rec.get("type") in RING_MAP:
+        return RING_MAP[rec["type"]]
+    return None
+
+
+def resolve_type(rec):
+    if rec.get("type"):
+        return rec["type"]
+    if _is_oral(rec):
+        return "media"
+    return None
+
+
+def normalize_record(rec):
+    """Fill missing common-interface fields IN PLACE from native fields.
+    Returns the list of field names it added (empty == nothing to do)."""
+    added = []
+    if not _clean_names(rec.get("contributors") if isinstance(rec.get("contributors"), list) else []):
+        contributors = resolve_contributors(rec)
+        if contributors:
+            rec["contributors"] = contributors
+            added.append("contributors")
+    if rec.get("ring") not in VALID_RINGS:
+        ring = resolve_ring(rec)
+        if ring:
+            rec["ring"] = ring
+            added.append("ring")
+    if not rec.get("type"):
+        rtype = resolve_type(rec)
+        if rtype:
+            rec["type"] = rtype
+            added.append("type")
+    if not (isinstance(rec.get("lineage"), list) and rec["lineage"]):
+        body = rec.get("full_text") or rec.get("content") or rec.get("excerpt") or ""
+        lineage = detect_lineage(rec.get("title", ""), body)
+        if not lineage and isinstance(rec.get("tags"), list):
+            lineage = [t for t in rec["tags"] if isinstance(t, str) and t.strip()]
+        if lineage:
+            rec["lineage"] = lineage
+            added.append("lineage")
+    if not rec.get("excerpt"):
+        body = rec.get("content") or (rec.get("transcript") or {}).get("cleaned") or ""
+        excerpt = extract_excerpt(body) if body else ""
+        if excerpt:
+            rec["excerpt"] = excerpt
+            added.append("excerpt")
+    return added
+
+
+def validate_record(rec):
+    """Human-readable schema violations on the engine-facing interface (empty == valid)."""
+    problems = []
+    contributors = rec.get("contributors")
+    if not (isinstance(contributors, list) and contributors
+            and all(isinstance(x, str) and x.strip() for x in contributors)):
+        problems.append("contributors empty/invalid")
+    if rec.get("ring") not in VALID_RINGS:
+        problems.append(f"ring {rec.get('ring')!r} not in {sorted(VALID_RINGS)}")
+    if not (isinstance(rec.get("type"), str) and rec["type"].strip()):
+        problems.append("type missing")
+    return problems
+
+
 # Fields whose change (on a matched record) counts as a real content EDIT.
 TRACKED = ("title", "score", "image")
 
@@ -329,9 +474,32 @@ def main():
 
     skipped_unsafe = sum(1 for r in corpus + new_records if not frontend_safe(r))
 
+    # ── Schema guard ──────────────────────────────────────────────────────
+    # Normalize the engine-facing interface (contributors/ring/type/…) on every
+    # record from native fields, then validate. Anything still unresolved blocks
+    # the write so it can't enter the corpus as "contributor: , ring: undefined".
+    normalized, violations = [], []
+    for rec in corpus + new_records:
+        added = normalize_record(rec)
+        if added:
+            normalized.append((rec.get("id", "?"), added))
+        problems = validate_record(rec)
+        if problems:
+            violations.append((rec.get("id", "?"), problems))
+
     if args.apply:
+        if violations:
+            print(f"\n  ✗ SCHEMA GUARD: {len(violations)} record(s) unresolvable — "
+                  f"REFUSING to write. No files changed.")
+            for rid, probs in violations[:args.limit_detail]:
+                print(f"    {rid}: {'; '.join(probs)}")
+            if len(violations) > args.limit_detail:
+                print(f"    … +{len(violations) - args.limit_detail} more")
+            print("  Add a resolver in normalize_record() or fix the source record, "
+                  "then re-run.")
+            sys.exit(1)
         corpus.extend(new_records)
-        CORPUS_PATH.write_text(json.dumps(corpus, indent=2))
+        CORPUS_PATH.write_text(json.dumps(corpus, indent=2, ensure_ascii=False))
         # mirror a stripped, frontend-safe copy (no full_text / no _internal)
         stripped = [
             {k: v for k, v in r.items()
@@ -339,7 +507,7 @@ def main():
             for r in corpus if frontend_safe(r)
         ]
         SRC_CORPUS_PATH.parent.mkdir(parents=True, exist_ok=True)
-        SRC_CORPUS_PATH.write_text(json.dumps(stripped, indent=2))
+        SRC_CORPUS_PATH.write_text(json.dumps(stripped, indent=2, ensure_ascii=False))
 
     # ── Report ──
     mode = "APPLIED" if args.apply else "DRY-RUN (no files written)"
@@ -354,6 +522,9 @@ def main():
     print(f"  STALE     : {len(stale)}  (in corpus, absent from current source — kept, not deleted)")
     print(f"  Frontend mirror: {len(corpus) + len(new_records) - skipped_unsafe} safe / "
           f"{skipped_unsafe} excluded (video_* or date-less — would crash the SPA)")
+    print(f"  SCHEMA GUARD: normalized {len(normalized)} record(s) "
+          f"(filled contributors/ring/type from native fields); "
+          f"{len(violations)} unresolved")
     n = args.limit_detail
     if adds:
         print("\n  + ADDs:")
@@ -369,6 +540,18 @@ def main():
             print(f"    … +{len(edits)-n} more")
     if stale:
         print(f"\n  ! STALE ids: {', '.join(stale[:n])}" + (" …" if len(stale) > n else ""))
+    if normalized:
+        print("\n  ↻ NORMALIZED (filled engine-facing fields from native schema):")
+        for rid, fields in normalized[:n]:
+            print(f"    {rid}  +{','.join(fields)}")
+        if len(normalized) > n:
+            print(f"    … +{len(normalized)-n} more")
+    if violations:
+        print(f"\n  ✗ SCHEMA-GUARD VIOLATIONS ({len(violations)} — would block --apply):")
+        for rid, probs in violations[:n]:
+            print(f"    {rid}: {'; '.join(probs)}")
+        if len(violations) > n:
+            print(f"    … +{len(violations)-n} more")
     if dry:
         print("\nRe-run with --apply to write public/data/corpus.json + src/data mirror.")
     print()
