@@ -16,13 +16,20 @@ import Anthropic from "@anthropic-ai/sdk";
 // never mutate the immutable council records or the grown-memory substrate; an
 // approved one is surfaced ALONGSIDE the record it answers. Folded into this
 // function (12-function Hobby cap) and reached via /api/contribute + /api/contributions.
-// ONE consolidated blob, not N per-contribution blobs. Per-file overwrite of a
-// Vercel Blob pathname is NOT reliably reflected on read (a status flip from
-// approved→rejected was silently lost in testing) — the same read-after-write
-// hazard _grown.js documents. A single cache-busted read-modify-write is the
-// proven-safe pattern here; contributions are low-frequency (visitor submit +
-// curator review), so one object is fine.
-const CONTRIB_KEY = "memory/contributions.json";
+//
+// STORAGE: ONE BLOB PER CONTRIBUTION (`contributions/<id>.json`), not one
+// consolidated array. The consolidated array was tried first but proved unsafe:
+// Vercel Blob has no compare-and-swap, so a writer that read a STALE snapshot and
+// then overwrote the whole array would silently DROP entries it never saw (verified
+// 2026-06-20 — a parallel submit dropped a concurrent one; a retry/verify RMW could
+// not fix it because a writer can only verify its OWN entry, not the disappearance
+// of others). Per-entry blobs eliminate cross-entry loss BY CONSTRUCTION: a submit
+// writes a brand-new unique path (never overwrites anyone), and a status change
+// rewrites only that one id's blob. The only residual race is two writes to the
+// SAME id (last-wins, fine — both rejects want it rejected). Per-file read-after-
+// write lag still exists (a fresh status read may briefly show the old value) but it
+// CONVERGES and never corrupts other entries — poll before trusting a read.
+const CONTRIB_PREFIX = "contributions/";
 const MAX_CONTRIB_CHARS = 8000;
 
 function curatorAuthed(req) {
@@ -35,55 +42,52 @@ async function findDivergenceRecord(id) {
   return (grown.entries || []).find((e) => e.id === id && e.type === "divergence" && e.divergence) || null;
 }
 
-// Load the consolidated contribution store. Never throws — empty on any failure.
-// Cache-bust the public Blob URL (CDN can serve a stale copy in the read-after-
-// write window) exactly as loadGrownMemory does.
+// Load all contributions — one fetch per per-entry blob, in parallel. Never throws
+// (empty on any failure). Each fetch is cache-busted (CDN can serve a stale copy in
+// the read-after-write window) exactly as loadGrownMemory does. A single malformed/
+// unreachable entry is skipped, not fatal. At this endpoint's volume (tens at most)
+// the fan-out is cheap; revisit with an index blob if it ever grows large.
 async function loadContributions() {
   try {
-    const { blobs } = await list({ prefix: CONTRIB_KEY });
+    const { blobs } = await list({ prefix: CONTRIB_PREFIX });
     if (!blobs.length) return [];
-    const res = await fetch(`${blobs[0].url}?ts=${Date.now()}`, { cache: "no-store" });
-    if (!res.ok) return [];
-    const d = await res.json();
-    return Array.isArray(d.entries) ? d.entries : [];
+    const entries = await Promise.all(
+      blobs.map(async (b) => {
+        try {
+          const res = await fetch(`${b.url}?ts=${Date.now()}`, { cache: "no-store" });
+          return res.ok ? await res.json() : null;
+        } catch {
+          return null;
+        }
+      })
+    );
+    return entries.filter(Boolean);
   } catch {
     return [];
   }
 }
 
-async function saveContributions(entries) {
-  await put(CONTRIB_KEY, JSON.stringify({ version: 1, updatedAt: new Date().toISOString(), entries }), {
+// Load a single contribution by id (targeted — lists only that id's prefix).
+async function loadContribution(id) {
+  try {
+    const { blobs } = await list({ prefix: CONTRIB_PREFIX + id });
+    if (!blobs.length) return null;
+    const res = await fetch(`${blobs[0].url}?ts=${Date.now()}`, { cache: "no-store" });
+    return res.ok ? await res.json() : null;
+  } catch {
+    return null;
+  }
+}
+
+// Write ONE contribution's own blob. A submit writes a brand-new unique path; a
+// status change rewrites only this id's blob — neither can touch another entry,
+// so there is no cross-entry lost-update to defend against.
+async function saveContribution(c) {
+  await put(CONTRIB_PREFIX + c.id + ".json", JSON.stringify(c), {
     access: "public",
     addRandomSuffix: false,
     contentType: "application/json",
   });
-}
-
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-// Safe read-modify-write of the consolidated contributions blob. Vercel Blob has
-// no compare-and-swap, so two writes inside the ~1-2s propagation window can lose
-// an update (observed 2026-06-20: two back-to-back rejects, the first clobbered).
-// Mitigation: load latest (cache-busted) → apply mutate(entries) → save → settle →
-// re-read and verify our change persisted; if a concurrent writer clobbered it,
-// re-apply over the now-fresher state and retry. `mutate` MUST be idempotent by id
-// (append only if absent; setting a status is naturally idempotent) so replaying
-// over fresher state composes both writers' distinct changes instead of duplicating.
-// This recovers from the realistic sequential-races; it is NOT a distributed lock,
-// so a stale verify-read could in theory false-pass a truly simultaneous clobber —
-// acceptable at this endpoint's volume. Never throws on verify-exhaustion (the write
-// was issued); only a real Blob error propagates.
-async function mutateContributions(mutate, verify, { retries = 4, settleMs = 350 } = {}) {
-  let after = [];
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    const entries = await loadContributions();
-    const next = mutate(entries.slice());
-    await saveContributions(next);
-    await sleep(settleMs);
-    after = await loadContributions();
-    if (verify(after)) return after;
-  }
-  return after; // best-effort: write was issued; verify couldn't confirm (likely read lag)
 }
 
 // ── Auto-admit lane ───────────────────────────────────────────────────────────
@@ -229,12 +233,8 @@ async function submitContribution(req, res) {
   }
 
   try {
-    // Idempotent append (by id) through the safe RMW — re-applies over fresher
-    // state on a concurrent clobber instead of overwriting another submission.
-    await mutateContributions(
-      (entries) => { if (!entries.some((e) => e.id === contribution.id)) entries.push(contribution); return entries; },
-      (entries) => entries.some((e) => e.id === contribution.id),
-    );
+    // Brand-new unique path — cannot overwrite or drop any other contribution.
+    await saveContribution(contribution);
   } catch (err) {
     return res.status(500).json({ error: "Could not store contribution", detail: String(err.message || err) });
   }
@@ -275,29 +275,16 @@ async function reviewContribution(req, res, action) {
   const id = (req.body?.id || req.body?.contribId || "").toString().trim();
   if (!id) return res.status(400).json({ error: "Missing contribution id" });
 
-  // Clean 404 on an unknown id (curator picked it from the list).
-  const pre = await loadContributions();
-  const existing = pre.find((x) => x.id === id);
-  if (!existing) return res.status(404).json({ error: `No contribution ${id}` });
+  // Load just this entry fresh (also gives a clean 404 on an unknown id).
+  const c = await loadContribution(id);
+  if (!c) return res.status(404).json({ error: `No contribution ${id}` });
 
-  const newStatus = action === "contribute-approve" ? "approved" : "rejected";
-  const stampField = action === "contribute-approve" ? "approvedAt" : "rejectedAt";
-  const stamp = new Date().toISOString();
-  const note = req.body?.note ? String(req.body.note).slice(0, 500) : null;
-
-  let c;
+  c.status = action === "contribute-approve" ? "approved" : "rejected";
+  c[action === "contribute-approve" ? "approvedAt" : "rejectedAt"] = new Date().toISOString();
+  if (req.body?.note) c.curatorNote = String(req.body.note).slice(0, 500);
   try {
-    // Idempotent status flip through the safe RMW — recovers if a near-simultaneous
-    // review/submit clobbers this write (the lost-update bug observed 2026-06-20).
-    const after = await mutateContributions(
-      (entries) => {
-        const t = entries.find((x) => x.id === id);
-        if (t) { t.status = newStatus; t[stampField] = stamp; if (note) t.curatorNote = note; }
-        return entries;
-      },
-      (entries) => { const t = entries.find((x) => x.id === id); return !!t && t.status === newStatus; },
-    );
-    c = after.find((x) => x.id === id) || { ...existing, status: newStatus, [stampField]: stamp, ...(note ? { curatorNote: note } : {}) };
+    // Rewrites only this id's blob — cannot affect any other contribution.
+    await saveContribution(c);
   } catch (err) {
     return res.status(500).json({ error: "Could not update contribution", detail: String(err.message || err) });
   }
