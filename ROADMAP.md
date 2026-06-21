@@ -76,12 +76,21 @@ New, still-open items from this pass (the rest fold into existing entries below)
   two-word phrase concludes the Atlas is silent on a topic it covers densely.
   Cheap, high trust-per-line. *(Workstream A1.)*
 
-- ⚪ **Core-canon data hygiene — quarantine OMN-085 + audit siblings** — reclassify
-  the ops/PM record out of `ring=core` (→ `media`/excluded or drop) and run a
-  one-pass on-topic classifier over the seed `corpus.json` for any other
-  non-philosophy bleed. The 06-19 ingest schema guard stops NEW leaks; this cleans
-  the EXISTING one both reviewers smelled. An off-topic record is also
-  `uncharacterized` on the evidence axis. *(Workstream A2.)*
+- 🟢 **Core-canon data hygiene — OMN-085 removed** (shipped & live 2026-06-21).
+  OMN-085 "Emergent Lattice: A Codex of Progress" (ring:core/type:lore) was a
+  facilities task-list (conference-room bulkhead, Boston Barricade, Kidz Rezort
+  payroll, assignee JL); source-confirmed (`page5.json`/`t3_1l9coau`) — the Reddit
+  post itself was the task list, nothing to restore. It carried a vector → live
+  semantic landmine. Removed from corpus.json (562), embeddings.json (vector+count
+  562), src/data/corpus.json (309) with byte-identity verification of all survivors;
+  redeployed (live 568→567, core 117→116); doc-count literals synced; HF mirror
+  rebuilt 423→422 + pushed (48 files, verified via `/raw/`). A marker-based scan over
+  all 563 seed records found this was the **only** real contamination (next
+  candidates scored 2–3, genuine essays). Arrival check 20/20. *(Workstream A2.)*
+  - ⚪ *Still open:* a one-pass **LLM on-topic classifier** over the corpus to catch
+    any non-PM off-topic bleed the marker scan can't see (low expected yield — the
+    marker scan was clean — but cheap insurance). An off-topic record is also
+    `uncharacterized` on the evidence axis.
 
 - ⚪ **Self-explaining empty-tier cert filter** — `?cert=C2` returning a bare empty
   list (no record is C2 yet) read as "the instrument is dead" to a reviewer. When a
