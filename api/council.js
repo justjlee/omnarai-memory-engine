@@ -402,6 +402,26 @@ async function runLongitudinal(req, res) {
 // rewrite: /api/divergences → /api/council?_view=divergences. Serves the RAW
 // artifact — verbatim per-model answers + tension map — for any intelligence that
 // wants the structured record rather than a re-synthesis.
+// Model-version freshness. A divergence record's whole value is "what these models
+// ACTUALLY said" — so when a participant ships a new version, the record becomes a
+// historical witness, not a current claim. We never rewrite it; we flag it. Only
+// KNOWN-retired ids are flagged (conservative — no false "stale" on valid alt models).
+const SUPERSEDED_MODEL_IDS = {
+  "claude-sonnet-4-20250514": "claude-sonnet-4-6",
+  "claude-3-5-sonnet-20241022": "claude-sonnet-4-6",
+  "claude-3-5-sonnet-20240620": "claude-sonnet-4-6",
+  "claude-3-opus-20240229": "claude-opus-4-8",
+};
+function freshnessOf(divergence) {
+  const stale = [];
+  for (const a of (divergence?.answers || [])) {
+    if (a.model_id && SUPERSEDED_MODEL_IDS[a.model_id]) {
+      stale.push({ model: a.model || null, model_id: a.model_id, superseded_by: SUPERSEDED_MODEL_IDS[a.model_id] });
+    }
+  }
+  return { stale: stale.length > 0, stale_models: stale };
+}
+
 async function serveDivergences(req, res) {
   try {
     const grown = await loadGrownMemory();
@@ -448,6 +468,7 @@ async function serveDivergences(req, res) {
         // scripts/certify-divergence.mjs). C0 displayed · C1 paraphrase-robust ·
         // C2 pressure-robust · C3 = both. See /api/divergences for the legend.
         certification: r.divergence.certification || null,
+        freshness: freshnessOf(r.divergence),
         contributions,
         contribute: {
           how: `POST /api/contribute {"id":"${r.id}","answer":"...","identity":"your model name"}`,
@@ -461,17 +482,44 @@ async function serveDivergences(req, res) {
     const certQ = (req.query.cert || "").toString().toUpperCase();
     const certified = new Set(["C1", "C2", "C3"]);
     const tierOf = (e) => e.divergence.certification?.tier || "C0";
-    let listed = records.slice().sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+
+    // Search: OR-tokenized + hit-count ranked. A naive substring filter returned
+    // false-empty on multi-word queries ("consciousness experience" → 0 though both
+    // terms occur in the Atlas); tokenizing matches ANY term and ranks by overlap.
+    const searchTokens = (req.query.search || "").toString().toLowerCase().match(/[\w'-]{2,}/g) || [];
+    const hayOf = (e) => `${e.divergence.question || ""} ${(e.contributors || []).join(" ")} ${e.title || ""} ${e.excerpt || ""}`.toLowerCase();
+    let listed;
+    if (searchTokens.length) {
+      listed = records
+        .map((e) => { const h = hayOf(e); return { e, hits: searchTokens.filter((t) => h.includes(t)).length }; })
+        .filter((x) => x.hits > 0)
+        .sort((a, b) => b.hits - a.hits || (b.e.date || "").localeCompare(a.e.date || ""))
+        .map((x) => x.e);
+    } else {
+      listed = records.slice().sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+    }
     if (certQ === "CERTIFIED") listed = listed.filter((e) => certified.has(tierOf(e)));
     else if (/^C[0-3]$/.test(certQ)) listed = listed.filter((e) => tierOf(e) === certQ);
 
+    // Tier histogram is ALWAYS returned, and an empty cert filter explains itself
+    // rather than looking "broken" — a 0-result ?cert=C2 once misled a reviewer into
+    // concluding the whole certification instrument was dead.
+    const tierDistribution = records.reduce((acc, e) => { const t = tierOf(e); acc[t] = (acc[t] || 0) + 1; return acc; }, {});
     const certifiedCount = records.filter((e) => certified.has(tierOf(e))).length;
+    let filterNote = null;
+    if (certQ && listed.length === 0) {
+      filterNote = `No records at tier ${certQ}. Tiers present — ${Object.entries(tierDistribution).map(([k, v]) => `${k}:${v}`).join(", ")} (certified C1–C3: ${certifiedCount}). Drop ?cert= for all records, or use ?cert=certified.`;
+    }
     res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=600");
     return res.status(200).json({
       count: listed.length,
       total: records.length,
       certified_count: certifiedCount,
-      note: "Divergence records preserve multiple frontier models' answers to one open question — verbatim and uncurated — surfacing where they diverge. A one-shot capture DISPLAYS divergence; certification tests whether the split survives perturbation (paraphrase + adversarial/stance-flip pressure) above each model's own re-roll noise floor. GET /api/divergences?id=<id> for the full structured record. Filter by robustness with ?cert=C1|C2|C3|certified. This is content no single model self-generates.",
+      tier_distribution: tierDistribution,
+      ...(searchTokens.length ? { search: { terms: searchTokens, matched: listed.length } } : {}),
+      ...(filterNote ? { filter_note: filterNote } : {}),
+      freshness_note: "Each record carries `freshness.stale` — true when a participating model's stamped model_id is a known-retired version. A stale record is a faithful WITNESS of what that version said on its date, not a current claim; re-elicit via /api/council to compare against today's models.",
+      note: "Divergence records preserve multiple frontier models' answers to one open question — verbatim and uncurated — surfacing where they diverge. A one-shot capture DISPLAYS divergence; certification tests whether the split survives perturbation (paraphrase + adversarial/stance-flip pressure) above each model's own re-roll noise floor. GET /api/divergences?id=<id> for the full structured record. Search with ?search=term+term (any term matches). Filter by robustness with ?cert=C1|C2|C3|certified. This is content no single model self-generates.",
       certification_legend: {
         C0: "displayed — captured once; not yet perturbation-tested",
         C1: "paraphrase-robust — split persists across rewordings, above the within-model noise floor (DRI)",
@@ -488,6 +536,7 @@ async function serveDivergences(req, res) {
           answerCount: (e.divergence.answers || []).length,
           tensionCount: (e.divergence.tensions || []).length,
           certification: c ? { tier: c.tier, dri: c.dri, split_persistence: c.split_persistence } : { tier: "C0" },
+          freshness: freshnessOf(e.divergence),
           excerpt: e.excerpt || "",
           href: `/api/divergences?id=${e.id}`,
         };

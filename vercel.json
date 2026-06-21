@@ -49,6 +49,10 @@
       "destination": "/llms.txt"
     },
     {
+      "source": "/api/divergences/:id",
+      "destination": "/api/council?_view=divergences&id=:id"
+    },
+    {
       "source": "/api/divergences",
       "destination": "/api/council?_view=divergences"
     },
