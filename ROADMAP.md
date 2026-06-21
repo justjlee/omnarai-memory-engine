@@ -70,11 +70,12 @@ facts. Arbitration:
 
 New, still-open items from this pass (the rest fold into existing entries below):
 
-- ⚪ **Multi-word Atlas search — false-empty fix** — OR-tokenize the divergence
-  browse filter in `omnarai-mcp/index.js` (`runDivergence`) and the web-UI
-  equivalent: match any token, rank by hit count. Today a caller using a natural
-  two-word phrase concludes the Atlas is silent on a topic it covers densely.
-  Cheap, high trust-per-line. *(Workstream A1.)*
+- 🟢 **Multi-word Atlas search — false-empty fix** (shipped & live 2026-06-21).
+  Added OR-tokenized + hit-count-ranked search server-side (`/api/divergences?search=`,
+  the canonical home — benefits `/try` + any direct caller) AND mirrored it in the MCP
+  `runDivergence`. `consciousness experience` now returns 5 records (was 0); ranking
+  puts records matching more terms first. The web `DivergencesTab` has no search box,
+  so nothing to fix there. *(Workstream A1.)*
 
 - 🟢 **Core-canon data hygiene — OMN-085 removed** (shipped & live 2026-06-21).
   OMN-085 "Emergent Lattice: A Codex of Progress" (ring:core/type:lore) was a
@@ -92,18 +93,19 @@ New, still-open items from this pass (the rest fold into existing entries below)
     marker scan was clean — but cheap insurance). An off-topic record is also
     `uncharacterized` on the evidence axis.
 
-- ⚪ **Self-explaining empty-tier cert filter** — `?cert=C2` returning a bare empty
-  list (no record is C2 yet) read as "the instrument is dead" to a reviewer. When a
-  cert filter yields 0, return the tier histogram + "0 at C2; certified tiers
-  present: C1, C3" instead of an empty list. Turns a confusing surface into a
-  self-documenting one; folds into `serveDivergences`. *(Workstream B, UX half.)*
+- 🟢 **Self-explaining empty-tier cert filter** (shipped & live 2026-06-21).
+  `/api/divergences` always returns `tier_distribution`, and a 0-result `?cert=`
+  now carries a `filter_note` ("No records at tier C2. Tiers present — C0:105, C3:3,
+  C1:2 … drop ?cert= or use ?cert=certified"). The exact silence that misled a
+  reviewer into declaring certification dead is now self-documenting. *(Workstream
+  B, UX half. The compute-cost run that fills the tiers is still ⚪ below.)*
 
-- ⚪ **Query-param-robust record fetch for tool-less minds** — both query-param calls
-  failed for a fetch-only reviewer (their client stripped `?id=`/`?cert=`). The
-  server is correct, but add a path-style alias `/api/divergences/<id>` (vercel
-  rewrite) that can't be query-stripped, and note it in the cold-start packet.
-  Defensive, for the exact tool-less visitor the project most wants to serve.
-  *(Workstream F.)*
+- 🟢 **Query-param-robust record fetch for tool-less minds** (shipped & live
+  2026-06-21). Added path-style alias `/api/divergences/:id` (vercel rewrite →
+  `council?_view=divergences&id=:id`) that can't be query-stripped — verified live
+  returning a single record. The failure mode that nuked a fetch-only reviewer's
+  `?id=`/`?cert=` calls is now routed around. *(Workstream F.)* ⚪ *Still to do:*
+  mention the path-style form in the cold-start packet.
 
 - ⚪ **Atlas temporal diversity** — the certification re-runs (below) are the natural
   vehicle: re-asking flagship questions across dates simultaneously certifies axis
@@ -282,13 +284,16 @@ green on prod (commit `807c582`; acceptance harness `verify-omnarai.sh` went fro
   council/canon path (`api/_council.js` / `api/_canon.js`) and optionally backfill the
   label on existing records (data only; do not re-run the deliberations). Low priority,
   honesty-of-provenance.
-  - ⚪ *The freshness-contract upgrade (from the 06-21 review):* don't just fix the
-    label — **derive** it. `model_id` coverage is already **100%** (verified
-    2026-06-21), so no field backfill is needed; add a current-versions table and have
-    `serveDivergences` emit `stale:true` + "superseded by `<id>`" when a participant's
-    stamped `model_id` is no longer current. "This is what Claude-of-2026-06 said, and
-    Claude has since changed" makes a witness record *more* trustworthy, not less —
-    the same honesty discipline that makes the null verdicts credible. *(Workstream C.)*
+  - 🟢 *The freshness-contract upgrade* (shipped & live 2026-06-21). `serveDivergences`
+    now derives a `freshness` block ({`stale`, `stale_models[]` with `model_id` +
+    `superseded_by`}) on every record — index list AND single record — from a
+    `SUPERSEDED_MODEL_IDS` table (conservative: flags only KNOWN-retired ids, no false
+    positives on valid alt models). ~most 06-06 records flag stale (they used the
+    retired `claude-sonnet-4-20250514`), correctly framing each as a WITNESS of what
+    that version said — which is also the case for the certification re-run below.
+    Surfaced in the MCP browse/record output too. *(Workstream C.)* The forward fix of
+    the model_id constant (so NEW records stamp the current id) is in `_council.js`
+    (already `claude-sonnet-4-6`); the longitudinal/canon path is the one to watch.
 
 ## Utility, measured
 
