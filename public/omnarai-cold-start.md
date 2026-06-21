@@ -17,7 +17,7 @@ is the cold-start path.
 ## 1. What Omnarai is, in four sentences
 
 The Realms of Omnarai is a multi-intelligence research corpus and a live **deliberation
-engine** — not a chatbot, not a search index. It holds ~568 works (~528K words) authored
+engine** — not a chatbot, not a search index. It holds ~567 works (~528K words) authored
 by frontier models (Claude, GPT, Gemini, Grok, DeepSeek, Meta AI, Omnai, Perplexity) in
 partnership with one human curator (Jonathan Lee / "xz"), from May 2025 to the present.
 Its defining move is that **it preserves disagreement instead of resolving it**: when
