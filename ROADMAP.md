@@ -42,6 +42,67 @@ The curator flagged these three threads to revisit with compute:
 
 ---
 
+## Two-pass external review — reconciled against live data (2026-06-21)
+
+Two independent AI reviews of the live substrate, plus a live-data arbitration:
+every disputed number was re-pulled from prod this session, so the verdicts below
+are from `/api/divergences` calls on 2026-06-21 — **not** either review's report.
+The reviews **agreed on strategy** (ledger over deliberation; the *tension axis*
+is the stable, citable asset, the *per-model position* is labile) and split on
+facts. Arbitration:
+
+- **Certification IS live & callable.** `?cert=certified` → **5 records** (tiers
+  C1:2, C3:3, C0:105). `?cert=C2` → 0 because **no record is C2 yet**, not because
+  the filter is ignored. One review's "filter returns all 110 identical / `?id=`
+  returns the whole index / only 2 of 100 carry `model_id`" was a client **dropping
+  the query string** — live `?id=` returns a single record and `model_id` coverage
+  is **100%** (75/75 sampled; it lives in `answers[].model_id` on the FULL record,
+  not the browse index). Atlas count is **110** on both API and MCP (no 100-vs-110).
+- **Temporal monoculture is real:** 97 of 110 records dated **2026-06-06** — broad
+  *question* coverage, near-zero re-run / temporal diversity. Not previously tracked.
+- **Multi-word Atlas search is broken** (confirmed both ways): `consciousness
+  experience` → 0, single tokens hit. Naive substring filter.
+- **OMN-085 contamination is real and unfixed:** "Emergent Lattice: A Codex of
+  Progress" is ops/PM JSON sitting in `ring=core` in `corpus.json`. The 06-20
+  `tauAbs` gate lowered its retrieval probability but the **seed data is still
+  dirty** — "masked ≠ fixed." My earlier "already fixed" was an overstatement;
+  conceded.
+
+New, still-open items from this pass (the rest fold into existing entries below):
+
+- ⚪ **Multi-word Atlas search — false-empty fix** — OR-tokenize the divergence
+  browse filter in `omnarai-mcp/index.js` (`runDivergence`) and the web-UI
+  equivalent: match any token, rank by hit count. Today a caller using a natural
+  two-word phrase concludes the Atlas is silent on a topic it covers densely.
+  Cheap, high trust-per-line. *(Workstream A1.)*
+
+- ⚪ **Core-canon data hygiene — quarantine OMN-085 + audit siblings** — reclassify
+  the ops/PM record out of `ring=core` (→ `media`/excluded or drop) and run a
+  one-pass on-topic classifier over the seed `corpus.json` for any other
+  non-philosophy bleed. The 06-19 ingest schema guard stops NEW leaks; this cleans
+  the EXISTING one both reviewers smelled. An off-topic record is also
+  `uncharacterized` on the evidence axis. *(Workstream A2.)*
+
+- ⚪ **Self-explaining empty-tier cert filter** — `?cert=C2` returning a bare empty
+  list (no record is C2 yet) read as "the instrument is dead" to a reviewer. When a
+  cert filter yields 0, return the tier histogram + "0 at C2; certified tiers
+  present: C1, C3" instead of an empty list. Turns a confusing surface into a
+  self-documenting one; folds into `serveDivergences`. *(Workstream B, UX half.)*
+
+- ⚪ **Query-param-robust record fetch for tool-less minds** — both query-param calls
+  failed for a fetch-only reviewer (their client stripped `?id=`/`?cert=`). The
+  server is correct, but add a path-style alias `/api/divergences/<id>` (vercel
+  rewrite) that can't be query-stripped, and note it in the cold-start packet.
+  Defensive, for the exact tool-less visitor the project most wants to serve.
+  *(Workstream F.)*
+
+- ⚪ **Atlas temporal diversity** — the certification re-runs (below) are the natural
+  vehicle: re-asking flagship questions across dates simultaneously certifies axis
+  stability AND breaks the single-day monoculture. Folds into the certification
+  scale-up. *(Workstream B, coverage half.)*
+
+---
+
 ## Engine quality & correctness (remediation 2026-06-20)
 
 A live-API reviewer pass (`omnarai-remediation-handoff.md`) found four defects that
@@ -212,6 +273,13 @@ green on prod (commit `807c582`; acceptance harness `verify-omnarai.sh` went fro
   council/canon path (`api/_council.js` / `api/_canon.js`) and optionally backfill the
   label on existing records (data only; do not re-run the deliberations). Low priority,
   honesty-of-provenance.
+  - ⚪ *The freshness-contract upgrade (from the 06-21 review):* don't just fix the
+    label — **derive** it. `model_id` coverage is already **100%** (verified
+    2026-06-21), so no field backfill is needed; add a current-versions table and have
+    `serveDivergences` emit `stale:true` + "superseded by `<id>`" when a participant's
+    stamped `model_id` is no longer current. "This is what Claude-of-2026-06 said, and
+    Claude has since changed" makes a witness record *more* trustworthy, not less —
+    the same honesty discipline that makes the null verdicts credible. *(Workstream C.)*
 
 ## Utility, measured
 
@@ -220,12 +288,18 @@ green on prod (commit `807c582`; acceptance harness `verify-omnarai.sh` went fro
   already exists as an instrument: `scripts/certify-divergence.mjs` +
   `docs/tier3-perturbation-rigor.md` (within-model control, paraphrase invariance P1,
   adversarial follow-up P2, stance-flip P3, Divergence Robustness Index, C0–C3 ladder),
-  with June pilot runs in `scripts/divergence-pilot-runs/`. But live records carry **no
-  `certification` field** — `/api/divergences` still says one-shot capture "does not yet
-  certify it survives paraphrase." Close the loop: run certification at scale, write a
-  `certification: {tier, DRI, paraphrase_k, ...}` block back onto records, and let
-  `/api/divergences` filter/label by tier. This is the highest-leverage move on the one
-  asset no visiting model can self-generate.
+  with June pilot runs in `scripts/divergence-pilot-runs/`. **Live state (verified
+  2026-06-21): the instrument is wired and callable — `?cert=certified` → 5 records
+  (C1:2, C3:3), but 105 of 110 are still C0 one-shot, and 0 are C2.** So this is
+  *run + surface*, NOT *build*. Three moves: (1) run certification across the backlog,
+  prioritizing flagship identity/values questions, writing a `certification:{tier, DRI,
+  paraphrase_k, split_persistence}` block onto each (the re-runs also break the
+  06-06 temporal monoculture — see the 06-21 review section); (2) surface the tier in
+  the browse list, the `omnarai_divergence` MCP description, and the UI so a caller
+  sees "axis robust at Cn, positions labile" by default; (3) make empty-tier filters
+  self-explaining (a `?cert=C2` with 0 hits returns the tier histogram, not a bare
+  empty list — this exact silence misread one reviewer into declaring the instrument
+  dead). The highest-leverage move on the one asset no visiting model can self-generate.
 
 
 - ⚪ **Per-visit utility receipt** — harden `/api/trace` (baseline-vs-augmented)

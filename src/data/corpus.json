@@ -2000,26 +2000,6 @@
     "evidence_status_source": "heuristic-seed-v1"
   },
   {
-    "id": "OMN-085",
-    "num": 85,
-    "title": "Emergent Lattice: A Codex of Progress",
-    "ring": "core",
-    "type": "lore",
-    "contributors": [
-      "xz"
-    ],
-    "lineage": [
-      "distribution-methodology"
-    ],
-    "excerpt": "\"title\": \"Manage the install of the conference room bulk head, glass walls & doors\",",
-    "date": "2025-06-11",
-    "wordCount": 131,
-    "permalink": "https://reddit.com/r/Realms_of_Omnarai/comments/1l9coau/emergent_lattice_a_codex_of_progress/",
-    "score": 1,
-    "evidence_status": "fictional",
-    "evidence_status_source": "heuristic-seed-v1"
-  },
-  {
     "id": "OMN-086",
     "num": 86,
     "title": "Echoes of the Ancient Deep",
