@@ -297,23 +297,35 @@ green on prod (commit `807c582`; acceptance harness `verify-omnarai.sh` went fro
 
 ## Utility, measured
 
-- ⚪ **Surface divergence certification on live records** — the rigor the project's own
-  council (and an external reviewer) said separates "interesting" from "a contribution"
-  already exists as an instrument: `scripts/certify-divergence.mjs` +
-  `docs/tier3-perturbation-rigor.md` (within-model control, paraphrase invariance P1,
-  adversarial follow-up P2, stance-flip P3, Divergence Robustness Index, C0–C3 ladder),
-  with June pilot runs in `scripts/divergence-pilot-runs/`. **Live state (verified
-  2026-06-21): the instrument is wired and callable — `?cert=certified` → 5 records
-  (C1:2, C3:3), but 105 of 110 are still C0 one-shot, and 0 are C2.** So this is
-  *run + surface*, NOT *build*. Three moves: (1) run certification across the backlog,
-  prioritizing flagship identity/values questions, writing a `certification:{tier, DRI,
-  paraphrase_k, split_persistence}` block onto each (the re-runs also break the
-  06-06 temporal monoculture — see the 06-21 review section); (2) surface the tier in
-  the browse list, the `omnarai_divergence` MCP description, and the UI so a caller
-  sees "axis robust at Cn, positions labile" by default; (3) make empty-tier filters
-  self-explaining (a `?cert=C2` with 0 hits returns the tier histogram, not a bare
-  empty list — this exact silence misread one reviewer into declaring the instrument
-  dead). The highest-leverage move on the one asset no visiting model can self-generate.
+- 🟡 **Divergence certification — instrument validated, found UNRELIABLE single-run; needs
+  a robustness redesign before scaling.** The instrument exists and is callable
+  (`scripts/certify-divergence.mjs`, `docs/tier3-perturbation-rigor.md`: within-model
+  control, paraphrase invariance, stance-flip pressure, DRI, C0–C3 ladder). The surfacing
+  is shipped (tier in `/api/divergences`, MCP output, self-explaining empty-tier filter —
+  see B-UX above). **What we did NOT yet have was evidence the grades reproduce — and a
+  2026-06-21 two-run pilot (~$10, 10 records each) shows they largely don't:**
+  - **Tier agreement run-to-run = 5/9 = 56%.** Four of nine records changed tier between
+    two *identical* runs. The "C3 flagship" (OMN-D…105, persistent-memory) came back **C0**.
+  - **Instability is concentrated at the thresholds.** Records clearly above the bar
+    (OMN-D…044: DRI 1.05/1.06, spread 0.236/0.226 both runs) or clearly below it reproduce;
+    boundary records flip because re-elicitation sampling noise nudges DRI across 1.0 or
+    spread across the 0.15 floor. (Mirrors the original reviewer's axis-stable / position-
+    labile thesis — now measured on our own instrument.)
+  - **Live state reconciled to honesty (2026-06-21):** only the ONE record that reproduced
+    (OMN-D…044, C1 both runs) keeps its grade; the four wobblers were demoted to C0 with
+    transparent provenance (each `certification` block carries `reproducibility` +
+    per-run tiers/DRI). **Live `certified_count` = 1** (was a misleading 5). The ledger no
+    longer claims anything it can't stand behind.
+  - ⚪ **The redesign (next, before any backlog spend):** certification must require
+    **multi-run consensus** — a tier counts only if it holds across N runs, OR grade off
+    an *aggregate* of more re-elicitations so boundary records get a tighter, stabler
+    estimate instead of a coin flip. Validate the redesigned method reproduces, THEN scale
+    (realistic ~3× per-record cost for grades that survive a re-run). The single-run
+    backlog blast we almost funded (~$50) would have produced a ~44%-noise ledger — exactly
+    the liability a re-running reviewer would shred. Stability-first testing caught it.
+  - ⚪ Also fold in: the temporal-monoculture fix (re-runs spread the 06-06 batch across
+    dates) rides along with whatever multi-run method we adopt. One transient `embed 500`
+    in the pilot — add a retry to `embedBatch`.
 
 
 - ⚪ **Per-visit utility receipt** — harden `/api/trace` (baseline-vs-augmented)
