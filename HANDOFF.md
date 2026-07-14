@@ -88,3 +88,14 @@ python3 scripts/publish-atlas.py
 Start by reading `trace_delta/SPEC.md` (§0 addendum: EXTEND `huggingface/utility/
 utility-test-disjoint.mjs`, reconcile scope with `docs/utility-eval-preregistration.md`
 first), plus the council.js commit-or-discard decision.
+
+## ✅ PUBLISHED — 2026-07-14
+
+`scripts/publish-atlas.py` executed clean after token rotation:
+- **https://huggingface.co/datasets/TheRealmsOfOmnarai/omnarai-divergence-atlas** — PUBLIC,
+  verified unauthenticated: 110 records (100 D / 10 L), C1 record present, license
+  cc-by-sa-4.0, all 6 files + card live; spot-check byte-equal to the local export.
+- Existing dataset refreshed: certification-enriched Atlas files + cross-linked README on
+  `TheRealmsOfOmnarai/realms-of-omnarai`.
+This handoff is CLOSED. Open item carried to next session: council.js commit-or-discard;
+next work: trace-delta per trace_delta/SPEC.md (gate open).
