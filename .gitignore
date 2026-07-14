@@ -31,3 +31,7 @@ corpus/pipeline_runs/
 
 # Local grown-memory snapshots (data artifacts, not source)
 *.grown-snapshot.json
+
+# Atlas export accounting logs are first-class artifacts (02-ATLAS-SHIP.md §3.2),
+# not build noise — exempt them from the global *.log rule
+!atlas/*.log

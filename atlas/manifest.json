@@ -1,0 +1,25 @@
+{
+  "dataset_version": "1.0.0",
+  "exported_at": "2026-07-14T18:39:18.196437+00:00",
+  "canonical_store": "Vercel Blob memory/grown.json (see header); local snapshot scripts/.grown-snapshot.json via dump-grown.mjs",
+  "store_count": 110,
+  "exported_count": 110,
+  "excluded_count": 0,
+  "review_needed_count": 0,
+  "series_counts": {
+    "D": 100,
+    "L": 10
+  },
+  "stale_flagged_count": 108,
+  "certification_tiers": {
+    "untested": 100,
+    "C0": 9,
+    "C1": 1
+  },
+  "question_groups": 100,
+  "multi_run_groups": 10,
+  "series_meaning": {
+    "D": "one-shot Atlas capture (new open question, asked once)",
+    "L": "longitudinal re-run of a frozen-canon question (monthly epoch; links to its OMN-D source via longitudinal.source_record)"
+  }
+}

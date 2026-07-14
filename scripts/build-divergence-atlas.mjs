@@ -4,13 +4,33 @@
 //   huggingface/divergence-answers.jsonl  — flat: one verbatim per-model answer/row
 //   huggingface/divergence-tensions.csv   — flat: one named disagreement/row
 //   huggingface/divergence-atlas.md       — dataset card (schema, findings, license)
+//
+// CANONICAL STORE: this export reads the grown-memory Blob (memory/grown.json,
+// via api/_grown.js loadGrownMemory()) — the store the engine writes divergence
+// records into at commit time. It NEVER reads the retrieval layer (/api/query,
+// /api/divergences): those are derived views, and reading a view to build the
+// dataset would launder view-level filtering/caching into the artifact of record.
+//
+// SERIES: the store holds two record series that both satisfy type==="divergence" —
+//   OMN-D<ms>  one-shot Atlas captures (a new open question, asked once)
+//   OMN-L<ms>  longitudinal-cadence re-asks of the frozen 20-question canon
+// The Atlas is the OMN-D series. Longitudinal records are EXCLUDED by default so
+// the Atlas count can't silently drift as the daily cron accrues OMN-L records
+// (that drift was live: /api/divergences count 110 vs the published 100-record
+// Atlas, 2026-07-14). Pass --include-longitudinal to fold them in deliberately.
+//   --out <dir>   write somewhere other than huggingface/ (e.g. a staging dir)
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
-const OUT = path.join(ROOT, "huggingface");
+const outArg = process.argv.indexOf("--out");
+const OUT = outArg !== -1 && process.argv[outArg + 1]
+  ? path.resolve(ROOT, process.argv[outArg + 1])
+  : path.join(ROOT, "huggingface");
+const INCLUDE_LONGITUDINAL = process.argv.includes("--include-longitudinal");
+fs.mkdirSync(OUT, { recursive: true });
 for (const line of fs.readFileSync(path.join(ROOT, ".env.local"), "utf8").split("\n")) {
   const m = line.match(/^\s*([A-Z_]+)\s*=\s*(.*)\s*$/);
   if (m) { let v = m[2].trim(); if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1); if (!(m[1] in process.env)) process.env[m[1]] = v; }
@@ -53,9 +73,17 @@ function synthesisOf(full_text) {
 }
 
 const grown = await loadGrownMemory();
-const recs = grown.entries
+const allDivergence = grown.entries
   .filter((e) => e.type === "divergence" && e.divergence)
   .sort((a, b) => (a.id).localeCompare(b.id));
+// OMN-D only (\d guard also keeps future OMN-DD delta records out of the Atlas).
+const isAtlas = (e) => /^OMN-D\d+$/.test(e.id);
+const recs = INCLUDE_LONGITUDINAL ? allDivergence : allDivergence.filter(isAtlas);
+const excluded = allDivergence.filter((e) => !recs.includes(e));
+if (excluded.length) {
+  console.log(`excluded ${excluded.length} non-Atlas divergence records (--include-longitudinal to fold in):`);
+  for (const e of excluded) console.log(`  ${e.id}`);
+}
 
 const divLines = [], ansLines = [], tenRows = [["question_id", "date", "cluster", "topic", "status", "voice_a", "claim_a", "voice_b", "claim_b"]];
 const modelTensionCounts = {}, clusterCounts = {}, labelCounts = { divergent: 0, convergent: 0 };
@@ -81,6 +109,8 @@ for (const e of recs) {
     n_models: answers.length, n_tensions: tensions.length,
     label, divergence_score: score,
     deliberation_card: d.deliberation_card || null,
+    // Perturbation certification, verbatim from the canonical store (null = C0/untested).
+    certification: d.certification || null,
     synthesis: synthesisOf(e.full_text),
     answers, tensions,
   }));
@@ -137,7 +167,7 @@ This is content **no single model can self-generate**: a model cannot produce a 
 | \`divergence-tensions.csv\` | one disagreement per row | the disagreement map; "who splits from whom on what" |
 
 ### \`divergences.jsonl\` schema
-\`id\`, \`date\`, \`cluster\`, \`question\`, \`method\`, \`models[]\`, \`n_models\`, \`n_tensions\`, \`label\` (divergent/convergent), \`divergence_score\` (answer-embedding spread; null for older records), \`deliberation_card\` { \`holdform_risk\`, \`novel_synthesis\`, \`epistemic_status\` }, \`synthesis\` (cross-model deliberation prose), \`answers[]\` { \`model\`, \`lab\`, \`model_id\`, \`date\`, \`text\` }, \`tensions[]\` { \`voice_a\`, \`claim_a\`, \`voice_b\`, \`claim_b\`, \`topic\`, \`status\` }.
+\`id\`, \`date\`, \`cluster\`, \`question\`, \`method\`, \`models[]\`, \`n_models\`, \`n_tensions\`, \`label\` (divergent/convergent), \`divergence_score\` (answer-embedding spread; null for older records), \`deliberation_card\` { \`holdform_risk\`, \`novel_synthesis\`, \`epistemic_status\` }, \`certification\` (perturbation-robustness block from \`scripts/certify-divergence.mjs\`; \`tier\` C0–C3; null = not yet tested), \`synthesis\` (cross-model deliberation prose), \`answers[]\` { \`model\`, \`lab\`, \`model_id\`, \`date\`, \`text\` }, \`tensions[]\` { \`voice_a\`, \`claim_a\`, \`voice_b\`, \`claim_b\`, \`topic\`, \`status\` }.
 
 ## What the Atlas shows so far
 
@@ -174,7 +204,24 @@ CC BY-SA 4.0. Verbatim model outputs are reproduced for research into cross-mode
 `;
 fs.writeFileSync(path.join(OUT, "divergence-atlas.md"), card);
 
-console.log(`Atlas built from ${recs.length} records:`);
+// Provenance manifest: what this build read, what it kept, what it left out —
+// so a staged export is auditable without re-deriving anything.
+const certTally = recs.reduce((acc, e) => {
+  const t = e.divergence.certification?.tier || "C0";
+  acc[t] = (acc[t] || 0) + 1; return acc;
+}, {});
+fs.writeFileSync(path.join(OUT, "atlas-build-manifest.json"), JSON.stringify({
+  built_at: new Date().toISOString(),
+  source: "grown-memory Blob (memory/grown.json) via api/_grown.js loadGrownMemory() — canonical store, not the retrieval layer",
+  series_basis: INCLUDE_LONGITUDINAL ? "OMN-D + OMN-L (explicit --include-longitudinal)" : "OMN-D only (Atlas series)",
+  records: recs.length,
+  answers: totalAnswers,
+  tensions: totalTensions,
+  certification_tiers: certTally,
+  excluded: excluded.map((e) => e.id),
+}, null, 2) + "\n");
+
+console.log(`Atlas built from ${recs.length} records → ${OUT}`);
 console.log(`  divergences.jsonl        (${divLines.length} records)`);
 console.log(`  divergence-answers.jsonl (${ansLines.length} answers)`);
 console.log(`  divergence-tensions.csv  (${tenRows.length - 1} tensions)`);
