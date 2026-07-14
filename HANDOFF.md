@@ -68,3 +68,23 @@ cd "/Users/jonathanlee/Library/Mobile Documents/com~apple~CloudDocs/CBS Cool Bus
 
 All eight green ⇒ follow `atlas/PUSH.md` (human). V6 still failing ⇒ D4 is real beyond the
 credits outage — investigate `api/query.js` trace mode before anything else.
+
+## Session 2026-07-14, third pass — decisions executed, publish authorized
+
+xz delegated the five staged decisions ("technical questions — let's publish") and declined
+the longitudinal backfill. All resolved and recorded in SESSION-LOG.md "DECISIONS": measured
+claim language stands · CC BY-SA 4.0 · new dataset · schema adopted (`divergence-delta.schema.json`)
+· uncommitted council.js work NOT shipped (the one remaining open item from the package).
+V1–V8 re-verified green after the schema adoption. Repo pushed: `main` @ `3e2f63b` + tag
+`atlas-v1.0.0` on GitHub.
+
+**HF publish:** one command, blocked only on a fresh write token (stored one expired):
+```bash
+python3 scripts/publish-atlas.py
+```
+(private repo → upload → spot-check → refresh existing dataset + cross-link → flip public)
+
+**Next session after publish:** trace-delta implementation — its gate (V4–V6) is OPEN.
+Start by reading `trace_delta/SPEC.md` (§0 addendum: EXTEND `huggingface/utility/
+utility-test-disjoint.mjs`, reconcile scope with `docs/utility-eval-preregistration.md`
+first), plus the council.js commit-or-discard decision.
