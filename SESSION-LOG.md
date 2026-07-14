@@ -244,7 +244,7 @@ run, supply it and the card section gets rewritten — the discrepancy is staged
 | V3 byte round-trip (6-record deterministic sample) | PASS |
 | V4 `?id=` honors param (D1) | PASS — single record, zero foreign ids |
 | V5 retrieval bleed (D3) — 5 conceptual gold-set queries | PASS — zero media-ring hits |
-| V6 trace end-to-end (D4) | **BLOCKED — prod Anthropic account OUT OF CREDITS** (below) |
+| V6 trace end-to-end (D4) | ~~BLOCKED — credits~~ → **PASS** after refill (same day, see addendum) |
 | V7 PII sweep (emails/phones/name denylist, unstaged local list) | PASS — zero hits |
 | V8 personal-name sweep of staged files | PASS (after removing a GitHub-username URL from the card) |
 
@@ -270,3 +270,29 @@ balance is too low."* Verified 2026-07-14. Consequences visible in data:
 - First-pass staging (`huggingface/staging/atlas-2026-07-14/`, existing-dataset refresh:
   certification enrichment on 9 records + card limitations update) — still valid, separate
   decision from the new dataset.
+
+## ADDENDUM 2026-07-14 (same day, post-refill) — ALL EIGHT CHECKS GREEN
+
+- xz refilled the production Anthropic credits. Full pipeline re-run
+  (dump → export → verify): **V1–V8 ALL PASS.**
+- V6 detail: trace jobs complete end-to-end in 30s / 38s with `measured:true`
+  receipts, verdict `substantive`. **D4 (trace timeouts) does NOT reproduce
+  post-refill** — the audit's timeouts were the credits outage. All four P0/P1
+  defects are now closed: D1 not reproducible, D2 fixed at export layer,
+  D3 no bleed observed (V5), D4 cleared.
+- One harness bug fixed in `scripts/verify-atlas.sh` V6 (poll_url is only on the
+  initial job ticket, not on poll responses).
+- Incident note: mid-session, macOS revoked the Claude app's file access to the
+  iCloud repo directory (hard EPERM on every tool). Restored by xz via
+  Privacy & Security grant. No data lost — the commit predated the incident.
+- Longitudinal cron: resumes automatically at the next 06:00 UTC run. July canon
+  days 1–14 (indexes 0–13, epoch 2026-07) remain unbackfilled — STAGED QUESTION:
+  backfill via `GET /api/cron-longitudinal?index=N` (Bearer INGEST_SECRET),
+  ~14 council runs, or accept the gap as an honest outage scar in the epoch data.
+- With V4–V6 green, the trace_delta/SPEC.md implementation gate is now OPEN
+  (per its §0 addendum: extend the existing utility harness; reconcile with the
+  preregistered study first).
+
+**Remaining moves are all xz's:** the 5 staged decisions (claim language, license,
+dataset placement, schema adoption, uncommitted council.js work) → then
+`atlas/PUSH.md` (HF publish) + `git push` (the local commits/tag are unpushed).

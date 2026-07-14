@@ -110,9 +110,10 @@ for q in queries:
     t0 = time.time()
     try:
         d = get(BASE + "/api/trace?q=" + urllib.parse.quote(q))
+        poll = d.get("poll_url")  # only the initial ticket carries it
         while d.get("status") in ("pending", "running") and time.time() - t0 < 180:
             time.sleep(4)
-            d = get(BASE + d["poll_url"] if d.get("poll_url", "").startswith("/") else d["poll_url"])
+            d = get(BASE + poll if poll.startswith("/") else poll)
         dt = time.time() - t0
         result = d.get("result", d)
         measured = (result.get("receipt") or {}).get("measured")
