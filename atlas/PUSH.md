@@ -18,7 +18,7 @@ from huggingface_hub import HfApi
 api = HfApi()  # uses HF_TOKEN env var
 repo = "TheRealmsOfOmnarai/omnarai-divergence-atlas"
 api.create_repo(repo, repo_type="dataset", private=True)   # private first; flip when ready
-for f in ["README.md", "divergence-delta.schema.DRAFT.json", "manifest.json",
+for f in ["README.md", "divergence-delta.schema.json", "manifest.json",
           "excluded.log", "review-needed.log", "data/atlas-v1.0.0.jsonl"]:
     api.upload_file(path_or_fileobj=f, path_in_repo=f, repo_id=repo, repo_type="dataset")
 PY

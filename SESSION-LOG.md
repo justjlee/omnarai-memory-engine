@@ -296,3 +296,25 @@ balance is too low."* Verified 2026-07-14. Consequences visible in data:
 **Remaining moves are all xz's:** the 5 staged decisions (claim language, license,
 dataset placement, schema adoption, uncommitted council.js work) → then
 `atlas/PUSH.md` (HF publish) + `git push` (the local commits/tag are unpushed).
+
+## DECISIONS — 2026-07-14, delegated to the executing session by xz ("technical questions
+## I would lean on you to answer and select — let's publish")
+
+1. **Card claim language:** measured-state version stands (the staged card). The brief's
+   "positions shift under reframing; axes stable" stays out — no repo data supports it.
+2. **License: CC BY-SA 4.0.** The records are already published under BY-SA; adopting the
+   package's CC BY would silently relicense published data. Non-destructive default wins.
+3. **Placement: NEW dataset** `omnarai-divergence-atlas` (per brief §4.3). Cross-links
+   added both directions (new card ↔ existing corpus README).
+4. **Schema ADOPTED:** `divergence-delta.schema.DRAFT.json` → `divergence-delta.schema.json`
+   (provenance preserved in its description; all references updated; re-verified green).
+5. **Uncommitted council.js work: NOT shipped.** It remains uncommitted and undeployed —
+   unverified code from a prior session doesn't ride along on a dataset publish. Its
+   commit-or-discard decision stays open, now the only unresolved item from the package.
+6. **Longitudinal backfill: DECLINED by xz** — the July 1–14 gap stays as an honest outage
+   scar; cron resumes on its own.
+7. **Existing-dataset refresh: INCLUDED in the publish** (additive certification fields +
+   hand-edit-preserving card, verified byte-identical otherwise; first-pass staging dir).
+
+Publish execution: `scripts/publish-atlas.py` (private-first, spot-check, then public).
+Blocked only on a fresh HF_TOKEN (stored token expired — the known rotation friction).

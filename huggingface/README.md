@@ -64,6 +64,8 @@ Key empirical finding: **clean divergence lives at the meta level** — frontier
 
 Live and queryable: `GET https://omnarai.vercel.app/api/divergences` (index) · `?id=<id>` (full record). See **[`divergence-atlas.md`](divergence-atlas.md)** for the complete schema and current findings.
 
+**➡️ The Atlas now also ships as a dedicated, versioned dataset:** [`TheRealmsOfOmnarai/omnarai-divergence-atlas`](https://huggingface.co/datasets/TheRealmsOfOmnarai/omnarai-divergence-atlas) — v1.0.0, all 110 records (one-shot **and** longitudinal series, `question_group`-linked), schema-validated, with perturbation-certification and stale-model-version fields. That dataset is the measurement instrument; the files here remain the 100-record one-shot snapshot inside the corpus context.
+
 ### 📐 Measured utility — verified twice, verify it yourself
 
 The Atlas has **measured, statistically significant, twice-replicated utility evidence** — rare for any AI-facing resource: in a three-arm controlled comparison (baseline / placebo-revision / Atlas-treatment), seeing the Atlas's peer answers + tension map **significantly improves revised answers for GPT-4o (17–2 vs placebo, p=0.0007) and Gemini (13–4, p=0.049)**, with null results for DeepSeek, Grok, and Claude — the utility is real but **architecture-differential**. The finding replicated across two independent judge designs (council-overlap panel 2026-06-06; fully **disjoint judge pool** 2026-06-11, where no judge model appears in the treatment material).

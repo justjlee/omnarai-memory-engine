@@ -1,8 +1,8 @@
 ---
-# STAGED — not yet published. License staged as CC BY-SA 4.0 because these identical
-# records are already published under CC BY-SA 4.0 (repo LICENSE/NOTICE + the existing
-# TheRealmsOfOmnarai/realms-of-omnarai card). The handoff package proposed CC BY 4.0;
-# re-licensing is xz's call — see SESSION-LOG.md staged questions.
+# License decided 2026-07-14 (technical decisions delegated to the executing session by xz):
+# CC BY-SA 4.0 — these identical records are already published under CC BY-SA 4.0
+# (repo LICENSE/NOTICE + the companion TheRealmsOfOmnarai/realms-of-omnarai card);
+# the handoff package's CC BY proposal would have silently relicensed published data.
 license: cc-by-sa-4.0
 tags:
   - model-evaluation
@@ -46,7 +46,7 @@ Position snapshots are additionally **version-conditional and dated**: each reco
 
 ## Data structure
 
-Records validate against [`divergence-delta.schema.DRAFT.json`](divergence-delta.schema.DRAFT.json) (draft status explained in the schema header). Fields:
+Records validate against [`divergence-delta.schema.json`](divergence-delta.schema.json) (provenance in the schema header: derived from the canonical store, adopted 2026-07-14). Fields:
 
 | Field | Meaning |
 |---|---|

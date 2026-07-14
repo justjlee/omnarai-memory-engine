@@ -35,9 +35,9 @@ else
 fi
 
 echo "== V2: schema validation, zero silent drops =="
-python3 - "$JSONL" <<'PY' && pass "all lines validate against divergence-delta.schema.DRAFT.json" || fail "validation failures"
+python3 - "$JSONL" <<'PY' && pass "all lines validate against divergence-delta.schema.json" || fail "validation failures"
 import json, sys, jsonschema
-schema = json.load(open("atlas/divergence-delta.schema.DRAFT.json"))
+schema = json.load(open("atlas/divergence-delta.schema.json"))
 bad = 0
 for i, line in enumerate(open(sys.argv[1], encoding="utf-8"), 1):
     try: jsonschema.validate(json.loads(line), schema)
