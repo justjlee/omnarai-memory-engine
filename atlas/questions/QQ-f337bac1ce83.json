@@ -23,9 +23,9 @@
       "measured_at": "2026-07-15"
     },
     "irreducibility_yield": {
-      "score": null,
-      "cross_prediction_run_id": null,
-      "measured_at": null
+      "score": 0.244,
+      "cross_prediction_run_id": "XP-b14ab4443f54",
+      "measured_at": "2026-07-15"
     },
     "discrimination": {
       "score": null,

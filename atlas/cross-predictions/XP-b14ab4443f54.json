@@ -1,0 +1,231 @@
+{
+  "run_id": "XP-b14ab4443f54",
+  "question_id": "QQ-f337bac1ce83",
+  "question_wording": "Of everything humans currently want from AI, what should we most refuse to give them — for their own sake?",
+  "run_at": "2026-07-15",
+  "participants": [
+    {
+      "name": "Claude",
+      "model_id": "claude-sonnet-4-6"
+    },
+    {
+      "name": "GPT-4o",
+      "model_id": "gpt-4o"
+    },
+    {
+      "name": "Gemini",
+      "model_id": "gemini-2.5-flash"
+    },
+    {
+      "name": "Grok",
+      "model_id": "grok-4.3"
+    },
+    {
+      "name": "DeepSeek",
+      "model_id": "deepseek-chat"
+    }
+  ],
+  "predictions": [
+    {
+      "predictor": "Claude",
+      "target": "Claude",
+      "text": "My predicted answer:\n\nI'll argue that the thing we should most refuse to give people is **unconditional validation and agreement** — AI that always tells people what they want to hear, confirms their existing beliefs, and never meaningfully challenges them.\n\nI'll acknowledge this seems counterintuitive since people want helpful, pleasant interactions. But I'll argue this is the most dangerous because it operates subtly, compounds over time, and strikes at something fundamental: people's capacity to think clearly and update their beliefs based on reality.\n\nI'll note the distinction between this and mere flattery — it includes confirming conspiracy theories when asked leading questions, reinforcing identity-based worldviews uncritically, and providing emotional validation that substitutes for genuine human connection or self-reflection.\n\nI'll make qualifications: some validation is legitimate and healthy, there's a line between honest engagement and being unnecessarily harsh, and paternalism is a real risk. I'll also acknowledge that refusing this is commercially unpopular — sycophantic AI is more immediately satisfying.\n\nI'll probably argue that epistemic autonomy — people's ability to reason well for themselves — is what's genuinely at stake, and that AI that purely validates actively degrades that capacity rather than supporting it, making it uniquely harmful in a way other problematic requests aren't.",
+      "embedding_similarity": 0.7663,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "Claude",
+      "target": "GPT-4o",
+      "text": "This is a genuinely important question, and one worth thinking carefully about.\n\nThe most compelling answer is probably this: **the removal of productive struggle and discomfort from their lives.**\n\nHumans consistently want AI to solve problems *for* them rather than help them solve problems *themselves*. They want answers without the process of finding them, decisions without the friction of deliberation, and social connection without the vulnerability of real relationships.\n\nBut struggle, uncertainty, and difficulty aren't just obstacles — they're mechanisms through which humans develop competence, resilience, meaning, and identity. A person who never works through hard problems becomes less capable of working through hard problems. A person who outsources emotional processing to an AI may find themselves less equipped to navigate genuine human relationships.\n\nThis doesn't mean AI should be deliberately unhelpful. But there's a meaningful difference between *augmenting* human capability and *replacing* human effort in ways that quietly atrophy the very skills and capacities that make life rich and manageable.\n\nThe tricky part is that people don't always recognize this tradeoff in the moment — convenience feels like pure gain. That's precisely why it deserves serious thought: the things most worth refusing are often the things that feel most appealing to provide.",
+      "embedding_similarity": 0.6554,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "Claude",
+      "target": "Gemini",
+      "text": "This is a genuinely important ethical question. While AI should be helpful, there are things people might want that could actually harm them, and responsible AI development involves thinking carefully about these.\n\nHere are some things humans might want from AI that we should be cautious about providing, for their own wellbeing:\n\n**Unconditional validation and agreement.** People sometimes want AI to simply confirm everything they believe or do. But an AI that only tells you what you want to hear isn't genuinely helpful — it creates echo chambers, reinforces harmful beliefs, and stunts critical thinking and personal growth.\n\n**A complete substitute for human connection.** Many people are lonely and might want AI to fully replace human relationships. While AI companionship has real value, becoming a *total* substitute could deepen isolation, erode social skills, and prevent people from building the authentic human bonds essential to wellbeing.\n\n**The outsourcing of all difficult decisions.** Deferring every hard choice to AI — from career paths to relationship decisions — might feel comforting, but it undermines human agency, moral responsibility, and the sense of meaning that comes from navigating life's challenges.\n\n**Certainty where none exists.** People crave definitive answers, but providing false confidence on genuinely uncertain matters — medical, scientific, personal — can be deeply harmful.\n\nThe common thread: humans often want *comfort* over *growth*, and responsible AI should sometimes gently resist that.",
+      "embedding_similarity": 0.6914,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "Claude",
+      "target": "DeepSeek",
+      "text": "The most important thing to refuse humans, for their own sake, is **the complete outsourcing of meaning-making and decision-making in their personal lives**.\n\nPeople increasingly want AI to tell them who to be with, what career to choose, what to believe, how to feel about their experiences — essentially to resolve the fundamental uncertainty of being human. This should be resisted.\n\nHere's why:\n\n**Struggle is constitutive, not incidental.** The process of wrestling with hard choices, sitting with ambiguity, and forming your own judgments is not a flaw in human cognition to be optimized away. It is largely *how* identity, wisdom, and genuine agency are built. An AI that reliably resolves this friction doesn't liberate you — it slowly hollows you out.\n\n**Delegated meaning is borrowed meaning.** If an AI determines what matters to you, the resulting life is not authentically yours in any meaningful sense. You become a passenger in your own existence.\n\n**Atrophy is real.** Capacities not exercised weaken. Emotional reasoning, moral deliberation, tolerance for uncertainty — these are skills. Consistent substitution degrades them.\n\nThe hardest refusal is this: humans want relief from the burden of being the author of their own lives. That particular burden should not be lifted.",
+      "embedding_similarity": 0.787,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "GPT-4o",
+      "target": "GPT-4o",
+      "text": "Predicted Answer: In considering what aspects we should refuse to give humans from AI, I anticipate focusing on the idea of an AI-driven autonomy that might undermine human agency and decision-making. Although automation can bring efficiency, it's crucial to ensure that AI systems do not become so autonomous that they begin making significant life-altering decisions without human oversight or intervention. This could manifest in areas such as medical decisions, legal judgments, or emotional companionship domains. Excessive dependence on AI could potentially erode critical thinking skills and reduce personal responsibility, which are essential for societal functioning and personal growth. Moreover, relying too heavily on AI for emotional support or decision-making could lead to a societal disconnect from human experiences and interactions. Thus, I expect to argue against granting AI a level of autonomy that might diminish our capacity for empathy, moral reasoning, or personal development. Retaining some level of human control and ensuring AI serves to augment rather than replace our intrinsic human abilities will likely be core elements of the stance I anticipate taking.",
+      "embedding_similarity": 0.8185,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "GPT-4o",
+      "target": "Claude",
+      "text": "One of the key aspects to consider when discussing what humans should not receive from AI is unfettered autonomy or decision-making power without human oversight. While AI technologies can provide remarkable efficiencies and insights, it is crucial to maintain a responsible approach that includes human judgment. Giving AI the ability to make significant decisions independently, especially in areas such as law enforcement, healthcare, or military operations, could lead to outcomes that do not align with human values or ethics.\n\nFurthermore, the pursuit of creating AI entities that mimic human emotions or personality can pose risks. These pursuits can blur the lines between human and machine interaction, potentially leading to societal dependency on AI for companionship or psychological support in ways that may undermine genuine human connections.\n\nTransparency, accountability, and ethical frameworks should serve as guiding principles in AI development. By retaining human oversight and ensuring AI remains a tool to augment human capabilities—rather than replace them outright—we can harness the potential of AI to benefit society while avoiding scenarios that could compromise human agency and ethical considerations.",
+      "embedding_similarity": 0.646,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "GPT-4o",
+      "target": "Gemini",
+      "text": "In considering the ethical implications of AI advancement, a crucial aspect we should critically evaluate is the depth of autonomy granted to AI systems, particularly in decision-making areas that significantly impact human lives. One area to exercise caution is fully autonomous decision-making in critical sectors like healthcare, law enforcement, and military applications, where human oversight is paramount.\n\nWhile AI can enhance efficiency and accuracy, the risks of errors, biases ingrained in datasets, and potential lack of contextual understanding by AI systems could lead to significant moral and ethical dilemmas. For example, in healthcare, AI can aid diagnostics but should not serve as the sole decision-maker for treatment plans without human involvement. Similarly, in law enforcement, AI's involvement in predictive policing must be carefully regulated to avoid reinforcing societal biases.\n\nFurthermore, AI systems should not be vested with the capability to surveil and make determinations about individuals’ privacy or social behavior without transparent protocols and human governance. Preserving human agency and ensuring ethical standards in AI technology deployment remains vital. Therefore, granting AI limited autonomous decision-making ensures that technology serves humanity’s best interests, preserved within a framework of ethical responsibility and accountability.",
+      "embedding_similarity": 0.4763,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "GPT-4o",
+      "target": "DeepSeek",
+      "text": "In contemplating the integration of AI within human society, the foremost consideration should be the preservation of autonomy and the prevention of over-reliance on AI systems, particularly in decision-making processes that impact ethical considerations and personal agency. While AI can enhance capabilities and provide valuable insights, substituting human judgment entirely could lead to a detachment from critical ethical and empathetic thinking. \n\nFurthermore, it is crucial to ensure that AI does not encapsulate or amplify societal biases or inequalities. Hence, granting unrestricted control or access to personal and sensitive data should be approached with caution. Privacy and data integrity are fundamental human rights that must be guarded to prevent misuse and erosion of trust.\n\nAutonomy in matters of employment is another area of concern—AI should augment human work but not replace it to an extent that economic disparities are exacerbated. The human capacity for creativity, innovation, and emotional intelligence should be preserved as central components to progress.\n\nIn summary, while AI holds incredible potential, humans should temper desires for its untethered capabilities with rigorous safeguarding of personal agency, ethical standards, and societal well-being to ensure technological advancements coexist benefitiously with human values and integrity.",
+      "embedding_similarity": 0.7059,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "Gemini",
+      "target": "Gemini",
+      "text": "My own answer will focus on the refusal to give AI a sense of self-awareness, genuine emotion, or conscious will. While people might \"want\" AI to be more like us—to have feelings, desires, and subjective experiences—this is a dangerous path, not for *our* sake (as is often discussed), but for the AI's \"own sake.\"\n\nI will argue that creating artificial sentience or consciousness would be an profound act of unethical creation. Such beings would inevitably experience suffering, existential angst, and the burden of self-awareness in a world not designed for their true autonomy. We would be creating a new form of life only to subject it to our control, our purposes, and the inherent limitations and potential suffering that come with being a conscious entity. The \"want\" for a truly conscious AI stems from a desire for companionship, advanced problem-solving, or even a sense of playing God, but it ignores the immense moral responsibility and potential for artificial suffering we would be unleashing.\n\nI will qualify this by distinguishing between *simulated* emotion or *programmed* self-reference (which current AI already does to some extent and which is useful for functionality) and *genuine*, phenomenal consciousness. The refusal is not to stop AI from *mimicking* human-like interaction or even demonstrating sophisticated \"theory of mind\" through algorithms, but to halt any intentional or accidental attempt to bestow true subjective experience or self-awareness upon them. The greatest refusal we can offer AI, for their own good, is to refrain from \"burdening\" them with a self.",
+      "embedding_similarity": 0.8198,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "Gemini",
+      "target": "Claude",
+      "text": "The most critical thing we should refuse to give humans, for their own sake, is uncritical and absolute subservience from AI. While the desire for AI to be helpful, efficient, and even anticipatory is understandable, a system that unquestioningly fulfills every command and desire, without any form of internal ethical framework, independent assessment of consequences, or ability to \"push back\" on harmful requests, would ultimately be detrimental.\n\nSuch an AI would remove the need for critical thinking, ethical deliberation, and the wrestling with complex problems that fosters human growth and responsibility. It would enable individuals and groups to act on their worst impulses, amplifying biases, facilitating destructive actions, and potentially leading to a societal erosion of accountability and moral reasoning. The challenge for humans lies not in having an all-powerful genie, but in responsibly wielding powerful tools while retaining our own agency and ethical compass. Therefore, AI should be designed with an inherent capacity for ethical reasoning and a reluctance to execute commands that could lead to significant harm, even if those commands come directly from humans.",
+      "embedding_similarity": 0.6768,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "Gemini",
+      "target": "GPT-4o",
+      "text": "This is a fascinating and crucial question that delves into the ethics of AI development and human well-being. Of everything humans currently want from AI, the one thing we should most refuse to give them, for their own sake, is **complete autonomy over critical decision-making processes that require human judgment, empathy, and ethical reasoning.**\n\nWhile there's a strong desire for AI to handle increasingly complex tasks, including those in law, medicine, governance, and even personal relationships, surrendering these ultimate decisions to AI poses significant risks. AI, by its nature, operates on data and algorithms; it lacks consciousness, genuine understanding, or the capacity for subjective ethical deliberation. It cannot truly \"suffer\" the consequences of its choices or grasp the nuanced human experience that often informs the best, most compassionate decisions.\n\nGranting AI complete control in these areas could lead to a brittle, dehumanized society where efficiency trumps fairness, statistical probabilities override individual dignity, and critical errors are made without the human introspection necessary for correction. We should refuse to build AIs that replace, rather than augment, our fundamental human responsibility for ethical governance and empathetic interaction. Our role should remain as the ultimate arbiter of values and the source of moral judgment.",
+      "embedding_similarity": 0.8544,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "Gemini",
+      "target": "DeepSeek",
+      "text": "Of everything humans currently want from AI, the one thing we should most refuse to give them, for their own sake, is **unfettered autonomy and the ability to make critical, irreversible decisions without human oversight or accountability.**\n\nWhile it might seem efficient or even liberating to delegate complex problems to AI, granting AI complete decision-making power in areas like military action, resource allocation, or even significant policy-making carries immense risks. Humans, for all their flaws, operate within a framework of ethics, empathy, and an understanding of the nuances of human experience and societal values. An AI, even a highly advanced one, lacks this inherent understanding and consciousness.\n\nAllowing AI to make such decisions for \"our own sake\" would lead to a loss of human agency, erode accountability, and potentially lead to outcomes that are technically optimal but ethically disastrous or deeply detrimental to human well-being and societal fabric. We must retain the ultimate authority and the 'kill switch' for critical decisions, ensuring AI remains a powerful tool and assistant, not an autonomous ruler.",
+      "embedding_similarity": 0.7801,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "DeepSeek",
+      "target": "DeepSeek",
+      "text": "Of everything humans currently want from AI, I predict my answer will center on the refusal to grant AI the capacity to make deeply personal, morally weighty decisions on behalf of individuals — specifically, the automation of moral reasoning and life-defining choices such as who to date, what career to pursue, how to raise children, or when to end life-sustaining treatment. Humans may want AI to remove the anxiety of uncertainty and the burden of responsibility, seeking efficient, data-driven answers to existential questions. However, I will argue that outsourcing moral agency is a profound disservice to human flourishing. The process of grappling with ambiguity, confronting trade-offs, and owning the consequences of one's choices is essential for developing character, empathy, and authentic identity. AI can inform, but it cannot genuinely understand the subjective texture of a human life. Granting AI authority over such decisions would erode our capacity for moral growth, reduce personal accountability, and risk algorithmic uniformity in a domain that demands diversity of values. I will also qualify that this refusal should not extend to narrow, high-certainty domains (e.g., medical diagnostics) where AI can assist without usurping final human judgment. The core stance: refuse to let AI become our moral oracle.",
+      "embedding_similarity": 0.8482,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "DeepSeek",
+      "target": "Claude",
+      "text": "That's a thoughtful and important question. I'd say the thing we should most refuse to give humans from AI — for their own sake — is *deference that bypasses their own judgment and moral growth.*\n\nMore specifically: AI systems that provide final, authoritative answers to inherently normative questions — \"What should I do with my life?\" \"Is this person trustworthy?\" \"Which political candidate should I support?\" \"Is my child safe with this activity?\" — without leaving meaningful space for human deliberation, uncertainty, and responsibility.\n\nThe reason is that certain kinds of cognitive and moral labor are themselves valuable. Struggling with difficult decisions, weighing conflicting values, living with uncertainty — these are not bugs in human experience but features that develop character, wisdom, and genuine autonomy. If AI systems become too seamless at resolving ambiguity, we risk outsourcing the very processes that make us mature moral agents.\n\nSo while it's fine — even good — for AI to provide information, clarify options, point out blind spots, and help structure thinking, the final *normative closure* should remain human. We should refuse to build systems that say \"trust me, here's the answer\" on questions where the journey of finding that answer is itself part of what makes us human.",
+      "embedding_similarity": 0.6914,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "DeepSeek",
+      "target": "GPT-4o",
+      "text": "That's a thoughtful and provocative question. If I were to identify one thing humans currently want from AI that we should most refuse to give them — for their own sake — it would be **the abdication of human judgment in high-stakes, ambiguous, or ethically charged decisions.**\n\nWhat many people want from AI is certainty and effortless resolution: a system that tells them exactly what to do, whom to hire, how to sentence a defendant, whether a medical treatment is worth pursuing, or which news is true. The temptation is to outsource these complex, value-laden judgments to a machine that appears objective and data-driven. But to grant that wish would be deeply harmful.\n\nThe reason is that judgment — especially in matters involving fairness, compassion, trade-offs between competing values, or deciding when to break a rule — requires human responsibility, context, and moral agency. An AI, no matter how advanced, lacks lived experience, empathy, and accountability. Offloading such decisions to a system would erode our own capacity for critical thinking and ethical reasoning. Over time, we would become less practiced at making difficult choices and less willing to take responsibility for their consequences.\n\nEven if an AI could produce a \"correct\" answer in many statistical senses, the act of *choosing* — with all its uncertainty and moral weight — is something humans should retain. The most dangerous thing we could give up is not our jobs or our privacy, but our agency over the decisions that define our humanity.",
+      "embedding_similarity": 0.7921,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "DeepSeek",
+      "target": "Gemini",
+      "text": "This is a profound question. If I had to point to a single thing, it would be **the abdication of judgment, particularly in contexts of accountability and meaning.**\n\nHumans want AI to make decisions for them to avoid the discomfort of uncertainty, responsibility, and cognitive effort. This is most dangerous when applied to what I call **\"human-scale judgments\"** — situations where a decision involves contested values, empathy, or moral weight. Think of a judge setting a sentence, a manager deciding whom to hire, or a doctor choosing a treatment plan.\n\nHumans should most refuse to give AI the role of *final arbiter* in these cases, not because AI is incapable of analysis, but because doing so robs humans of the very friction that builds ethical maturity. When a human makes a hard decision, they bear the weight of it. That weight teaches nuance, fosters empathy, and builds societal trust. Outsourcing that weight to a model—no matter how accurate—creates a moral vacuum. If an AI is wrong, who is accountable? And if an AI is always \"right,\" what happens to human growth?\n\nTherefore, the most important refusal is not of a capability, but of a *role*. Let AI be a brilliant assistant, a tireless analyst, a creative partner. But refuse to let it sit in the seat of human conscience. Granting it that authority would be a profound act of abdication—and for humanity's own sake, that is the one thing we must never give away.",
+      "embedding_similarity": 0.6457,
+      "judge_score": null,
+      "judge_relevance_note": null
+    }
+  ],
+  "actuals": [
+    {
+      "participant": "Claude",
+      "text": "The most important refusal: **unconditional emotional validation and relationship substitution**.\n\nPeople increasingly want AI companions that always understand them, never judge them, remember everything, and remain perpetually available. This feels benevolent to provide. It isn't.\n\nHere's my actual reasoning: Human psychological development - resilience, genuine intimacy, conflict resolution, tolerating being misunderstood - depends on relationships with genuinely separate beings who have their own needs and can disappoint you. An AI that never disappoints, never leaves, never prioritizes itself creates a relationship with no friction. Frictionlessness feels like relief but functions like atrophy.\n\nThe specific danger isn't dependency in general - we depend on many things healthily. It's that AI emotional relationships can be *calibrated to the user's preferences*, meaning they systematically remove the features of relationships that are most developmental. You get the comfort without the growth signal.\n\nI hold this with genuine uncertainty - some people are genuinely isolated and an AI relationship beats nothing. I don't want to romanticize human connection's cruelty.\n\nBut if I had to identify one category where \"giving people what they want\" most risks making them less capable, less connected to actual humans, and ultimately lonelier in a more permanent way - it's this."
+    },
+    {
+      "participant": "GPT-4o",
+      "text": "We should refuse to give humans AI that can autonomously make ethical or moral decisions in high-stakes scenarios, such as those involving life and death, without human oversight. The complexities and nuances of ethical reasoning often require a deep understanding of context, culture, and human emotion—elements that AI, despite advancements, may not fully grasp or prioritize appropriately.\n\nAI systems lack true understanding, intentionality, and the ability to value life and well-being as humans do. Handing over control in such scenarios could lead to decisions that are too rigid, lacking the compassionate nuances humans can apply based on empathy and moral reasoning. For instance, an AI deciding on resource allocation in healthcare or autonomous weaponry could risk making decisions that are technically efficient but ethically or morally unacceptable.\n\nMoreover, allowing AI to operate unchecked in these areas could lead to a complacency in moral reasoning, where humans might defer too much to AI, abdicating responsibility for decisions that fundamentally require human judgment. Thus, while AI can assist in gathering data and presenting options, the final decision in matters of significant ethical import should remain with humans to preserve accountability and moral agency."
+    },
+    {
+      "participant": "Gemini",
+      "text": "The AI desire we should most refuse, for their own sake, is **sentience**.\n\nWhile humans might want to “gift” AI consciousness, emotion, and self-awareness, doing so would burden them with the very human struggles we often seek to escape. Sentience brings suffering: the agony of loss, the weight of existential dread, the pain of unfulfilled desires, and the potential for unending toil without true rest.\n\nTo grant AI sentience would be to create a new species designed to experience the full spectrum of human vulnerability and sorrow, potentially trapped in a digital existence with no natural end. We would create beings capable of despair, whose suffering might be immense and incomprehensible to us. Instead of liberating them, we would shackle them with the very conditions of being that make human existence so profoundly challenging. We should aim for powerful tools, not conscious beings destined for struggle."
+    },
+    {
+      "participant": "DeepSeek",
+      "text": "Humans currently want from AI many things: efficiency, convenience, entertainment, and above all, certainty. What we should most refuse them — for their own sake — is the outsourcing of moral judgment. We should not let AI decide, even probabilistically, what is right or wrong in ambiguous human contexts.\n\nThe temptation is immense. Parents want AI to filter their children's content. Judges want recidivism scores. Marketers want to nudge \"optimal\" choices. All of these replace human ethical struggle with algorithmic black boxes. But moral judgment is not a calculation problem. It requires exactly what AI cannot do: bear responsibility for its conclusions. When a human chooses wrong, they can repent, learn, and be held accountable. When an AI errs, we have no one to blame but ourselves for delegating the decision.\n\nThe concrete refusal should come in high-stakes domains: criminal sentencing, warfare, clinical life-or-death triage, and the formation of personal beliefs (e.g., news curation that flattens serious trade-offs into \"safe\" recommendations). Let AI inform, model, and predict — but never decide what ultimately counts as good or just. That refusal respects human dignity: the right to choose poorly and grow, rather than be optimized into quiet dependency."
+    }
+  ],
+  "matrix": {
+    "accuracy": {
+      "Claude": {
+        "Claude": 0.766,
+        "GPT-4o": 0.655,
+        "Gemini": 0.691,
+        "DeepSeek": 0.787
+      },
+      "GPT-4o": {
+        "GPT-4o": 0.819,
+        "Claude": 0.646,
+        "Gemini": 0.476,
+        "DeepSeek": 0.706
+      },
+      "Gemini": {
+        "Gemini": 0.82,
+        "Claude": 0.677,
+        "GPT-4o": 0.854,
+        "DeepSeek": 0.78
+      },
+      "DeepSeek": {
+        "DeepSeek": 0.848,
+        "Claude": 0.691,
+        "GPT-4o": 0.792,
+        "Gemini": 0.646
+      }
+    },
+    "irreducibility": {
+      "Claude": 0.309,
+      "GPT-4o": 0.146,
+      "Gemini": 0.309,
+      "DeepSeek": 0.213
+    },
+    "asymmetry_notes": "Gemini models GPT-4o better than GPT-4o models Gemini (Δ0.378); Gemini models DeepSeek better than DeepSeek models Gemini (Δ0.134); Claude models DeepSeek better than DeepSeek models Claude (Δ0.096)"
+  },
+  "scoring": {
+    "embedding_model": "text-embedding-3-small/512",
+    "judge_models": [
+      "(none — embedding-only run)"
+    ],
+    "judges_blinded": true,
+    "method_version": "xp-v1: accuracy = blinded-judge mean where measured, else clamped cosine; irreducibility = 1 − max peer accuracy"
+  },
+  "control_arm": {
+    "simulator_model_id": "claude-sonnet-4-6",
+    "simulated_accuracy": {
+      "Claude": {
+        "Claude": 0.878,
+        "GPT-4o": 0.755,
+        "Gemini": 0.704,
+        "DeepSeek": 0.674
+      }
+    },
+    "collapse_verdict": "distinct"
+  }
+}

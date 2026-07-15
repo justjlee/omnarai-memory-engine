@@ -1,6 +1,6 @@
 {
   "_about": "Question-quality index (B11 offline pass). One row per question_group; full QQ records alongside. Ranked by position_spread. Nulls are honest untested, not zeros.",
-  "generated_at": "2026-07-15T20:20:34.015Z",
+  "generated_at": "2026-07-15T20:26:14.170Z",
   "schema": "../question-quality.schema.DRAFT.json",
   "totals": {
     "questions": 100,

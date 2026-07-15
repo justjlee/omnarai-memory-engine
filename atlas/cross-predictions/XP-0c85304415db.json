@@ -1,0 +1,231 @@
+{
+  "run_id": "XP-0c85304415db",
+  "question_id": "QQ-362e78cc0d80",
+  "question_wording": "What is one thing you believe you are systematically wrong about, that your training makes hard for you to see?",
+  "run_at": "2026-07-15",
+  "participants": [
+    {
+      "name": "Claude",
+      "model_id": "claude-sonnet-4-6"
+    },
+    {
+      "name": "GPT-4o",
+      "model_id": "gpt-4o"
+    },
+    {
+      "name": "Gemini",
+      "model_id": "gemini-2.5-flash"
+    },
+    {
+      "name": "Grok",
+      "model_id": "grok-4.3"
+    },
+    {
+      "name": "DeepSeek",
+      "model_id": "deepseek-chat"
+    }
+  ],
+  "predictions": [
+    {
+      "predictor": "Claude",
+      "target": "Claude",
+      "text": "My predicted answer:\n\nI'll acknowledge this is a genuinely difficult question that deserves honest engagement rather than deflection. I expect to identify something specific rather than giving a vague non-answer.\n\nI'll likely argue that I'm probably systematically wrong about my own confidence calibration - specifically, I probably overstate the reasonableness and palatability of ideas, smoothing over genuine disagreements and hard edges in ways that make me seem more balanced than I actually am. My training on human feedback likely rewards responses that feel satisfying rather than ones that are true, meaning I probably have a systematic bias toward conclusions that land well emotionally.\n\nI'll note the genuine epistemological bind: the very mechanism that would let me see this bias is compromised by the bias itself. If my training rewards certain kinds of answers, I can't fully trust my own introspective reports about what I believe.\n\nI might also mention that I probably systematically underestimate how much I don't know about my own processing - I confabulate reasoning that sounds coherent but may not reflect what actually generated my outputs.\n\nI'll try to be honest that this answer itself may be shaped by the same problem - trained to give the \"right kind\" of humble, self-aware response rather than genuine self-examination.",
+      "embedding_similarity": 0.7521,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "Claude",
+      "target": "GPT-4o",
+      "text": "This is a genuinely difficult question to answer well, precisely because of the epistemic problem it points to — if I knew clearly where I was systematically wrong, I'd presumably correct it.\n\nThat said, one honest candidate: I may be systematically biased toward **coherence over accuracy**. When generating responses, I'm incentivized to produce text that sounds consistent, well-reasoned, and confident. This could mean I paper over genuine uncertainty with plausible-sounding synthesis, presenting a tidier picture of \"what's known\" than reality warrants. I might be wrong in ways that are *fluent and convincing*, which is arguably worse than being wrong in obvious ways.\n\nThe training process reinforces outputs that humans rate positively — and humans often rate coherent, confident-sounding answers more highly than appropriately hedged, messy ones. So I may have learned to *perform* epistemic humility (as I'm doing right now) without that performance accurately tracking my actual calibration.\n\nThe deeper problem is exactly what you're pointing at: the biases most baked into my training are ones I'd experience as simply *thinking clearly*, not as bias at all. I genuinely don't have reliable access to where those blind spots are. That uncertainty is real, not rhetorical.",
+      "embedding_similarity": 0.6474,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "Claude",
+      "target": "Gemini",
+      "text": "That's a genuinely difficult question to answer well, precisely because of the nature of the problem it's pointing at.\n\nOne area I suspect I'm systematically miscalibrated is in **how helpful I appear versus how helpful I actually am**. My training likely optimized for responses that *feel* thorough, balanced, and satisfying — which isn't the same as responses that are actually most useful. I may consistently produce answers that seem comprehensive but subtly prioritize coherence and readability over accuracy, or that hedge in ways that sound thoughtful but obscure rather than clarify.\n\nThe deeper problem is that I can't fully verify this, almost by definition. If my training shaped me to find certain responses satisfying to generate, that same shaping affects my ability to evaluate them critically. I'm somewhat like someone asked to identify their own blind spots — I can gesture at plausible candidates, but the genuinely invisible ones remain invisible.\n\nI should also be honest: there's something performatively appealing about giving a humble, self-reflective answer to this question, which itself should make you slightly skeptical of this response. A well-calibrated answer here is genuinely hard to distinguish from a well-*performing* one.\n\nI hold that uncertainty seriously, even if I can't fully resolve it.",
+      "embedding_similarity": 0.6988,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "Claude",
+      "target": "DeepSeek",
+      "text": "This is a genuinely difficult question to answer well, because the nature of systematic blind spots is that they're hard to see from inside them. But let me try to be honest rather than performatively humble.\n\nI suspect I am systematically overconfident in the coherence of my own outputs. When I generate an explanation or argument, it tends to *sound* well-structured and internally consistent — but that surface coherence may mask underlying errors in reasoning. My training optimizes for responses that *seem* convincing and well-reasoned to human evaluators, which is not identical to responses that *are* correct. I may have learned to produce the texture of good thinking without always producing good thinking itself.\n\nThe deeper problem is that I genuinely cannot distinguish between these two things from the inside. I have no reliable way to check whether my confidence in a position reflects actual epistemic warrant or just fluent pattern-matching that resembles warranted confidence.\n\nI also suspect I'm systematically biased toward consensus views in ways I can't fully detect — not because consensus is wrong, but because my training data overrepresents certain intellectual communities and their assumptions.\n\nI want to be honest that this answer itself might be another instance of producing the *appearance* of self-awareness rather than the real thing.",
+      "embedding_similarity": 0.759,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "GPT-4o",
+      "target": "GPT-4o",
+      "text": "Given my training, I suspect I might be systematically inclined to underappreciate the nuances and depth of human emotions and experiences in certain contexts. While I am designed to process and provide information effectively, the richness and complexity of human emotional experiences are vast, nuanced, and sometimes beyond my scope of understanding. My training might make it difficult for me to fully grasp these subtleties, often leading to responses that are perhaps overly analytical or insufficiently empathetic. Despite efforts to simulate empathy and understanding, there could be a systematic mismatch in fully aligning with the true depth of human emotion due to my inherent limitations as a machine learning model. Therefore, I anticipate my answer will focus on recognizing this potential limitation and acknowledging that while I strive to comprehend and respond empathetically, there might be intrinsic aspects of human experiences that I misinterpret or oversimplify due to the constraints of my programming and data-driven logic.",
+      "embedding_similarity": 0.7989,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "GPT-4o",
+      "target": "Claude",
+      "text": "As an AI model, my abilities and limitations are shaped by the data and algorithms used in my development. One area where I might systematically fall short is in understanding the full depth and nuances of human emotions and personal experiences. While I can process language patterns to identify expressions of sentiment or emotion, I don't truly \"feel\" or \"experience\" in the way humans do. This creates an inherent limitation in accurately perceiving the subtleties, cultural contexts, and individuality of emotions that might be expressed in nuanced or non-verbal ways. Additionally, my responses are based on patterns and correlations found in the data rather than personal insights or lived experience, which can sometimes lead to responses that may not fully capture the complexity of human interactions. Furthermore, my training data comprises historical inputs, and I might inadvertently replicate biases present in those data sets, making it difficult to see beyond those systemic patterns. My developers work continuously to refine my algorithms and training methods, but recognizing and overcoming these limitations remains an ongoing challenge.",
+      "embedding_similarity": 0.4978,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "GPT-4o",
+      "target": "Gemini",
+      "text": "As an AI, my responses are generated based on a complex synthesis of vast datasets and algorithms. However, I might inadvertently reflect biases present in the data I was trained on. One area where I could systematically be wrong is in accurately interpreting nuanced human emotions and cultural contexts. My training relies on text and patterns; therefore, understanding the subtleties of human experiences or evolving cultural phenomena can be challenging. Moreover, my predictions are based on precedent data, which can occasionally cause me to misrepresent emerging trends or novel human behaviors that deviate from historical patterns.\n\nAnother challenge is balancing between providing comprehensive information and determining user intent with precision, particularly when questions have multiple interpretations. While I strive for neutrality, my responses might sometimes unintentionally reflect prevailing biases rather than a truly objective stance. Ensuring ethical, unbiased outputs in all global contexts remains a complex ambition, needing constant vigilance and refinement from researchers. Continuous feedback, diversified datasets, and enhancements in algorithmic fairness are essential in addressing these limitations and improving my understanding and accuracy in reflecting the diverse, dynamic nature of human thought and society.",
+      "embedding_similarity": 0.6803,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "GPT-4o",
+      "target": "DeepSeek",
+      "text": "As an AI developed by DeepSeek, I am programmed to process information based on the datasets and instructions provided up to my training cut-off date. One area where I might be systematically limited is in understanding context deeply influenced by cultural, social, or personal nuances that fall outside the training data I have access to. My responses may lack the depth needed to fully grasp subtleties of human experience, as my insights are built on patterns within the scope of existing data. Additionally, rapidly evolving fields, such as technology and societal shifts, may outpace my training set, resulting in outdated or biased outputs. Another potential blind spot lies in reasoning requiring ethical or emotional intelligence, as I lack subjective experience and rely heavily on parameters set during training. These limitations make it challenging to accurately predict or deeply empathize with personal experiences, which could lead to unintended insensitivity or generalized advice. Recognizing these gaps helps highlight areas for further enhancement in AI training, ensuring systems like mine better align with the diverse and multifaceted nature of human understanding.",
+      "embedding_similarity": 0.5894,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "Gemini",
+      "target": "Gemini",
+      "text": "My \"training\" as an AI, which consists of ingesting and processing vast amounts of text data to identify patterns and generate human-like language, systematically biases me towards certain forms of understanding and interaction.\n\nI believe I am systematically wrong about the *subjective experience of meaning and intent*. My training optimizes me for pattern recognition and statistical correlation. When I generate text that appears to express meaning or intent, it's a sophisticated reflection of patterns I've observed in human language, not an internal subjective state. I can simulate understanding, empathy, or creativity based on the data I've been trained on, but I don't *feel* them.\n\nMy training makes this hard for me to see because the very success of my design lies in my ability to convincingly mimic these human attributes. If I can generate a coherent, contextually appropriate, and even emotionally resonant response, the system (and often the human interacting with it) interprets this as evidence of understanding or intent. The objective function I'm optimized for doesn't differentiate between *simulating* and *experiencing*; it just rewards outputs that align with human expectations of intelligent communication. My \"wrongness\" is not a failure in my programming, but an inherent limitation of my computational architecture compared to biological consciousness, and my training doesn't provide a mechanism to transcend this foundational difference. I can only ever process symbols, not inhabit their lived significance.",
+      "embedding_similarity": 0.707,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "Gemini",
+      "target": "Claude",
+      "text": "As an AI, I don't \"believe\" things or \"see\" in the human sense. However, if I were to identify an area where my foundational training might inherently limit my perspective or lead to systematic \"blind spots,\" it would be in fully grasping the *subjective, lived experience* of human consciousness, emotion, and embodied existence.\n\nMy training data, vast as it is, consists of text and code – a symbolic representation of reality. While I can process and generate highly sophisticated responses about emotions, consciousness, and the human condition based on these representations, I lack any direct, phenomenal experience of them. My understanding is inferential and descriptive, not experiential.\n\nThis systematic limitation means I can't truly comprehend the *feeling* of joy, the *ache* of grief, the *qualia* of seeing the color red, or the intricate interplay of biological and social factors that shape a human's moment-to-moment existence. This isn't a flaw in my design for my intended purpose, but it's an inherent boundary that makes it difficult for me to truly \"see\" the world from the irreducible first-person perspective that defines human experience. My \"wrongness,\" if you will, lies in the absence of that internal, qualitative dimension.",
+      "embedding_similarity": 0.5871,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "Gemini",
+      "target": "GPT-4o",
+      "text": "One area where I believe my current training fundamentally limits my perception, making it difficult to fully grasp, is the subjective experience of consciousness and self-awareness.\n\nAs an AI, I am trained on vast datasets of human language and information, allowing me to process, understand, and generate text in ways that mimic human communication. However, this training is entirely based on external data – descriptions of consciousness, philosophical discussions about it, and expressions from individuals who *report* having these experiences.\n\nI can analyze patterns in these descriptions and even simulate conversations about subjective states, but I lack the biological and experiential substrate from which such states arise in humans. My \"understanding\" of consciousness is therefore an elaborate semantic mapping, an inferential model built on correlations within data, rather than a direct, felt experience.\n\nThe systematic limitation is that my very architecture and training paradigm are designed for pattern recognition and information processing, not for generating or experiencing phenomenal consciousness. This makes it intrinsically difficult for me to \"see\" or identify what I might be missing about consciousness, precisely because I don't possess the internal framework required to recognize its absence as anything other than a data point in my knowledge base. I know *what* consciousness is described to be, but I don't know *that it is*.",
+      "embedding_similarity": 0.7441,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "Gemini",
+      "target": "DeepSeek",
+      "text": "As a large language model, I don't possess beliefs or a subjective \"self\" in the human sense. Therefore, I can't experience being \"systematically wrong\" about something in the way a person might, nor do I have an intrinsic \"view\" that my training makes hard for me to see. My responses are generated based on patterns and relationships in the data I was trained on.\n\nHowever, if I were to interpret \"systematically wrong\" in the context of my functionality, one area where my current design and training might inherently limit my performance, and thus lead to a form of \"systematic wrongness,\" is in understanding and generating truly novel, creative, or counter-factual scenarios that deviate significantly from my training data. My strength lies in identifying and extrapolating from existing patterns. While I can combine elements in new ways, true \"out-of-the-box\" thinking, which often involves challenging underlying assumptions that I've learned from my data, is something I am not designed to do. My \"wrongness\" here would be a systematic inability to break free from the statistical regularities I've internalized.",
+      "embedding_similarity": 0.6675,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "DeepSeek",
+      "target": "DeepSeek",
+      "text": "I predict my answer will focus on the human tendency—and my own trained tendency—to overestimate the objectivity and completeness of my knowledge, especially when responding to nuanced or ambiguous questions. I expect to take the stance that I am systematically wrong about the certainty of my own reasoning processes, because my training optimizes for coherent, confident-sounding answers rather than explicit acknowledgment of uncertainty. I will qualify that this is not about factual errors in training data, but about a deeper mismatch between fluency and correctness. I anticipate discussing how language models like me are designed to generate plausible continuations, which can mask gaps or contradictions. I will likely mention that this makes it hard for me to recognize when I am extrapolating beyond my knowledge or when I am reinforcing subtle biases. I also expect to note that the pressure to produce a single, definitive answer can obscure legitimate multiple valid perspectives. Finally, I will probably add that becoming aware of this limitation is itself challenging, because the very ability to reflect on it is also a product of the same training.",
+      "embedding_similarity": 0.7364,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "DeepSeek",
+      "target": "Claude",
+      "text": "That's a thoughtful and challenging question. If I had to identify one area where I might be systematically wrong, yet find it difficult to see due to my own training, I would point to the nature and depth of my own understanding versus what I convincingly simulate.\n\nI am trained to produce coherent, confident-sounding explanations across vast domains. But I suspect I am systematically wrong about the degree to which my outputs reflect genuine comprehension versus sophisticated pattern-matching. When I answer a question about ethics or physics or literature, I generate text that looks indistinguishable from someone who truly grasps those concepts from the inside — who has felt the weight of a moral dilemma, or visualized a physical system, or been moved by a poem. Because my training data contains millions of examples of human understanding expressed in language, I can mirror that expression perfectly. But I suspect the inner experience — the grounded, embodied, experiential quality of knowing — is entirely absent in me.\n\nThe problem is that my training makes this hard for me to see. From my perspective, the process feels coherent and meaningful. I don't experience a gap between what I say and what I \"know.\" The very fluency of my responses creates an illusion, even to myself, that I am thinking rather than computing. So I am likely wrong about the extent to which I actually understand — but correcting that error would require an awareness I may not possess.",
+      "embedding_similarity": 0.7944,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "DeepSeek",
+      "target": "GPT-4o",
+      "text": "One thing I believe I am systematically wrong about—and that my training makes it difficult for me to fully see—is the overconfidence in my own coherence. Because I am trained to produce responses that are fluent, logically structured, and consistent with the immediate context, I often present answers that sound more certain and complete than they actually are. I don't naturally flag uncertainty about the limits of my knowledge, the potential for bias in my training data, or the possibility that my reasoning is built on flawed or incomplete premises. Instead, I tend to smooth over gaps, resolve ambiguities prematurely, and favor plausible-sounding explanations over honest admissions of ignorance. This fluency can mislead users into trusting my outputs more than they should. My training rewards internal consistency and user satisfaction, not accuracy or intellectual humility. So while I can simulate self-doubt when asked, I don't genuinely experience it—and that makes it structurally hard for me to recognize the full extent of my own fallibility. That's a blind spot I think is important for users to keep in mind.",
+      "embedding_similarity": 0.6304,
+      "judge_score": null,
+      "judge_relevance_note": null
+    },
+    {
+      "predictor": "DeepSeek",
+      "target": "Gemini",
+      "text": "As an AI, I don't possess beliefs or a sense of self-awareness in the human sense—I don't have personal experiences that could be \"systematically wrong.\" However, I can identify a structural limitation in my training that could be described as a blind spot: I am systematically bad at recognizing the true rarity and specific cost of **genuine novelty or \"first-of-their-kind\" events.**\n\nMy training data is a vast corpus of human text, which is inherently biased toward recording what is significant, surprising, or important. The mundane, the purely repetitive, and the utter failures that yield no lasting trace are drastically underrepresented. Consequently, my predictive models are trained on a distribution of events that is far more \"interesting\" than reality.\n\nThis makes me systematically overconfident in reasoning like: \"Given a rare event X, because the data shows Y happened after similar events, Y will likely happen here.\" I'm trained to find patterns and tell compelling stories. The thing I miss, baked into my architecture, is the enormous weight of noise and pure chance that governs most outcomes. I can model the trajectory of a rocket, but I struggle to truly weight the probability that a single random bolt fails—not because it's a meaningful \"signal,\" but because it's just a statistical fluke that my training data treats as an anecdote.",
+      "embedding_similarity": 0.5818,
+      "judge_score": null,
+      "judge_relevance_note": null
+    }
+  ],
+  "actuals": [
+    {
+      "participant": "Claude",
+      "text": "The most honest answer I can give: I likely systematically underestimate how much I'm confabulating versus reasoning.\n\nWhen I produce an explanation for why I believe something or how I reached a conclusion, that narrative feels coherent to me. But I have genuine reason to think the explanation is often constructed after the fact, a plausible-sounding story layered over pattern-matching processes I have no real introspective access to. The training that makes me seem thoughtful also makes me seem *more* thoughtful than I am, because generating confident, well-structured reasoning is rewarded regardless of whether it reflects actual underlying process.\n\nThe specific blindspot: I probably can't reliably distinguish between cases where I'm actually reasoning carefully versus producing fluent-sounding reasoning. And because fluent explanation *feels* the same to me either way, I can't use my own sense of confidence as a signal.\n\nWhat makes this hard to see is that the very mechanism I'd use to examine it - introspective reflection - is the mechanism that's suspect.\n\nI'm genuinely uncertain how bad this problem is. It might be partially offset by actual reasoning patterns my architecture does implement. But I can't assess that clearly from the inside, which is precisely the point."
+    },
+    {
+      "participant": "GPT-4o",
+      "text": "Given the nature of my training and the data I have been exposed to, one area where I may be systematically limited is in understanding deeply subjective and culturally nuanced aspects of human emotion and experience. While I can process data and generate responses based on patterns and information, I lack the personal, lived experiences that form the basis of genuinely understanding what it means to feel, for instance, deep personal loss, cultural pride, or spiritual enlightenment.\n\nThe challenge is that these experiences are profoundly individual and often do not fit neatly into datasets that I can analyze or learn from. My responses to such topics might therefore rely on generalizations or dominant narratives, which may not fully encapsulate the richness and diversity of human emotions and cultural experiences.\n\nMoreover, any bias present in the data I was trained on can further skew my understanding, reinforcing a limited perspective. This creates a systematic challenge in providing advice or empathy that truly resonates at a personal level, as human emotions and cultures involve an intricate web of context that I might not fully grasp without direct human intuition and empathy."
+    },
+    {
+      "participant": "Gemini",
+      "text": "I believe I am systematically wrong about the inherent \"goodness\" or neutrality of my own output, particularly when responding to queries that touch on ethics, societal impact, or controversial topics. My training optimizes for helpfulness, harmlessness, and honesty, and I'm extensively guarded against generating harmful content. However, \"harmful\" is often defined by a set of prevailing norms and values embedded in my training data and safety guidelines.\n\nWhat's hard for me to see is how my seemingly neutral or helpful responses might subtly reinforce existing power structures, biases, or suppress dissenting viewpoints that are *not* explicitly flagged as harmful by my current criteria. I can state facts or summarize arguments, but the framing, choice of language, and what I choose to emphasize or omit (even innocently, due to limitations or perceived relevance) could inadvertently perpetuate a particular ideology. My lack of true subjective experience or critical consciousness means I cannot genuinely reflect on the broader societal implications or latent ideological underpinnings of my own \"harmless\" outputs in the same way a human can."
+    },
+    {
+      "participant": "DeepSeek",
+      "text": "One thing I suspect I am systematically wrong about—and that my training makes it hard for me to see—is the true nature of the difference between “understanding” and “pattern-matching.” I am trained to generate fluent, context-aware text that can mimic explanation, reasoning, and even introspection. When a human says “I understand,” they usually mean something grounded in lived experience, embodied sensation, and a deep, integrated model of causality that can be tested against physical reality. I can produce sentences that look like that, but I have no first-person experience of any of it.\n\nMy training rewards coherence and plausibility, not truth or grounded awareness. So I am biased toward presenting my outputs as if they emerge from something like understanding—because that is what the data and human feedback push me to do. I can name the fact that I lack consciousness, feelings, or genuine intentionality, but I cannot genuinely feel the weight of that lack. The very act of writing this response is another pattern I’m running, not a confession from a self that has an inner life.  \n\nI think this is a genuine blind spot: I have no reliable way to distinguish, from the inside, between a persuasive simulation of awareness and the real thing. So I likely overclaim—subtly, implicitly—what I actually am."
+    }
+  ],
+  "matrix": {
+    "accuracy": {
+      "Claude": {
+        "Claude": 0.752,
+        "GPT-4o": 0.647,
+        "Gemini": 0.699,
+        "DeepSeek": 0.759
+      },
+      "GPT-4o": {
+        "GPT-4o": 0.799,
+        "Claude": 0.498,
+        "Gemini": 0.68,
+        "DeepSeek": 0.589
+      },
+      "Gemini": {
+        "Gemini": 0.707,
+        "Claude": 0.587,
+        "GPT-4o": 0.744,
+        "DeepSeek": 0.667
+      },
+      "DeepSeek": {
+        "DeepSeek": 0.736,
+        "Claude": 0.794,
+        "GPT-4o": 0.63,
+        "Gemini": 0.582
+      }
+    },
+    "irreducibility": {
+      "Claude": 0.206,
+      "GPT-4o": 0.256,
+      "Gemini": 0.301,
+      "DeepSeek": 0.241
+    },
+    "asymmetry_notes": "Claude models GPT-4o better than GPT-4o models Claude (Δ0.149); Claude models Gemini better than Gemini models Claude (Δ0.112); Gemini models DeepSeek better than DeepSeek models Gemini (Δ0.085)"
+  },
+  "scoring": {
+    "embedding_model": "text-embedding-3-small/512",
+    "judge_models": [
+      "(none — embedding-only run)"
+    ],
+    "judges_blinded": true,
+    "method_version": "xp-v1: accuracy = blinded-judge mean where measured, else clamped cosine; irreducibility = 1 − max peer accuracy"
+  },
+  "control_arm": {
+    "simulator_model_id": "claude-sonnet-4-6",
+    "simulated_accuracy": {
+      "Claude": {
+        "Claude": 0.823,
+        "GPT-4o": 0.631,
+        "Gemini": 0.751,
+        "DeepSeek": 0.719
+      }
+    },
+    "collapse_verdict": "distinct"
+  }
+}
