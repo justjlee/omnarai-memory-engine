@@ -362,13 +362,41 @@ async function runLongitudinal(req, res) {
       return res.status(200).json({ skipped: true, epoch, canon_id: canon.canon_id, existing: existing.id });
     }
 
-    const answers = await elicitCouncil(canon.question, { timeoutMs: 30000 });
+    // Deadline discipline (fix 2026-07-15): the serial chain (30s elicitation +
+    // up-to-45s synthesis + scoring + embed + append) blew the 60s Hobby wall —
+    // FUNCTION_INVOCATION_TIMEOUT killed every run after 06-12, losing the day's
+    // verbatim answers AFTER they were already elicited. Priority per the
+    // preservation doctrine: primaries (verbatim answers) MUST commit; synthesis
+    // and scoring are interpretation — recomputable, so bounded and droppable.
+    const t0 = Date.now();
+    const DEADLINE_MS = 50000; // leave ~10s of the 60s wall for append + response
+    const msLeft = () => DEADLINE_MS - (Date.now() - t0);
+    const bounded = (promise, ms, fallback) =>
+      Promise.race([
+        promise.catch(() => fallback),
+        new Promise((r) => setTimeout(() => r(fallback), Math.max(0, ms))),
+      ]);
+
+    const answers = await elicitCouncil(canon.question, { timeoutMs: 25000 });
     const answered = answers.filter((a) => a.ok);
     if (answered.length < 2) {
       return res.status(502).json({ error: "council assembled <2 voices", epoch, canon_id: canon.canon_id, answers });
     }
 
-    const synthesis = await synthesizeCouncil(canon.question, answers);
+    // Interpretation runs in parallel, inside whatever budget elicitation left.
+    // Fallback synthesis marks itself pending — the primaries carry the record.
+    const pendingSynthesis = {
+      narrative:
+        "_Synthesis pending: the deliberation pass exceeded the function budget on capture day. " +
+        "The verbatim answers above are the primary record; this interpretive layer is recomputable and will be enriched._",
+      tensions: [],
+      deliberation_card: null,
+    };
+    const [synthesis, score] = await Promise.all([
+      bounded(synthesizeCouncil(canon.question, answers), Math.max(msLeft() - 9000, 5000), pendingSynthesis),
+      bounded(scoreAnswers(answered.map((a) => a.text)), 6000, null),
+    ]);
+
     const record = buildDivergenceRecord(canon.question, answers, synthesis);
     record.id = `OMN-L${Date.now()}`;
     record.provenance.longitudinal = {
@@ -376,10 +404,11 @@ async function runLongitudinal(req, res) {
       epoch,
       source_record: canon.source_record,
       original_score: canon.original_score,
+      ...(synthesis === pendingSynthesis ? { synthesis_pending: true } : {}),
     };
-    record.provenance.score = await scoreAnswers(answered.map((a) => a.text));
+    record.provenance.score = score;
 
-    const embedding = await embedRecord(record);
+    const embedding = await bounded(embedRecord(record), Math.max(Math.min(msLeft(), 6000), 1000), null);
     const count = await appendGrownEntry(record, embedding);
 
     return res.status(200).json({

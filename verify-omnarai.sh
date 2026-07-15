@@ -14,7 +14,7 @@
 #
 # Usage:
 #   ./verify-omnarai.sh                 # run all checks
-#   ./verify-omnarai.sh --only p1       # one check (p1|p2|p3|p4|health)
+#   ./verify-omnarai.sh --only p1       # one check (p1|p2|p3|p4|m1|health)
 #   TAU_ABS=0.42 ./verify-omnarai.sh    # tune the P3 absolute-relevance gate
 #   BASE=https://staging.example ./verify-omnarai.sh
 #
@@ -174,6 +174,44 @@ print("BAD="+str(bad))')"
     || { no "P4: duplicated section header(s):"; printf '%s\n' "$out" | grep '^DUP' | sed 's/^/      /'; }
 }
 
+# M1 — canonical manifest (B1): exists, self-attests, and every surface agrees
+check_m1(){
+  info "M1 — /api/manifest consistency contract"
+  local m i h mw iw hw mh
+  m="$(curl -s "${SELF[@]}" "${BASE}/api/manifest")"
+  i="$(curl -s "${SELF[@]}" "${BASE}/api/info")"
+  h="$(curl -s "${SELF[@]}" "${BASE}/api/health")"
+
+  # 1) manifest exists and carries a well-formed attestation hash
+  mh="$(printf '%s' "$m" | jq -r '.hashes.manifest // empty')"
+  printf '%s' "$mh" | grep -qE '^[0-9a-f]{64}$' \
+    && ok "M1: manifest present with sha256 attestation hash" \
+    || no "M1: manifest missing or hashes.manifest not a sha256 hex"
+
+  # 2) the attestation verifies: recomputed canonical-JSON hash of counts == hashes.manifest
+  local recomputed
+  recomputed="$(printf '%s' "$m" | python3 -c '
+import json,sys,hashlib
+def canon(v):
+    if isinstance(v,list): return "["+",".join(canon(x) for x in v)+"]"
+    if isinstance(v,dict): return "{"+",".join(json.dumps(k)+":"+canon(v[k]) for k in sorted(v))+"}"
+    return json.dumps(v)
+d=json.load(sys.stdin); print(hashlib.sha256(canon(d["counts"]).encode()).hexdigest())' 2>/dev/null)"
+  [ -n "$recomputed" ] && [ "$recomputed" = "$mh" ] \
+    && ok "M1: hashes.manifest verifies against independently recomputed canonical JSON" \
+    || no "M1: attestation hash does NOT verify (got ${recomputed:-parse-error}, manifest says ${mh:-none})"
+
+  # 3) cross-surface count agreement: manifest == /api/info == /api/health
+  mw="$(printf '%s' "$m" | jq -r '.counts.corpus.total_works // "m?"')"
+  iw="$(printf '%s' "$i" | jq -r '.corpus.totalWorks // "i?"')"
+  hw="$(printf '%s' "$h" | jq -r '.corpus.totalWorks // "h?"')"
+  if [ "$mw" = "$iw" ] && [ "$iw" = "$hw" ]; then
+    ok "M1: total_works agrees across manifest/info/health ($mw)"
+  else
+    no "M1: count drift — manifest=$mw info=$iw health=$hw"
+  fi
+}
+
 # ---------------------------------------------------------------------------
 case "$ONLY" in
   health) check_health ;;
@@ -181,7 +219,8 @@ case "$ONLY" in
   p2) check_p2 ;;
   p3) check_p3 ;;
   p4) check_p4 ;;
-  all|*) check_health; echo; check_p1; echo; check_p3; echo; check_p2; echo; check_p4 ;;
+  m1) check_m1 ;;
+  all|*) check_health; echo; check_m1; echo; check_p1; echo; check_p3; echo; check_p2; echo; check_p4 ;;
 esac
 
 echo

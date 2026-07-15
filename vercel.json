@@ -29,6 +29,10 @@
       "destination": "/api/info?_view=health"
     },
     {
+      "source": "/api/manifest",
+      "destination": "/api/info?_view=manifest"
+    },
+    {
       "source": "/api/citation",
       "destination": "/api/info?_view=citation"
     },

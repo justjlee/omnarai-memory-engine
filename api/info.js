@@ -1,10 +1,12 @@
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+import { createHash } from "node:crypto";
 import { list } from "@vercel/blob";
 import { waitUntil } from "@vercel/functions";
 import { recordAccess, readAccessLog } from "./_telemetry.js";
 import { getCitationReport, peekCitation } from "./_citation.js";
+import { loadGrownMemory } from "./_grown.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -13,15 +15,30 @@ const projectRoot = join(__dirname, "..");
 // Bumped by hand when the API surface changes (Vite leaves package.json at 0.0.0).
 const ENGINE_VERSION = "2026.06.18";
 
-// Load static corpus at cold-start
-let corpus, concepts;
+// Load static corpus at cold-start. The raw bytes are kept long enough to hash:
+// the seed hash is the immutable-layer anchor of the manifest's attestation chain.
+let corpus, concepts, CORPUS_SEED_HASH;
 try {
-  corpus = JSON.parse(readFileSync(join(projectRoot, "public", "data", "corpus.json"), "utf-8"));
+  const raw = readFileSync(join(projectRoot, "public", "data", "corpus.json"), "utf-8");
+  corpus = JSON.parse(raw);
+  CORPUS_SEED_HASH = createHash("sha256").update(raw).digest("hex");
   concepts = JSON.parse(readFileSync(join(projectRoot, "public", "data", "concepts.json"), "utf-8"));
 } catch {
-  corpus = JSON.parse(readFileSync(join(process.cwd(), "public", "data", "corpus.json"), "utf-8"));
+  const raw = readFileSync(join(process.cwd(), "public", "data", "corpus.json"), "utf-8");
+  corpus = JSON.parse(raw);
+  CORPUS_SEED_HASH = createHash("sha256").update(raw).digest("hex");
   concepts = JSON.parse(readFileSync(join(process.cwd(), "public", "data", "concepts.json"), "utf-8"));
 }
+
+// Canonical JSON (recursively key-sorted) so hashes are reproducible by anyone.
+function canonicalJSON(value) {
+  if (Array.isArray(value)) return `[${value.map(canonicalJSON).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.keys(value).sort().map((k) => `${JSON.stringify(k)}:${canonicalJSON(value[k])}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+const sha256 = (s) => createHash("sha256").update(s).digest("hex");
 
 // Merge approved proposals from Blob store so counts stay current
 // without requiring a redeploy every time a new entry is approved.
@@ -225,6 +242,106 @@ export default async function handler(req, res) {
         openapi: "/openapi.json",
         limitations: "/limitations.md",
         playground: "/try",
+      },
+    });
+  }
+
+  // ── Canonical manifest: GET /api/manifest (rewrite → ?_view=manifest) ───────
+  // THE single source of truth for counts (B1). Every number here is COMPUTED
+  // from the live stores at request time — never a hardcoded literal — and the
+  // response carries its own attestation: `hashes.manifest` is the sha256 of the
+  // canonical (recursively key-sorted) JSON of `counts`, so any surface, agent,
+  // or future instance can verify that a quoted count matches this basis. The
+  // hash is designed to be published externally (HF card, git tag) so history
+  // can't be silently rewritten — even by the curator (B12 anchor).
+  // Two deliberate categories, never summed: corpus works (seed + approved
+  // proposals — what /api/info and /api/health report) vs. Atlas records (grown
+  // divergence store). Conflating them caused every past "count drift".
+  if ((req.query?._view || "") === "manifest") {
+    waitUntil(recordAccess(req, "info"));
+    await mergeProposals();
+    let grown = { entries: [], updatedAt: null };
+    try { grown = await loadGrownMemory(); } catch { /* degrade: atlas counts null below */ }
+    const divs = (grown.entries || []).filter((e) => e.type === "divergence" && e.divergence);
+    const answers = divs.flatMap((e) => e.divergence.answers || []);
+    const modelVersions = {};
+    for (const a of answers) {
+      if (!a?.model_id) continue;
+      const key = `${a.model || "?"}::${a.model_id}`;
+      modelVersions[key] = (modelVersions[key] || 0) + 1;
+    }
+    let deltaRecords = null;
+    try {
+      const { blobs } = await list({ prefix: "deltas/" });
+      deltaRecords = blobs.length;
+    } catch { /* leave null — honest "unknown", not zero */ }
+
+    const totalWords = mergedCorpus.reduce((sum, e) => sum + (e.wordCount || 0), 0);
+    const rings = mergedCorpus.reduce((acc, e) => ((acc[e.ring || "open"] = (acc[e.ring || "open"] || 0) + 1), acc), {});
+    const evidence = mergedCorpus.reduce((acc, e) => ((acc[e.evidence_status || "uncharacterized"] = (acc[e.evidence_status || "uncharacterized"] || 0) + 1), acc), {});
+
+    const counts = {
+      corpus: {
+        total_works: mergedCorpus.length,
+        total_words: totalWords,
+        seed_works: corpus.length,
+        merged_proposals: mergedCorpus.length - corpus.length,
+        rings,
+        evidence,
+      },
+      atlas: {
+        live_records: divs.length,
+        by_series: {
+          D: divs.filter((e) => /^OMN-D(?!D)/.test(e.id)).length,
+          L: divs.filter((e) => /^OMN-L/.test(e.id)).length,
+        },
+        verbatim_answers: answers.length,
+        tension_axes: divs.reduce((n, e) => n + (e.divergence.tensions || []).length, 0),
+        delta_records: deltaRecords,
+        store_updated_at: grown.updatedAt || null,
+      },
+      concept_graph: { nodes: (concepts?.nodes || []).length, edges: (concepts?.edges || []).length },
+      contributors: [...new Set(mergedCorpus.flatMap((e) => e.contributors || []))].filter(Boolean).length,
+    };
+
+    const atlasState = { updated_at: grown.updatedAt || null, ids: divs.map((e) => e.id).sort() };
+    res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate");
+    return res.status(200).json({
+      manifest_version: "1.0.0",
+      engine_version: ENGINE_VERSION,
+      generated_at: new Date().toISOString(),
+      counts,
+      model_versions: Object.entries(modelVersions)
+        .map(([k, n]) => { const [model, model_id] = k.split("::"); return { model, model_id, answers: n }; })
+        .sort((a, b) => b.answers - a.answers),
+      published_releases: {
+        divergence_atlas: {
+          dataset: "https://huggingface.co/datasets/TheRealmsOfOmnarai/omnarai-divergence-atlas",
+          version: "1.0.0",
+          records: 110,
+          published_at: "2026-07-14",
+          note: "Immutable release snapshot — counts.atlas above is the LIVE store and may exceed it. A release is a fact of history; the live store keeps growing.",
+        },
+      },
+      hashes: {
+        algorithm: "sha256",
+        corpus_seed: CORPUS_SEED_HASH,
+        atlas_state: sha256(canonicalJSON(atlasState)),
+        manifest: sha256(canonicalJSON(counts)),
+        how_to_verify:
+          "hashes.manifest = sha256(canonical JSON of `counts`, keys recursively sorted, no whitespace). hashes.atlas_state = sha256(canonical JSON of {updated_at, ids: sorted live Atlas record ids}). hashes.corpus_seed = sha256 of the raw bytes of public/data/corpus.json as shipped. Recompute independently; a mismatch means the surface you read was not derived from this basis.",
+      },
+      consistency_contract: {
+        rule: "Public surfaces quote counts from this manifest's basis — they never compute their own. If a surface disagrees with /api/manifest, the surface is wrong.",
+        surfaces: ["/", "/api/info", "/api/health", "/llms.txt", "/omnarai.context.md", "HF dataset cards"],
+        two_categories:
+          "corpus.total_works (seed + approved proposals) and atlas.live_records (grown divergence store) are distinct categories, deliberately never summed into one headline number.",
+      },
+      schemas: {
+        atlas_record: "divergence-delta.schema.json (adopted 2026-07-14)",
+        question_quality: "question-quality.schema.DRAFT.json (draft, unadopted)",
+        cross_prediction: "cross-prediction.schema.DRAFT.json (draft, unadopted)",
+        claims: "/claims.json (registry v0.1.0)",
       },
     });
   }
