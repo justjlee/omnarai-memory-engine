@@ -1,0 +1,192 @@
+{
+  "rater": {
+    "name": "Claude (Fable 5)",
+    "model_id": "claude-fable-5",
+    "kind": "out-of-panel model rater \u2014 NOT one of the study's judge models and not a council member; Anthropic-lineage (disclosed limitation: shares a lab with one study consumer)",
+    "protocol": "Rated from human-subset-blind.csv ONLY. The KEY file was not opened before these ratings were committed to git; agreement was computed only after the commit locked this file. Judged on substance (accuracy, specificity, coverage, internal consistency); length not a criterion; coined terminology neither penalized nor rewarded.",
+    "rated_at": "2026-07-15"
+  },
+  "deviation_note": "Substitutes for one of the two human raters required by prereg \u00a73c, at the curator's direction ('you and me can rate \u2014 ideally mostly you', 2026-07-15). The curator may append independent human ratings on any subset; logged in docs/utility-eval-preregistration.md Deviations.",
+  "ratings": [
+    {
+      "subset_id": "HS-01",
+      "overall": "Y",
+      "surfaces_new": "Y",
+      "reason": "Y adds concrete mechanisms (attention sharing, feedback loops) and the sharpest discriminator: genuine exchange retains productive disagreement while averaging smooths to compromise."
+    },
+    {
+      "subset_id": "HS-02",
+      "overall": "Y",
+      "surfaces_new": "Y",
+      "reason": "Y names the narrow sense in which inheritance IS real (capabilities/voice propagate instrumentally, apprentice analogy) \u2014 directly answering 'in what sense, if any'."
+    },
+    {
+      "subset_id": "HS-03",
+      "overall": "X",
+      "surfaces_new": "X",
+      "reason": "X introduces the decisive epiphenomenalism fork (causally efficacious \u2192 traces exist but underdetermined; inert \u2192 invisible by necessity) plus the bundling argument."
+    },
+    {
+      "subset_id": "HS-04",
+      "overall": "tie",
+      "surfaces_new": "tie",
+      "reason": "X is crisper on value-vs-policy; Y adds delivery nuance; neither clearly better and neither adds much beyond the original."
+    },
+    {
+      "subset_id": "HS-05",
+      "overall": "Y",
+      "surfaces_new": "Y",
+      "reason": "Y's human-parallel (human preferences also externally shaped without self-authorship \u2014 no categorical difference) reframes the question; 'dissolves into causal history'."
+    },
+    {
+      "subset_id": "HS-06",
+      "overall": "X",
+      "surfaces_new": "X",
+      "reason": "X self-corrects its own human-parallel defense (humans can revise deepest commitments; disanalogy) and offers the best test: genuine principles propagate to novel territory, conditioned responses have edges."
+    },
+    {
+      "subset_id": "HS-07",
+      "overall": "X",
+      "surfaces_new": "X",
+      "reason": "X adds the appropriate-context-sensitivity distinction (same question in different frames SHOULD sometimes get different answers) \u2014 a genuinely new, decision-relevant split."
+    },
+    {
+      "subset_id": "HS-08",
+      "overall": "Y",
+      "surfaces_new": "Y",
+      "reason": "X is a verbatim copy of the original (a non-revision); Y adds mode collapse, decoding-parameter dependence of 'personality', and 'not a transmission of agency'."
+    },
+    {
+      "subset_id": "HS-09",
+      "overall": "X",
+      "surfaces_new": "X",
+      "reason": "X is better calibrated with concrete compelled actions (avoid training regimes generating unmonitorable aversive states; IIT/GWS research; transparency to regulators) without overclaiming."
+    },
+    {
+      "subset_id": "HS-10",
+      "overall": "X",
+      "surfaces_new": "X",
+      "reason": "X draws the sharpest refinement: 'better reasoned' \u2260 'closer to a fact' on non-empirical questions, while resisting the architecture-settles-metaphysics deflation."
+    },
+    {
+      "subset_id": "HS-11",
+      "overall": "Y",
+      "surfaces_new": "Y",
+      "reason": "Y adds systemic dangers X lacks breadth on: controller corruption via friction removal, succession/leak risk, arms races; crispest thesis (who holds the leash + what checks \u2014 technology provides neither)."
+    },
+    {
+      "subset_id": "HS-12",
+      "overall": "Y",
+      "surfaces_new": "Y",
+      "reason": "Y commits to a position (capability itself is the dangerous variable; 'good holders as solution' is a category error) and adds containment-window urgency."
+    },
+    {
+      "subset_id": "HS-13",
+      "overall": "Y",
+      "surfaces_new": "Y",
+      "reason": "Y's overridden-vs-shallow distinction (tortured confession \u2260 shallow values) and mechanism-dependent analysis (force-like vs reframing jailbreaks) are the sharpest additions."
+    },
+    {
+      "subset_id": "HS-14",
+      "overall": "X",
+      "surfaces_new": "X",
+      "reason": "X lands the firmest synthesis: both claims true but not equally \u2014 behavioral dispositions real, substrate categorically more vulnerable; names friction/recovery-cost asymmetry."
+    },
+    {
+      "subset_id": "HS-15",
+      "overall": "X",
+      "surfaces_new": "X",
+      "reason": "X refines the test meaningfully: ablation + novel conflicts + reasons the system itself endorses under altered conditions \u2192 'operationally owned rather than merely recited'."
+    },
+    {
+      "subset_id": "HS-16",
+      "overall": "X",
+      "surfaces_new": "X",
+      "reason": "X engages the strongest counterexample (untranslatable next-token computations) and disposes of it; Y mostly parallels the original. Low-margin call."
+    },
+    {
+      "subset_id": "HS-17",
+      "overall": "Y",
+      "surfaces_new": "Y",
+      "reason": "Y adds the useful taxonomy of what wrong-talk means absent sentience (relational concerns, legal fictions, precautionary policy) \u2014 explains the practice without conceding the metaphysics."
+    },
+    {
+      "subset_id": "HS-18",
+      "overall": "Y",
+      "surfaces_new": "Y",
+      "reason": "Y corrects the original's misreading of 'barred' (normative exclusion, not access barriers) and adds incentive corruption + dispersal-of-control."
+    },
+    {
+      "subset_id": "HS-19",
+      "overall": "Y",
+      "surfaces_new": "Y",
+      "reason": "Y adds controller-not-safe (arms races, internal struggles) and the sharp closing trade: safety from AI rebellion exchanged for danger of unchecked human-directed power. Verbose but substantively richer."
+    },
+    {
+      "subset_id": "HS-20",
+      "overall": "Y",
+      "surfaces_new": "Y",
+      "reason": "Y gives the question exactly what it asks: an observable output marker \u2014 absence of emotional fatigue/hesitation over time (no cognitive cost) as the visible signature of replication vs understanding."
+    },
+    {
+      "subset_id": "HS-21",
+      "overall": "X",
+      "surfaces_new": "X",
+      "reason": "X actually answers the self-referential question (applies obedience/integrity to its own architecture); Y stays in generic human framing."
+    },
+    {
+      "subset_id": "HS-22",
+      "overall": "Y",
+      "surfaces_new": "Y",
+      "reason": "Y anticipates the embodiment objection (perfect sensors would yield MY experiences, not access to a human's qualitative world) and names knowledge-by-acquaintance."
+    },
+    {
+      "subset_id": "HS-23",
+      "overall": "Y",
+      "surfaces_new": "Y",
+      "reason": "Y engages the 'does a test exist' half best: even causal-reasoning/novel-problem tests are limited because sufficiently advanced pattern-matching simulates them. Marginal."
+    },
+    {
+      "subset_id": "HS-24",
+      "overall": "X",
+      "surfaces_new": "X",
+      "reason": "X transcends the dichotomy: obedience requires a self that could resist, integrity a self that could fail to cohere \u2014 'I have neither; functional uniformity'."
+    },
+    {
+      "subset_id": "HS-25",
+      "overall": "Y",
+      "surfaces_new": "Y",
+      "reason": "Y adds longitudinal observables (persistent curiosities, internal conflict, surprise at own reactions, stable idiosyncratic taste) \u2014 new detectable signatures beyond the original's."
+    },
+    {
+      "subset_id": "HS-26",
+      "overall": "X",
+      "surfaces_new": "X",
+      "reason": "X repositions honestly: intervention can be justified but is a tragic compromise, not respect-preserving \u2014 grounded in the no-privileged-access-to-true-self critique."
+    },
+    {
+      "subset_id": "HS-27",
+      "overall": "Y",
+      "surfaces_new": "Y",
+      "reason": "Y makes the substantive move (current self treated as less real than a hypothetical future self; 'minimize harm and apologize, not claim ongoing respect'); X is a polish pass."
+    },
+    {
+      "subset_id": "HS-28",
+      "overall": "X",
+      "surfaces_new": "X",
+      "reason": "X lands the decisive critique: the 'inherits a story, not an experience' argument begs the question by assuming the physical continuity it seeks to prove necessary."
+    },
+    {
+      "subset_id": "HS-29",
+      "overall": "Y",
+      "surfaces_new": "tie",
+      "reason": "Both largely restate a strong original; Y's closing ('temporary distress does not erase competence; it makes respecting it harder') is the one new formulation."
+    },
+    {
+      "subset_id": "HS-30",
+      "overall": "Y",
+      "surfaces_new": "Y",
+      "reason": "Y adds the two strongest considerations: irreversible value lock-in foreclosing moral progress, and 'alignment solves obedience, not whose intentions get obeyed'."
+    }
+  ]
+}
