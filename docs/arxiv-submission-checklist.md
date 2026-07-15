@@ -17,14 +17,17 @@ endorsement) and **two content decisions** (below). Everything else is ready.
 ## ⚠️ Two content decisions before you submit
 1. **Stale corpus counts.** The paper states **298 works / 511,798 words /
    "May 2025 – March 2026"** (abstract, §Intro, §Corpus, §Limitations). The live
-   dataset is now **568 works total** (413 text-only on the HF mirror) /
-   **528,208 words**. Options:
+   count moves (568 when this checklist was written; 567 as of 2026-07-15 after a
+   curation removal) — so at submission time, **pull the number fresh from
+   `GET https://omnarai.vercel.app/api/manifest`** (the canonical count surface;
+   never hardcode from this checklist). Options:
    - *(recommended)* Keep the paper as a dated **April-2026 snapshot** and add one
-     footnote in §Corpus: *"The corpus has since grown to 568 works (413
-     text-only); this paper describes the v1 snapshot used for the experiments."*
-     — preserves experimental integrity, removes the credibility gap. An outside
-     model already flagged the stale public counts, so don't ship a number a
-     reviewer can click through and disprove.
+     footnote in §Corpus: *"The corpus has since grown to N works (see the live
+     manifest at omnarai.vercel.app/api/manifest); this paper describes the v1
+     snapshot used for the experiments."* — with N read from the manifest on
+     submission day. Preserves experimental integrity, removes the credibility
+     gap. An outside model already flagged the stale public counts, so don't
+     ship a number a reviewer can click through and disprove.
    - Or update all four sites to the current basis (then state the counting rule:
      413 text / 568 live).
    - **Do NOT touch the benchmark results** (Claude Opus 4 38/40, Grok 4.20 40/40)
