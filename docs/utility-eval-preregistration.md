@@ -156,4 +156,18 @@ majority vote and mean-pairwise inter-judge agreement remain well-defined at 3 j
 (the ≥0.60 agreement reportability gate in §2 is unchanged). Implemented in
 `scripts/utility-test-prereg.mjs`. No §2/§3(b,d,e)/§5 parameter changed.
 
+**2026-07-15 — §3c human raters substituted with an out-of-panel model rater +
+open invitation.** The registered design required ≥2 human raters for the 30-triple
+blind subset. At the curator's direction post-run, the first rating was performed by
+Claude Fable 5 — a model outside the judge panel and council set, from a newer
+generation than every study model, but Anthropic-lineage (limitation disclosed).
+Blinding was preserved procedurally: ratings were committed to git (`1497d48`)
+before the answer key was first opened, making the order verifiable. Result:
+21/30 (70%) agreement with panel majority, within the panel's inter-judge range.
+This substitutes for ONE registered human rater; the blind CSV + separate key
+remain published so any human (including the curator) can add the registered
+human check independently. No §2/§4/§5 parameter changed; the external-validity
+claim is correspondingly downgraded from "human-validated" to "out-of-panel-model-
+validated, human check open."
+
 *(append further dated entries below if anything in §2–§5 changes after the first run)*

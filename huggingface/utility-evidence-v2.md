@@ -97,9 +97,19 @@ The value of this corpus is **located, differential, and bounded**:
 - Full per-question transcripts (every prompt, answer, revision, defense, and
   judge verdict): `utility/utility-prereg-{GPT-4o,Gemini,Grok,Claude,DeepSeek}.json`
 - Cross-consumer analysis: `utility/utility-prereg-aggregate.json`
-- **Human-rater subset (§3c, pending):** `utility/human-subset-blind.csv` — 30
-  blind triples awaiting ≥2 human raters (the answer key is in a separate file;
-  raters must not open it). Human-vs-panel agreement will be appended here.
+- **External-rater subset (§3c, modified — see Deviations):**
+  `utility/human-subset-blind.csv` — 30 blind triples. First external rating
+  completed 2026-07-15 by an **out-of-panel model rater** (Claude Fable 5 — not a
+  study judge, not a council member; Anthropic-lineage, disclosed): ratings were
+  locked by git commit (`1497d48`) *before* the answer key was opened.
+  **Agreement with the blinded panel majority: 21/30 (70%)** — within the panel's
+  own inter-judge agreement range (63–72%), with only 5 hard
+  treatment↔placebo reversals, concentrated in Grok triples (3/7), the consumer
+  where the panel itself was noisiest. Ratings + reasons:
+  `utility/rater-claude-fable-5.json`. Human ratings from the curator may be
+  appended to the same CSV; the original two-human design remains open to any
+  independent party — the blind CSV and separate key are published for exactly
+  that purpose.
 - Registered model set (matched exactly at run time): claude-sonnet-4-6, gpt-4o,
   gemini-2.5-flash, grok-4.3, deepseek-chat. Harness:
   [`scripts/utility-test-prereg.mjs`](https://github.com/justjlee/omnarai-memory-engine/blob/main/scripts/utility-test-prereg.mjs).
