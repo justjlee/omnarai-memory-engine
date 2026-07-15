@@ -188,3 +188,52 @@ B8 (now unblocked — council.js is committed) · B12 orient packet (manifest ha
 exists) · publish the manifest hash externally (HF card or git tag) · consider --judges
 scoring + more XP runs as more questions get certified · update claims.json
 `divergence-adds-unique-info` evidence_note with XP-36b4699ab09a once xz reviews.
+
+## Session 2026-07-15, third pass — THE MEASUREMENT CAMPAIGN (xz: "proceed")
+
+All six planned measurements executed same-day. Cheap wins shipped first: git tag
+`attest-2026-07-15` (external manifest-hash anchor, B12), B8 justification gate LIVE
+(7-value vocabulary, verified on prod), claims.json XP note. Count-drift audit on xz's
+prompt: ONE live-facing stale count survived (omnarai-mcp GitHub description "568-work")
+— replaced with count-free wording pointing at /api/manifest.
+
+**PREREGISTERED CONFIRMATORY STUDY — 5/5 registered predictions confirmed** (locked
+2026-06-18, run 2026-07-15, ~810 question-instances, 3-judge blind panels):
+- GPT-4o **H1 CONFIRMED** 148–12, Holm p<1e-6, H3 3/3 paraphrases, both caps
+- Gemini **H1 CONFIRMED** 137–35, same hardening ✓
+- Grok H2 null ✓ (72–93) · DeepSeek H2 null ✓ (90–68, weak 1500-cap lean dies under Holm)
+- Claude H2 supported with a significant REVERSE effect (35–126): Atlas exposure
+  actively degrades Claude vs placebo self-reflection — reported at full strength
+- **H4 adversarial durability NOT supported for anyone** (the Atlas sharpens, doesn't armor)
+- Aggregation built (`scripts/utility-prereg-aggregate.mjs` — the referenced script never
+  existed) · 30-triple blind human subset exported (§3c, awaits ≥2 raters; KEY separate)
+- **Published to HF**: utility-evidence-v2.md + all five transcript files + aggregate
+
+**TRACE-DELTA v2 (B4) — excerpt retrieval REFUTED for GPT-4o:** 35/102 in-domain
+(win 0.343, p=0.002 WRONG direction), worst on technical; no length/vocab confound;
+OOD controls clean. claims.json gains `fast-path-retrieval-improves-answers` = refuted.
+
+**CERTIFICATION SCALE-UP — first two C3 records:** OMN-D1780752664948 (DRI 1.02) and
+OMN-D1780752664953 (DRI 1.28) survive paraphrase AND pressure; 4 others honestly C0.
+Blocks persisted live. QQ scorer overlays live certs (release jsonl stays immutable) +
+handles single-run block shape.
+
+**CROSS-PREDICTION — control arm DISTINCT 5/5** across all runs on all three certified
+questions (incl. full-panel re-runs XP-c2cfdb0ebb57 / XP-c7bde3357cd7 after the outage
+partials). The three certified questions carry full instrument profiles
+(spread .31–.33 / axis 1.0 / intra .78–.82 / irr .25–.28).
+
+**Claims registry v0.2.0 LIVE** (deployed, arrival 20/20): first `replicated`
+(divergence-improves-reasoning, wording tightened to the differential claim) and first
+`refuted` levels. **The synthesis: located (Atlas, not retrieval) · differential (helps
+weak self-reflectors: GPT-4o/Gemini; harms Claude) · bounded (no adversarial armor).**
+
+**Ops:** xAI credits exhausted mid-campaign (caught in minutes by a live instrument;
+Grok prereg restarted clean after xz top-up — zero contaminated data). Longitudinal
+cron fix verified again. Two fresh full-Blob backups. caffeinate ran during the campaign.
+
+**Open next:** human-rater subset scoring → append to evidence-v2 · out-of-Atlas
+question replication (registered known-objection) · B2/B7 layered retrieval — now
+EVIDENCE-BACKED by the trace-delta refutation (excerpt injection is a measured tax) ·
+consider fuller-text retrieval arm re-run · B9 panel seeding from certified questions ·
+arXiv endorsement still pending.
