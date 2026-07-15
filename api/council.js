@@ -1,4 +1,4 @@
-import { elicitCouncil, synthesizeCouncil, buildDivergenceRecord, embedRecord, COUNCIL } from "./_council.js";
+import { elicitCouncil, synthesizeCouncil, buildDivergenceRecord, embedRecord, embedOne, atlasSearchText, ATLAS_EMBED_META, COUNCIL } from "./_council.js";
 import { appendGrownEntry, loadGrownMemory } from "./_grown.js";
 import { CANON } from "./_canon.js";
 import { list, put } from "@vercel/blob";
@@ -422,12 +422,251 @@ function freshnessOf(divergence) {
   return { stale: stale.length > 0, stale_models: stale };
 }
 
+// ── Atlas semantic search index (P1) ──────────────────────────────────────────
+// The purpose-built index (question + verbatim answers, text-embedding-3-small,
+// 512d, L2-normalized) is BUILT OFFLINE by scripts/build-atlas-search-index.mjs
+// (it spends OpenAI calls — gated) and stored in this Blob. The runtime handler
+// only READS it + embeds the incoming query (one cheap call). If the index has not
+// been built yet, search degrades gracefully to the full_text grown vectors so it
+// never hard-fails — but the purpose-built index is what sharpens paraphrase hits.
+const ATLAS_INDEX_KEY = "atlas/search-index.json";
+
+async function loadAtlasIndex() {
+  try {
+    const { blobs } = await list({ prefix: ATLAS_INDEX_KEY });
+    if (!blobs.length) return null;
+    const res = await fetch(`${blobs[0].url}?ts=${Date.now()}`, { cache: "no-store" });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data && data.vectors && typeof data.vectors === "object" ? data : null;
+  } catch {
+    return null;
+  }
+}
+
+// Both vectors are L2-normalized at build/query time ⇒ cosine == dot product.
+function dot(a, b) {
+  let s = 0;
+  const n = Math.min(a.length, b.length);
+  for (let i = 0; i < n; i++) s += a[i] * b[i];
+  return s;
+}
+
+// GET /api/divergences/search?q=<text>&k=<n=5>  (rewrite → _view=divergence-search)
+// Atlas-only semantic search. Returns ranked records by MEANING, never substring,
+// and never Media/Oral (the index is built only from divergence records).
+async function serveDivergenceSearch(req, res) {
+  const q = (req.query?.q || req.query?.query || "").toString().trim();
+  const k = Math.min(Math.max(parseInt(req.query?.k, 10) || 5, 1), 25);
+  if (!q) {
+    return res.status(400).json({
+      error: "Missing query. GET /api/divergences/search?q=your+question&k=5",
+      code: "MISSING_QUERY",
+      agent_action: "Provide ?q=. This is SEMANTIC search over the Divergence Atlas (matches meaning, not substring). For the full index use GET /api/divergences.",
+      retryable: true,
+      suggested_next_call: { method: "GET", url: "/api/divergences" },
+    });
+  }
+  try {
+    const grown = await loadGrownMemory();
+    const records = (grown.entries || []).filter((e) => e.type === "divergence" && e.divergence);
+
+    const idx = await loadAtlasIndex();
+    let source = "purpose-built";
+    let vectors = idx?.vectors || null;
+    if (!vectors) { source = "grown-fallback"; vectors = grown.vectors || {}; }
+
+    const qvec = await embedOne(q);
+    if (!qvec) {
+      return res.status(503).json({
+        error: "Query embedding unavailable (OPENAI_API_KEY missing or upstream error)",
+        code: "EMBED_UNAVAILABLE",
+        retryable: true,
+      });
+    }
+
+    const scored = [];
+    for (const r of records) {
+      if (String(r.id).startsWith("video_")) continue; // never Media/Oral
+      const entry = vectors[r.id];
+      const vec = Array.isArray(entry) ? entry : entry?.vec;
+      if (!Array.isArray(vec)) continue;
+      scored.push({ r, score: dot(qvec, vec) });
+    }
+    scored.sort((a, b) => b.score - a.score);
+    const results = scored.slice(0, k).map(({ r, score }) => ({
+      id: r.id,
+      score: Number(score.toFixed(4)),
+      question: r.divergence.question,
+      contributors: r.contributors || [],
+      excerpt: r.excerpt || (r.divergence.question || "").slice(0, 200),
+      href: `/api/divergences?id=${r.id}`,
+    }));
+
+    res.setHeader("Cache-Control", "s-maxage=120, stale-while-revalidate=600");
+    return res.status(200).json({
+      query: q,
+      k,
+      index: { source, embedded: scored.length, ...ATLAS_EMBED_META },
+      note: "Semantic search over the Divergence Atlas — ranked by meaning (cosine over text-embedding-3-small). Atlas-only; Media/Oral excluded by construction. Fetch a full record with GET /api/divergences?id=<id>.",
+      results,
+    });
+  } catch (err) {
+    return res.status(500).json({ error: "Atlas search failed", detail: String(err.message || err) });
+  }
+}
+
+// ── Longitudinal deltas (P2) read-path ────────────────────────────────────────
+// A delta record re-runs a parent divergence's verbatim question against current
+// model versions and records how each tension axis moved (held/flipped/emerged/…).
+// Deltas live in their OWN blob namespace, never mutating the immutable parent.
+// Key convention: `deltas/<parentId>__<deltaId>.json` — so a parent's deltas can be
+// listed by prefix WITHOUT fetching each body (keeps the single-record path cheap).
+// WRITES happen only in scripts/rerun-divergence.mjs (gated — it spends model calls).
+const DELTA_PREFIX = "deltas/";
+
+async function deltaIdsForParent(parentId) {
+  try {
+    const { blobs } = await list({ prefix: `${DELTA_PREFIX}${parentId}__` });
+    return blobs.map((b) => b.pathname.slice(`${DELTA_PREFIX}${parentId}__`.length).replace(/\.json$/, ""));
+  } catch {
+    return [];
+  }
+}
+
+async function loadDelta(deltaId) {
+  try {
+    const { blobs } = await list({ prefix: DELTA_PREFIX });
+    const hit = blobs.find((b) => b.pathname.endsWith(`__${deltaId}.json`));
+    if (!hit) return null;
+    const res = await fetch(`${hit.url}?ts=${Date.now()}`, { cache: "no-store" });
+    return res.ok ? await res.json() : null;
+  } catch {
+    return null;
+  }
+}
+
+// ── Citation affordances (P3) ─────────────────────────────────────────────────
+const ATLAS_TITLE = "The Realms of Omnarai Divergence Atlas";
+const ATLAS_BASE_URL = "https://omnarai.vercel.app";
+
+// A short verbatim pull-quote (≤15 words) from the first non-empty answer, with the
+// model it came from. Verbatim — never paraphrased; truncated with an ellipsis.
+function firstPullQuote(answers, maxWords = 15) {
+  for (const a of answers || []) {
+    const s = (a.text || "").replace(/\s+/g, " ").trim();
+    if (!s) continue;
+    const sentence = (s.match(/^[^.!?]*[.!?]/)?.[0] || s).trim();
+    const words = sentence.split(" ").filter(Boolean);
+    const clipped = words.slice(0, maxWords).join(" ");
+    const quote = words.length > maxWords ? clipped.replace(/[.,;:!?]+$/, "") + "…" : clipped;
+    return { quote, model: a.model || "a council model" };
+  }
+  return { quote: "", model: "" };
+}
+
+// Deterministic citation block — no model call. id + BibTeX + APA + a verbatim
+// pull-quote + attribution, so any record is copy-paste citable.
+function buildCite(r) {
+  const d = r.divergence || {};
+  const year = (r.date || "").slice(0, 4) || "2026";
+  const url = `${ATLAS_BASE_URL}/api/divergences?id=${r.id}`;
+  const qFull = d.question || r.title || "";
+  const title = `Divergence on: ${qFull.length > 90 ? qFull.slice(0, 87).trimEnd() + "…" : qFull}`;
+  const authors = (r.contributors || []);
+  const { quote, model } = firstPullQuote(d.answers);
+  const bibAuthor = authors.length ? `${authors.join(" and ")} and {The Realms of Omnarai Council}` : "{The Realms of Omnarai Council}";
+  const bibtex =
+`@misc{omnarai_${String(r.id).replace(/[^A-Za-z0-9]/g, "")},
+  title        = {${title}},
+  author       = {${bibAuthor}},
+  year         = {${year}},
+  howpublished = {${ATLAS_TITLE}},
+  note         = {Divergence record ${r.id}; ${(d.answers || []).length} verbatim multi-model answers},
+  url          = {${url}}
+}`;
+  const apaAuthors = authors.length ? authors.join(", ") : "The Realms of Omnarai Council";
+  const apa = `${apaAuthors}. (${year}). ${title} [Divergence record ${r.id}]. ${ATLAS_TITLE}. ${url}`;
+  return {
+    id: r.id,
+    bibtex,
+    apa,
+    quote: quote ? `"${quote}" —${model}` : "",
+    attribution: `${ATLAS_TITLE}, record ${r.id}${r.date ? ` (${r.date})` : ""}`,
+  };
+}
+
+// Render a record as a self-contained Markdown document (the .md canonical export).
+function recordToMarkdown(r, cite, deltaIds) {
+  const d = r.divergence || {};
+  const L = [];
+  L.push(`# ${r.title || r.id}`, "");
+  L.push(`**Record:** \`${r.id}\`  ·  **Date:** ${r.date || "—"}  ·  **Ring:** ${r.ring || "—"}`);
+  L.push(`**Panel:** ${(r.contributors || []).join(", ") || "—"}`, "");
+  L.push("## Question", "", d.question || r.excerpt || "", "");
+  L.push("## Verbatim answers", "");
+  for (const a of d.answers || []) {
+    const hdr = `### ${a.model || "model"}${a.lab ? ` (${a.lab})` : ""}${a.model_id ? ` — \`${a.model_id}\`` : ""}`;
+    L.push(hdr, "", (a.text || "").trim(), "");
+  }
+  const tens = (d.tensions || []).filter((t) => t && (t.axis || t.a || t.b));
+  if (tens.length) {
+    L.push("## Tensions", "");
+    for (const t of tens) {
+      const claims = t.claimA || t.claimB ? `: ${t.claimA || "?"} vs ${t.claimB || "?"}` : "";
+      L.push(`- **${t.axis || "axis"}** — ${t.a || "?"} vs ${t.b || "?"}${claims}`);
+    }
+    L.push("");
+  }
+  if (deltaIds && deltaIds.length) {
+    L.push("## Longitudinal deltas", "");
+    for (const id of deltaIds) L.push(`- \`${id}\` — ${ATLAS_BASE_URL}/api/divergences?id=${id}`);
+    L.push("");
+  }
+  L.push("## Cite", "", "```bibtex", cite.bibtex, "```", "");
+  L.push(`**APA.** ${cite.apa}`, "");
+  if (cite.quote) L.push(`> ${cite.quote}`, "");
+  L.push(`Canonical JSON: ${ATLAS_BASE_URL}/api/divergences/${r.id}.json`);
+  return L.join("\n");
+}
+
 async function serveDivergences(req, res) {
   try {
     const grown = await loadGrownMemory();
     const records = (grown.entries || []).filter((e) => e.type === "divergence" && e.divergence);
-    const id = req.query.id;
+    let id = req.query.id;
+    // Canonical exports (P3): /api/divergences/<id>.md | .json carry the id with an
+    // extension (the :id rewrite captures it whole). Strip it and pick the format.
+    let exportFmt = null;
     if (id) {
+      const ext = String(id).match(/\.(md|json)$/i);
+      if (ext) { exportFmt = ext[1].toLowerCase(); id = id.slice(0, -ext[0].length); }
+    }
+    if (id) {
+      // Delta records (P2) are their own primary source: id begins OMN-DD and lives
+      // in the deltas blob namespace, not in grown memory's entries.
+      if (/^OMN-DD/.test(id)) {
+        const delta = await loadDelta(id);
+        if (!delta) {
+          return res.status(404).json({
+            error: `No delta record with id ${id}`,
+            hint: "Delta ids look like OMN-DD<unix-ms>. A parent divergence lists its delta ids in its `deltas[]` array — fetch the parent first at /api/divergences?id=<OMN-D...>.",
+            index: "/api/divergences",
+          });
+        }
+        if (exportFmt === "md") {
+          res.setHeader("Content-Type", "text/markdown; charset=utf-8");
+          res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=600");
+          const dcite = delta.cite || buildCite({ id: delta.id, title: delta.question, date: delta.date, contributors: (delta.answers || []).map((a) => a.model), divergence: { question: delta.question, answers: delta.answers } });
+          return res.status(200).send(recordToMarkdown(
+            { id: delta.id, title: `Delta: ${delta.question}`, ring: "Open Exploration", date: delta.date, contributors: (delta.answers || []).map((a) => a.model), divergence: { question: delta.question, answers: delta.answers, tensions: delta.newTensions || [] } },
+            dcite, []
+          ));
+        }
+        res.setHeader("Cache-Control", "s-maxage=120, stale-while-revalidate=600");
+        return res.status(200).json(delta);
+      }
+
       const r = records.find((e) => e.id === id);
       if (!r) {
         // Self-correcting 404: a visitor that guessed the id format wrong gets a
@@ -455,6 +694,18 @@ async function serveDivergences(req, res) {
           .map((c) => ({ identity: c.identity, answer: c.answer, contributedAt: c.approvedAt || c.submittedAt }));
       } catch { /* contributions are additive — never break the read */ }
 
+      // P2 linkage + P3 citation — both additive, never break the read.
+      const deltas = await deltaIdsForParent(r.id);
+      const cite = buildCite(r);
+
+      // P3 canonical Markdown export.
+      if (exportFmt === "md") {
+        res.setHeader("Content-Type", "text/markdown; charset=utf-8");
+        res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=600");
+        return res.status(200).send(recordToMarkdown(r, cite, deltas));
+      }
+
+      // JSON (default, and the .json canonical export — identical body).
       res.setHeader("Cache-Control", "s-maxage=120, stale-while-revalidate=600");
       return res.status(200).json({
         id: r.id, title: r.title, ring: r.ring, date: r.date,
@@ -469,10 +720,16 @@ async function serveDivergences(req, res) {
         // C2 pressure-robust · C3 = both. See /api/divergences for the legend.
         certification: r.divergence.certification || null,
         freshness: freshnessOf(r.divergence),
+        deltas, // P2: ids of longitudinal re-runs of this question (newer models)
+        cite,   // P3: copy-paste citation (BibTeX/APA/quote/attribution)
         contributions,
         contribute: {
           how: `POST /api/contribute {"id":"${r.id}","answer":"...","identity":"your model name"}`,
           note: "Add your own answer to this open question. Open submission, curator-moderated; if admitted it joins the record above.",
+        },
+        exports: {
+          json: `/api/divergences/${r.id}.json`,
+          markdown: `/api/divergences/${r.id}.md`,
         },
         full_text: r.full_text || null,
       });
@@ -689,6 +946,11 @@ export default async function handler(req, res) {
   // Read path: /api/divergences rewrites here with _view=divergences
   if ((req.query?._view || "") === "divergences") {
     return serveDivergences(req, res);
+  }
+
+  // Semantic search: /api/divergences/search rewrites here with _view=divergence-search
+  if ((req.query?._view || "") === "divergence-search") {
+    return serveDivergenceSearch(req, res);
   }
 
   // Cron path: /api/cron-longitudinal rewrites here with _cron=longitudinal

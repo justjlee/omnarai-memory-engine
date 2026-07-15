@@ -341,3 +341,83 @@ export async function embedRecord(record) {
     return null;
   }
 }
+
+// ── Atlas semantic search (P1) ────────────────────────────────────────────────
+// The Divergence-Atlas search index embeds a record's QUESTION + verbatim ANSWERS
+// (deliberately not the synthesis narrative or title decoration) so the index
+// matches on what was actually asked and answered. Both the build (embedMany) and
+// the query (embedOne) go through the SAME model/dims/normalization, so a stored
+// document vector and an incoming query vector are directly comparable: because
+// every vector is L2-normalized here, cosine similarity == plain dot product.
+const EMBED_MODEL = "text-embedding-3-small";
+const EMBED_DIMS = 512;
+const EMBED_MAX_WORDS = 7000; // text-embedding-3-small caps at 8191 tokens; stay under
+
+function l2normalize(v) {
+  let n = 0;
+  for (const x of v) n += x * x;
+  n = Math.sqrt(n) || 1;
+  return v.map((x) => x / n);
+}
+
+function clampWords(text, max = EMBED_MAX_WORDS) {
+  const words = (text || "").split(/\s+/).filter(Boolean);
+  return words.length > max ? words.slice(0, max).join(" ") : words.join(" ");
+}
+
+// Canonical search text for one divergence record: open question + each model's
+// verbatim answer. Accepts either a grown entry (with .divergence) or a raw record
+// (with .provenance) or a flat shape.
+export function atlasSearchText(rec) {
+  const d = rec?.divergence || rec?.provenance || rec || {};
+  const q = d.question || rec?.excerpt || "";
+  const answers = (d.answers || [])
+    .map((a) => `${a.model || ""}: ${a.text || ""}`.trim())
+    .filter(Boolean)
+    .join("\n\n");
+  return `${q}\n\n${answers}`.trim();
+}
+
+// Embed a single string into the normalized 512-d space. Returns null on any
+// failure (no key, upstream error) — callers decide whether that is fatal.
+export async function embedOne(text, { apiKey = process.env.OPENAI_API_KEY } = {}) {
+  if (!apiKey) return null;
+  const input = clampWords(text);
+  if (!input) return null;
+  try {
+    const res = await fetch("https://api.openai.com/v1/embeddings", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: EMBED_MODEL, input, dimensions: EMBED_DIMS }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const v = data.data?.[0]?.embedding;
+    return v ? l2normalize(v) : null;
+  } catch {
+    return null;
+  }
+}
+
+// Embed many strings (for the index build). Batched to stay within request limits;
+// throws on HTTP error so the build script fails loudly rather than writing a
+// partial index. Returns vectors in input order, each L2-normalized.
+export async function embedMany(texts, { apiKey = process.env.OPENAI_API_KEY, batch = 64 } = {}) {
+  if (!apiKey) throw new Error("OPENAI_API_KEY not set");
+  const out = [];
+  for (let i = 0; i < texts.length; i += batch) {
+    const slice = texts.slice(i, i + batch).map((t) => clampWords(t) || " ");
+    const res = await fetch("https://api.openai.com/v1/embeddings", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: EMBED_MODEL, input: slice, dimensions: EMBED_DIMS }),
+    });
+    if (!res.ok) throw new Error(`embeddings HTTP ${res.status}: ${await res.text()}`);
+    const data = await res.json();
+    const vecs = (data.data || []).sort((a, b) => a.index - b.index).map((d) => l2normalize(d.embedding));
+    out.push(...vecs);
+  }
+  return out;
+}
+
+export const ATLAS_EMBED_META = { model: EMBED_MODEL, dims: EMBED_DIMS };
