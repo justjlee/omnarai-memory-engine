@@ -107,7 +107,7 @@ if [[ -n "$PROMOTE_URL" ]]; then
   V=$(curl -s "https://omnarai.vercel.app/omnarai.context.md?cb=$RANDOM" | grep -m1 -oE 'Version:\*\* [0-9.]+')
   AGE=$(curl -sI "https://omnarai.vercel.app/omnarai.context.md" | tr -d '\r' | awk 'BEGIN{IGNORECASE=1}/^age:/{print $2}')
   echo "  Live: bundle=${BUNDLE:-?}  context.md ${V:-?}  age=${AGE:-0} (want low)"
-  curl -s "https://omnarai.vercel.app/api/info" | python3 -c "import sys,json;d=json.load(sys.stdin);print('  /api/info works:',d['corpus']['totalWorks'])"
+  curl -s -H "x-omnarai-self:1" "https://omnarai.vercel.app/api/info" | python3 -c "import sys,json;d=json.load(sys.stdin);print('  /api/info works:',d['corpus']['totalWorks'])"
 else
   echo "  skipped (run: ./scripts/refresh.sh <verified-preview-url>)"
 fi

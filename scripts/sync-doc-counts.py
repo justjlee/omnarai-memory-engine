@@ -35,7 +35,7 @@ EDGES = len(CONCEPTS.get("edges", []))
 CORE = CURATED = OPEN = None
 _SRC = "live /api/info"
 try:
-    with urllib.request.urlopen("https://omnarai.vercel.app/api/info", timeout=8) as r:
+    with urllib.request.urlopen(urllib.request.Request("https://omnarai.vercel.app/api/info", headers={"x-omnarai-self": "1"}), timeout=8) as r:
         info = json.loads(r.read())
     WORKS = int(info["corpus"]["totalWorks"])
     WORDS = int(info["corpus"]["totalWords"])

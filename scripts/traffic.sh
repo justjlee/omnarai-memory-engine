@@ -22,7 +22,7 @@ if [[ "${1:-}" == "--reset" ]]; then
   exit 0
 fi
 
-curl -s -H "Authorization: Bearer $INGEST_SECRET" "$BASE/api/info?_view=traffic" \
+curl -s -H "x-omnarai-self:1" -H "Authorization: Bearer $INGEST_SECRET" "$BASE/api/info?_view=traffic" \
 | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{let j;try{j=JSON.parse(d)}catch{console.error('Bad response (auth? URL?):',d.slice(0,120));process.exit(1)}
 console.log('');
 console.log('  '+(j.milestone||'(no milestone field)'));

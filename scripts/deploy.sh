@@ -55,7 +55,7 @@ if [[ "${1:-}" == "--promote" ]]; then
     echo ">> WARNING: could not parse prod deployment URL — re-alias $DOMAIN manually!"
   fi
   sleep 4
-  LIVE_BUNDLE=$(curl -s "https://$DOMAIN" | grep -oE 'index-[A-Za-z0-9_]+\.js' | head -1)
+  LIVE_BUNDLE=$(curl -s -H "x-omnarai-self:1" "https://$DOMAIN" | grep -oE 'index-[A-Za-z0-9_]+\.js' | head -1)
   LOCAL_BUNDLE=$(ls dist/assets | grep -oE 'index-[A-Za-z0-9_]+\.js' | head -1)
   echo ">> Live bundle: ${LIVE_BUNDLE:-<none>} · local build: ${LOCAL_BUNDLE:-<none>}"
   if [[ -n "$LIVE_BUNDLE" && "$LIVE_BUNDLE" == "$LOCAL_BUNDLE" ]]; then
