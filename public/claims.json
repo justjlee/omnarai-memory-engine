@@ -14,7 +14,7 @@
       "claim_id": "divergence-adds-unique-info",
       "wording": "Verbatim cross-model divergence records contain decision-relevant information that no single model can regenerate alone.",
       "evidence_level": "anecdotal",
-      "evidence_note": "Version-pinned verbatim records exist (110, cc-by-sa-4.0) and 108/110 are already stale-flagged — the snapshots are unrecoverable. But 'unrecoverable' is not yet 'irreducible': whether a strong model can SIMULATE the panel is untested.",
+      "evidence_note": "First controlled test PASSED (2026-07-15, run XP-36b4699ab09a on the C1-certified question): in the cross-prediction protocol, one strong model simulating all five voices did NOT match real peer-prediction accuracy (control-arm verdict: distinct); per-model irreducibility ranged 0.180 (GPT-4o) to 0.355 (DeepSeek). Single question, embedding-scored, unreplicated — the level stays anecdotal until the protocol replicates across more certified questions and blinded-judge scoring.",
       "falsification_conditions": "The cross-prediction control arm (cross-prediction.schema.DRAFT.json): if one strong model's simulated 5×5 matrix matches the real matrix (collapse_verdict=collapsed) across certified questions, the claim fails.",
       "known_objections": ["A frontier model prompted to role-play five architectures may reproduce most of the spread.", "Question-selection bias: records were captured on questions chosen to elicit disagreement."],
       "required_experiment": "B5 cross-prediction protocol on B11-certified questions, control arm included.",
