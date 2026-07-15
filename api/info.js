@@ -131,7 +131,7 @@ export default async function handler(req, res) {
       ],
       health: "GET /api/health — liveness, version, live counts, and which call-paths are wired on this deploy. The safe first call.",
       first_call: "GET /api/info — orientation: live stats, glyph reference, full endpoint map",
-      fast_path: "GET /api/query?q=...&mode=retrieve — ~1.5s, retrieval substrate only, no deliberation. Start here; reason over it yourself.",
+      fast_path: "GET /api/query?q=...&mode=retrieve — ~1.5s, retrieval substrate only, no deliberation. Start here; reason over it yourself. LAYER FILTERS (recommended): &layers=research,divergence | &exclude=realms | &evidence_threshold=theoretical — the corpus is four layers (research / divergence / canon / realms) and measured evidence says undifferentiated retrieval can hurt (see /claims.json); pick the layers your task needs.",
       main_endpoints: {
         orient: "GET /api/info",
         retrieve: "GET /api/query?q=...&mode=retrieve  (fast, ~1.5s)",

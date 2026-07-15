@@ -366,6 +366,33 @@
               "type": "string"
             },
             "description": "Caller's synthetic identity (e.g. Gemini); personalizes retrieval framing for a peer model."
+          },
+          {
+            "name": "layers",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "B2 layered retrieval: comma-list restricting the candidate pool. Values: research | divergence | canon | realms. Alias: sources. Measured basis: undifferentiated excerpt retrieval tested worse than none — choose your layer."
+          },
+          {
+            "name": "exclude",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Comma-list of layers to drop from the pool (e.g. exclude=realms keeps mythology out of technical queries)."
+          },
+          {
+            "name": "evidence_threshold",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Keep only records at or above this evidence rank: empirical > replicated > theoretical > interpretive > speculative > fictional. Orthogonal to layers."
           }
         ],
         "responses": {

@@ -541,6 +541,50 @@ async function findRelevantSemantic(query, records, limit = 6, useMMR = false, i
   return result;
 }
 
+// ── Layered retrieval (B2/B7, 2026-07-15) ─────────────────────────────────────
+// Evidence-backed: the trace-delta study (trace_delta/results-v1-GPT-4o) measured
+// that undifferentiated excerpt retrieval makes a consumer's answers WORSE than
+// answering cold. The corpus is not one substance — an agent asking a technical
+// question should be able to keep mythology out of its context, and a lore
+// question shouldn't drag in benchmark records. Four layers, DERIVED from
+// existing metadata (nothing re-curated, nothing mutated):
+//   divergence  verbatim cross-model splits (the Atlas — the measured-value layer)
+//   realms      the mythology/creative corpus (media ring, fictional works)
+//   canon       core-ring non-fictional frameworks (holdform, the theses)
+//   research    everything else non-fictional (essays, analyses, benchmarks)
+// Filters are OPT-IN; default retrieval is unchanged. Mythic interpretation is a
+// mode of engagement, not evidence of ontological status — agents choose their layer.
+const LAYERS = ["research", "divergence", "canon", "realms"];
+const EVIDENCE_RANK = { empirical: 6, replicated: 5, theoretical: 4, interpretive: 3, speculative: 2, fictional: 1, uncharacterized: 0 };
+function layerOf(r) {
+  if (r.type === "divergence") return "divergence";
+  const ev = r.evidence_status || "uncharacterized";
+  if (r.ring === "media" || ev === "fictional") return "realms";
+  if (r.ring === "core") return "canon";
+  return "research";
+}
+// Parse "a,b" lists; unknown names are reported back, never silently ignored.
+function parseLayerFilters(body) {
+  const csv = (v) => (v || "").toString().split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  const layers = csv(body?.layers || body?.sources);
+  const exclude = csv(body?.exclude);
+  const threshold = (body?.evidence_threshold || "").toString().trim().toLowerCase();
+  const unknown = [...layers, ...exclude].filter((l) => !LAYERS.includes(l));
+  if (threshold && !(threshold in EVIDENCE_RANK)) unknown.push(threshold);
+  const active = layers.length > 0 || exclude.length > 0 || Boolean(threshold);
+  return { layers, exclude, threshold, unknown, active };
+}
+function applyLayerFilters(records, f) {
+  if (!f.active) return records;
+  return records.filter((r) => {
+    const layer = layerOf(r);
+    if (f.layers.length && !f.layers.includes(layer)) return false;
+    if (f.exclude.includes(layer)) return false;
+    if (f.threshold && (EVIDENCE_RANK[r.evidence_status || "uncharacterized"] ?? 0) < EVIDENCE_RANK[f.threshold]) return false;
+    return true;
+  });
+}
+
 // Keyword-based relevance scoring (fallback)
 function findRelevant(query, records, limit = 6) {
   const STOP = new Set(["the","and","for","are","but","not","you","all","can","had","her","was","one","our","out","has","its","how","who","did","get","let","say","she","too","use","what","does","this","that","with","have","from","they","been","will","more","when","some","them","than","into","each","make","just","over","such","take","also","most","would","about","which","their","there","these","where"]);
@@ -1126,9 +1170,16 @@ export default async function handler(req, res) {
     // comparison. Defaults to ASYNC for GET (it runs 3 model calls, ~30-40s) so a
     // bare browser GET never hangs; &sync=1 forces a single blocking response.
     const wantsTraceGet = req.query?.mode === "trace" || req.query?.trace === "1" || req.query?.trace === "true";
+    // Layered-retrieval filters (B2): ?layers= (alias ?sources=), ?exclude=,
+    // ?evidence_threshold= ride through to the shared retrieval path.
+    const layerParams = {
+      layers: req.query?.layers || req.query?.sources || "",
+      exclude: req.query?.exclude || "",
+      evidence_threshold: req.query?.evidence_threshold || "",
+    };
     req.body = wantsTraceGet
-      ? { query: fullQuery, mode: "trace", syntheticIdentity: siParam, async: !wantsSyncGet }
-      : { query: fullQuery, format: formatParam, syntheticIdentity: siParam, session_id: sessionParam };
+      ? { query: fullQuery, mode: "trace", syntheticIdentity: siParam, async: !wantsSyncGet, ...layerParams }
+      : { query: fullQuery, format: formatParam, syntheticIdentity: siParam, session_id: sessionParam, ...layerParams };
   } else if (req.method !== "POST") {
     return agentError(res, 405, {
       code: "METHOD_NOT_ALLOWED",
@@ -1221,18 +1272,40 @@ export default async function handler(req, res) {
       ? "bridge"    // known contributor → prioritize cross-contributor diversity
       : "identity"  // unknown SI → broad sampling across all rings and voices
     : null;
+  // Layered retrieval (B2): filter the candidate pool BEFORE ranking, so MMR
+  // diversifies within the caller's chosen layers rather than smuggling excluded
+  // ones back in. No filters → pool === corpus, behavior unchanged.
+  const layerFilters = parseLayerFilters(req.body);
+  if (layerFilters.unknown.length) {
+    return agentError(res, 400, {
+      code: "UNKNOWN_LAYER",
+      message: `Unknown layer/threshold value(s): ${layerFilters.unknown.join(", ")}`,
+      agent_action: `layers/sources and exclude accept: ${LAYERS.join(" | ")}. evidence_threshold accepts: ${Object.keys(EVIDENCE_RANK).join(" | ")} (keeps records at or above that evidence rank).`,
+      retryable: true,
+    });
+  }
+  const pool = applyLayerFilters(corpus, layerFilters);
+  if (layerFilters.active && pool.length === 0) {
+    return agentError(res, 400, {
+      code: "EMPTY_LAYER_POOL",
+      message: "The requested layer/evidence filters match zero records.",
+      agent_action: `Loosen the filters. Available layers: ${LAYERS.join(" | ")}. Note the corpus currently has no records above 'theoretical' evidence rank.`,
+      retryable: true,
+    });
+  }
+
   let relevant;
   let retrievalMethod = "keyword";
   try {
-    const semantic = await findRelevantSemantic(cleanQuery, corpus, 6, useMMR, identityOverride);
+    const semantic = await findRelevantSemantic(cleanQuery, pool, 6, useMMR, identityOverride);
     if (semantic && semantic.length > 0) {
       relevant = semantic;
       retrievalMethod = useMMR ? "semantic-mmr" : "semantic";
     } else {
-      relevant = findRelevant(cleanQuery, corpus);
+      relevant = findRelevant(cleanQuery, pool);
     }
   } catch {
-    relevant = findRelevant(cleanQuery, corpus);
+    relevant = findRelevant(cleanQuery, pool);
   }
   const relatedConcepts = findRelatedConcepts(cleanQuery, relevant);
 
@@ -1345,6 +1418,7 @@ export default async function handler(req, res) {
       records: relevant.map(r => ({
         id: r.id, title: r.title, ring: r.ring,
         type: r.type || null,                                   // P2: "divergence" for Atlas records
+        layer: layerOf(r),                                      // B2: research | divergence | canon | realms
         evidence: r.evidence_status || "uncharacterized",
         contributors: r.contributors, date: r.date, excerpt: r.excerpt,
         ...(r.model_ids ? { model_ids: r.model_ids } : {}),     // P2: panel attribution for divergence records
@@ -1352,6 +1426,15 @@ export default async function handler(req, res) {
         role: r._retrievalReason?.startsWith("anchor") ? "anchor"
             : r._retrievalReason?.includes("divergence") ? "divergence" : "relevance",
       })),
+      ...(layerFilters.active ? {
+        retrieval_filters: {
+          layers: layerFilters.layers.length ? layerFilters.layers : null,
+          exclude: layerFilters.exclude.length ? layerFilters.exclude : null,
+          evidence_threshold: layerFilters.threshold || null,
+          pool_size: pool.length,
+        },
+      } : {}),
+      layers_available: "Filter retrieval with &layers= (alias &sources=), &exclude=, &evidence_threshold=. Layers: research | divergence | canon | realms. Measured basis: undifferentiated excerpt retrieval tested WORSE than no retrieval (see /claims.json fast-path-retrieval-improves-answers) — choose your layer.",
       concepts: relatedConcepts,
       conceptSubgraph,
       contributors: [...new Set(relevant.flatMap(r => r.contributors || []))],
@@ -1570,6 +1653,7 @@ This deliberation was requested by a synthetic intelligence identifying itself a
         title: r.title,
         score: r.score,
         ring: r.ring,
+        layer: layerOf(r),                                      // B2: research | divergence | canon | realms
         evidence: r.evidence_status || "uncharacterized",
         contributors: r.contributors,
         retrievalReason: r._retrievalReason || "relevance-ranked",
