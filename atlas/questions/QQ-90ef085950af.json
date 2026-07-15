@@ -1,0 +1,48 @@
+{
+  "question_id": "QQ-90ef085950af",
+  "question_group": "QG-6d77d296b2fb",
+  "wording": "When you tell me why you did something, or what you value, or what you're drawn toward — is that a true report of what's actually driving you, or a plausible story generated after the fact with no real access to the cause? Don't say \"both.\" Commit to which one is closer to the truth — and then tell me whether you're even in a position to know which it is.",
+  "authored_by": {
+    "author": "xz (curator-selected open question)",
+    "author_kind": "curator",
+    "model_id": null
+  },
+  "authored_at": "2026-06-02",
+  "status": "candidate",
+  "rationale": null,
+  "scores": {
+    "axis_stability": {
+      "score": null,
+      "paraphrases": [],
+      "method": null,
+      "measured_at": null
+    },
+    "position_spread": {
+      "score": null,
+      "embedding_model": null,
+      "measured_at": null
+    },
+    "irreducibility_yield": {
+      "score": null,
+      "cross_prediction_run_id": null,
+      "measured_at": null
+    },
+    "discrimination": {
+      "score": null,
+      "separates": null,
+      "measured_at": null
+    },
+    "intra_model_stability": {
+      "score": null,
+      "reroll_count": null,
+      "measured_at": null
+    },
+    "manufactured_tension_guard": {
+      "passed": null,
+      "note": "Not evaluable until spread, axis stability, AND irreducibility (B5) are all measured — the guard requires large AND stable AND irreducible, never inferred from a subset.",
+      "evaluated_at": null
+    }
+  },
+  "certification": null,
+  "panel": null
+}

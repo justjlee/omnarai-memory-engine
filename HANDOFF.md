@@ -135,3 +135,56 @@ change; fold into `info.js ?_view=manifest` per 12-fn cap, design hash-chain for
 B10 (non-defect). Next builds per corrected sequencing: B1 manifest → B4 trace harness v2
 (unblocked; extend existing utility harness per trace_delta/SPEC.md §0) → B11 scoring
 pipeline → B5 runs on certified questions.
+
+## Session 2026-07-15, second pass — council.js ADOPTED · B1/B4/B11/B5 built · cron root-caused
+
+xz ruled: commit (the staged council.js work reviewed & adopted — Atlas search, OMN-DD
+delta read path, cite/exports; `365c694`), push, build as sequenced.
+
+**B1 SHIPPED & LIVE (`51ecb5a`, deployed preview→promote, arrival-check 20/20):**
+`/api/manifest` — live-computed counts (corpus vs atlas as TWO categories, never summed),
+model-version totals, self-attesting hash block (`hashes.manifest` = sha256 of canonical
+key-sorted counts JSON; corpus_seed + atlas_state anchors for B12). verify-omnarai.sh M1
+(exists / attestation recomputes / counts agree across manifest-info-health): **3/3 PASS live**.
+
+**🔴→🟢 Longitudinal cron ROOT-CAUSED & FIXED — it was NOT just the credits outage.**
+The serial chain (30s elicitation + up-to-45s synthesis) exceeds the 60s Hobby wall:
+FUNCTION_INVOCATION_TIMEOUT killed every run after 06-12 (verified live: two 504s at
+60.1s/60.5s), losing the day's verbatim answers AFTER eliciting them. Fix (§0.5 priority
+rule applied): 50s deadline, 25s elicitation cap, synthesis ∥ scoring bounded to remaining
+budget with a `synthesis_pending` fallback — primaries always commit. **Verified live
+post-deploy: OMN-L1784135876336 committed in 42.6s, 5/5 panel, synthesis completed —
+July's first longitudinal record (LC-15). July 1–14 gap stands per xz's earlier ruling.**
+
+**B4 BUILT (not run — the study runs on curator go):** `trace_delta/battery-v1.json`
+(50 queries: 20 canon conceptual / 8 narrative / 10 technical / 12 ood_control = 24%) +
+`trace_delta/harness.mjs` — extends the disjoint-judge methodology to retrieval-vs-cold;
+arms cold/retrieval/divergence/ensemble (the majority-vote bar); MEC / Correction Yield /
+False-Complexity Rate from blinded judge fields; OOD-contamination, coined-term, and
+length-confound sensitivity built in; SPEC §4 pre-commitment embedded in every results
+file. Verified: --dry-run, --preflight (4/5 judges OK; Gemini was a transient 503), one
+live smoke trial end-to-end (artifact deleted). Note: mode=retrieve serves EXCERPTS —
+that IS the agent-facing fast path; documented in the harness.
+
+**B11 RUN (offline pass — zero new elicitation, reads stored primaries):**
+`scripts/score-question-quality.mjs` → `atlas/questions/` — 100 QQ records + INDEX, all
+schema-valid. position_spread ← stored divergence_score; axis_stability ← certification
+tier runs (C1/C3 fraction); intra_model_stability ← 1 − between/dri. 95 scored / 5
+candidates / 9 with certification data. Live candidate scoring deliberately lives in the
+certification harness, not here.
+
+**B5 BUILT AND FIRST-RUN on the one certified question (QQ-ab39ce8ecc13, the C1 flagship):**
+`scripts/cross-prediction.mjs` → `atlas/cross-predictions/XP-36b4699ab09a.json` (schema-valid;
+20 peer + 5 self predictions + 5 actuals + 5 simulator voices, embedding-scored).
+**Findings:** irreducibility DeepSeek .355 · Claude .329 · Grok .310 · Gemini .216 ·
+GPT-4o .180; systematic asymmetry — every model predicts GPT-4o better than GPT-4o
+predicts it; **control arm: DISTINCT** (Claude simulating all five voices did NOT match
+real peer accuracy — the Atlas's irreducibility claim survives its first test).
+Irreducibility folded back into the QQ record (spread .334 / axis 1.0 / intra .781 /
+irreducibility .278 — the first fully-instrumented divergence question).
+
+**Open for next session:** B7 ontology field → B2 layered retrieval (schema wave) ·
+B8 (now unblocked — council.js is committed) · B12 orient packet (manifest hash anchor
+exists) · publish the manifest hash externally (HF card or git tag) · consider --judges
+scoring + more XP runs as more questions get certified · update claims.json
+`divergence-adds-unique-info` evidence_note with XP-36b4699ab09a once xz reviews.

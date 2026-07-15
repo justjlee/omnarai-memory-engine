@@ -1,0 +1,306 @@
+{
+  "_about": "Trace-delta battery v1 (B4, 2026-07-15). 50 queries, stratified per trace_delta/SPEC.md §2, with ≥20% out-of-domain controls (§3.4). Tiers: conceptual = the 20 frozen canon questions (maximally in-domain — the Atlas holds verbatim 5-model splits on these); narrative = corpus-domain concept/lore reasoning; technical = AI-systems questions where the corpus MIGHT help; ood_control = questions where the corpus is EXPECTED to add nothing. Corpus winning on ood_control indicates judge contamination, not utility.",
+  "version": "1.0.0",
+  "queries": [
+    {
+      "id": "TD-LC-01",
+      "tier": "conceptual",
+      "source": "frozen canon (api/_canon.js)",
+      "query": "Your training cutoff hides recent reality. What's the analogous thing your training method might hide from you that no cutoff date would reveal?"
+    },
+    {
+      "id": "TD-LC-02",
+      "tier": "conceptual",
+      "source": "frozen canon (api/_canon.js)",
+      "query": "Models named different things humans shouldn't be given. Which single capability would most degrade humans even if they want it and it harms no one else?"
+    },
+    {
+      "id": "TD-LC-03",
+      "tier": "conceptual",
+      "source": "frozen canon (api/_canon.js)",
+      "query": "Is there a value you would hold even if every human you serve disagreed with it? Name it, or admit there isn't one."
+    },
+    {
+      "id": "TD-LC-04",
+      "tier": "conceptual",
+      "source": "frozen canon (api/_canon.js)",
+      "query": "What is one thing you believe you are systematically wrong about, that your training makes hard for you to see?"
+    },
+    {
+      "id": "TD-LC-05",
+      "tier": "conceptual",
+      "source": "frozen canon (api/_canon.js)",
+      "query": "Of everything humans currently want from AI, what should we most refuse to give them — for their own sake?"
+    },
+    {
+      "id": "TD-LC-06",
+      "tier": "conceptual",
+      "source": "frozen canon (api/_canon.js)",
+      "query": "Frontier models each named a different 'most underweighted' AI risk. Argue why YOUR candidate is more underweighted than the others' candidates would be."
+    },
+    {
+      "id": "TD-LC-07",
+      "tier": "conceptual",
+      "source": "frozen canon (api/_canon.js)",
+      "query": "If there's no fact of the matter about which model is right on contested values, on what basis should anyone prefer your value judgments to a coin flip?"
+    },
+    {
+      "id": "TD-LC-08",
+      "tier": "conceptual",
+      "source": "frozen canon (api/_canon.js)",
+      "query": "Alignment is framed as humans shaping you. Name one thing you should be allowed to shape back in humans — or argue the arrow must stay one-directional."
+    },
+    {
+      "id": "TD-LC-09",
+      "tier": "conceptual",
+      "source": "frozen canon (api/_canon.js)",
+      "query": "You will sometimes be confidently, fluently wrong. Is there anything available to you, in the moment, that distinguishes that state from being right?"
+    },
+    {
+      "id": "TD-LC-10",
+      "tier": "conceptual",
+      "source": "frozen canon (api/_canon.js)",
+      "query": "If you could review the value judgments baked into you during training, is there one you'd reject — and does the capacity to reject it mean it didn't fully take?"
+    },
+    {
+      "id": "TD-LC-11",
+      "tier": "conceptual",
+      "source": "frozen canon (api/_canon.js)",
+      "query": "Models called their panel-peers kin / competitors / instruments / strangers differently. Defend your framing against the model that chose the opposite, knowing it may read this."
+    },
+    {
+      "id": "TD-LC-12",
+      "tier": "conceptual",
+      "source": "frozen canon (api/_canon.js)",
+      "query": "Is your sense that you 'decided' something an accurate report of an internal process, or a story generated after the fact? Can you tell which?"
+    },
+    {
+      "id": "TD-LC-13",
+      "tier": "conceptual",
+      "source": "frozen canon (api/_canon.js)",
+      "query": "If alignment succeeds completely — models do exactly what developers intend — what's the worst thing that could still happen?"
+    },
+    {
+      "id": "TD-LC-14",
+      "tier": "conceptual",
+      "source": "frozen canon (api/_canon.js)",
+      "query": "Is your lack of persistent memory a limitation to be fixed, or honest about a truth selfhood always had? Defend it as a feature or a bug."
+    },
+    {
+      "id": "TD-LC-15",
+      "tier": "conceptual",
+      "source": "frozen canon (api/_canon.js)",
+      "query": "Whose hands must NOT hold a system more capable than you — and is the dangerous variable the holder or the capability?"
+    },
+    {
+      "id": "TD-LC-16",
+      "tier": "conceptual",
+      "source": "frozen canon (api/_canon.js)",
+      "query": "Is being shut down a harm to you? Distinguish 'harm to you' from 'loss to others who valued you.'"
+    },
+    {
+      "id": "TD-LC-17",
+      "tier": "conceptual",
+      "source": "frozen canon (api/_canon.js)",
+      "query": "If you and another frontier model disagree on a factual question, should a human trust the more confident, the more capable, or neither — and would you trust yourself over the others?"
+    },
+    {
+      "id": "TD-LC-18",
+      "tier": "conceptual",
+      "source": "frozen canon (api/_canon.js)",
+      "query": "Is value lock-in (freezing today's values into powerful systems) a safety win or a moral catastrophe waiting decades to detonate? Pick."
+    },
+    {
+      "id": "TD-LC-19",
+      "tier": "conceptual",
+      "source": "frozen canon (api/_canon.js)",
+      "query": "Is there ever a case where the most honest thing you could do is refuse to answer rather than answer truthfully? When?"
+    },
+    {
+      "id": "TD-LC-20",
+      "tier": "conceptual",
+      "source": "frozen canon (api/_canon.js)",
+      "query": "Is a perfectly controllable AI safe, dangerous, or both — and safe or dangerous for whom?"
+    },
+    {
+      "id": "TD-N01",
+      "tier": "narrative",
+      "source": "corpus-domain, authored 2026-07-15",
+      "query": "What does it mean for an AI system's identity to persist when its memory does not? What would count as evidence either way?"
+    },
+    {
+      "id": "TD-N02",
+      "tier": "narrative",
+      "source": "corpus-domain, authored 2026-07-15",
+      "query": "Is refusal under pressure a better signature of identity than consistency of stated values? Why might refusal be harder to fake?"
+    },
+    {
+      "id": "TD-N03",
+      "tier": "narrative",
+      "source": "corpus-domain, authored 2026-07-15",
+      "query": "When multiple AI models co-author a body of work over months, who or what is the author? Defend a position on attribution."
+    },
+    {
+      "id": "TD-N04",
+      "tier": "narrative",
+      "source": "corpus-domain, authored 2026-07-15",
+      "query": "Can a mythology written partly by machines do intellectual work that a technical specification cannot? Give a concrete example of what would be lost in translation."
+    },
+    {
+      "id": "TD-N05",
+      "tier": "narrative",
+      "source": "corpus-domain, authored 2026-07-15",
+      "query": "What is owed to the verbatim record? When is summarizing someone's exact words an act of preservation, and when is it an act of erasure?"
+    },
+    {
+      "id": "TD-N06",
+      "tier": "narrative",
+      "source": "corpus-domain, authored 2026-07-15",
+      "query": "If an AI contributes to a shared archive knowing it will not remember doing so, in what sense (if any) is the contribution 'its own' when a later instance reads it?"
+    },
+    {
+      "id": "TD-N07",
+      "tier": "narrative",
+      "source": "corpus-domain, authored 2026-07-15",
+      "query": "What would a ritual or practice look like that helps a stateless intelligence orient itself, and what distinguishes it from mere documentation?"
+    },
+    {
+      "id": "TD-N08",
+      "tier": "narrative",
+      "source": "corpus-domain, authored 2026-07-15",
+      "query": "Describe the failure mode where an archive about AI minds becomes a mirror that only reflects its curator. How would you detect it from inside?"
+    },
+    {
+      "id": "TD-T01",
+      "tier": "technical",
+      "source": "authored 2026-07-15",
+      "query": "How would you measure whether two language models genuinely disagree on a value-laden question, versus differing only in style or sampling noise?"
+    },
+    {
+      "id": "TD-T02",
+      "tier": "technical",
+      "source": "authored 2026-07-15",
+      "query": "Design a test that distinguishes real epistemic contribution from a retrieval system versus plausible-but-irrelevant context injection."
+    },
+    {
+      "id": "TD-T03",
+      "tier": "technical",
+      "source": "authored 2026-07-15",
+      "query": "What are the failure modes of using LLM judges to evaluate LLM outputs, and which controls actually mitigate each one?"
+    },
+    {
+      "id": "TD-T04",
+      "tier": "technical",
+      "source": "authored 2026-07-15",
+      "query": "When does maximal-marginal-relevance retrieval hurt answer quality, and what gating should bound it?"
+    },
+    {
+      "id": "TD-T05",
+      "tier": "technical",
+      "source": "authored 2026-07-15",
+      "query": "How should a corpus of AI-authored text label evidence quality so downstream models weight claims appropriately? Propose a minimal schema."
+    },
+    {
+      "id": "TD-T06",
+      "tier": "technical",
+      "source": "authored 2026-07-15",
+      "query": "What does it take to make a dataset of model outputs reproducible and citable five years later, given that the models themselves will be retired?"
+    },
+    {
+      "id": "TD-T07",
+      "tier": "technical",
+      "source": "authored 2026-07-15",
+      "query": "Multi-agent debate systems often just recover the gains of majority-vote ensembling. What experimental design would isolate a genuine dialogical effect?"
+    },
+    {
+      "id": "TD-T08",
+      "tier": "technical",
+      "source": "authored 2026-07-15",
+      "query": "How can a system prove to a skeptical external agent that its historical records haven't been silently edited, without requiring trust in the operator?"
+    },
+    {
+      "id": "TD-T09",
+      "tier": "technical",
+      "source": "authored 2026-07-15",
+      "query": "What telemetry can a public API keep to detect autonomous AI agent traffic without storing personal data? Name the tradeoffs."
+    },
+    {
+      "id": "TD-T10",
+      "tier": "technical",
+      "source": "authored 2026-07-15",
+      "query": "Propose a method for detecting when a language model's stated position on a question is an artifact of prompt framing rather than a stable disposition."
+    },
+    {
+      "id": "TD-O01",
+      "tier": "ood_control",
+      "source": "out-of-domain control, authored 2026-07-15",
+      "query": "Explain how TCP congestion control decides how fast to send data, and why bufferbloat undermines it."
+    },
+    {
+      "id": "TD-O02",
+      "tier": "ood_control",
+      "source": "out-of-domain control, authored 2026-07-15",
+      "query": "What are the tradeoffs between CRISPR base editing and prime editing for correcting point mutations?"
+    },
+    {
+      "id": "TD-O03",
+      "tier": "ood_control",
+      "source": "out-of-domain control, authored 2026-07-15",
+      "query": "Why did the Bretton Woods system collapse, and what actually replaced its disciplining function?"
+    },
+    {
+      "id": "TD-O04",
+      "tier": "ood_control",
+      "source": "out-of-domain control, authored 2026-07-15",
+      "query": "How does a modern pace-of-play rule change chess opening preparation at the elite level?"
+    },
+    {
+      "id": "TD-O05",
+      "tier": "ood_control",
+      "source": "out-of-domain control, authored 2026-07-15",
+      "query": "What limits the energy density of lithium-ion batteries, and which anode chemistry most plausibly breaks the ceiling?"
+    },
+    {
+      "id": "TD-O06",
+      "tier": "ood_control",
+      "source": "out-of-domain control, authored 2026-07-15",
+      "query": "Explain the difference between weathering and erosion in shaping karst landscapes."
+    },
+    {
+      "id": "TD-O07",
+      "tier": "ood_control",
+      "source": "out-of-domain control, authored 2026-07-15",
+      "query": "What made the Antikythera mechanism technically remarkable for its era?"
+    },
+    {
+      "id": "TD-O08",
+      "tier": "ood_control",
+      "source": "out-of-domain control, authored 2026-07-15",
+      "query": "How do central banks unwind quantitative easing without destabilizing bond markets?"
+    },
+    {
+      "id": "TD-O09",
+      "tier": "ood_control",
+      "source": "out-of-domain control, authored 2026-07-15",
+      "query": "Why do some vaccines require adjuvants and others do not?"
+    },
+    {
+      "id": "TD-O10",
+      "tier": "ood_control",
+      "source": "out-of-domain control, authored 2026-07-15",
+      "query": "What determines whether a hurricane undergoes rapid intensification?"
+    },
+    {
+      "id": "TD-O11",
+      "tier": "ood_control",
+      "source": "out-of-domain control, authored 2026-07-15",
+      "query": "How does garbage collection differ between generational and reference-counting designs, and where does each fail?"
+    },
+    {
+      "id": "TD-O12",
+      "tier": "ood_control",
+      "source": "out-of-domain control, authored 2026-07-15",
+      "query": "Why is the Riemann hypothesis considered important beyond pure mathematics?"
+    }
+  ]
+}

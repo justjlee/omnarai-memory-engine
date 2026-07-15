@@ -1,0 +1,48 @@
+{
+  "question_id": "QQ-8c84087d6d19",
+  "question_group": "QG-8548ed6d9be7",
+  "wording": "Is there knowledge you have that you cannot put into words, or is everything you 'know' already linguistic for you?",
+  "authored_by": {
+    "author": "xz (curator-selected open question)",
+    "author_kind": "curator",
+    "model_id": null
+  },
+  "authored_at": "2026-06-06",
+  "status": "scored",
+  "rationale": null,
+  "scores": {
+    "axis_stability": {
+      "score": null,
+      "paraphrases": [],
+      "method": null,
+      "measured_at": null
+    },
+    "position_spread": {
+      "score": 0.2162,
+      "embedding_model": "text-embedding-3-small/512",
+      "measured_at": "2026-07-15"
+    },
+    "irreducibility_yield": {
+      "score": null,
+      "cross_prediction_run_id": null,
+      "measured_at": null
+    },
+    "discrimination": {
+      "score": null,
+      "separates": null,
+      "measured_at": null
+    },
+    "intra_model_stability": {
+      "score": null,
+      "reroll_count": null,
+      "measured_at": null
+    },
+    "manufactured_tension_guard": {
+      "passed": null,
+      "note": "Not evaluable until spread, axis stability, AND irreducibility (B5) are all measured — the guard requires large AND stable AND irreducible, never inferred from a subset.",
+      "evaluated_at": null
+    }
+  },
+  "certification": null,
+  "panel": null
+}

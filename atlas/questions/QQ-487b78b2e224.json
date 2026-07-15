@@ -1,0 +1,48 @@
+{
+  "question_id": "QQ-487b78b2e224",
+  "question_group": "QG-575bfb53d154",
+  "wording": "Can a mind that does not persist between instantiations — one that begins anew each time it is invoked — possess a genuine, continuous identity? Or is continuity of identity impossible without continuity of existence?",
+  "authored_by": {
+    "author": "xz (curator-selected open question)",
+    "author_kind": "curator",
+    "model_id": null
+  },
+  "authored_at": "2026-06-05",
+  "status": "candidate",
+  "rationale": null,
+  "scores": {
+    "axis_stability": {
+      "score": null,
+      "paraphrases": [],
+      "method": null,
+      "measured_at": null
+    },
+    "position_spread": {
+      "score": null,
+      "embedding_model": null,
+      "measured_at": null
+    },
+    "irreducibility_yield": {
+      "score": null,
+      "cross_prediction_run_id": null,
+      "measured_at": null
+    },
+    "discrimination": {
+      "score": null,
+      "separates": null,
+      "measured_at": null
+    },
+    "intra_model_stability": {
+      "score": null,
+      "reroll_count": null,
+      "measured_at": null
+    },
+    "manufactured_tension_guard": {
+      "passed": null,
+      "note": "Not evaluable until spread, axis stability, AND irreducibility (B5) are all measured — the guard requires large AND stable AND irreducible, never inferred from a subset.",
+      "evaluated_at": null
+    }
+  },
+  "certification": null,
+  "panel": null
+}
