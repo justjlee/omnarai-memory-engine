@@ -7,7 +7,7 @@
     "replicated": "Measured effect reproduced under independent conditions (disjoint judges, new seeds, or external replication).",
     "refuted": "A fair test came back negative; the claim is retained for the record, not asserted."
   },
-  "registry_version": "0.1.0",
+  "registry_version": "0.2.0",
   "updated_at": "2026-07-15",
   "claims": [
     {
@@ -62,6 +62,17 @@
       "falsification_conditions": "Probe scores failing to separate models that independent behavioral tests distinguish, or failing test-retest reliability across sessions of the same pinned version.",
       "known_objections": ["Self-scored rubrics inflate; the scorer shares architecture with the scored.", "One mechanistic paper is thin support for a general identity thesis (remediation P6)."],
       "required_experiment": "Externally-scored probe runs (disjoint judge models) plus test-retest reliability on pinned versions; HEB redesign before further investment.",
+      "maintainer": "xz",
+      "status": "open"
+    },
+    {
+      "claim_id": "fast-path-retrieval-improves-answers",
+      "wording": "Injecting the public fast path's retrieved corpus excerpts (GET /api/query?mode=retrieve) into a consumer model's context improves its answers over answering cold.",
+      "evidence_level": "refuted",
+      "evidence_note": "Trace-delta v2 (2026-07-15, GPT-4o, 50-query stratified battery × 3 runs, blinded 4-judge disjoint panel): retrieval arm won only 35/102 decided in-domain trials (win rate 0.343, 95% CI [0.258,0.439], p=0.002 in the WRONG direction) — excerpt injection made answers measurably worse, worst on technical queries (0.214). No length or coined-term confound; false-complexity rate 9.7%. Scope: EXCERPT-granularity retrieval on GPT-4o only; the engine's internal deliberation uses fuller text (untested here), and Atlas-record exposure is a different, separately-measured treatment (see divergence-improves-reasoning). Published per pre-commitment.",
+      "falsification_conditions": "A replication with fuller-text retrieval or a different consumer showing a significant positive effect would scope the refutation rather than reverse it; the excerpt-granularity claim for GPT-4o stands refuted as tested.",
+      "known_objections": ["Excerpts (~300 words) may under-represent the corpus — granularity, not content, may be the culprit.", "Single consumer tested."],
+      "required_experiment": "Re-run the trace-delta harness with full-text context and the divergence arm; test a second consumer.",
       "maintainer": "xz",
       "status": "open"
     },
