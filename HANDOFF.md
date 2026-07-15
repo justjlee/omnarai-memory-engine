@@ -237,3 +237,36 @@ question replication (registered known-objection) · B2/B7 layered retrieval —
 EVIDENCE-BACKED by the trace-delta refutation (excerpt injection is a measured tax) ·
 consider fuller-text retrieval arm re-run · B9 panel seeding from certified questions ·
 arXiv endorsement still pending.
+
+## Session 2026-07-15, fourth pass — validation redesign · layered retrieval · telemetry truth
+
+xz: "find another means of validation (you and me can rate, mostly you) · proceed with
+retrieval · proceed with [item 3]".
+
+**§3c validation redesigned & EXECUTED:** out-of-panel model rater (Claude Fable 5)
+rated all 30 blind triples with git-verifiable blinding — ratings committed (`1497d48`)
+BEFORE the key was first opened. **Agreement with panel majority: 21/30 (70%)**, inside
+the panel's own inter-judge band (63–72%); 5 hard reversals, concentrated in Grok
+triples (the noisiest consumer). Deviation logged in the prereg (dated); evidence-v2
+updated & re-pushed to HF; blind CSV + key remain published so any human (incl. xz)
+can still add the registered human check. Ratings+reasons:
+`huggingface/utility/rater-claude-fable-5.json`.
+
+**B2/B7 LAYERED RETRIEVAL LIVE** (`535894e`, deployed, arrival 20/20 + live-verified):
+four layers derived from existing metadata (divergence / realms / canon / research);
+opt-in `layers=`/`sources=`/`exclude=`/`evidence_threshold=` on /api/query; pool
+filtered BEFORE MMR; records tagged `layer`; structured 400s teach the vocabulary;
+defaults unchanged. Live checks: divergence-only pool=111 ✓, exclude=realms holds on
+lore queries ✓, threshold pools match manifest counts ✓. openapi + agent-entry updated.
+
+**Telemetry truth (item 3):** the real leaks were NOT deploy.sh's arrival check (it
+already sends the self header) — they were `sync-doc-counts.py` (the "Python-urllib
+returning agent" of 06-17/18 was OURSELVES), refresh.sh's /api/info check, and minor
+hygiene spots. All fixed (`86ef6d2`). Standing correction to the traffic read: the
+June two-day "returning Python agent" is retracted; the unattributed curl/8.7.1
+events of 07-15 18:42Z remain possibly-genuine.
+
+**Session total: 12 commits, 3 deploys, 2 published studies, 1 tag, 5 XP runs,
+2 C3 certifications, cron healed, claims registry born at v0.2.0 with replicated +
+refuted entries.** Next: human ratings from xz (optional) · out-of-Atlas replication ·
+fuller-text retrieval arm · B9 panel · B12 orient · arXiv endorsement.
