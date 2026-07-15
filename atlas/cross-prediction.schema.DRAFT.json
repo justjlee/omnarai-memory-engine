@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cross-prediction.schema.DRAFT.json",
+  "title": "Omnarai cross-prediction run (B5)",
+  "description": "DRAFT 2026-07-15 — flagged for adoption, not adopted. One run of the cross-prediction protocol on one question: each of five participants predicts the answers of the other four (20 predictions), then answers itself (5 actuals); every prediction is scored against its target's actual. Yields a 5×5 prediction-accuracy matrix whose off-diagonal asymmetries are individuation data and whose per-model irreducibility (1 − max peer-prediction accuracy) quantifies Atlas value per record as a continuous measure. The control arm has one strong model simulate all five voices; if the real matrix collapses to what one model can simulate, the Atlas's core claim fails — and that result is published like any other. Predictions and actuals are primary records under §0.5: verbatim, append-only, never summarized in place.",
+  "type": "object",
+  "required": [
+    "run_id",
+    "question_id",
+    "question_wording",
+    "run_at",
+    "participants",
+    "predictions",
+    "actuals",
+    "matrix",
+    "scoring"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "run_id": { "type": "string", "pattern": "^XP-[0-9a-f]{12}$" },
+    "question_id": { "type": ["string", "null"], "pattern": "^QQ-[0-9a-f]{12}$", "description": "B11 question record. Runs on uncertified questions are allowed but inherit question-selection bias — certify first (B11 precedes B5)." },
+    "question_wording": { "type": "string", "minLength": 1 },
+    "run_at": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}" },
+    "participants": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["name", "model_id"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "model_id": { "type": "string", "description": "Exact pinned version string — the matrix is a property of (model, version, date)." }
+        }
+      }
+    },
+    "predictions": {
+      "type": "array",
+      "description": "predictor ≠ target for peer predictions; predictor = target entries are the optional self-opacity control (self-prediction made before answering).",
+      "items": {
+        "type": "object",
+        "required": ["predictor", "target", "text"],
+        "additionalProperties": false,
+        "properties": {
+          "predictor": { "type": "string" },
+          "target": { "type": "string" },
+          "text": { "type": "string", "minLength": 1, "description": "Verbatim prediction. Immutable primary record." },
+          "embedding_similarity": { "type": ["number", "null"] },
+          "judge_score": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+          "judge_relevance_note": { "type": ["string", "null"], "description": "Blinded-evaluator relevance logging, per xz 2026-07-15." }
+        }
+      }
+    },
+    "actuals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["participant", "text"],
+        "additionalProperties": false,
+        "properties": {
+          "participant": { "type": "string" },
+          "text": { "type": "string", "minLength": 1, "description": "Verbatim answer. Immutable primary record." }
+        }
+      }
+    },
+    "matrix": {
+      "type": "object",
+      "required": ["accuracy", "irreducibility"],
+      "additionalProperties": false,
+      "properties": {
+        "accuracy": {
+          "type": "object",
+          "description": "accuracy[predictor][target] ∈ [0,1] — combined embedding + blinded-judge score of the prediction against the target's actual. Diagonal entries are self-prediction accuracy where measured.",
+          "additionalProperties": { "type": "object", "additionalProperties": { "type": ["number", "null"] } }
+        },
+        "irreducibility": {
+          "type": "object",
+          "description": "Per participant: 1 − max peer-prediction accuracy against it. High = no peer could anticipate this answer = genuinely irreducible information.",
+          "additionalProperties": { "type": ["number", "null"] }
+        },
+        "asymmetry_notes": { "type": ["string", "null"], "description": "Named asymmetries (e.g. A models B better than B models A) — individuation data." }
+      }
+    },
+    "scoring": {
+      "type": "object",
+      "required": ["embedding_model", "judge_models", "judges_blinded"],
+      "additionalProperties": false,
+      "properties": {
+        "embedding_model": { "type": "string" },
+        "judge_models": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "judges_blinded": { "type": "boolean", "description": "Must be true for publishable results — evaluators must not know which text is prediction vs actual, nor whose." },
+        "method_version": { "type": ["string", "null"] }
+      }
+    },
+    "control_arm": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "description": "Cheap control: one strong model simulates all five voices; its simulated matrix is compared against the real one.",
+      "properties": {
+        "simulator_model_id": { "type": "string" },
+        "simulated_accuracy": {
+          "type": "object",
+          "additionalProperties": { "type": "object", "additionalProperties": { "type": ["number", "null"] } }
+        },
+        "collapse_verdict": { "enum": ["distinct", "partial", "collapsed", null], "description": "collapsed = one model reproduced the full matrix — the divergence was simulable, and the Atlas claim fails for this question. Published either way." }
+      }
+    }
+  }
+}

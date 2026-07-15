@@ -99,3 +99,39 @@ first), plus the council.js commit-or-discard decision.
   `TheRealmsOfOmnarai/realms-of-omnarai`.
 This handoff is CLOSED. Open item carried to next session: council.js commit-or-discard;
 next work: trace-delta per trace_delta/SPEC.md (gate open).
+
+## Session 2026-07-15 — Multi-AI review synthesis: verification + NOW-wave builds
+
+Input: the six-review synthesis (B1–B12). All §5 verification tasks executed against
+live/repo/HF ground truth:
+- **§5.1** `/api/agent-entry` EXISTS (live, advertised in `/api/info`); R6's "Handshake
+  Protocol" = the openapi `orientation` tag description, not a missing endpoint. No build gap.
+- **§5.2** HF Atlas card numbers verified EXACT: 110 records / 550 answers / 351 tensions /
+  108 stale-flagged / 1 C1-reproduced / 4 near-threshold tier-changers.
+- **§5.3** `/api/health` capabilities all true, matching the homepage.
+- **§5.4** Primary-redundancy audit: Atlas = 3 locations (HF public, git, Blob) ✓; seed
+  corpus = git + HF ✓; **grown Blob layer (incl. approved visitor contributions, tension
+  dispositions, telemetry milestone) was Blob-only** — `.grown-snapshot.json` is gitignored,
+  `../omnarai-backups/` was stale since 06-04. FIXED: `scripts/backup-primaries.mjs`
+  (read-only, dumps all blobs except `sessions/` to a dated `../omnarai-backups/<ts>/` with
+  MANIFEST) — first run captured 659 blobs / 4.40 MB.
+- **Stale-blocker correction to the synthesis doc:** its "trace timeout P0" and count-drift/
+  retrieval-bleed defects are ALREADY CLOSED (remediation 2026-06-20 shipped green 11/11;
+  D4 was the credits outage, cleared 07-14; trace gate OPEN). **B4 is UNBLOCKED.** B10 is a
+  misdiagnosis — health `time` is live-correct; R1 misread the `version: "2026.06.18"` label.
+
+**Shipped (working tree, committed, NOT deployed — nothing here needs a deploy):**
+- `atlas/question-quality.schema.DRAFT.json` (B11) — question-as-instrument quality record;
+  certification = large AND stable AND irreducible; validated draft 2020-12.
+- `atlas/cross-prediction.schema.DRAFT.json` (B5) — 5×5 prediction matrix, irreducibility,
+  self-opacity control, simulator control arm; validated draft 2020-12.
+- `public/claims.json` (B3) — claim registry seeded with R1's six claims, evidence levels
+  filled honestly from measured reality (utility study = measured_differential; the rest
+  anecdotal/untested). Static file → `/claims.json`, no function cost, vercel.json untouched.
+
+**Deliberately NOT done:** B8 contribution gate (edits council.js — blocked on the
+commit-or-discard decision, 264 uncommitted insertions still pending); B1 manifest (engine
+change; fold into `info.js ?_view=manifest` per 12-fn cap, design hash-chain for B12 in);
+B10 (non-defect). Next builds per corrected sequencing: B1 manifest → B4 trace harness v2
+(unblocked; extend existing utility harness per trace_delta/SPEC.md §0) → B11 scoring
+pipeline → B5 runs on certified questions.

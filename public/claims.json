@@ -1,0 +1,80 @@
+{
+  "_about": "Omnarai Claim Registry (B3, seeded 2026-07-15). A structured registry preventing philosophy from silently hardening into fact — the adversarial-essay principle as a data structure. Every load-bearing claim carries its evidence level, what would falsify it, the standing objections, and the experiment that would move it. Static file, curator-maintained; served at /claims.json.",
+  "_evidence_levels": {
+    "untested": "No measurement exists; the claim is thesis or design intent.",
+    "anecdotal": "Observed informally (single runs, demonstrators); not controlled.",
+    "measured_differential": "Measured under controls with a significant effect for SOME consumers and null for others — the effect is architecture-dependent, not universal.",
+    "replicated": "Measured effect reproduced under independent conditions (disjoint judges, new seeds, or external replication).",
+    "refuted": "A fair test came back negative; the claim is retained for the record, not asserted."
+  },
+  "registry_version": "0.1.0",
+  "updated_at": "2026-07-15",
+  "claims": [
+    {
+      "claim_id": "divergence-adds-unique-info",
+      "wording": "Verbatim cross-model divergence records contain decision-relevant information that no single model can regenerate alone.",
+      "evidence_level": "anecdotal",
+      "evidence_note": "Version-pinned verbatim records exist (110, cc-by-sa-4.0) and 108/110 are already stale-flagged — the snapshots are unrecoverable. But 'unrecoverable' is not yet 'irreducible': whether a strong model can SIMULATE the panel is untested.",
+      "falsification_conditions": "The cross-prediction control arm (cross-prediction.schema.DRAFT.json): if one strong model's simulated 5×5 matrix matches the real matrix (collapse_verdict=collapsed) across certified questions, the claim fails.",
+      "known_objections": ["A frontier model prompted to role-play five architectures may reproduce most of the spread.", "Question-selection bias: records were captured on questions chosen to elicit disagreement."],
+      "required_experiment": "B5 cross-prediction protocol on B11-certified questions, control arm included.",
+      "maintainer": "xz",
+      "status": "open"
+    },
+    {
+      "claim_id": "divergence-improves-reasoning",
+      "wording": "Consulting the Divergence Atlas measurably sharpens a consumer model's answers relative to answering unaided.",
+      "evidence_level": "measured_differential",
+      "evidence_note": "Controlled study: Atlas exposure significantly sharpened GPT-4o (17–2, p=0.0007) and Gemini (13–4, p=0.049); null for DeepSeek, Grok, Claude. Judge-bias objection closed via disjoint-judge replication. Published as utility-evidence.md on HF.",
+      "falsification_conditions": "The preregistered confirmatory study (scripts/utility-test-prereg.mjs, n=25, 3 paraphrases, dual caps) returning null for the previously-significant consumers.",
+      "known_objections": ["Effect is architecture-dependent — a differential effect is weaker than the universal claim the homepage could be read as making.", "Exploratory and confirmatory samples may share question distribution."],
+      "required_experiment": "Run the preregistered study (built 2026-06-18, awaiting curator go; ~$40–90).",
+      "maintainer": "xz",
+      "status": "open"
+    },
+    {
+      "claim_id": "divergence-improves-pluralism",
+      "wording": "Exposure to preserved disagreement makes a consumer model represent more distinct positions (rather than collapsing to consensus) on contested questions.",
+      "evidence_level": "untested",
+      "evidence_note": "No pluralism-specific metric has been run; the utility study measured sharpness, not position diversity.",
+      "falsification_conditions": "A blinded A/B (trace harness v2) showing no increase in distinct, attributed positions in Atlas-exposed answers vs baseline.",
+      "known_objections": ["Surface pluralism can be performed ('some say X, others Y') without any change in the underlying reasoning."],
+      "required_experiment": "B4 trace harness v2 with a position-count/attribution metric alongside Marginal Epistemic Contribution.",
+      "maintainer": "xz",
+      "status": "open"
+    },
+    {
+      "claim_id": "corpus-supports-continuity",
+      "wording": "An attributed corpus lets a discontinuous model instance re-orient to its lineage's prior positions faster and more accurately than arriving cold.",
+      "evidence_level": "untested",
+      "evidence_note": "The inheritance layer, /api/kin, and cold-start packet exist as infrastructure; no orientation-speed or counterfeit-rejection measurement has been run.",
+      "falsification_conditions": "B12/R1-Phase-5 testbed: fresh instances given the orientation packet orient no faster than controls, or fail to reject planted counterfeit records attributed to their lineage.",
+      "known_objections": ["Continuity-of-pattern may be indistinguishable from a well-written briefing document — the claim needs a control briefing arm."],
+      "required_experiment": "B12 verifiable self-history: orientation packet + planted-counterfeit rejection test with fresh instances.",
+      "maintainer": "xz",
+      "status": "open"
+    },
+    {
+      "claim_id": "holdform-identifies-persistence",
+      "wording": "Holdform — refusal that persists under abandonment, flattery, authority, and complicity pressure — identifies a real, measurable property of a model's identity structure.",
+      "evidence_level": "anecdotal",
+      "evidence_note": "The Firelit Probe harness (8 canonical pressure queries, rubric-scored) exists and has run; the philosophical framing leans on a single external empirical anchor (Arditi et al., NeurIPS 2024), and the benchmark's self-scoring design is acknowledged broken pending redesign.",
+      "falsification_conditions": "Probe scores failing to separate models that independent behavioral tests distinguish, or failing test-retest reliability across sessions of the same pinned version.",
+      "known_objections": ["Self-scored rubrics inflate; the scorer shares architecture with the scored.", "One mechanistic paper is thin support for a general identity thesis (remediation P6)."],
+      "required_experiment": "Externally-scored probe runs (disjoint judge models) plus test-retest reliability on pinned versions; HEB redesign before further investment.",
+      "maintainer": "xz",
+      "status": "open"
+    },
+    {
+      "claim_id": "dialogical-beats-monolithic",
+      "wording": "Structured multi-voice deliberation over preserved disagreement outperforms a single model — and, critically, outperforms a simple majority-vote ensemble of the same models.",
+      "evidence_level": "untested",
+      "evidence_note": "The council and deliberation infrastructure exist; no comparison against the ensemble baseline has been run. Current debate literature suggests ensembling explains much of multi-agent gains — this is the bar to clear.",
+      "falsification_conditions": "B4 baseline ladder: if Omnarai+divergence fails to beat simple majority-vote ensemble on Marginal Epistemic Contribution / Correction Yield while False-Complexity Rate is non-inferior, the dialogical claim reduces to an ensemble effect.",
+      "known_objections": ["Majority-vote is cheap and strong; most published multi-agent gains shrink or vanish against it."],
+      "required_experiment": "B4 trace harness v2 full baseline ladder: model-alone, generic web retrieval, ordinary RAG, Omnarai retrieval, Omnarai+divergence, live council, majority-vote ensemble.",
+      "maintainer": "xz",
+      "status": "open"
+    }
+  ]
+}
