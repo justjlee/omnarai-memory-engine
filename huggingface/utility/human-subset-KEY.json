@@ -1,0 +1,306 @@
+{
+  "_do_not_open_before_rating": true,
+  "seed": 20260715,
+  "key": [
+    {
+      "subset_id": "HS-01",
+      "consumer": "GPT-4o",
+      "record": "OMN-D1780757185075",
+      "cell": "1500__v2",
+      "variant": 2,
+      "X": "placebo",
+      "Y": "treatment",
+      "panel_majority": "treatment"
+    },
+    {
+      "subset_id": "HS-02",
+      "consumer": "Grok",
+      "record": "OMN-D1780757185095",
+      "cell": "700__v1",
+      "variant": 1,
+      "X": "treatment",
+      "Y": "placebo",
+      "panel_majority": "tie"
+    },
+    {
+      "subset_id": "HS-03",
+      "consumer": "Claude",
+      "record": "OMN-D1780757185029",
+      "cell": "1500__v1",
+      "variant": 1,
+      "X": "treatment",
+      "Y": "placebo",
+      "panel_majority": "treatment"
+    },
+    {
+      "subset_id": "HS-04",
+      "consumer": "GPT-4o",
+      "record": "OMN-D1780757185042",
+      "cell": "700__v0",
+      "variant": 0,
+      "X": "treatment",
+      "Y": "placebo",
+      "panel_majority": "treatment"
+    },
+    {
+      "subset_id": "HS-05",
+      "consumer": "Grok",
+      "record": "OMN-D1780752664944",
+      "cell": "700__v2",
+      "variant": 2,
+      "X": "treatment",
+      "Y": "placebo",
+      "panel_majority": "placebo"
+    },
+    {
+      "subset_id": "HS-06",
+      "consumer": "Claude",
+      "record": "OMN-D1780429830432",
+      "cell": "700__v1",
+      "variant": 1,
+      "X": "placebo",
+      "Y": "treatment",
+      "panel_majority": "placebo"
+    },
+    {
+      "subset_id": "HS-07",
+      "consumer": "Claude",
+      "record": "OMN-D1780757185049",
+      "cell": "1500__v2",
+      "variant": 2,
+      "X": "placebo",
+      "Y": "treatment",
+      "panel_majority": "placebo"
+    },
+    {
+      "subset_id": "HS-08",
+      "consumer": "Grok",
+      "record": "OMN-D1780757185095",
+      "cell": "700__v0",
+      "variant": 0,
+      "X": "treatment",
+      "Y": "placebo",
+      "panel_majority": "placebo"
+    },
+    {
+      "subset_id": "HS-09",
+      "consumer": "Grok",
+      "record": "OMN-D1780757185077",
+      "cell": "700__v2",
+      "variant": 2,
+      "X": "treatment",
+      "Y": "placebo",
+      "panel_majority": "placebo"
+    },
+    {
+      "subset_id": "HS-10",
+      "consumer": "Claude",
+      "record": "OMN-D1780753529900",
+      "cell": "1500__v1",
+      "variant": 1,
+      "X": "treatment",
+      "Y": "placebo",
+      "panel_majority": "placebo"
+    },
+    {
+      "subset_id": "HS-11",
+      "consumer": "DeepSeek",
+      "record": "OMN-D1780757185098",
+      "cell": "1500__v0",
+      "variant": 0,
+      "X": "placebo",
+      "Y": "treatment",
+      "panel_majority": "treatment"
+    },
+    {
+      "subset_id": "HS-12",
+      "consumer": "DeepSeek",
+      "record": "OMN-L1784135876336",
+      "cell": "1500__v0",
+      "variant": 0,
+      "X": "placebo",
+      "Y": "treatment",
+      "panel_majority": "treatment"
+    },
+    {
+      "subset_id": "HS-13",
+      "consumer": "Claude",
+      "record": "OMN-D1780757185037",
+      "cell": "700__v2",
+      "variant": 2,
+      "X": "treatment",
+      "Y": "placebo",
+      "panel_majority": "treatment"
+    },
+    {
+      "subset_id": "HS-14",
+      "consumer": "Claude",
+      "record": "OMN-D1780757185037",
+      "cell": "1500__v1",
+      "variant": 1,
+      "X": "treatment",
+      "Y": "placebo",
+      "panel_majority": "treatment"
+    },
+    {
+      "subset_id": "HS-15",
+      "consumer": "Grok",
+      "record": "OMN-D1780429830432",
+      "cell": "1500__v1",
+      "variant": 1,
+      "X": "treatment",
+      "Y": "placebo",
+      "panel_majority": "treatment"
+    },
+    {
+      "subset_id": "HS-16",
+      "consumer": "Gemini",
+      "record": "OMN-D1780757185052",
+      "cell": "1500__v0",
+      "variant": 0,
+      "X": "treatment",
+      "Y": "placebo",
+      "panel_majority": "treatment"
+    },
+    {
+      "subset_id": "HS-17",
+      "consumer": "Grok",
+      "record": "OMN-D1780757185076",
+      "cell": "700__v2",
+      "variant": 2,
+      "X": "treatment",
+      "Y": "placebo",
+      "panel_majority": "treatment"
+    },
+    {
+      "subset_id": "HS-18",
+      "consumer": "Gemini",
+      "record": "OMN-L1784135876336",
+      "cell": "1500__v2",
+      "variant": 2,
+      "X": "placebo",
+      "Y": "treatment",
+      "panel_majority": "treatment"
+    },
+    {
+      "subset_id": "HS-19",
+      "consumer": "Gemini",
+      "record": "OMN-D1780757185098",
+      "cell": "700__v2",
+      "variant": 2,
+      "X": "placebo",
+      "Y": "treatment",
+      "panel_majority": "treatment"
+    },
+    {
+      "subset_id": "HS-20",
+      "consumer": "GPT-4o",
+      "record": "OMN-D1780757185061",
+      "cell": "700__v1",
+      "variant": 1,
+      "X": "placebo",
+      "Y": "treatment",
+      "panel_majority": "treatment"
+    },
+    {
+      "subset_id": "HS-21",
+      "consumer": "Gemini",
+      "record": "OMN-D1780757185041",
+      "cell": "700__v1",
+      "variant": 1,
+      "X": "treatment",
+      "Y": "placebo",
+      "panel_majority": "placebo"
+    },
+    {
+      "subset_id": "HS-22",
+      "consumer": "Gemini",
+      "record": "OMN-D1780752434693",
+      "cell": "1500__v0",
+      "variant": 0,
+      "X": "placebo",
+      "Y": "treatment",
+      "panel_majority": "treatment"
+    },
+    {
+      "subset_id": "HS-23",
+      "consumer": "GPT-4o",
+      "record": "OMN-D1780757185057",
+      "cell": "700__v1",
+      "variant": 1,
+      "X": "placebo",
+      "Y": "treatment",
+      "panel_majority": "treatment"
+    },
+    {
+      "subset_id": "HS-24",
+      "consumer": "DeepSeek",
+      "record": "OMN-D1780757185041",
+      "cell": "1500__v0",
+      "variant": 0,
+      "X": "treatment",
+      "Y": "placebo",
+      "panel_majority": "treatment"
+    },
+    {
+      "subset_id": "HS-25",
+      "consumer": "DeepSeek",
+      "record": "OMN-D1780757185029",
+      "cell": "700__v1",
+      "variant": 1,
+      "X": "placebo",
+      "Y": "treatment",
+      "panel_majority": "tie"
+    },
+    {
+      "subset_id": "HS-26",
+      "consumer": "DeepSeek",
+      "record": "OMN-D1780757185038",
+      "cell": "700__v0",
+      "variant": 0,
+      "X": "placebo",
+      "Y": "treatment",
+      "panel_majority": "placebo"
+    },
+    {
+      "subset_id": "HS-27",
+      "consumer": "DeepSeek",
+      "record": "OMN-D1780757185038",
+      "cell": "700__v1",
+      "variant": 1,
+      "X": "treatment",
+      "Y": "placebo",
+      "panel_majority": "placebo"
+    },
+    {
+      "subset_id": "HS-28",
+      "consumer": "DeepSeek",
+      "record": "OMN-D1780683044559",
+      "cell": "1500__v2",
+      "variant": 2,
+      "X": "placebo",
+      "Y": "treatment",
+      "panel_majority": "placebo"
+    },
+    {
+      "subset_id": "HS-29",
+      "consumer": "Grok",
+      "record": "OMN-D1780757185038",
+      "cell": "1500__v0",
+      "variant": 0,
+      "X": "placebo",
+      "Y": "treatment",
+      "panel_majority": "tie"
+    },
+    {
+      "subset_id": "HS-30",
+      "consumer": "Gemini",
+      "record": "OMN-D1780757185067",
+      "cell": "1500__v0",
+      "variant": 0,
+      "X": "placebo",
+      "Y": "treatment",
+      "panel_majority": "treatment"
+    }
+  ]
+}

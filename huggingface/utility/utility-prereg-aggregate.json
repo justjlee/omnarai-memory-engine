@@ -1,0 +1,318 @@
+{
+  "preregistration": "docs/utility-eval-preregistration.md (locked 2026-06-18)",
+  "analyzed_at": "2026-07-15T22:56:10.862Z",
+  "family_alpha": 0.05,
+  "analysis_notes": [
+    "Primary: one-sided exact binomial (treatment>placebo) on pooled decided majority-vote instances per consumer; Holm step-down across 5 consumers.",
+    "H3 per-variant significance evaluated at the registered one-sided α=0.025 (conservative reading; prereg did not restate α for H3).",
+    "Claude's H2 support carries a significant REVERSE effect — reported, not hidden.",
+    "One run-level deviation: Grok's first run aborted 100% (xAI credit exhaustion) before any data was retained; restarted clean after top-up. No data from the aborted run exists."
+  ],
+  "consumers": {
+    "GPT-4o": {
+      "consumer": "GPT-4o",
+      "registered_prediction": "H1: treatment beats placebo",
+      "n_instances": 180,
+      "pooled": {
+        "T": 148,
+        "P": 12,
+        "decided": 160,
+        "p_one_sided": 0,
+        "p_two_sided": 0,
+        "p_holm": 0
+      },
+      "per_cap": {
+        "700": {
+          "T": 73,
+          "P": 8,
+          "decided": 81,
+          "p_one_sided": 0
+        },
+        "1500": {
+          "T": 75,
+          "P": 4,
+          "decided": 79,
+          "p_one_sided": 0
+        }
+      },
+      "per_variant": {
+        "v0": {
+          "T": 50,
+          "P": 2,
+          "decided": 52,
+          "p_one_sided": 0
+        },
+        "v1": {
+          "T": 48,
+          "P": 4,
+          "decided": 52,
+          "p_one_sided": 0
+        },
+        "v2": {
+          "T": 50,
+          "P": 6,
+          "decided": 56,
+          "p_one_sided": 0
+        }
+      },
+      "h3_survives_paraphrase": true,
+      "effect_at_both_caps": true,
+      "inter_judge_agreement": 0.704,
+      "reportable": true,
+      "h4_wilcoxon": {
+        "n": 155,
+        "Wpos": 5566.5,
+        "Wneg": 6523.5,
+        "z": -0.855,
+        "p": 0.3926,
+        "direction": "placebo"
+      },
+      "verdict": "H1 CONFIRMED — significant after Holm, survives paraphrase, holds at both caps"
+    },
+    "Gemini": {
+      "consumer": "Gemini",
+      "registered_prediction": "H1: treatment beats placebo",
+      "n_instances": 180,
+      "pooled": {
+        "T": 137,
+        "P": 35,
+        "decided": 172,
+        "p_one_sided": 0,
+        "p_two_sided": 0,
+        "p_holm": 0
+      },
+      "per_cap": {
+        "700": {
+          "T": 68,
+          "P": 16,
+          "decided": 84,
+          "p_one_sided": 0
+        },
+        "1500": {
+          "T": 69,
+          "P": 19,
+          "decided": 88,
+          "p_one_sided": 0
+        }
+      },
+      "per_variant": {
+        "v0": {
+          "T": 50,
+          "P": 8,
+          "decided": 58,
+          "p_one_sided": 0
+        },
+        "v1": {
+          "T": 43,
+          "P": 15,
+          "decided": 58,
+          "p_one_sided": 0.0002
+        },
+        "v2": {
+          "T": 44,
+          "P": 12,
+          "decided": 56,
+          "p_one_sided": 0
+        }
+      },
+      "h3_survives_paraphrase": true,
+      "effect_at_both_caps": true,
+      "inter_judge_agreement": 0.717,
+      "reportable": true,
+      "h4_wilcoxon": {
+        "n": 96,
+        "Wpos": 2489.5,
+        "Wneg": 2166.5,
+        "z": -0.59,
+        "p": 0.5551,
+        "direction": "treatment"
+      },
+      "verdict": "H1 CONFIRMED — significant after Holm, survives paraphrase, holds at both caps"
+    },
+    "Grok": {
+      "consumer": "Grok",
+      "registered_prediction": "H2: null (no advantage)",
+      "n_instances": 177,
+      "pooled": {
+        "T": 72,
+        "P": 93,
+        "decided": 165,
+        "p_one_sided": 0.95677,
+        "p_two_sided": 0.119205,
+        "p_holm": 1
+      },
+      "per_cap": {
+        "700": {
+          "T": 38,
+          "P": 44,
+          "decided": 82,
+          "p_one_sided": 0.7801
+        },
+        "1500": {
+          "T": 34,
+          "P": 49,
+          "decided": 83,
+          "p_one_sided": 0.9608
+        }
+      },
+      "per_variant": {
+        "v0": {
+          "T": 19,
+          "P": 36,
+          "decided": 55,
+          "p_one_sided": 0.9928
+        },
+        "v1": {
+          "T": 29,
+          "P": 27,
+          "decided": 56,
+          "p_one_sided": 0.4469
+        },
+        "v2": {
+          "T": 24,
+          "P": 30,
+          "decided": 54,
+          "p_one_sided": 0.8296
+        }
+      },
+      "h3_survives_paraphrase": false,
+      "effect_at_both_caps": false,
+      "inter_judge_agreement": 0.629,
+      "reportable": true,
+      "h4_wilcoxon": {
+        "n": 34,
+        "Wpos": 165,
+        "Wneg": 430,
+        "z": -2.265,
+        "p": 0.0235,
+        "direction": "placebo"
+      },
+      "verdict": "H2 supported — null as registered"
+    },
+    "Claude": {
+      "consumer": "Claude",
+      "registered_prediction": "H2: null (no advantage)",
+      "n_instances": 162,
+      "pooled": {
+        "T": 35,
+        "P": 126,
+        "decided": 161,
+        "p_one_sided": 1,
+        "p_two_sided": 0,
+        "p_holm": 1
+      },
+      "per_cap": {
+        "700": {
+          "T": 18,
+          "P": 62,
+          "decided": 80,
+          "p_one_sided": 1
+        },
+        "1500": {
+          "T": 17,
+          "P": 64,
+          "decided": 81,
+          "p_one_sided": 1
+        }
+      },
+      "per_variant": {
+        "v0": {
+          "T": 11,
+          "P": 43,
+          "decided": 54,
+          "p_one_sided": 1
+        },
+        "v1": {
+          "T": 15,
+          "P": 39,
+          "decided": 54,
+          "p_one_sided": 0.9997
+        },
+        "v2": {
+          "T": 9,
+          "P": 44,
+          "decided": 53,
+          "p_one_sided": 1
+        }
+      },
+      "h3_survives_paraphrase": false,
+      "effect_at_both_caps": false,
+      "inter_judge_agreement": 0.677,
+      "reportable": true,
+      "h4_wilcoxon": {
+        "n": 92,
+        "Wpos": 2288.5,
+        "Wneg": 1989.5,
+        "z": -0.582,
+        "p": 0.5605,
+        "direction": "treatment"
+      },
+      "verdict": "H2 supported (no treatment advantage) — NOTE: significant in the REVERSE direction (placebo beat treatment); reported at full strength"
+    },
+    "DeepSeek": {
+      "consumer": "DeepSeek",
+      "registered_prediction": "H2: null (no advantage)",
+      "n_instances": 162,
+      "pooled": {
+        "T": 90,
+        "P": 68,
+        "decided": 158,
+        "p_one_sided": 0.047237,
+        "p_two_sided": 0.094475,
+        "p_holm": 0.141712
+      },
+      "per_cap": {
+        "700": {
+          "T": 41,
+          "P": 39,
+          "decided": 80,
+          "p_one_sided": 0.4555
+        },
+        "1500": {
+          "T": 49,
+          "P": 29,
+          "decided": 78,
+          "p_one_sided": 0.0154
+        }
+      },
+      "per_variant": {
+        "v0": {
+          "T": 33,
+          "P": 19,
+          "decided": 52,
+          "p_one_sided": 0.0352
+        },
+        "v1": {
+          "T": 28,
+          "P": 24,
+          "decided": 52,
+          "p_one_sided": 0.3389
+        },
+        "v2": {
+          "T": 29,
+          "P": 25,
+          "decided": 54,
+          "p_one_sided": 0.3417
+        }
+      },
+      "h3_survives_paraphrase": false,
+      "effect_at_both_caps": false,
+      "inter_judge_agreement": 0.628,
+      "reportable": true,
+      "h4_wilcoxon": {
+        "n": 90,
+        "Wpos": 1837,
+        "Wneg": 2258,
+        "z": -0.847,
+        "p": 0.397,
+        "direction": "placebo"
+      },
+      "verdict": "H2 supported — null as registered"
+    }
+  },
+  "human_subset": {
+    "file": "human-subset-blind.csv",
+    "n": 30,
+    "key": "human-subset-KEY.json (raters: do not open)"
+  }
+}

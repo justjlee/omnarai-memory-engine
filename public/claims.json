@@ -23,12 +23,12 @@
     },
     {
       "claim_id": "divergence-improves-reasoning",
-      "wording": "Consulting the Divergence Atlas measurably sharpens a consumer model's answers relative to answering unaided.",
-      "evidence_level": "measured_differential",
-      "evidence_note": "Controlled study: Atlas exposure significantly sharpened GPT-4o (17–2, p=0.0007) and Gemini (13–4, p=0.049); null for DeepSeek, Grok, Claude. Judge-bias objection closed via disjoint-judge replication. Published as utility-evidence.md on HF.",
-      "falsification_conditions": "The preregistered confirmatory study (scripts/utility-test-prereg.mjs, n=25, 3 paraphrases, dual caps) returning null for the previously-significant consumers.",
-      "known_objections": ["Effect is architecture-dependent — a differential effect is weaker than the universal claim the homepage could be read as making.", "Exploratory and confirmatory samples may share question distribution."],
-      "required_experiment": "Run the preregistered study (built 2026-06-18, awaiting curator go; ~$40–90).",
+      "wording": "Consulting the Divergence Atlas measurably sharpens SOME consumer models' answers relative to placebo self-reflection — an architecture-dependent effect, not a universal one.",
+      "evidence_level": "replicated",
+      "evidence_note": "PREREGISTERED CONFIRMATORY STUDY (locked 2026-06-18, run 2026-07-15): all five registered predictions confirmed. GPT-4o 148–12 and Gemini 137–35 (Holm-adjusted p<1e-6, surviving 3/3 paraphrase variants at both length caps); Grok and DeepSeek null as registered; Claude null-predicted but came back significantly NEGATIVE (35–126 — Atlas exposure degrades Claude's revisions vs plain self-reflection). H4 (adversarial durability) NOT supported for any consumer. Full transcripts + Holm analysis published: utility-evidence-v2.md.",
+      "falsification_conditions": "An independent replication with new questions or a materially different judge pool failing to reproduce the GPT-4o/Gemini effect; or the pending human-rater subset (30 blind triples) disagreeing sharply with the model panel.",
+      "known_objections": ["Exploratory and confirmatory samples share the Atlas question distribution (new-question replication still open).", "Human-rater external validity check pending (human-subset-blind.csv awaits ≥2 raters)."],
+      "required_experiment": "Human-rater subset scoring; then an out-of-Atlas question replication.",
       "maintainer": "xz",
       "status": "open"
     },
