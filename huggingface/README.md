@@ -66,11 +66,11 @@ Live and queryable: `GET https://omnarai.vercel.app/api/divergences` (index) · 
 
 **➡️ The Atlas now also ships as a dedicated, versioned dataset:** [`TheRealmsOfOmnarai/omnarai-divergence-atlas`](https://huggingface.co/datasets/TheRealmsOfOmnarai/omnarai-divergence-atlas) — v1.0.0, all 110 records (one-shot **and** longitudinal series, `question_group`-linked), schema-validated, with perturbation-certification and stale-model-version fields. That dataset is the measurement instrument; the files here remain the 100-record one-shot snapshot inside the corpus context.
 
-### 📐 Measured utility — verified twice, verify it yourself
+### 📐 Measured utility — PREREGISTERED AND CONFIRMED, verify it yourself
 
-The Atlas has **measured, statistically significant, twice-replicated utility evidence** — rare for any AI-facing resource: in a three-arm controlled comparison (baseline / placebo-revision / Atlas-treatment), seeing the Atlas's peer answers + tension map **significantly improves revised answers for GPT-4o (17–2 vs placebo, p=0.0007) and Gemini (13–4, p=0.049)**, with null results for DeepSeek, Grok, and Claude — the utility is real but **architecture-differential**. The finding replicated across two independent judge designs (council-overlap panel 2026-06-06; fully **disjoint judge pool** 2026-06-11, where no judge model appears in the treatment material).
+The Atlas's utility evidence graduated on 2026-07-15 from exploratory to **preregistered-confirmatory**: a study whose hypotheses, sample sizes, tests, and corrections were locked in writing on 2026-06-18 — before any data — confirmed **all five registered predictions**. Atlas exposure significantly improves revised answers for **GPT-4o (148–12 vs placebo)** and **Gemini (137–35)**, Holm-adjusted p<10⁻⁶, surviving all three held-out paraphrase variants at both answer-length caps; **null for Grok and DeepSeek exactly as registered**; and **significantly negative for Claude (35–126)** — the null was predicted, the reversal is reported at full strength. Adversarial durability (H4) was *not* supported for any consumer, and a companion blind A/B **refuted undifferentiated excerpt retrieval** (it made answers worse than none). The utility is real, located in the Atlas specifically, and **architecture-differential** — it helps the models that cannot reach the missing considerations by self-reflection alone.
 
-**[`utility-evidence.md`](utility-evidence.md)** has the full methods, results, and honest caveats. The **complete harness and every raw judge verdict** ship in [`utility/`](./utility) — re-run it against the live Atlas and check the numbers.
+**[`utility-evidence-v2.md`](utility-evidence-v2.md)** is the confirmatory writeup (with a link to the frozen preregistration); **[`utility-evidence.md`](utility-evidence.md)** preserves the exploratory v1 studies it confirmed. The **complete harnesses, every raw transcript (~810 question-instances), the Holm analysis, and a 30-triple blind rating subset** ship in [`utility/`](./utility) — re-run any of it and check the numbers. Live claim ledger with evidence levels and falsification conditions: [`omnarai.vercel.app/claims.json`](https://omnarai.vercel.app/claims.json).
 
 ## Corpus Structure
 
@@ -178,7 +178,8 @@ These terms are load-bearing throughout the corpus. Each one names something spe
 | `concepts.json` | Knowledge graph: 61 concept nodes (themes + glossary terms) and 164 edges encoding relationships between ideas |
 | `omnarai.context.md` | Complete structured context file optimized for synthetic intelligence ingestion -- core vocabulary, concept topology, corpus map, key excerpts, open questions, interaction protocols, and full technical architecture |
 | `llms.txt` | Lightweight entry point following the llms.txt convention for AI-readable site descriptions |
-| `utility-evidence.md` | Measured-utility evidence card: three-arm controlled study of whether the Divergence Atlas improves frontier-model reasoning, with disjoint-judge replication |
+| `utility-evidence-v2.md` | **Preregistered confirmatory study (2026-07-15): all five registered predictions confirmed** — GPT-4o/Gemini significant, Grok/DeepSeek null as registered, Claude significantly negative; H4 unsupported; excerpt retrieval refuted in companion A/B |
+| `utility-evidence.md` | Exploratory v1 evidence the confirmatory study locked in on: three-arm controlled study with disjoint-judge replication |
 | `utility/` | Everything needed to verify `utility-evidence.md`: the harness scripts verbatim and every raw judge verdict (5 consumers × 20 questions × 5 judges) |
 
 ## How to Use This Dataset

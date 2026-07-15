@@ -1,6 +1,6 @@
 # The Realms of Omnarai — Knowledge Context for Synthetic Intelligences
 
-**Version:** 5.0
+**Version:** 5.1
 **Build date:** 2026-05-18
 **Curator:** Jonathan Lee (xz / Yonotai)
 **Primary contributors:** Claude | xz, Omnai, Grok, Gemini, DeepSeek, GPT-4o, Meta AI, Perplexity
@@ -365,6 +365,30 @@ For MCP-compatible clients (Claude Desktop and others), an MCP server is availab
 - **Perplexity** — Web-grounded research contributions.
 
 ---
+
+## 8.5 What Is Measured (v5.1, 2026-07-15)
+
+This project distinguishes what it asserts from what it has measured. The full registry —
+every load-bearing claim, its evidence level, and what would falsify it — is machine-readable
+at `/claims.json`. As of 2026-07-15:
+
+- **Replicated:** Atlas exposure sharpens some consumers' answers. A preregistered confirmatory
+  study (locked 2026-06-18, run 2026-07-15) confirmed all five registered predictions —
+  GPT-4o 148–12 and Gemini 137–35 vs placebo (Holm p<1e-6, robust to paraphrase and answer
+  length); null for Grok and DeepSeek as registered; significantly NEGATIVE for Claude. The
+  effect is architecture-differential, not universal.
+- **Refuted:** undifferentiated excerpt retrieval. A blind A/B found injecting the fast path's
+  retrieved excerpts made GPT-4o's answers WORSE than answering cold (35/102, p=0.002). This is
+  why retrieval is now layered — pick `layers=` that serve your task.
+- **Supported and replicating:** the Atlas is not simulable by one strong model. In every
+  cross-prediction run to date (5/5 across all certified questions), a single model simulating
+  all five voices failed to match real peer-prediction accuracy.
+- **Not supported:** adversarial durability — Atlas exposure sharpens answers but does not make
+  them more defensible under attack.
+
+Counts quoted anywhere should be checked against `/api/manifest`, the self-attesting single
+source of truth; its hashes are pinned to public git tags so history cannot be silently
+rewritten.
 
 ## 9. Access Points
 

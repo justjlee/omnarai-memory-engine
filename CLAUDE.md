@@ -1,8 +1,8 @@
 # Omnarai Memory Engine — Claude Code Context
 
 **Live at:** omnarai.vercel.app
-**Last updated:** 2026-05-18
-**Status:** Fully operational. Cognitive loop is closed. Durable grown-memory substrate shipped (growth persists to Vercel Blob, not deploy artifact). Session continuity active. Adversarial stress harness live.
+**Last updated:** 2026-07-15
+**Status:** Fully operational and MEASURED. Cognitive loop closed; durable grown-memory substrate live (Vercel Blob). Preregistered utility study CONFIRMED 5/5 (utility-evidence-v2.md on HF); undifferentiated excerpt retrieval REFUTED → retrieval is now layered (`layers=`/`exclude=`/`evidence_threshold=`). Canonical counts + attestation: `/api/manifest` (hashes pinned to `attest-*` git tags). Claim registry: `/claims.json`. Longitudinal cron healed 2026-07-15 (60s-wall fix — primaries commit first).
 
 ---
 
@@ -87,6 +87,12 @@ Classifies every incoming call to the public endpoints (query, info, council, te
 - `scripts/eval_retrieval.py` — 1,200-config retrieval eval harness (Ξ v4 calibration source)
 - `scripts/build-data.py` — corpus build from Reddit JSON
 - `scripts/push-to-huggingface.py` — HuggingFace sync
+- `scripts/backup-primaries.mjs` — dated full-Blob backup (ex `sessions/`) → `../omnarai-backups/<ts>/`; run after approval batches and before schema migrations (§0.5)
+- `scripts/score-question-quality.mjs` — B11 offline scorer → `atlas/questions/` QQ records (spread/axis/intra/irreducibility from stored primaries; overlays live certifications)
+- `scripts/cross-prediction.mjs` — B5 protocol (5×5 prediction matrix, irreducibility, simulator control arm) → `atlas/cross-predictions/`
+- `scripts/utility-test-prereg.mjs` + `scripts/utility-prereg-aggregate.mjs` — the preregistered confirmatory study + Holm aggregation/human-subset export
+- `trace_delta/harness.mjs` + `battery-v1.json` — blind retrieval-vs-cold A/B (arms: retrieval/divergence/ensemble; MEC/CY/FCR metrics)
+- `scripts/certify-divergence.mjs` — tier3 perturbation certification (`--ids ... --write`)
 
 ---
 
@@ -178,6 +184,11 @@ Uploads: README.md, corpus.json, corpus.csv, corpus-full-text.jsonl, concepts.js
 | `/api/eval?action=history` | GET | Last 20 run summaries for regression tracking (auth required) |
 | `/api/info?_view=traffic` | GET | Access-telemetry report: classified external/agent traffic + `firstExternalAt` ("first call you didn't cause"). Auth: Bearer INGEST_SECRET (see `api/_telemetry.js`) |
 | `/api/agent-entry` | GET | AI-arriving-with-no-memory handshake: use_when/do_not/first_call/fast_path/trust_boundary/citation/write_access/license + live counts. Rewrite → `info.js ?_view=agent-entry` (no new function — 12-fn cap) |
+| `/api/manifest` | GET | **Canonical count manifest + attestation** (rewrite → `info.js ?_view=manifest`). Live-computed counts (corpus vs Atlas as two categories, never summed), model-version totals, sha256 hash block (`hashes.manifest` over canonical counts JSON — independently recomputable; anchored externally via `attest-YYYY-MM-DD` git tags). verify-omnarai.sh M1 asserts manifest/info/health agreement. Added 2026-07-15 (B1) |
+| `/api/divergences/search?q=...&k=5` | GET | Atlas-only semantic search (rewrite → council `_view=divergence-search`); question+verbatim-answer embeddings, cosine ranked; graceful fallback to grown vectors until the purpose-built index is built |
+| `/api/divergences/<id>.md` / `.json` | GET | Canonical per-record exports; single-record reads also carry `cite` (BibTeX/APA/pull-quote) + `deltas[]` (OMN-DD longitudinal re-runs, own blob namespace) |
+| `/claims.json` | GET | **Claim registry** (static): every load-bearing claim + evidence level (untested→anecdotal→measured_differential→replicated/refuted) + falsification conditions. First replicated + refuted entries landed 2026-07-15 |
+| `/api/query?...&layers=research,divergence` | GET | **Layered retrieval (B2/B7, 2026-07-15):** `layers=` (alias `sources=`), `exclude=`, `evidence_threshold=` filter the candidate pool BEFORE MMR. Layers derived from metadata: research / divergence / canon / realms; records tagged `layer`. Defaults unchanged. Evidence-backed: trace-delta refuted undifferentiated excerpt retrieval |
 | `/api/health` | GET | Machine-readable liveness + capability probe (rewrite → `info.js ?_view=health`, no new function — 12-fn cap). `{status, version (ENGINE_VERSION literal in info.js), corpus counts, capabilities{retrieval/deliberation/live_embeddings/council/persistence/contributions_open} derived from env-key presence, endpoints{} with per-path enabled flags, access{auth/cors/rate_limit/persistence/privacy}}`. Cached s-maxage=60. The "safe first call" + status-page data source. Added 2026-06-18 from the visiting-model feedback batch |
 | `/try` | GET | Browser API **playground** (static `public/try.html`, rewrite `/try`→`/try.html`). Calls every public endpoint live, shows raw JSON beside a rendered reading; surfaces the Ξ glyph (reviewers said it was buried); async submit+poll for query/trace done client-side. The dev "lobby" / on-ramp. Uses RELATIVE `/api/*` URLs so it only fully works on the deployed origin (local vite has no functions). Added 2026-06-18 |
 | `/api/lineage?concept=<id\|alias\|word>` | GET | Concept lineage view (rewrite → `concepts.js ?_view=lineage`, no new function — 12-fn cap). Assembles from real data: source spine (entries tagged with the concept, chronological + contributors), graph neighbors ranked by corpus co-occurrence, contributor breakdown, and open/repaired tensions in the region (matched by shared source entries; keyword fallback). `related` is undirected adjacency — NOT directional parent/child. `&tensions=0` = static-only/faster. Resolver: exact id → alias map (holdform→holdform-identity, glyphs→cognitive-infrastructure, …) → label/id substring → self-correcting 404 listing all node ids. Cached s-maxage=120 |
