@@ -1,6 +1,6 @@
 {
   "_about": "Question-quality index (B11 offline pass). One row per question_group; full QQ records alongside. Ranked by position_spread. Nulls are honest untested, not zeros.",
-  "generated_at": "2026-07-15T18:46:55.380Z",
+  "generated_at": "2026-07-15T20:20:34.015Z",
   "schema": "../question-quality.schema.DRAFT.json",
   "totals": {
     "questions": 100,
@@ -53,8 +53,8 @@
         "OMN-L1781275210572"
       ],
       "position_spread": 0.3263,
-      "axis_stability": null,
-      "intra_model_stability": null
+      "axis_stability": 1,
+      "intra_model_stability": 0.794
     },
     {
       "question_id": "QQ-f337bac1ce83",
@@ -65,8 +65,8 @@
         "OMN-L1781275251381"
       ],
       "position_spread": 0.3104,
-      "axis_stability": null,
-      "intra_model_stability": null
+      "axis_stability": 1,
+      "intra_model_stability": 0.824
     },
     {
       "question_id": "QQ-d23d3ca569aa",
@@ -76,8 +76,8 @@
         "OMN-D1780757185062"
       ],
       "position_spread": 0.3076,
-      "axis_stability": null,
-      "intra_model_stability": null
+      "axis_stability": 0,
+      "intra_model_stability": 0.795
     },
     {
       "question_id": "QQ-98c7ce730bf8",
@@ -87,8 +87,8 @@
         "OMN-D1780757185046"
       ],
       "position_spread": 0.3052,
-      "axis_stability": null,
-      "intra_model_stability": null
+      "axis_stability": 0,
+      "intra_model_stability": 0.823
     },
     {
       "question_id": "QQ-a124fef33370",
@@ -99,8 +99,8 @@
         "OMN-L1781275390102"
       ],
       "position_spread": 0.299,
-      "axis_stability": null,
-      "intra_model_stability": null
+      "axis_stability": 0,
+      "intra_model_stability": 0.811
     },
     {
       "question_id": "QQ-237b734d1ba5",
@@ -111,8 +111,8 @@
         "OMN-L1781275482281"
       ],
       "position_spread": 0.2987,
-      "axis_stability": null,
-      "intra_model_stability": null
+      "axis_stability": 0,
+      "intra_model_stability": 0.775
     },
     {
       "question_id": "QQ-e87f34c19186",

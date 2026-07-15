@@ -12,10 +12,10 @@
   "rationale": null,
   "scores": {
     "axis_stability": {
-      "score": null,
+      "score": 0,
       "paraphrases": [],
-      "method": null,
-      "measured_at": null
+      "method": "derived: fraction of tier3-perturbation-v2-floored runs at tier C1/C3 (paraphrase-robust)",
+      "measured_at": "2026-07-15"
     },
     "position_spread": {
       "score": 0.3076,
@@ -33,9 +33,9 @@
       "measured_at": null
     },
     "intra_model_stability": {
-      "score": null,
-      "reroll_count": null,
-      "measured_at": null
+      "score": 0.795,
+      "reroll_count": 3,
+      "measured_at": "2026-07-15"
     },
     "manufactured_tension_guard": {
       "passed": null,

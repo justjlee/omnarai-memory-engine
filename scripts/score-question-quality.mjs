@@ -58,6 +58,24 @@ const ATLAS = path.join(ROOT, "atlas", "data", "atlas-v1.0.0.jsonl");
 const OUT_DIR = path.join(ROOT, "atlas", "questions");
 const records = fs.readFileSync(ATLAS, "utf8").trim().split("\n").map((l) => JSON.parse(l));
 
+// The v1.0.0 release file is immutable; certifications earned AFTER the release
+// live on the grown store. Overlay them from the local snapshot when it exists
+// (refresh with scripts/dump-grown.mjs), so scoring always uses the freshest
+// certification data without ever touching the released jsonl.
+const SNAP = path.join(__dirname, ".grown-snapshot.json");
+if (fs.existsSync(SNAP)) {
+  const snap = JSON.parse(fs.readFileSync(SNAP, "utf8"));
+  const liveCert = new Map((snap.entries || [])
+    .filter((e) => e.divergence?.certification)
+    .map((e) => [e.id, e.divergence.certification]));
+  let overlaid = 0;
+  for (const r of records) {
+    const c = liveCert.get(r.id);
+    if (c && JSON.stringify(c) !== JSON.stringify(r.certification)) { r.certification = c; overlaid++; }
+  }
+  if (overlaid) console.log(`overlaid ${overlaid} live certification block(s) from grown snapshot`);
+}
+
 const qid = (question_group) => `QQ-${createHash("sha256").update(question_group).digest("hex").slice(0, 12)}`;
 
 // B5 linkage: cross-prediction runs (scripts/cross-prediction.mjs) fold back in
@@ -124,7 +142,14 @@ async function scoreGroup(group, recs) {
   const spread = spreads.length ? +(spreads.reduce((a, b) => a + b, 0) / spreads.length).toFixed(4) : null;
 
   // axis_stability + intra_model_stability: from certification runs, where present.
-  const certRuns = recs.flatMap((r) => r.certification?.runs || []);
+  // Two block shapes exist: the reconciled two-run format ({runs:[{tier,dri,between}]})
+  // and the single-run pilot format ({tier,dri,between_spread}) — normalize both.
+  const certRuns = recs.flatMap((r) => {
+    const c = r.certification;
+    if (!c) return [];
+    if (Array.isArray(c.runs) && c.runs.length) return c.runs;
+    return c.tier ? [{ run: 1, tier: c.tier, dri: c.dri, between: c.between_spread ?? c.between ?? null }] : [];
+  });
   let axisScore = null, intraScore = null, certMethod = null;
   if (certRuns.length) {
     certMethod = recs.find((r) => r.certification)?.certification?.method || null;
