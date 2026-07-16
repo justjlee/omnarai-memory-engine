@@ -89,7 +89,17 @@ Small normalization fix, touches grown-Blob data — do deliberately, not hot.
 
 ## Open items
 
-- Ring-label normalization on grown records (above).
+- ~~Ring-label normalization on grown records (above).~~ **FIXED 2026-07-16
+  (branch claude/cool-kalam-6bc468):** normalized at the read choke point —
+  `normalizeRing()` in `api/_grown.js`, applied in `loadGrownMemory()` (covers
+  the existing Blob data with no hot migration) and `normalizeEntry()` (write
+  path). The two label-minting sites (`_council.js` buildDivergenceRecord,
+  `council.js` delta-export) now write the token `"open"`. No Blob migration
+  needed: every writer is load-modify-write through `loadGrownMemory`, so the
+  stored labels self-heal to tokens on the next grown-memory write. Pinned by
+  probe T6 in `scripts/omnarai-verify.sh` (asserts every retrieved `ring` ∈
+  core/curated/open/media on the original repro query) — T6 is RED against
+  prod until this deploys, by design.
 - D6 (`/api/citation` "warming") — untouched, P3, behavior unverified.
 - The audit environment's query-string mangling is worth remembering: **any
   future external audit claiming param loss should be reproduced with plain
