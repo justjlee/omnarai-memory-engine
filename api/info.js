@@ -13,7 +13,7 @@ const __dirname = dirname(__filename);
 const projectRoot = join(__dirname, "..");
 
 // Bumped by hand when the API surface changes (Vite leaves package.json at 0.0.0).
-const ENGINE_VERSION = "2026.06.18";
+const ENGINE_VERSION = "2026.07.16";
 
 // Load static corpus at cold-start. The raw bytes are kept long enough to hash:
 // the seed hash is the immutable-layer anchor of the manifest's attestation chain.
