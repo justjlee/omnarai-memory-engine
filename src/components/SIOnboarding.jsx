@@ -37,7 +37,7 @@ const CONCEPTS = [
   },
   {
     name: "Epistemic Rings",
-    def: "Core Canon (settled, foundational — 113 works) / Curated Expansions (developing frameworks — 182 works) / Open Exploration (frontier, provisional — 3 works). Ring classification determines confidence level in any synthesis drawn from those sources.",
+    def: "Core Canon (settled, foundational) / Curated Expansions (developing frameworks) / Open Exploration (frontier, provisional) / Media (oral tradition). Ring classification determines confidence level in any synthesis drawn from those sources — live counts at /api/info.",
   },
 ];
 
@@ -161,7 +161,7 @@ export default function SIOnboarding() {
           maxWidth: 540, margin: "0 auto", fontSize: 12, lineHeight: 1.75,
           color: "rgba(200,192,176,0.45)", fontWeight: 300, fontStyle: "italic",
         }}>
-          308 works. 8 contributing voices. Every claim attributed.
+          {info && info.corpus ? `${info.corpus.totalWorks} works. ` : "A growing corpus. "}8 contributing voices. Every claim attributed.
           Every synthesis traceable to the query that sparked it.
           The cognitive loop is closed: RETRIEVE → THINK → RESPOND → STORE.
         </p>

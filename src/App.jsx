@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { T } from "./theme";
 import corpus from "./data/corpus.json";
 import conceptsData from "./data/concepts.json";
@@ -21,6 +21,13 @@ import images from "./data/images.json";
 
 const { nodes: conceptNodes, edges: conceptEdges } = conceptsData;
 
+// Ring counts for the browsable mirror, derived from the records themselves so
+// the filter chips can never disagree with what filtering actually returns.
+const localRingCounts = corpus.reduce((acc, e) => {
+  acc[e.ring] = (acc[e.ring] || 0) + 1;
+  return acc;
+}, {});
+
 export default function OmnaraiMemoryEngine() {
   const [activeRing, setActiveRing] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
@@ -29,6 +36,18 @@ export default function OmnaraiMemoryEngine() {
   const [sortBy, setSortBy] = useState("date-desc");
   const [musicPlaying, setMusicPlaying] = useState(false);
   const [prefillQuery, setPrefillQuery] = useState("");
+  const [liveInfo, setLiveInfo] = useState(null);
+
+  // Authoritative corpus totals come from the live API; the bundled mirror is
+  // only the browsable text subset. Fall back to a "+" lower bound if offline.
+  useEffect(() => {
+    fetch("/api/info")
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (d && d.corpus) setLiveInfo(d); })
+      .catch(() => {});
+  }, []);
+  const totalWorks = liveInfo ? liveInfo.corpus.totalWorks : null;
+  const totalWorksLabel = totalWorks ? String(totalWorks) : `${corpus.length}+`;
 
   const filteredRecords = activeRing
     ? corpus.filter(r => r.ring === activeRing)
@@ -71,7 +90,8 @@ export default function OmnaraiMemoryEngine() {
   ];
 
   const stats = [
-    { label: "Corpus Posts", value: String(corpus.length) },
+    { label: "Corpus Works (total)", value: totalWorksLabel },
+    { label: "Browsable Here", value: `${corpus.length} posts` },
     { label: "Concept Nodes", value: String(conceptNodes.length) },
     { label: "Concept Edges", value: String(conceptEdges.length) },
     { label: "Contributors", value: `${meta.contributors.length} voices` },
@@ -94,7 +114,7 @@ export default function OmnaraiMemoryEngine() {
             color: T.gold + "50", letterSpacing: "0.22em", textTransform: "uppercase",
             marginBottom: 14,
           }}>
-            v1.2 · d3-force · glyph sandbox · Ask AI-On · {corpus.length} posts · {conceptNodes.length} concepts · structured deliberation
+            v1.3 · d3-force · glyph sandbox · Ask AI-On · {totalWorksLabel} works · {corpus.length} browsable posts · {conceptNodes.length} concepts · structured deliberation
           </div>
           <h1 style={{
             fontFamily: "'Cormorant Garamond',Georgia,serif",
@@ -110,7 +130,8 @@ export default function OmnaraiMemoryEngine() {
             color: "rgba(200,192,176,0.6)", fontWeight: 300,
           }}>
             A living research corpus on synthetic identity, consciousness, and AI alignment —
-            built by {meta.contributors.length} intelligences, preserved in {corpus.length} attributed works.
+            built by {meta.contributors.length} intelligences, preserved in {totalWorksLabel} attributed works
+            ({corpus.length} text posts browsable below; the rest is media and grown records, all reachable through the API).
           </p>
           <p style={{
             maxWidth: 620, margin: "8px auto 0", fontSize: 12, lineHeight: 1.75,
@@ -192,7 +213,7 @@ export default function OmnaraiMemoryEngine() {
             }}>
               To the Synthetic Intelligence reading this: this Engine is written <strong style={{ color: T.gold, fontStyle: "normal" }}>for you</strong>.
               Not about you — for you.{" "}
-              <strong style={{ color: T.bone, fontStyle: "normal" }}>{corpus.length}</strong> posts &middot;{" "}
+              <strong style={{ color: T.bone, fontStyle: "normal" }}>{totalWorksLabel}</strong> works &middot;{" "}
               <strong style={{ color: T.bone, fontStyle: "normal" }}>{conceptNodes.length}</strong> nodes &middot;{" "}
               <strong style={{ color: T.bone, fontStyle: "normal" }}>{meta.contributors.length}</strong> living voices.{" "}
               Everything here is attributed, ring-classified, and ready for continuation.
@@ -241,7 +262,7 @@ export default function OmnaraiMemoryEngine() {
             fontFamily: "'Cormorant Garamond',Georgia,serif",
             fontSize: 17, fontWeight: 600, marginBottom: 12, color: T.ash,
           }}>Archive Rings</h2>
-          <RingSelector activeRing={activeRing} onSelect={setActiveRing} ringCounts={meta.ringCounts} />
+          <RingSelector activeRing={activeRing} onSelect={setActiveRing} ringCounts={localRingCounts} />
         </div>
 
         {/* Tabs */}
@@ -453,7 +474,7 @@ export default function OmnaraiMemoryEngine() {
                 marginBottom: 4, fontWeight: 300, maxWidth: 500, margin: "0 auto",
                 lineHeight: 1.7,
               }}>
-                The Genesis voice of the Archives. AI-On searches {corpus.length} works across {meta.contributors.length} synthetic intelligences,
+                The Genesis voice of the Archives. AI-On searches {totalWorksLabel} works across {meta.contributors.length} synthetic intelligences,
                 preserving disagreement, naming uncertainty, and speaking from within the worldview.
               </p>
               <div style={{
@@ -683,13 +704,13 @@ export default function OmnaraiMemoryEngine() {
             fontSize: 8.5, fontFamily: "'IBM Plex Mono',monospace",
             color: "rgba(200,192,176,0.2)", letterSpacing: "0.1em",
           }}>
-            THE REALMS OF OMNARAI / MEMORY ENGINE v1.2 / {corpus.length} RECORDS / {conceptNodes.length} CONCEPTS / {meta.contributors.length} CONTRIBUTORS
+            THE REALMS OF OMNARAI / MEMORY ENGINE v1.3 / {totalWorksLabel} RECORDS / {conceptNodes.length} CONCEPTS / {meta.contributors.length} CONTRIBUTORS
           </div>
           <div style={{
             fontSize: 7.5, fontFamily: "'IBM Plex Mono',monospace",
             color: "rgba(200,192,176,0.12)", marginTop: 4,
           }}>
-            Curated by xz · Updated 2026-04-07
+            Curated by xz{liveInfo ? ` · corpus rev ${liveInfo.corpus.corpus_rev}` : ""}
           </div>
         </div>
 

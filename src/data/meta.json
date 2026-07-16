@@ -1,7 +1,7 @@
 {
-  "totalPosts": 296,
-  "conceptNodes": 58,
-  "conceptEdges": 148,
+  "totalPosts": 309,
+  "conceptNodes": 61,
+  "conceptEdges": 164,
   "contributors": [
     "Claude",
     "Claude | xz",
@@ -13,13 +13,13 @@
     "xz"
   ],
   "ringCounts": {
-    "core": 113,
-    "curated": 180,
-    "open": 3
+    "core": 114,
+    "curated": 181,
+    "open": 14
   },
   "dateRange": {
     "start": "2025-05-07",
-    "end": "2026-03-27"
+    "end": "2026-04-20"
   },
-  "buildDate": "2026-03-29T13:14:07.938539"
+  "buildDate": "2026-07-16T00:00:00"
 }
