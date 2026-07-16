@@ -16,6 +16,7 @@ import ImageGallery from "./components/ImageGallery";
 import SIOnboarding from "./components/SIOnboarding";
 import TensionsTab from "./components/TensionsTab";
 import DivergencesTab from "./components/DivergencesTab";
+import AtlasHeroBand from "./components/AtlasHeroBand";
 import OralTradition from "./components/OralTradition";
 import images from "./data/images.json";
 
@@ -107,6 +108,29 @@ export default function OmnaraiMemoryEngine() {
       <StarField />
 
       <div style={{ position: "relative", zIndex: 1, maxWidth: 960, margin: "0 auto", padding: "36px 20px" }}>
+        {/* Divergence Atlas — the payoff, above the engine hero */}
+        <AtlasHeroBand
+          onExplore={() => {
+            setActiveTab("divergences");
+            // The tab content lives below the hero — bring it into view so the CTA
+            // visibly lands instead of silently swapping off-screen. The Divergences
+            // tab fetches its list on mount and is briefly just a "loading" line, so
+            // the page is momentarily too short to scroll all the way down; retry an
+            // INSTANT scroll (repeated "smooth" calls cancel one another) until the
+            // list has rendered and the target actually reaches the top.
+            let tries = 0;
+            const bring = () => {
+              const el = document.getElementById("atlas-tabs");
+              if (el) el.scrollIntoView({ block: "start" });
+              if (tries++ < 15 && (!el || Math.abs(el.getBoundingClientRect().top - 12) > 4)) {
+                setTimeout(bring, 80);
+              }
+            };
+            bring();
+          }}
+          worksLabel={totalWorksLabel}
+        />
+
         {/* Header */}
         <div style={{ marginBottom: 36, textAlign: "center" }}>
           <div style={{
@@ -266,7 +290,7 @@ export default function OmnaraiMemoryEngine() {
         </div>
 
         {/* Tabs */}
-        <div style={{ display: "flex", gap: 0, marginBottom: 20, borderBottom: "1px solid rgba(255,255,255,0.05)", overflowX: "auto" }}>
+        <div id="atlas-tabs" style={{ display: "flex", gap: 0, marginBottom: 20, borderBottom: "1px solid rgba(255,255,255,0.05)", overflowX: "auto", scrollMarginTop: 12 }}>
           {tabs.map(tab => (
             <button key={tab.id}
               onClick={() => setActiveTab(tab.id)}

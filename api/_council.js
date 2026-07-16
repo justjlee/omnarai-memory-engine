@@ -180,17 +180,35 @@ Then output a DELIBERATION_CARD block:
 }
 \`\`\``;
 
-// Reused verbatim from query.js's extraction discipline.
+// Recover the complete leading objects of a JSON array cut off mid-stream (the
+// synthesis can hit max_tokens partway through TENSION_MAP). Trims to the last
+// closed `}`, re-closes the array, and drops only the partial trailing object.
+function salvageJsonArray(s) {
+  const start = s.indexOf("[");
+  const lastClose = s.lastIndexOf("}");
+  if (start < 0 || lastClose < 0 || lastClose < start) return null;
+  try { return JSON.parse(s.slice(start, lastClose + 1) + "]"); } catch { return null; }
+}
+
+// Reused verbatim from query.js's extraction discipline. Prefers a properly
+// closed ```TAG …``` fence; falls back to an UNTERMINATED fence (opening ``` with
+// no closer) so a truncated block yields a salvaged map instead of nothing.
 function extractBlock(text, tag) {
-  const m = text.match(new RegExp("```" + tag + "\\s*\\n([\\s\\S]*?)```"));
-  if (!m) return { value: null, stripped: text };
+  const closed = text.match(new RegExp("```" + tag + "\\s*\\n([\\s\\S]*?)```"));
+  const raw = closed
+    ? closed[1]
+    : (text.match(new RegExp("```" + tag + "\\s*\\n([\\s\\S]*)$")) || [])[1] || null;
+  if (raw == null) return { value: null, stripped: text };
   let value = null;
-  try { value = JSON.parse(m[1].trim()); } catch { value = null; }
-  const stripped = text.replace(new RegExp("```" + tag + "\\s*\\n[\\s\\S]*?```"), "").trim();
+  try { value = JSON.parse(raw.trim()); } catch { value = salvageJsonArray(raw); }
+  const stripped = text
+    .replace(new RegExp("```" + tag + "\\s*\\n[\\s\\S]*?```"), "")
+    .replace(new RegExp("```" + tag + "\\s*\\n[\\s\\S]*$"), "")
+    .trim();
   return { value, stripped };
 }
 
-export async function synthesizeCouncil(question, answers) {
+export async function synthesizeCouncil(question, answers, { maxTokens = 2048 } = {}) {
   const answered = answers.filter((a) => a.ok);
   if (answered.length < 2) {
     throw new Error(`Need at least 2 council answers to synthesize; got ${answered.length}`);
@@ -208,10 +226,11 @@ export async function synthesizeCouncil(question, answers) {
   const client = new Anthropic();
   const msg = await client.messages.create({
     model: "claude-sonnet-4-6",
-    // 2048, not 4096: claude-sonnet-4-6 runs ~45 tok/s; a 4096-token synthesis can
-    // exceed the 60s function ceiling once member calls are added. 2048 is ample
-    // for the agreement/disagreement map and keeps council under the wall.
-    max_tokens: 2048,
+    // Default 2048, not 4096: claude-sonnet-4-6 runs ~45 tok/s; a 4096-token
+    // synthesis can exceed the 60s function ceiling once member calls are added.
+    // 2048 is ample under the live wall. Offline callers with no wall (backfill /
+    // enrichment) pass a larger maxTokens so the TENSION_MAP block can't truncate.
+    max_tokens: maxTokens,
     temperature: 0.7,
     system: SYNTH_SYSTEM,
     messages: [{ role: "user", content: userMessage }],
