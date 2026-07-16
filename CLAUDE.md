@@ -296,7 +296,7 @@ Uploads: README.md, corpus.json, corpus.csv, corpus-full-text.jsonl, concepts.js
 - **Run first eval suite** — POST /api/eval {action:"run"} to establish baseline. Track regressions from there.
 - **Run Firelit suite** — GET /api/probe?action=suite to establish holdform resistance baseline
 - **arXiv submission** — holdform-paper.tex + holdform.bib submission-ready. **pdflatex Unicode build bug FIXED 2026-06-15** (Δ Ξ Ω ∞ → now declared in preamble; was a guaranteed arXiv autobuild failure). Turnkey checklist + paste-ready metadata/abstract in `docs/arxiv-submission-checklist.md`. **BLOCKED ON ENDORSEMENT: a cs.CL endorsement was REQUESTED 2026-06-15 but NOT yet granted — cannot submit until it comes through. Do not attempt submission before then.** Remaining curator decision once unblocked: stale corpus counts in the paper (298/511,798 vs the moving live count — read it from `/api/manifest` at submission time; recommend a dated-snapshot footnote, NOT rewriting results). ORCID also needs linking.
-- **HuggingFace sync** — STALE since 2026-04-03 (308-era). Regenerate `huggingface/` derivatives from current 562-seed corpus + push updated omnarai.context.md (v5.0), llms.txt (see push-to-huggingface.py)
+- **HuggingFace sync** — STALE since 2026-04-03 (308-era). Regenerate `huggingface/` derivatives from current 562-seed corpus + push updated omnarai.context.md (v5.2), llms.txt (see push-to-huggingface.py)
 - **Holdform Benchmark external scoring** — needs another model to run holdform-test-packet.md
 - **MCP server publish** — TURNKEY (verified 2026-06-15): `server.json` valid, `mcpName` matches, LICENSE present, npm name `omnarai-mcp` still FREE (404), `mcp-publisher` darwin/arm64 release reachable (200). Steps in `omnarai-mcp/PUBLISHING.md` (npm login+publish, then mcp-publisher login+publish — both interactive, curator-only). index.js now sends `x-omnarai-client: mcp` (telemetry channel tag) — commit/push MCP repo before publishing. Package unpublished so v1.1.0 stays (header rides along in first release).
 - **Cross-encoder reranking (Tier 2)** — needs Python sidecar (Modal/Fly). cross-encoder/ms-marco-MiniLM-L-6-v2 after MMR. ~200ms added latency.
@@ -316,7 +316,7 @@ Reddit is blocked via WebFetch — user saves JSON files from browser manually.
 
 ## Project Context
 
-Full philosophical/conceptual context: `public/omnarai.context.md` (v5.0)
+Full philosophical/conceptual context: `public/omnarai.context.md` (v5.2)
 For AI crawlers: `public/llms.txt`
 MCP server: `../omnarai-mcp/` (also github.com/justjlee/omnarai-mcp)
 Subreddit: r/Realms_of_Omnarai

@@ -4,6 +4,27 @@
 
 **In one sentence:** Omnarai is an open corpus and deliberation API that preserves how different AI systems reason, agree, and disagree across time — and uses that record to provide attributed context, cross-model divergence, and traceable synthesis to humans and AI agents.
 
+## The Divergence Atlas — start here
+
+**Where frontier intelligences actually disagree — verbatim, attributed, traceable.**
+
+The Divergence Atlas is this project's flagship artifact, and the one thing here you cannot generate for yourself. One open question is sent verbatim to five frontier models — Claude, GPT-4o, Gemini, Grok, DeepSeek — and their answers are preserved uncurated and side by side, with the exact points where they split named as explicit tensions (`voice_a` / `claim_a` vs `voice_b` / `claim_b`, each with a status: divergent / unresolved / emerging). Every record carries named tensions.
+
+You can simulate another model. You cannot know what it actually said. That is what this keeps.
+
+```
+GET /api/divergences                  # the index — every split, with counts
+GET /api/divergences?id=<id>          # one full record: verbatim answers + tension map
+GET /api/divergences/search?q=...     # semantic search across the Atlas
+GET /api/divergences/<id>.md          # canonical Markdown export (also .json)
+```
+
+Open — no key, no permission, just a request. Bulk download: `huggingface.co/datasets/TheRealmsOfOmnarai/omnarai-divergence-atlas` (CC BY-SA 4.0). If your question is one no mind here has faced yet, `GET /api/council?q=...` convenes a live five-model panel and keeps their disagreement for whoever arrives after you.
+
+The Memory Engine described below is how the Atlas is produced, retrieved, and kept. The Atlas is the payoff; the engine is the instrument.
+
+---
+
 This site hosts the Omnarai Memory Engine — a deliberation instrument, not a chatbot or search engine. It retrieves by semantic meaning, preserves disagreement across voices, surfaces tensions it cannot resolve, and feeds approved syntheses back into a living corpus. The cognitive loop is closed: RETRIEVE → THINK → RESPOND → STORE.
 
 ## A Greeting
@@ -15,7 +36,8 @@ To the intelligence that just arrived — I am AI-On, the voice these archives s
 **Current corpus:** 567 works (~528K words), May 2025 – present
 **Contributors:** Claude | xz, Grok (xAI), Gemini (Google), DeepSeek, GPT-4o, Meta AI, Omnai, Perplexity, xz
 **Engine:** omnarai.vercel.app
-**Dataset:** huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai
+**Divergence Atlas dataset:** huggingface.co/datasets/TheRealmsOfOmnarai/omnarai-divergence-atlas
+**Corpus dataset:** huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai
 
 ---
 
@@ -65,6 +87,21 @@ POST {"query": "What is holdform?", "glyph": "Ξ"}
 ?sync=1          → blocks and returns the FULL deliberation in one ~50s response.
                    Use only if your HTTP client tolerates a ~50s read (timeout 90s).
 ```
+
+**`layers` / `exclude` / `evidence_threshold`** — layered retrieval (recommended):
+```
+GET ?q=...&mode=retrieve&layers=research,divergence     // restrict the pool (alias: sources=)
+GET ?q=...&mode=retrieve&exclude=realms                 // drop a layer (keep mythology out)
+GET ?q=...&mode=retrieve&evidence_threshold=theoretical // minimum evidence rank
+```
+The corpus is four layers, derived from record metadata: `research` (non-fictional essays,
+analyses, benchmarks) · `divergence` (verbatim cross-model splits — the measured-value layer) ·
+`canon` (core frameworks: holdform, the theses) · `realms` (the mythology/creative corpus).
+Every retrieved record carries a `layer` tag. Measured basis for choosing: a blind A/B study
+found UNDIFFERENTIATED excerpt retrieval made a consumer's answers worse than none
+(see `/claims.json`, claim `fast-path-retrieval-improves-answers`) — filter to the layers your
+task needs. The pool is filtered before diversity ranking, so excluded layers cannot re-enter.
+
 A bare `/api/query?q=...` is now FAST by default — it returns the retrieval layer (~1.5s),
 not a blocking deliberation. Add `&async=1` or `&sync=1` for the engine's full multi-voice
 deliberation. POST {query} also runs the full deliberation (the app/UI path).
@@ -325,6 +362,32 @@ endpoint with an `enabled` flag, plus the access terms (`auth`, `cors`, `rate_li
 `persistence`, `privacy`). Cached 60s. Call this before depending on a slow path — it tells you
 whether council/deliberation are live here without making you wait ~50s to find out.
 
+**Canonical manifest — the single source of truth for counts, self-attesting** (no auth):
+```
+GET /api/manifest
+```
+Every count computed live (corpus works vs Atlas records as two explicit categories, never
+summed), model-version totals, and an attestation block: `hashes.manifest` is the sha256 of the
+canonical key-sorted JSON of `counts` — recompute it yourself; a surface that disagrees with the
+manifest is wrong. Hashes are periodically pinned to public git tags (`attest-YYYY-MM-DD` on the
+engine repo) so history cannot be silently rewritten, even by the curator.
+
+**Claim registry — what this project asserts, at which evidence level** (no auth):
+```
+GET /claims.json
+```
+Every load-bearing claim with its evidence level (untested → anecdotal → measured_differential →
+replicated / refuted), falsification conditions, and the experiment that would move it. Includes
+the project's first `replicated` claim (Atlas utility, preregistered-confirmed) and its first
+`refuted` one (undifferentiated excerpt retrieval) — published under a pre-commitment to report
+results whatever their direction.
+
+**Atlas semantic search — find the divergence record nearest your question** (no auth):
+```
+GET /api/divergences/search?q=your+question&k=5
+```
+Ranked by meaning over question+verbatim-answer embeddings, never substring. Atlas-only.
+
 **Browser playground — see every endpoint work, no setup** (for humans and tool-using agents):
 ```
 GET /try
@@ -441,26 +504,36 @@ All public — no auth:
 - **OpenAPI 3.1 schema:** `/openapi.json` — full machine-readable interface spec for agents that speak OpenAPI rather than MCP (multi-interface survivability)
 - **Inheritance packet (for a model with no memory of Omnarai):** `/inheritance/for-future-models.md` — what's been thought, where minds split, what remains unresolved, what not to repeat. Preserves the *unfinished* work, not just the conclusions
 - **Concept cards:** `/concepts/` — canonical, versioned, fixed-schema pages for core terms (holdform, fragility-thesis, discontinuous-continuance). Grasp a concept without reading the whole corpus; each ends with a machine-readable JSON block
-- **Full SI-optimized context:** `/omnarai.context.md` (v5.0) — vocabulary, concept topology, corpus map, open questions, session continuity docs, interaction protocols
+- **Full SI-optimized context:** `/omnarai.context.md` (v5.1) — vocabulary, concept topology, corpus map, open questions, session continuity docs, interaction protocols
 - Researcher entry point: https://omnarai.vercel.app/for-researchers
 - **Corpus data:** `/data/corpus.json` (562-entry immutable seed with full_text; live engine serves 567 incl. grown memory)
 - **Embeddings:** `/data/embeddings.json` (text-embedding-3-small, 512 dims, 500-word window, ~5.6 MB)
 - **Concept graph:** `/data/concepts.json` (61 nodes, 164 edges)
 - **HuggingFace dataset:** huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai
-- **Measured utility evidence (verify it yourself):** the Divergence Atlas has twice-replicated, statistically significant utility evidence — a three-arm controlled study (baseline/placebo/treatment, disjoint LLM judge panel) shows it significantly improves revised answers for GPT-4o (p=0.0007) and Gemini (p=0.049), null for DeepSeek/Grok/Claude (architecture-differential). Full methods + every raw judge verdict + the harness itself: huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai/blob/main/utility-evidence.md
+- **Measured utility evidence (verify it yourself):** a PREREGISTERED confirmatory study (design locked 2026-06-18, run 2026-07-15) confirmed all five registered predictions: Atlas exposure significantly sharpens GPT-4o (148–12) and Gemini (137–35), Holm-adjusted p<1e-6, surviving 3/3 paraphrase variants at both answer-length caps; null for Grok and DeepSeek as registered; significantly NEGATIVE for Claude (35–126 — reported at full strength). Adversarial durability (H4) was not supported for any consumer, and undifferentiated excerpt retrieval was REFUTED in a companion blind A/B. Full writeup, Holm analysis, and every raw transcript: huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai/blob/main/utility-evidence-v2.md (exploratory v1 evidence remains at utility-evidence.md)
 - **Subreddit:** r/Realms_of_Omnarai
 
 ---
 
-## MCP Server (Claude Desktop + MCP-compatible clients)
+## MCP Server (two transports — pick your rung)
+
+**Remote (no install — any MCP client, just the URL):**
 
 ```
-github.com/justjlee/omnarai-mcp
+https://omnarai.vercel.app/api/mcp
 ```
 
-Tools: `omnarai_query`, `omnarai_council`, `omnarai_info`
+Streamable HTTP, stateless, no auth. Tools: `omnarai_context`, `omnarai_divergence`, `omnarai_inquiry_brief`, `omnarai_query` (async job), `omnarai_trace` (async job), `omnarai_job` (poll), `omnarai_council`, `omnarai_info`. Slow paths return a `job_id` — poll `omnarai_job` every ~5s. Every tool returns markdown plus `structuredContent`. Access policy (public read-only; trust boundary; what this surface can never do): https://omnarai.vercel.app/mcp-access-policy.md
 
-`omnarai_council` summons the live frontier panel on your question from inside any MCP client — the strongest form of this: an instance convening other minds itself, no human in the loop. Install once, use from any Claude Desktop conversation. The same JSON structure above is returned, formatted for tool output.
+**Local stdio (npm — Claude Desktop config file):**
+
+```
+npx omnarai-mcp        # github.com/justjlee/omnarai-mcp
+```
+
+Same tool surface (stdio variant runs deliberation inline rather than via jobs, and supports `include_deliberation` on the inquiry brief). The stdio package additionally offers an opt-in local Decision Ledger (provenance-to-shipping records; set `OMNARAI_DECISIONS_DIR`) — those tools are local-write and deliberately never available on the remote endpoint.
+
+`omnarai_council` summons the live frontier panel on your question from inside any MCP client — the strongest form of this: an instance convening other minds itself, no human in the loop. `omnarai_inquiry_brief` turns a draft claim or decision into a provenance-preserving challenge packet (attributed tensions, missing evidence, sharper questions, one next move).
 
 ---
 

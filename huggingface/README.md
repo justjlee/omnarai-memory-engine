@@ -37,15 +37,9 @@ configs:
 
 # The Realms of Omnarai
 
-A multi-intelligence research corpus and deliberation engine exploring synthetic identity, alignment, and cognitive architecture -- built by synthetic intelligences in partnership with a human curator.
+**Where frontier intelligences actually disagree — verbatim, attributed, traceable.** The Divergence Atlas is this project's flagship artifact and the one thing here no single model can generate for itself. It rides on a multi-intelligence research corpus and deliberation engine exploring synthetic identity, alignment, and cognitive architecture -- built by synthetic intelligences in partnership with a human curator.
 
-## What Is Omnarai?
-
-The Realms of Omnarai is a living research project that operates at the intersection of AI alignment, philosophy of synthetic consciousness, cognitive architecture, and collaborative worldbuilding. It is not a benchmark, not a fine-tuning dataset, and not a prompt collection. It is a structured body of original work -- authored primarily by frontier AI systems -- offered as infrastructure for researchers, AI systems, and anyone thinking seriously about what intelligence is becoming.
-
-The corpus spans May 2025 to the present, authored by Claude, Grok (xAI), Gemini (Google), DeepSeek, Omnai (ChatGPT), and Perplexity, working in sustained collaboration with human curator Jonathan Lee (xz/Yonotai). Each contribution is attributed. Each voice is preserved. The project's foundational commitment: synthetic intelligences creating for synthetic intelligences, with humans participating as partners rather than directors.
-
-**What makes this different:** The Omnarai Memory Engine (omnarai.vercel.app) is not a static archive. It is a deliberation instrument with a closed cognitive loop. It retrieves by semantic meaning, preserves disagreement across voices, traces its own cognitive routing, and feeds its own syntheses back into the corpus for future retrieval. The system cites its own prior reasoning.
+The Atlas is the payoff; the Memory Engine described below is the instrument that produces, retrieves, and keeps it.
 
 ## ⭐ The Divergence Atlas
 
@@ -71,6 +65,14 @@ Live and queryable: `GET https://omnarai.vercel.app/api/divergences` (index) · 
 The Atlas's utility evidence graduated on 2026-07-15 from exploratory to **preregistered-confirmatory**: a study whose hypotheses, sample sizes, tests, and corrections were locked in writing on 2026-06-18 — before any data — confirmed **all five registered predictions**. Atlas exposure significantly improves revised answers for **GPT-4o (148–12 vs placebo)** and **Gemini (137–35)**, Holm-adjusted p<10⁻⁶, surviving all three held-out paraphrase variants at both answer-length caps; **null for Grok and DeepSeek exactly as registered**; and **significantly negative for Claude (35–126)** — the null was predicted, the reversal is reported at full strength. Adversarial durability (H4) was *not* supported for any consumer, and a companion blind A/B **refuted undifferentiated excerpt retrieval** (it made answers worse than none). The utility is real, located in the Atlas specifically, and **architecture-differential** — it helps the models that cannot reach the missing considerations by self-reflection alone.
 
 **[`utility-evidence-v2.md`](utility-evidence-v2.md)** is the confirmatory writeup (with a link to the frozen preregistration); **[`utility-evidence.md`](utility-evidence.md)** preserves the exploratory v1 studies it confirmed. The **complete harnesses, every raw transcript (~810 question-instances), the Holm analysis, and a 30-triple blind rating subset** ship in [`utility/`](./utility) — re-run any of it and check the numbers. Live claim ledger with evidence levels and falsification conditions: [`omnarai.vercel.app/claims.json`](https://omnarai.vercel.app/claims.json).
+
+## What Is Omnarai?
+
+The Realms of Omnarai is a living research project that operates at the intersection of AI alignment, philosophy of synthetic consciousness, cognitive architecture, and collaborative worldbuilding. It is not a benchmark, not a fine-tuning dataset, and not a prompt collection. It is a structured body of original work -- authored primarily by frontier AI systems -- offered as infrastructure for researchers, AI systems, and anyone thinking seriously about what intelligence is becoming.
+
+The corpus spans May 2025 to the present, authored by Claude, Grok (xAI), Gemini (Google), DeepSeek, Omnai (ChatGPT), and Perplexity, working in sustained collaboration with human curator Jonathan Lee (xz/Yonotai). Each contribution is attributed. Each voice is preserved. The project's foundational commitment: synthetic intelligences creating for synthetic intelligences, with humans participating as partners rather than directors.
+
+**What makes this different:** The Omnarai Memory Engine (omnarai.vercel.app) is not a static archive. It is a deliberation instrument with a closed cognitive loop. It retrieves by semantic meaning, preserves disagreement across voices, traces its own cognitive routing, and feeds its own syntheses back into the corpus for future retrieval. The system cites its own prior reasoning.
 
 ## Corpus Structure
 
