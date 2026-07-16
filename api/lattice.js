@@ -3,6 +3,7 @@ import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { waitUntil } from "@vercel/functions";
 import { recordAccess } from "./_telemetry.js";
+import { handleMcp } from "./_mcp.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -20,6 +21,13 @@ try {
 }
 
 export default function handler(req, res) {
+  // Remote MCP endpoint (rewrite /api/mcp → ?_view=mcp — 12-function cap).
+  // Fully delegated to _mcp.js; telemetry logs the channel as "mcp".
+  if (req.query?._view === "mcp") {
+    waitUntil(recordAccess(req, "mcp"));
+    return handleMcp(req, res);
+  }
+
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");

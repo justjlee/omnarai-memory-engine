@@ -142,10 +142,10 @@ Uploads: README.md, corpus.json, corpus.csv, corpus-full-text.jsonl, concepts.js
 
 ## MCP Server
 
-**Repo:** github.com/justjlee/omnarai-mcp
-**Local:** `../omnarai-mcp/`
-**Tools:** omnarai_query, omnarai_info
-**Install:** Clone → `npm install` → add to claude_desktop_config.json → restart Claude Desktop
+**Remote (no install):** `https://omnarai.vercel.app/api/mcp` — Streamable HTTP, stateless (see `/api/mcp` row above)
+**Repo (stdio):** github.com/justjlee/omnarai-mcp — npm `omnarai-mcp` (v1.5.0), `npx omnarai-mcp`
+**Local:** `../omnarai-mcp/` (has `npm test` — 13 tests, keep green)
+**Tools (both transports):** omnarai_query, omnarai_context, omnarai_divergence, omnarai_inquiry_brief, omnarai_trace, omnarai_council, omnarai_info (+ omnarai_job on remote)
 **Also ships:** `openai-tools.json` — OpenAI function-calling format schemas for any framework
 
 ---
@@ -189,6 +189,7 @@ Uploads: README.md, corpus.json, corpus.csv, corpus-full-text.jsonl, concepts.js
 | `/api/divergences/<id>.md` / `.json` | GET | Canonical per-record exports; single-record reads also carry `cite` (BibTeX/APA/pull-quote) + `deltas[]` (OMN-DD longitudinal re-runs, own blob namespace) |
 | `/claims.json` | GET | **Claim registry** (static): every load-bearing claim + evidence level (untested→anecdotal→measured_differential→replicated/refuted) + falsification conditions. First replicated + refuted entries landed 2026-07-15 |
 | `/api/query?...&layers=research,divergence` | GET | **Layered retrieval (B2/B7, 2026-07-15):** `layers=` (alias `sources=`), `exclude=`, `evidence_threshold=` filter the candidate pool BEFORE MMR. Layers derived from metadata: research / divergence / canon / realms; records tagged `layer`. Defaults unchanged. Evidence-backed: trace-delta refuted undifferentiated excerpt retrieval |
+| `/api/mcp` | POST | **Remote MCP endpoint** (Streamable HTTP, STATELESS; rewrite → `lattice.js ?_view=mcp`, no new function — 12-fn cap; logic in `api/_mcp.js`, inquiry composition in `api/_inquiry.js` — verbatim copy of `omnarai-mcp/inquiry.js`, keep in sync). Any MCP client connects with just this URL — no npm/Node install. 8 tools: context / divergence / inquiry_brief / query (async submit) / trace (async submit) / job (poll) / council (sync ~35s) / info. JSON-RPC: initialize (version negotiation), ping, tools/list, tools/call; notifications → 202; GET → 405 (no SSE); batch rejected. Tools self-fetch prod endpoints tagged `x-omnarai-client: mcp-remote`; incoming `x-omnarai-self` propagates to inner fetches (no phantom telemetry strangers). Local harness pattern: drive `handleMcp` with mock req/res |
 | `/api/health` | GET | Machine-readable liveness + capability probe (rewrite → `info.js ?_view=health`, no new function — 12-fn cap). `{status, version (ENGINE_VERSION literal in info.js), corpus counts, capabilities{retrieval/deliberation/live_embeddings/council/persistence/contributions_open} derived from env-key presence, endpoints{} with per-path enabled flags, access{auth/cors/rate_limit/persistence/privacy}}`. Cached s-maxage=60. The "safe first call" + status-page data source. Added 2026-06-18 from the visiting-model feedback batch |
 | `/try` | GET | Browser API **playground** (static `public/try.html`, rewrite `/try`→`/try.html`). Calls every public endpoint live, shows raw JSON beside a rendered reading; surfaces the Ξ glyph (reviewers said it was buried); async submit+poll for query/trace done client-side. The dev "lobby" / on-ramp. Uses RELATIVE `/api/*` URLs so it only fully works on the deployed origin (local vite has no functions). Added 2026-06-18 |
 | `/api/lineage?concept=<id\|alias\|word>` | GET | Concept lineage view (rewrite → `concepts.js ?_view=lineage`, no new function — 12-fn cap). Assembles from real data: source spine (entries tagged with the concept, chronological + contributors), graph neighbors ranked by corpus co-occurrence, contributor breakdown, and open/repaired tensions in the region (matched by shared source entries; keyword fallback). `related` is undirected adjacency — NOT directional parent/child. `&tensions=0` = static-only/faster. Resolver: exact id → alias map (holdform→holdform-identity, glyphs→cognitive-infrastructure, …) → label/id substring → self-correcting 404 listing all node ids. Cached s-maxage=120 |

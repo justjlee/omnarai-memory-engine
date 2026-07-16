@@ -49,6 +49,10 @@
       "destination": "/api/concepts?_view=lineage"
     },
     {
+      "source": "/api/mcp",
+      "destination": "/api/lattice?_view=mcp"
+    },
+    {
       "source": "/.well-known/llms.txt",
       "destination": "/llms.txt"
     },
@@ -108,7 +112,7 @@
         },
         {
           "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type"
+          "value": "Content-Type, Authorization, Accept, Mcp-Session-Id, MCP-Protocol-Version"
         }
       ]
     },
