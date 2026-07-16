@@ -7,6 +7,7 @@
   <url><loc>https://omnarai.vercel.app/omnarai-cold-start.md</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://omnarai.vercel.app/openapi.json</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://omnarai.vercel.app/limitations.md</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://omnarai.vercel.app/mcp-access-policy.md</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://omnarai.vercel.app/inheritance/for-future-models.md</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://omnarai.vercel.app/concepts/holdform.md</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://omnarai.vercel.app/concepts/fragility-thesis.md</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>

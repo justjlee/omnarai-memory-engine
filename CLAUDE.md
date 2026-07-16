@@ -142,10 +142,12 @@ Uploads: README.md, corpus.json, corpus.csv, corpus-full-text.jsonl, concepts.js
 
 ## MCP Server
 
-**Remote (no install):** `https://omnarai.vercel.app/api/mcp` — Streamable HTTP, stateless (see `/api/mcp` row above)
-**Repo (stdio):** github.com/justjlee/omnarai-mcp — npm `omnarai-mcp` (v1.5.0), `npx omnarai-mcp`
-**Local:** `../omnarai-mcp/` (has `npm test` — 13 tests, keep green)
+**Remote (no install):** `https://omnarai.vercel.app/api/mcp` — Streamable HTTP, stateless (see `/api/mcp` row above). **Access policy:** `public/mcp-access-policy.md` (served at `/mcp-access-policy.md`) — public read-only stance, trust boundary, what the remote surface can never do (OMN-P-044)
+**Repo (stdio):** github.com/justjlee/omnarai-mcp — npm `omnarai-mcp` (v1.6.0), `npx omnarai-mcp`
+**Local:** `../omnarai-mcp/` (has `npm test` — 43 tests, keep green; `scripts/check-tool-parity.js` gates releases)
 **Tools (both transports):** omnarai_query, omnarai_context, omnarai_divergence, omnarai_inquiry_brief, omnarai_trace, omnarai_council, omnarai_info (+ omnarai_job on remote)
+**Decision Ledger (stdio ONLY, opt-in via `OMNARAI_DECISIONS_DIR`):** omnarai_create_decision_record / omnarai_get_decision_lineage / omnarai_prepare_claude_code_handoff — provenance-to-shipping records in `omnarai-mcp/proposals/` (OMN-P-043). NEVER on the remote surface — `scripts/check-mcp-surface.js` enforces the read-only allowlist + `_inquiry.js` copy sync; run it before deploying MCP-surface changes
+**Parity policy (tool defs live in 3 places):** any tool change lands in `omnarai-mcp/lib/tool-definitions.js` FIRST → `openai-tools.json` (that repo's parity check) → `api/_mcp.js` here (manual; verified by check-mcp-surface.js)
 **Also ships:** `openai-tools.json` — OpenAI function-calling format schemas for any framework
 
 ---

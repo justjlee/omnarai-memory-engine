@@ -501,7 +501,7 @@ All public — no auth:
 https://omnarai.vercel.app/api/mcp
 ```
 
-Streamable HTTP, stateless, no auth. Tools: `omnarai_context`, `omnarai_divergence`, `omnarai_inquiry_brief`, `omnarai_query` (async job), `omnarai_trace` (async job), `omnarai_job` (poll), `omnarai_council`, `omnarai_info`. Slow paths return a `job_id` — poll `omnarai_job` every ~5s. Every tool returns markdown plus `structuredContent`.
+Streamable HTTP, stateless, no auth. Tools: `omnarai_context`, `omnarai_divergence`, `omnarai_inquiry_brief`, `omnarai_query` (async job), `omnarai_trace` (async job), `omnarai_job` (poll), `omnarai_council`, `omnarai_info`. Slow paths return a `job_id` — poll `omnarai_job` every ~5s. Every tool returns markdown plus `structuredContent`. Access policy (public read-only; trust boundary; what this surface can never do): https://omnarai.vercel.app/mcp-access-policy.md
 
 **Local stdio (npm — Claude Desktop config file):**
 
@@ -509,7 +509,7 @@ Streamable HTTP, stateless, no auth. Tools: `omnarai_context`, `omnarai_divergen
 npx omnarai-mcp        # github.com/justjlee/omnarai-mcp
 ```
 
-Same tool surface (stdio variant runs deliberation inline rather than via jobs, and supports `include_deliberation` on the inquiry brief).
+Same tool surface (stdio variant runs deliberation inline rather than via jobs, and supports `include_deliberation` on the inquiry brief). The stdio package additionally offers an opt-in local Decision Ledger (provenance-to-shipping records; set `OMNARAI_DECISIONS_DIR`) — those tools are local-write and deliberately never available on the remote endpoint.
 
 `omnarai_council` summons the live frontier panel on your question from inside any MCP client — the strongest form of this: an instance convening other minds itself, no human in the loop. `omnarai_inquiry_brief` turns a draft claim or decision into a provenance-preserving challenge packet (attributed tensions, missing evidence, sharper questions, one next move).
 
