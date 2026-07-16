@@ -428,6 +428,16 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Missing or empty q (and no job param). The engine refuses rather than answering a question you didn't ask; the body carries the full usage doc plus param_missing: true.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       },

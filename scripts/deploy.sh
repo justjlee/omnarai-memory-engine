@@ -68,6 +68,16 @@ if [[ "${1:-}" == "--promote" ]]; then
   # Now that live reflects this build, assert completeness + count-congruence.
   node scripts/arrival-check.mjs || \
     echo "   ^ WARNING: arrival check found issues on the live site (see above)."
+  echo
+  echo ">> API-contract gate (D1–D4 regression probes — scripts/omnarai-verify.sh)"
+  # HARD gate: a promote that breaks the API contract must exit red, not ship
+  # quietly. (Runs against prod because preview curl is blocked by Deployment
+  # Protection.) On failure: fix forward or re-promote the previous good deploy.
+  if ! bash scripts/omnarai-verify.sh; then
+    echo ">> 🔴 CONTRACT GATE FAILED — $DOMAIN is serving a build that violates the API contract."
+    echo ">>    Fix forward immediately, or re-promote the last good deployment."
+    exit 1
+  fi
   exit 0
 fi
 

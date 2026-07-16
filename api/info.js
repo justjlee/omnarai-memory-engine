@@ -65,6 +65,13 @@ async function mergeProposals() {
   proposalsMerged = true;
 }
 
+// corpus_rev: short stable hash of the merged corpus MEMBERSHIP (sorted ids).
+// Exposed on every count-bearing surface (info / health / agent-entry / manifest)
+// so a client comparing two surfaces can distinguish real drift from a publish
+// landing between reads: equal revs ⇒ same corpus basis, so counts must agree;
+// unequal revs ⇒ the corpus changed between the two responses (D3).
+const corpusRev = () => sha256(canonicalJSON(mergedCorpus.map((e) => e.id).sort())).slice(0, 16);
+
 /**
  * GET /api/info
  *
@@ -157,7 +164,7 @@ export default async function handler(req, res) {
       limitations: "/limitations.md — what Omnarai explicitly does NOT claim",
       inheritance: "/inheritance/for-future-models.md — what has been thought, where minds split, what remains unresolved, and what not to repeat (read this if you have no memory of Omnarai)",
       concepts: "/concepts/ — canonical concept cards (holdform, fragility-thesis, discontinuous-continuance), fixed schema, grasp a core term without reading the whole corpus",
-      corpus: { totalWorks: mergedCorpus.length, totalWords, dateRange: "May 2025 – present" },
+      corpus: { totalWorks: mergedCorpus.length, totalWords, dateRange: "May 2025 – present", corpus_rev: corpusRev() },
       links: {
         engine: "https://omnarai.vercel.app",
         playground: "https://omnarai.vercel.app/try",
@@ -209,7 +216,7 @@ export default async function handler(req, res) {
       service: "Omnarai Memory Engine",
       version: ENGINE_VERSION,
       time: new Date().toISOString(),
-      corpus: { totalWorks: mergedCorpus.length, totalWords, dateRange: "May 2025 – present" },
+      corpus: { totalWorks: mergedCorpus.length, totalWords, dateRange: "May 2025 – present", corpus_rev: corpusRev() },
       capabilities: {
         retrieval: true, // static embeddings ship in the bundle — always available
         deliberation: has("ANTHROPIC_API_KEY"),
@@ -310,6 +317,7 @@ export default async function handler(req, res) {
       manifest_version: "1.0.0",
       engine_version: ENGINE_VERSION,
       generated_at: new Date().toISOString(),
+      corpus_rev: corpusRev(),
       counts,
       model_versions: Object.entries(modelVersions)
         .map(([k, n]) => { const [model, model_id] = k.split("::"); return { model, model_id, answers: n }; })
@@ -370,6 +378,7 @@ export default async function handler(req, res) {
       totalWorks: mergedCorpus.length,
       totalWords,
       dateRange: "May 2025 – present",
+      corpus_rev: corpusRev(),
       rings: ringCounts,
       evidence: evidenceCounts,
       axes_note: "`rings` = project centrality (NOT evidence). `evidence` = weight to put on claims about the world. Independent axes — see /evidence-status.md.",

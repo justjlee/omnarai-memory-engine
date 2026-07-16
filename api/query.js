@@ -1148,7 +1148,17 @@ export default async function handler(req, res) {
     const formatParam = explicitFormat
       || (q.trim() && !wantsSyncGet && !wantsAsyncGet ? "context" : "");
     if (!q.trim()) {
-      return res.status(200).json({
+      // 400, not 200: a query endpoint with no query is a caller error. Answering
+      // anyway (or silently substituting an example) hands an agent plausible
+      // substrate for a question it never asked — the worst failure mode. The
+      // body keeps the full usage doc so the refusal still teaches the right call.
+      return res.status(400).json({
+        error: "Missing required parameter: q",
+        code: "MISSING_QUERY",
+        param_missing: true,
+        agent_action: "Reissue as GET /api/query?q=your+question (add &mode=retrieve for ~1.5s). For orientation first, call GET /api/agent-entry.",
+        retryable: true,
+        suggested_next_call: { method: "GET", url: "/api/query?q=your+question&mode=retrieve" },
         info: "Omnarai Memory Engine — deliberation API",
         usage: "GET /api/query?q=your+question+here",
         example: "/api/query?q=What+is+holdform%3F",
