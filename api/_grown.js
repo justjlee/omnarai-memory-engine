@@ -22,6 +22,29 @@ function emptyGrown() {
   return { version: 1, updatedAt: null, entries: [], vectors: {} };
 }
 
+// ── Ring normalization ────────────────────────────────────────────────────────
+// The seed corpus uses lowercase ring TOKENS (core/curated/open/media); display
+// labels ("Open Exploration") belong to the frontend's theme map. Early council
+// records were written with the display label, so clients grouping by ring saw
+// two buckets for the same ring (D5, DELTA.md 2026-07-16). Normalize at this
+// choke point — every reader goes through loadGrownMemory, and every Blob
+// writer is load-modify-write, so stored labels self-heal to tokens on the
+// next write without a hot migration.
+const RING_TOKENS = new Set(["core", "curated", "open", "media"]);
+const RING_LABELS = {
+  "core canon": "core",
+  "curated expansions": "curated",
+  "open exploration": "open",
+};
+
+export function normalizeRing(ring) {
+  const lower = String(ring || "").trim().toLowerCase();
+  if (RING_TOKENS.has(lower)) return lower;
+  // Grown records are frontier material by definition — unknown/missing ring
+  // degrades to "open" (same default the count surfaces already use).
+  return RING_LABELS[lower] || "open";
+}
+
 // Load the consolidated grown-memory blob. Never throws — returns an empty
 // structure if the blob is absent or the store is unreachable.
 export async function loadGrownMemory() {
@@ -36,10 +59,12 @@ export async function loadGrownMemory() {
     const res = await fetch(`${blobs[0].url}?ts=${Date.now()}`, { cache: "no-store" });
     if (!res.ok) return emptyGrown();
     const data = await res.json();
+    const entries = Array.isArray(data.entries) ? data.entries : [];
+    for (const e of entries) e.ring = normalizeRing(e.ring);
     return {
       version: data.version || 1,
       updatedAt: data.updatedAt || null,
-      entries: Array.isArray(data.entries) ? data.entries : [],
+      entries,
       vectors: data.vectors && typeof data.vectors === "object" ? data.vectors : {},
     };
   } catch {
@@ -56,7 +81,7 @@ function normalizeEntry(entry) {
     id: entry.id,
     num: entry.num ?? null,
     title: entry.title,
-    ring: entry.ring,
+    ring: normalizeRing(entry.ring),
     type: entry.type,
     contributors: entry.contributors || [],
     lineage: entry.lineage || [],

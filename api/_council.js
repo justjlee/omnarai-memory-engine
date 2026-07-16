@@ -259,7 +259,9 @@ export function buildDivergenceRecord(question, answers, synthesis) {
   return {
     id,
     title,
-    ring: "Open Exploration",
+    // Normalized ring TOKEN (matches the seed corpus), not the display label —
+    // "Open Exploration" is the frontend's rendering of "open" (see api/_grown.js).
+    ring: "open",
     type: "divergence",
     contributors,
     lineage: [],
@@ -298,7 +300,7 @@ function buildChunkTexts(record) {
   const title = record.title || "";
   const tail = [
     `Type: ${record.type || "divergence"}`,
-    `Ring: ${record.ring || "Open Exploration"}`,
+    `Ring: ${record.ring || "open"}`,
     `Contributors: ${(record.contributors || []).join(", ")}`,
   ].join("\n");
   if (words.length <= CHUNK_WORDS) {

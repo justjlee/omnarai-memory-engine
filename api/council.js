@@ -713,7 +713,7 @@ async function serveDivergences(req, res) {
           res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=600");
           const dcite = delta.cite || buildCite({ id: delta.id, title: delta.question, date: delta.date, contributors: (delta.answers || []).map((a) => a.model), divergence: { question: delta.question, answers: delta.answers } });
           return res.status(200).send(recordToMarkdown(
-            { id: delta.id, title: `Delta: ${delta.question}`, ring: "Open Exploration", date: delta.date, contributors: (delta.answers || []).map((a) => a.model), divergence: { question: delta.question, answers: delta.answers, tensions: delta.newTensions || [] } },
+            { id: delta.id, title: `Delta: ${delta.question}`, ring: "open", date: delta.date, contributors: (delta.answers || []).map((a) => a.model), divergence: { question: delta.question, answers: delta.answers, tensions: delta.newTensions || [] } },
             dcite, []
           ));
         }

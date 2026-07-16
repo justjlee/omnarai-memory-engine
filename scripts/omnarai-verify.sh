@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# omnarai-verify.sh — API-contract regression probes (fresh-audit defects D1–D4).
+# omnarai-verify.sh — API-contract regression probes (fresh-audit defects D1–D5).
 # Runs as the deploy gate from deploy.sh --promote; exit 0 = all contracts hold.
 #
 # Origin: 2026-07-16 fresh audit (OMNARAI-FRESH-AUDIT-HANDOFF.md). On first true
@@ -98,6 +98,22 @@ NULLS=$(echo "$R" | jq '[.records[]?.relevanceScore] | map(select(.==null)) | le
 TOTAL=$(echo "$R" | jq '.records | length' 2>/dev/null || echo "-")
 if [ "$NULLS" = "0" ] && [ "$TOTAL" != "0" ]; then ok "relevanceScore populated on $TOTAL records"
 else bad "relevanceScore null on $NULLS/$TOTAL records"; fi
+
+echo "== T6 (D5): ring values must be normalized tokens =="
+# Grown divergence records once carried the display label "Open Exploration"
+# instead of the seed's lowercase token ("open"), splitting one ring into two
+# client-visible buckets. This query is the original repro — it retrieves grown
+# divergence records alongside seed records.
+R6=$(curl -sSL "${SELF[@]}" "$BASE/api/query?q=discontinuous+continuance&mode=retrieve")
+T6TOTAL=$(echo "$R6" | jq '.records | length' 2>/dev/null || echo "0")
+BADRINGS=$(echo "$R6" | jq -r '[.records[]? | (.ring // "MISSING") | select(IN("core","curated","open","media") | not)] | unique | join(", ")' 2>/dev/null || echo "jq-error")
+if [ "$T6TOTAL" = "0" ] || [ -z "$T6TOTAL" ]; then
+  bad "ring probe retrieved no records — cannot assert normalization"
+elif [ -z "$BADRINGS" ]; then
+  ok "all $T6TOTAL retrieved records carry normalized ring tokens"
+else
+  bad "non-normalized ring values in retrieval: $BADRINGS (must be core/curated/open/media)"
+fi
 
 echo ""
 echo "==================================="
