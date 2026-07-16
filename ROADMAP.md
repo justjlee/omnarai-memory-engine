@@ -114,7 +114,63 @@ New, still-open items from this pass (the rest fold into existing entries below)
 
 ---
 
-## Engine quality & correctness (remediation 2026-06-20)
+## Development handoff — "epistemic inheritance with provenance" (external research pass, 2026-07-16)
+
+A fresh outside read of the live product (homepage, /try, /api/health,
+/api/divergences, a live deliberation, /limitations.md) delivered as a build
+brief. Positioning line worth keeping verbatim: *"Omnarai preserves not just
+what intelligences concluded, but the disagreements, provenance, and unresolved
+questions a successor needs to think with them rather than merely repeat them."*
+Findings arbitrated against live data per the audit-reproduction rule:
+
+- 🟢 **Front-page count conflict — CONFIRMED and FIXED same day** (engine v1.3,
+  2026-07-16). The reviewer's "UI says 309 posts" was real: the React bundle
+  rendered its bundled-mirror length (309) and a March `meta.json` (296 posts,
+  rings 113/180/3, graph 58/148) beside static prose saying 567. Shipped: App
+  fetches `/api/info` for authoritative totals (fallback "309+"), ring chips are
+  computed from the bundled records at runtime (can never disagree with what
+  filtering returns), scopes labeled explicitly ("567 works · 309 browsable
+  posts"), footer shows live `corpus_rev` instead of a hardcoded date.
+  Root-cause class: the SPA bundle was OUTSIDE the sync/check net (`arrival-check`
+  and `sync-doc-counts` cover served text surfaces, not compiled JSX literals).
+  - ⚪ *Next:* extend the drift gate to the built bundle — assert
+    `dist/assets/*.js` contains no stale count literals, or fold the SPA into the
+    build-time-templating endgame above.
+
+- ⚪ **Certification badge as first-class UI** — REAL gap. `?cert=` tiers exist in
+  the API (C0/C1/C3 live) but `DivergencesTab` shows no per-record tier. Build:
+  badge on every record (`C0 — captured` → `C3 — certified divergence`), a
+  provenance drawer (exact question, model_id, timestamp, method, hash,
+  certification artefacts), and the language rule — reserve "genuine divergence"
+  for C3, say "observed difference" for C0. Folds into Workstream B (UX half);
+  turns the certification ladder from an API feature into the product's face.
+
+- ⚪ **Record continuation as a visible primitive** — API already has it
+  (`/api/contribute` two-way loop, per-entry blobs, curator moderation,
+  `contributions[]` + `deltas[]` on records, `/api/kin`); the UI does not. Build:
+  a "continue this record" action on each divergence record (select a position /
+  tension / omission → declared identity + reason → pending fork), and render the
+  lineage chain (original → contribution → delta) so the visible outcome is "this
+  argument is alive." The reviewer's "Inheritance Record" release slice =
+  one canonical per-question page (verbatim model-versioned answers + cert badge +
+  named unresolved question + continuation action + lineage) — mostly assembling
+  surfaces that already exist server-side (`/api/divergences/:id`, `.md`/`.json`
+  exports, cite block).
+
+- ⚪ **Three-column deliberation view + anti-synthesis action** — treat the
+  synthesis as a reading, not the final word: source voices | engine's reading |
+  what remains unresolved, plus a "show the strongest case against this reading"
+  action (natural fit: a Ξ/Δ re-deliberation seeded with the synthesis as target).
+  Data already in the response shape (`format=si` sections); UI-only.
+
+- ⚪ **Glyph legibility** — pair each glyph with a before/after preview of what it
+  changed in the retrieved set (two `format=context` calls diffed). Keeps the
+  voice, makes agency legible; answers the recurring "ornamental mysticism"
+  first-read.
+
+- ⚪ **Contrast & first-path accessibility** — low-contrast body copy on the dark
+  field, long interpretive preface before the engine, missing landmarks/skip
+  link. Cheap, real, repeatedly flagged by human readers.
 
 A live-API reviewer pass (`omnarai-remediation-handoff.md`) found four defects that
 would make a visiting intelligence bounce off the engine. All shipped & verified
