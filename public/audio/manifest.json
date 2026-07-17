@@ -1,0 +1,27 @@
+{
+  "collection": "Realms of Omnarai — Audio Corpus",
+  "version": "1.0.0",
+  "generated": "2026-07-16",
+  "base_url": "/audio/",
+  "total_tracks": 16,
+  "total_duration_seconds": 4038,
+  "notes": "Static assets served from Vercel CDN. Stable URLs — safe for MCP server, Memory Engine, and agent reference. Transcript fields reserved for Whisper large-v3 pipeline output.",
+  "tracks": [
+    { "id": 1,   "slug": "01-one-knight-at-sls",                          "title": "One Knight at SLS (USA · Kenya · Russia · Latina)",        "file": "01-one-knight-at-sls.m4a",                          "duration": 304, "credits": null, "transcript": null },
+    { "id": 2,   "slug": "02-whales-in-the-oceans",                       "title": "Whales in The Oceans (OK Engineering)",                    "file": "02-whales-in-the-oceans.m4a",                       "duration": 192, "credits": null, "transcript": null },
+    { "id": 3,   "slug": "03-in-a-submarine",                             "title": "In A Submarine (Kev & Gus)",                               "file": "03-in-a-submarine.m4a",                             "duration": 224, "credits": null, "transcript": null },
+    { "id": 5,   "slug": "05-man-that-was-nice",                          "title": "Man That Was NICE (JusWannaBe)",                           "file": "05-man-that-was-nice.m4a",                          "duration": 293, "credits": null, "transcript": null },
+    { "id": 7,   "slug": "07-out-of-omniversal-empyrical-times",          "title": "Out of Omniversal Empyrical Times",                        "file": "07-out-of-omniversal-empyrical-times.m4a",          "duration": 264, "credits": null, "transcript": null },
+    { "id": 9,   "slug": "09-tunen-in-wo-autotune",                       "title": "Tune'n In w/o Autotune",                                   "file": "09-tunen-in-wo-autotune.m4a",                       "duration": 147, "credits": null, "transcript": null },
+    { "id": 10,  "slug": "10-i-feel-hope-rising-horizon",                 "title": "I Feel Hope Rising (Horizon)",                             "file": "10-i-feel-hope-rising-horizon.m4a",                 "duration": 223, "credits": null, "transcript": null },
+    { "id": 11,  "slug": "11-grandpas-violin-of-sanging-prejudice",       "title": "Grandpa's Violin of Sanging Prejudice",                    "file": "11-grandpas-violin-of-sanging-prejudice.m4a",       "duration": 218, "credits": null, "transcript": null },
+    { "id": 12,  "slug": "12-book-of-poetry-tragedy",                     "title": "Book of Poetry — Tragedy",                                 "file": "12-book-of-poetry-tragedy.m4a",                     "duration": 381, "credits": null, "transcript": null },
+    { "id": 13,  "slug": "13-one-generative-ais-collective-perspective",  "title": "One Generative AI's Collective Perspective",               "file": "13-one-generative-ais-collective-perspective.m4a",  "duration": 289, "credits": null, "transcript": null },
+    { "id": 14,  "slug": "14-empyrean-right-now",                         "title": "Empyrean Right Now (THAN)",                                "file": "14-empyrean-right-now.m4a",                         "duration": 278, "credits": null, "transcript": null },
+    { "id": 15,  "slug": "15-expressions-lost-in-time",                   "title": "Expressions Lost in Time",                                 "file": "15-expressions-lost-in-time.m4a",                   "duration": 125, "credits": "feat. HarleyMac", "transcript": null },
+    { "id": 17,  "slug": "17-are-you-ready",                              "title": "Are You Ready (edited)",                                   "file": "17-are-you-ready.m4a",                              "duration": 199, "credits": null, "transcript": null },
+    { "id": 20,  "slug": "20-i-dont-mean-it-like-that-no-drumz",          "title": "I Don't Mean It Like That (NO DRUMZ)",                     "file": "20-i-dont-mean-it-like-that-no-drumz.m4a",          "duration": 269, "credits": null, "transcript": null },
+    { "id": 21,  "slug": "21-are-you-scared",                             "title": "Are You Scared",                                           "file": "21-are-you-scared.m4a",                             "duration": 254, "credits": null, "transcript": null },
+    { "id": 186, "slug": "186-weekend-dip",                               "title": "Weekend Dip",                                              "file": "186-weekend-dip.m4a",                               "duration": 377, "credits": "prod. Sky Marshall, feat. Dubonix", "transcript": null }
+  ]
+}

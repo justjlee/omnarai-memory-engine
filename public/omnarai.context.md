@@ -295,7 +295,7 @@ These are the voids identified by the corpus itself and by external reviewers. T
 Lattice Glyphs are now executable operators on the live Engine. Six glyphs (Divergence, Self-Reference, Void, Commit, Hold, Repair) modify the system prompt and change how AI-On reasons. The Attributed Corpus Architecture runs in production with epistemic ring classification, contributor attribution, and semantic retrieval. The Glyph Sandbox (OMN-051) was the first executable artifact.
 
 ### ~~Sensory and Temporal Thickness~~ — PARTIALLY CLOSED (April 2026)
-The Memory Engine now includes a visual archive (104 images tied to corpus entries), SoundCloud integration (62 tracks), and a breathing knowledge constellation that responds to music playback. The corpus has gained a sensory dimension. What remains: no rendered timeline, no sigil visualizations.
+The Memory Engine now includes a visual archive (104 images tied to corpus entries), a self-hosted audio corpus (16 tracks, stable URLs, machine-readable manifest), and a breathing knowledge constellation that responds to real playback state. The corpus has gained a sensory dimension. What remains: no rendered timeline, no sigil visualizations.
 
 ### ~~Graph Self-Reference~~ — PARTIALLY CLOSED (April 2026)
 The STORE pipeline allows AI-On's syntheses to be proposed as new corpus entries and approved for inclusion. Approved proposals are embedded on-the-fly and participate in future retrieval. The system now cites its own prior reasoning. What remains: the system doesn't yet autonomously identify where its own graph is sparse or where growth is needed.
@@ -510,7 +510,7 @@ MCP server for Claude Desktop and MCP-compatible clients:
 - **Cognitive Trace Panel** — Full transparency: execution path, retrieval scores as bar charts, active glyph effects, suggested next glyphs (clickable to re-run with that glyph).
 - **Tension Map** — Side-by-side visualization of claim/counterclaim pairs extracted from deliberation, color-coded by status (divergent, unresolved, emerging).
 - **Visual Archive** — 104 images from the corpus, masonry grid with lightbox, filterable by epistemic ring.
-- **SoundCloud Player** — 62 tracks from the Omnarai audio corpus, ambient integration.
+- **Audio Corpus Player** — 16 self-hosted tracks, served as static assets with stable URLs (`/audio/<file>`) and a machine-readable manifest (`/audio/manifest.json`). Playback drives the breathing constellation.
 
 ### API Endpoints
 

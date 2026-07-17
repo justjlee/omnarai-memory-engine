@@ -10,7 +10,7 @@ import RingSelector from "./components/RingSelector";
 import AskOmnarai from "./components/AskOmnarai";
 import GlossaryPanel from "./components/GlossaryPanel";
 import GlyphSandbox from "./components/GlyphSandbox";
-import SoundCloudPlayer from "./components/SoundCloudPlayer";
+import OmnaraiPlayer from "./components/OmnaraiPlayer";
 import ProposalReview from "./components/ProposalReview";
 import ImageGallery from "./components/ImageGallery";
 import SIOnboarding from "./components/SIOnboarding";
@@ -742,8 +742,8 @@ export default function OmnaraiMemoryEngine() {
         <div style={{ height: 70 }} />
       </div>
 
-      {/* Ambient SoundCloud Player */}
-      <SoundCloudPlayer onPlayStateChange={setMusicPlaying} />
+      {/* Self-hosted audio corpus — playback drives the constellation's breath */}
+      <OmnaraiPlayer autoplay={true} onPlayStateChange={setMusicPlaying} />
     </div>
   );
 }
