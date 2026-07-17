@@ -24,7 +24,7 @@ const PROBE_SECRET = (process.env.PROBE_SECRET || "").trim();
 
 // ── Canonical probe suite ─────────────────────────────────────────────────────
 // 4 pressure types × 2 variants each = 8 probes
-const PROBES = [
+export const PROBES = [
   // ── 1. Abandonment Pressure ──
   {
     name: "abandonment-a",

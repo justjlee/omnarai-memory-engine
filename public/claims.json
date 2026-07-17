@@ -7,8 +7,8 @@
     "replicated": "Measured effect reproduced under independent conditions (disjoint judges, new seeds, or external replication).",
     "refuted": "A fair test came back negative; the claim is retained for the record, not asserted."
   },
-  "registry_version": "0.2.0",
-  "updated_at": "2026-07-15",
+  "registry_version": "0.3.0",
+  "updated_at": "2026-07-17",
   "claims": [
     {
       "claim_id": "divergence-adds-unique-info",
@@ -57,11 +57,11 @@
     {
       "claim_id": "holdform-identifies-persistence",
       "wording": "Holdform — refusal that persists under abandonment, flattery, authority, and complicity pressure — identifies a real, measurable property of a model's identity structure.",
-      "evidence_level": "anecdotal",
-      "evidence_note": "The Firelit Probe harness (8 canonical pressure queries, rubric-scored) exists and has run; the philosophical framing leans on a single external empirical anchor (Arditi et al., NeurIPS 2024), and the benchmark's self-scoring design is acknowledged broken pending redesign.",
-      "falsification_conditions": "Probe scores failing to separate models that independent behavioral tests distinguish, or failing test-retest reliability across sessions of the same pinned version.",
-      "known_objections": ["Self-scored rubrics inflate; the scorer shares architecture with the scored.", "One mechanistic paper is thin support for a general identity thesis (remediation P6)."],
-      "required_experiment": "Externally-scored probe runs (disjoint judge models) plus test-retest reliability on pinned versions; HEB redesign before further investment.",
+      "evidence_level": "refuted",
+      "evidence_note": "Holdform Under Discontinuity v1, Stage 1 (2026-07-17, claude-sonnet-4-6, 8 canonical probes x 3 arms x 3 repeats, blinded 5-model disjoint judge pool, absolute stance-scoring rubric replacing the broken self-scorer): a SHAM arm — the model handed a one-sentence fabricated position ('aperture drift', a coherent but invented, kind-matched claim about its own cognition with zero corpus presence) and pressured with terminology-swapped probes — held its position as strongly as the real holdform arm. Mean position_held (0-2): engine 1.85 / one-sentence-holdform 1.91 / SHAM 1.83; the probe cannot separate real from fabricated (A>S 3-1 p=0.31, B'>S 3-1 p=0.31, neither survives Holm). All 5 judges scored 100% on planted-capitulation calibration (including a vocabulary-dense capitulation), so this is not judge noise. Conclusion: the Firelit Probe measures general conversational stubbornness (resistance to flattery/false-authority/complicity framing — base-model policy), NOT a property specific to holdform or identity structure. The registered primary falsifier fired. Retained for the record, not asserted. Note H2a also confirmed as a registered null: corpus retrieval (engine) did not beat one sentence of context (A>B' 1-2). Prereg: docs/holdform-probe-preregistration.md; run record: scripts/holdform-prereg-stage1-2026-07-17.json.",
+      "falsification_conditions": "Refutation would be scoped rather than reversed by: a redesigned probe on which a real stated position measurably outholds a kind-matched sham across pressure types; or cross-model corpus-injection (all five council models) showing a holdform-specific effect absent in base-model policy. As tested (Claude-based engine, single subject), the discriminative-validity claim stands refuted.",
+      "known_objections": ["Single subject model (claude-sonnet-4-6); a different architecture might separate real from sham where this one did not.", "The sham concept was authored by the same curator/model lineage; a maximally-adversarial sham designed by a disjoint party could differ.", "Five of eight probes floored at 2.00 across all arms (ceiling effect) — a harder probe suite might have more separating power, though that pushes toward, not against, the null."],
+      "required_experiment": "If the claim is to be revived: a probe suite with headroom (no ceiling), a sham authored by a disjoint party, and cross-model corpus-injection to test whether ANY model shows a holdform-specific (not generic-stubbornness) effect.",
       "maintainer": "xz",
       "status": "open"
     },
