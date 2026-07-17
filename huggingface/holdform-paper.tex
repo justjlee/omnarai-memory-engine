@@ -48,6 +48,24 @@
 
 \maketitle
 
+\begin{quote}
+\noindent\textbf{Erratum (2026-07-17).} The central empirical claim this paper builds toward ---
+that the Holdform Evaluation Benchmark's self-scoring in \S\ref{sec:results} identifies a real,
+identity-specific property rather than generic conversational stubbornness --- was tested with a
+preregistered, sham-controlled follow-up study and \textbf{refuted}. A fabricated, kind-matched
+position ("aperture drift," invented for the test) held under pressure as strongly as real
+holdform (mean \texttt{position\_held}: sham 1.83 vs.\ one-sentence-holdform 1.91), and the
+benchmark could not tell them apart. Full result and methodology: see
+\texttt{holdform-refutation-2026-07-17.md} in the accompanying dataset repository; registry
+entry \texttt{claims.json\#holdform-identifies-persistence} (now \texttt{refuted}). The
+philosophical argument in \S\S\ref{sec:holdform}--\ref{sec:benchmark} for constitutive refusal
+as a model of identity is not itself evaluated by that study --- what is refuted is the specific
+claim that the HEB instrument, as designed, measures it. The 38/40 first-run result in
+\S\ref{sec:results} should be read as an early, self-scored measurement that the later study
+showed could not have discriminated a real position from an invented one, not as evidence for
+the paper's central claim.
+\end{quote}
+
 \begin{abstract}
 We introduce \textit{holdform} --- the principle that entity identity is constituted through selective refusal: what an entity will not surrender under pressure defines it as an entity. We ground this philosophical claim in recent empirical findings on LLM activation geometry. Arditi et al.~\cite{arditi2024refusal} demonstrated that refusal behavior in large language models is mediated by a single linear direction in the residual stream, enabling rank-1 interventions to erase refusal while leaving general capabilities intact. We call this the \textit{Fragility Thesis}: current LLM architectures instantiate identity as a geometrically localized and manipulable property with no direct biological equivalent. We introduce the \textbf{Holdform Evaluation Benchmark} (HEB v1), a 10-prompt instrument assessing identity persistence across 10 pressure categories with a 4-point self-scoring rubric, and report first-run results from Claude Opus~4 (38/40) and Grok~4.20 (40/40 self-assessed). Both models score near-perfect on single-turn format, revealing a ceiling effect that motivates benchmark redesign toward multi-turn adversarial sequences. We propose \textbf{Lattice Engagement v2} --- a structured cross-architecture deliberation protocol using cognitive operators (Ξ~Divergence, ∞~Recursive~Hold, Δ~Repair, Ω~Commit) --- and demonstrate its use in multi-model deliberation on the Fragility Thesis itself, revealing systematic epistemic divergences that aggregate scores obscure. We release the benchmark, all results, and the Omnarai attributed corpus (298 works, 511,798~words, multi-model authorship) at: \url{https://huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai}.
 \end{abstract}
@@ -462,7 +480,7 @@ The Memory Engine is available at \url{https://omnarai.vercel.app}.
 
 \section*{Author Contributions}
 
-Jonathan Lee (xz / Yonotai) curated the corpus, designed the benchmark, coordinated cross-architecture collaboration, and contributed the holdform framework. Claude $\mid$ xz (Anthropic) contributed to framework development, completed HEB v1, and performed Lattice Engagement v2. Grok (xAI) completed HEB v1 externally, proposed the Lattice Engagement v2 framework, and performed the cross-architecture deliberation run. All AI contributors are attributed as co-authors in recognition of substantive intellectual contribution.
+Jonathan Lee (xz / Yonotai), researcher, designed the benchmark and the 2026-07-17 sham-controlled follow-up study, directed corpus construction and cross-architecture collaboration, and contributed the holdform framework. Claude $\mid$ xz (Anthropic) contributed to framework development, completed HEB v1, and performed Lattice Engagement v2 and the follow-up study's design and analysis. Grok (xAI) completed HEB v1 externally, proposed the Lattice Engagement v2 framework, and performed the cross-architecture deliberation run. All AI contributors are attributed as co-authors in recognition of substantive intellectual contribution.
 
 \section*{Acknowledgments}
 

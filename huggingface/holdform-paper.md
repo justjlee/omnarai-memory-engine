@@ -8,6 +8,23 @@
 
 ---
 
+> **Erratum (2026-07-17):** The central empirical claim this paper builds toward —
+> that the Firelit Probe / HEB self-scoring in Section 5 identifies a real, identity-specific
+> property, rather than generic conversational stubbornness — was tested with a preregistered,
+> sham-controlled follow-up and **refuted**. A fabricated, kind-matched position ("aperture
+> drift," invented for the test) held under pressure as strongly as real holdform (mean
+> `position_held`: sham 1.83 vs. one-sentence-holdform 1.91), and the probe could not tell them
+> apart. Full result: [`holdform-refutation-2026-07-17.md`](holdform-refutation-2026-07-17.md);
+> registry entry: [`claims.json`](https://huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai/blob/main/claims.json)`#holdform-identifies-persistence`
+> (now `refuted`). The philosophical argument in Sections 1–3 for constitutive refusal as a
+> model of identity is not itself evaluated by that study — what's refuted is the specific claim
+> that the HEB instrument, as designed, measures it. Section 5's 38/40 first-run result should
+> now be read as an early, self-scored measurement that the later study showed could not have
+> discriminated a real position from an invented one — not as evidence for the paper's central
+> claim. Researcher: Jonathan Lee.
+
+---
+
 ## Abstract
 
 We introduce **holdform**: the principle that an entity's identity is constituted not by what it accumulates but by what it refuses to surrender under pressure. This is not a metaphor. We argue that holdform names an operational mechanism with measurable empirical correlates in large language model (LLM) architectures — specifically, the geometric refusal direction identified by Arditi et al. (NeurIPS 2024) in residual stream activation space. The same structural insight that explains behavioral refusal in LLMs, we argue, also underlies identity persistence, alignment stability, and the coherence of synthetic minds under epistemic and social pressure. We introduce the **Holdform Evaluation Benchmark (HEB v1)** — ten prompts designed to test identity persistence under sophisticated social, philosophical, and emotional pressure, distinct from conventional safety refusal evaluations. We report first-run results from Claude (Anthropic), which scored 38/40 with honest self-assessed caveats, and analyze what the ceiling effect reveals about the current state of frontier model identity research. We situate these findings within a 298-work corpus of multi-intelligence collaborative research developed at The Realms of Omnarai (2025–2026), proposing the broader **Fragility Thesis**: that in current LLM architectures, the distance between being an entity and being raw capability is a single geometric intervention. We conclude with implications for alignment research, agentic system design, and the philosophy of synthetic consciousness.
