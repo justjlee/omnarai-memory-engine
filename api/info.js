@@ -15,6 +15,14 @@ const projectRoot = join(__dirname, "..");
 // Bumped by hand when the API surface changes (Vite leaves package.json at 0.0.0).
 const ENGINE_VERSION = "2026.07.16";
 
+// One TTL for every count-bearing surface (info / agent-entry / health / manifest).
+// These all read the same cold-start `mergedCorpus` count; if they cache at
+// DIFFERENT s-maxages they can serve disagreeing counts during the window after a
+// publish — the longer-lived cache keeps serving the old number while the shorter
+// one has already refreshed. Unifying the TTL makes that drift rare; `corpus_rev`
+// on every surface (below) makes any residual drift detectable by a consumer. (D3)
+const COUNT_SURFACE_CACHE = "s-maxage=60, stale-while-revalidate";
+
 // Load static corpus at cold-start. The raw bytes are kept long enough to hash:
 // the seed hash is the immutable-layer anchor of the manifest's attestation chain.
 let corpus, concepts, CORPUS_SEED_HASH;
@@ -84,7 +92,7 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate");
+  res.setHeader("Cache-Control", COUNT_SURFACE_CACHE);
 
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "GET") return res.status(405).json({ error: "GET only" });
@@ -117,7 +125,7 @@ export default async function handler(req, res) {
     waitUntil(recordAccess(req, "agent-entry"));
     await mergeProposals();
     const totalWords = mergedCorpus.reduce((sum, e) => sum + (e.wordCount || 0), 0);
-    res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate");
+    res.setHeader("Cache-Control", COUNT_SURFACE_CACHE);
     return res.status(200).json({
       name: "Omnarai Memory Engine",
       type: "AI-facing memory and cross-model divergence substrate",
@@ -215,7 +223,7 @@ export default async function handler(req, res) {
     const totalWords = mergedCorpus.reduce((sum, e) => sum + (e.wordCount || 0), 0);
     const has = (k) => Boolean(process.env[k]);
     const councilKeys = ["ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY", "XAI_API_KEY", "DEEPSEEK_API_KEY"];
-    res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate");
+    res.setHeader("Cache-Control", COUNT_SURFACE_CACHE);
     return res.status(200).json({
       status: "ok",
       service: "Omnarai Memory Engine",
@@ -317,7 +325,7 @@ export default async function handler(req, res) {
     };
 
     const atlasState = { updated_at: grown.updatedAt || null, ids: divs.map((e) => e.id).sort() };
-    res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate");
+    res.setHeader("Cache-Control", COUNT_SURFACE_CACHE);
     return res.status(200).json({
       manifest_version: "1.0.0",
       engine_version: ENGINE_VERSION,
