@@ -167,6 +167,16 @@ export async function patchGrownCertifications(certs) {
   let updated = 0;
   for (const e of grown.entries) {
     if (e.type === "divergence" && e.divergence && certs[e.id]) {
+      // Append-only discipline (2026-07-18): a re-certification must not erase
+      // the evidence of what the instrument previously graded. The superseded
+      // block (minus its own history, which is carried forward flat) moves into
+      // the new block's `history[]`, oldest first — so any reader can see the
+      // grade's full lineage, including demotions.
+      const prior = e.divergence.certification;
+      if (prior) {
+        const { history: priorHistory, ...priorCompact } = prior;
+        certs[e.id].history = [...(priorHistory || []), priorCompact];
+      }
       e.divergence.certification = certs[e.id];
       updated++;
     }
