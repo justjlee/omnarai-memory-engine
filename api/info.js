@@ -4,7 +4,7 @@ import { fileURLToPath } from "url";
 import { createHash } from "node:crypto";
 import { list } from "@vercel/blob";
 import { waitUntil } from "@vercel/functions";
-import { recordAccess, readAccessLog } from "./_telemetry.js";
+import { recordAccess, readAccessLog, readDayEvents } from "./_telemetry.js";
 import { getCitationReport, peekCitation } from "./_citation.js";
 import { loadGrownMemory } from "./_grown.js";
 
@@ -133,6 +133,14 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
     }
     res.setHeader("Cache-Control", "no-store");
+    // &day=YYYY-MM-DD (or day=today) → the loss-proof per-event record for that
+    // day, read straight from the append-only event blobs (survives the
+    // aggregate log's recent-window cap).
+    const dayParam = (req.query?.day || "").toString();
+    if (dayParam) {
+      const day = dayParam === "today" ? new Date().toISOString().slice(0, 10) : dayParam;
+      return res.status(200).json(await readDayEvents(day));
+    }
     const logData = await readAccessLog();
     return res.status(200).json({
       milestone: logData.firstExternalAt
