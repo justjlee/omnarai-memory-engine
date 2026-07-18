@@ -32,6 +32,12 @@ echo ">> Auto-syncing doc counts to live /api/info (no-drift guarantee)"
 python3 scripts/sync-doc-counts.py --apply --require-live || echo "   (count sync skipped/failed — non-fatal; deploy continues)"
 echo
 
+# HARD gate: no frozen corpus-shape literal in served code (2026-07-17 audit guard).
+# Docs are handled above by sync-doc-counts; this covers api/ + src/.
+echo ">> Shape-literal guard (no frozen corpus counts in api/ or src/)"
+node scripts/check-shape-literals.mjs
+echo
+
 if [[ "${1:-}" == "--promote" ]]; then
   # IMPORTANT: promotion is a real PRODUCTION deployment, not a preview alias.
   # Production-scoped env vars (OPENAI_API_KEY, YOUTUBE_API_KEY) are NOT injected

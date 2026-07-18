@@ -90,7 +90,7 @@ function deliberationToMarkdown(resp, { question, tensions, epistemicMode }) {
   if (resp.concepts && resp.concepts.length) lines.push(`**Activated concepts:** ${resp.concepts.map((x) => `#${x}`).join(" ")}`, ``);
   lines.push(
     `---`,
-    `Source: The Realms of Omnarai memory engine (https://omnarai.vercel.app) — 568 works, multi-AI attributed corpus.`
+    `Source: The Realms of Omnarai memory engine (https://omnarai.vercel.app) — a multi-AI attributed corpus.`
   );
   return lines.join("\n");
 }
