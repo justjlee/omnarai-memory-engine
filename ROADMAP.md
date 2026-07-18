@@ -349,13 +349,38 @@ C3-style study once annotations exist.
 
 ### Build order out of this pass — EXECUTED same day (2026-07-18, commit `9d4a55b`, engine v2026.07.18)
 
-1. 🟡 **Cert-methodology redesign** — `--runs N` multi-run STRICT-MIN consensus
-   shipped in `certify-divergence.mjs` (method `tier3-perturbation-v3-consensus-xN`,
-   additive `reproducibility` block with per-run tiers/DRI, embedBatch retry,
-   chat-call counter for cost actuals). Stage-1 validation (10 pilot records × 3
-   runs, ~$15–20, xz-approved) RUNNING at write time — first consensus already
-   caught a coin-flip: [C1, C0, C0] → C0. Gate for the 25-record batch: ≥90%
-   tier agreement. Batch spend (~$40–55) goes to xz with stage-1 actuals.
+1. 🔴 **Cert-methodology stage 1 — COMPLETE, GATE FAILED, batch correctly BLOCKED**
+   (2026-07-18, 10 pilot records × 3 full-battery runs, 2,130 chat calls ≈ $15).
+   `--runs N` strict-min consensus shipped (`tier3-perturbation-v3-consensus-xN`,
+   `reproducibility` block, embed retry, call counter). Results:
+   - **Single-run tier agreement 60%** (6/10 unanimous) — replicates the 06-21
+     finding (56%) on a larger basis. The ≥90% gate fails; the 25-record
+     single-run-equivalent batch does NOT proceed. This is the gate doing its job.
+   - **Every non-unanimous record was a 1-of-3 deviant run** ([C1,C0,C0] ×3,
+     [C0,C0,C1]) — strict-min collapses all four to C0. The consensus grades
+     themselves look far stabler than any single run; whether strict-min×3
+     reproduces is testable for ~$15 (re-run the same 10, compare consensus).
+   - 🚨 **The live ledger is now in question:** OMN-D…044 — the ONE record the
+     06-21 pilot found reproducible (C1 both runs) and currently live at C1 —
+     came back **[C1,C0,C0] → C0** here. And the two live C3s carry no
+     reproducibility evidence at all. Honesty precedent (06-21: demote wobblers
+     with transparent provenance) says: re-certify the 3 live records under ×3
+     consensus (~$4.50) and let the grades fall where they land.
+   - ⚠️ **A birth-score-0.00 "negative control" certified C1 unanimously**
+     (OMN-D…945, "which constraint would you change", DRI 1.69–2.05). Either its
+     stale birth-score mislabels a real split (likely — the question invites
+     genuine divergence) or the floor is leaking; distinguish before scaling.
+   - 📉 **Pattern worth its own record: DRI < 1.0 almost everywhere** (0.83–0.96)
+     on TODAY'S model versions, vs the recorded splits' historical values —
+     persistence stayed 1.00 while between-spread shrank toward the within-noise
+     floor. Tentative read: the current panel generation converges more (or
+     self-varies more) than the 2026-06 panel did on the same questions. If it
+     holds beyond n=10 it's a longitudinal finding ("is cross-model divergence
+     closing over generations?") — exactly what the OMN-DD delta namespace is for.
+   - **Next decision (xz):** (a) ~$15 — validate strict-min×3 reproducibility on
+     the same 10; (b) ~$4.50 — re-certify the 3 live certified records ×3 and
+     reconcile the ledger; (c) hold. Spent so far ~$15 of the $75 ceiling; the
+     25-record batch stays blocked until a consensus method passes its own gate.
 2. 🟢 **Additive honesty PR** — SHIPPED & verified on prod: `question_received`
    echoed byte-identically on every response shape (incl. `&`/`?`/unicode) +
    trace object; `rings=` (alias ring/tier) hard pre-MMR filter, 400 UNKNOWN_LAYER
