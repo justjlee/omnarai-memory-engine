@@ -347,18 +347,39 @@ C3-style study once annotations exist.
   classification is adopted as *workflow vocabulary* (it is how this very
   arbitration worked), not as a feature.
 
-### Build order out of this pass
+### Build order out of this pass — EXECUTED same day (2026-07-18, commit `9d4a55b`, engine v2026.07.18)
 
-1. **Cert-methodology redesign + reproducibility validation** — unblocks both
-   the 25-record batch and the HF ship; the one item on the critical path.
-   Needs xz spend approval (projection will exceed the $26 pre-auth at ~3×).
-2. **Additive honesty PR** — `question_received`, `embedding_coverage`, the
-   "served separately" prose reconciliation, `rings=` hard filter (one small
-   PR, minor openapi/health version bump).
-3. **Annotation substrate** — Atlas lifecycle (status / synthesis links) +
-   OMN-P-045 respondent context as its first two consumers, then the
-   "deliberate this tension" wiring on top.
-4. Interface elaborations stay parked until 1–3 are live.
+1. 🟡 **Cert-methodology redesign** — `--runs N` multi-run STRICT-MIN consensus
+   shipped in `certify-divergence.mjs` (method `tier3-perturbation-v3-consensus-xN`,
+   additive `reproducibility` block with per-run tiers/DRI, embedBatch retry,
+   chat-call counter for cost actuals). Stage-1 validation (10 pilot records × 3
+   runs, ~$15–20, xz-approved) RUNNING at write time — first consensus already
+   caught a coin-flip: [C1, C0, C0] → C0. Gate for the 25-record batch: ≥90%
+   tier agreement. Batch spend (~$40–55) goes to xz with stage-1 actuals.
+2. 🟢 **Additive honesty PR** — SHIPPED & verified on prod: `question_received`
+   echoed byte-identically on every response shape (incl. `&`/`?`/unicode) +
+   trace object; `rings=` (alias ring/tier) hard pre-MMR filter, 400 UNKNOWN_LAYER
+   on bad values (silent unscoping eliminated — verified `rings=core` → 0
+   out-of-ring); `embedding_coverage` on health (live: 1.0, seed basis, would
+   list unembedded ids); prose reconciliation on index.html + context.md;
+   openapi.json 5.1.0.
+3. 🟢 **Annotation substrate** — SHIPPED & verified on prod: `api/_annotations.js`
+   (append-only per-record blobs `annotations/<id>.json`, provenance required,
+   28/28 tests in `scripts/test-annotations.mjs`); council.js `action:"annotate"`
+   (INGEST_SECRET); folded `annotations` on `?id=` reads + `annotated` flag on
+   index (prefix-list, no body fetches); UI annotation strip + "Ξ Deliberate this
+   question →" (record page → Ask tab prefill); `deliberate` prefilled-URL block
+   on every record read. **Backfill COMPLETE: 111/111 records carry
+   `question_context`** (Haiku-classified, confidence medium, curator-correctable).
+   - 🔔 **Immediate empirical finding: 109/111 questions are inside-position**
+     (panel-implicating); only OMN-D1780752664947 (truth-telling ethics) and
+     OMN-D1780757185038 (autonomy vs paternalism) are outside. The Atlas has a
+     position-axis monoculture to match its temporal one — the planned
+     "does divergence structure differ under self-implication?" comparison
+     currently has n=2 in the outside arm. ⚪ *Next:* seed future council/canon
+     questions with deliberately outside-position questions so the comparison
+     becomes runnable; then it's a novel, publishable C3-style study.
+4. Interface elaborations remain parked until the cert batch ships.
 
 ## Substrate & federation
 
