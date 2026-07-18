@@ -115,7 +115,7 @@ export default function AtlasHeroBand({ onReadFeatured, onBrowseAll, worksLabel 
           fontFamily: "'Cormorant Garamond',Georgia,serif", fontSize: 19, fontWeight: 600,
           color: T.bone, lineHeight: 1.3, marginBottom: 12,
         }}>
-          {featured ? featured.question : "One open question, sent verbatim to five frontier models — their answers preserved uncurated, the exact points where they split named."}
+          {featured ? featured.question : "One open question, sent verbatim to a panel of frontier models — their answers preserved uncurated, the exact points where they split named."}
         </div>
 
         {/* model chips */}
