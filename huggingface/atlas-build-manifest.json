@@ -1,0 +1,25 @@
+{
+  "built_at": "2026-07-18T22:50:35.213Z",
+  "source": "grown-memory Blob (memory/grown.json) via api/_grown.js loadGrownMemory() — canonical store, not the retrieval layer",
+  "series_basis": "OMN-D only (Atlas series)",
+  "records": 105,
+  "answers": 530,
+  "tensions": 342,
+  "certification_tiers": {
+    "C0": 104,
+    "C1": 1
+  },
+  "excluded": [
+    "OMN-L1781202970123",
+    "OMN-L1781275070811",
+    "OMN-L1781275117112",
+    "OMN-L1781275166450",
+    "OMN-L1781275210572",
+    "OMN-L1781275251381",
+    "OMN-L1781275390102",
+    "OMN-L1781275434017",
+    "OMN-L1781275482281",
+    "OMN-L1781275543413",
+    "OMN-L1784135876336"
+  ]
+}

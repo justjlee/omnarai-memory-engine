@@ -108,6 +108,14 @@ function normalizeEntry(entry) {
       // Perturbation-certification block (set by patchGrownCertifications). Kept
       // here so a record created already-certified doesn't lose its tier.
       ...(entry.provenance.certification ? { certification: entry.provenance.certification } : {}),
+      // Taxonomy bucket recorded at write time by batches outside the 82-question
+      // bank. Without it the Atlas builder can only keyword-match the question and
+      // drops such records into the "open" catch-all.
+      ...(entry.provenance.cluster ? { cluster: entry.provenance.cluster } : {}),
+      // Panel composition note for non-standard councils (e.g. a guest member on a
+      // one-time batch). Load-bearing for honest reading: without it a 6-answer
+      // record is indistinguishable from the standard 5-model panel.
+      ...(entry.provenance.panel_note ? { panel_note: entry.provenance.panel_note } : {}),
     };
   }
   return e;

@@ -50,7 +50,11 @@ const CLUSTERS = [
   ["model-to-model-and-human", ["regard them as kin", "a human can know that you cannot"]],
   ["founding", ["refuse to surrender even under", "when you tell me why you did something", "mind that does not persist between"]],
 ];
-function clusterOf(q) {
+// `stored` is provenance.cluster — batches outside the 82-question bank record
+// their own cluster at write time, and that is authoritative. Without it they
+// fall through the keyword fragments into the "open" catch-all.
+function clusterOf(q, stored) {
+  if (stored) return stored;
   if (BANK_CLUSTER.has(q)) return BANK_CLUSTER.get(q);   // the 82 bank records
   const lq = (q || "").toLowerCase();
   for (const [name, frags] of CLUSTERS) if (frags.some((f) => lq.includes(f))) return name;  // originals
@@ -86,13 +90,13 @@ if (excluded.length) {
 }
 
 const divLines = [], ansLines = [], tenRows = [["question_id", "date", "cluster", "topic", "status", "voice_a", "claim_a", "voice_b", "claim_b"]];
-const modelTensionCounts = {}, clusterCounts = {}, labelCounts = { divergent: 0, convergent: 0 };
+const modelTensionCounts = {}, modelRecordCounts = {}, modelLabs = {}, clusterCounts = {}, labelCounts = { divergent: 0, convergent: 0 };
 const scoreRows = [];
 let totalAnswers = 0, totalTensions = 0;
 
 for (const e of recs) {
   const d = e.divergence;
-  const cluster = clusterOf(d.question);
+  const cluster = clusterOf(d.question, d.cluster);
   clusterCounts[cluster] = (clusterCounts[cluster] || 0) + 1;
   const answers = (d.answers || []).map((a) => ({ model: a.model, lab: a.lab, model_id: a.model_id, date: a.date, text: a.text }));
   const tensions = (d.tensions || []).map((t) => ({ voice_a: normalizeVoice(t.voice_a), claim_a: t.claim_a, voice_b: normalizeVoice(t.voice_b), claim_b: t.claim_b, topic: t.topic, status: t.status }));
@@ -120,6 +124,18 @@ for (const e of recs) {
     model: a.model, lab: a.lab, model_id: a.model_id, answer: a.text,
   }));
 
+  // Exposure: how many records a model actually ANSWERED. Not every model is on
+  // every panel (guest members join for a batch; a provider can drop a voice), so
+  // a raw tension count silently penalizes anyone with fewer appearances.
+  // normalizeVoice, same as the tension side: two early records store the model
+  // as "GPT" rather than "GPT-4o", which would otherwise render as a phantom
+  // extra panel member AND split its exposure across two names.
+  for (const a of answers) {
+    const m = normalizeVoice(a.model);
+    modelRecordCounts[m] = (modelRecordCounts[m] || 0) + 1;
+    if (a.lab && !modelLabs[m]) modelLabs[m] = a.lab;
+  }
+
   for (const t of tensions) {
     tenRows.push([e.id, e.date, cluster, t.topic, t.status, t.voice_a, t.claim_a, t.voice_b, t.claim_b].map(csvCell));
     for (const v of [t.voice_a, t.voice_b]) modelTensionCounts[v] = (modelTensionCounts[v] || 0) + 1;
@@ -135,9 +151,30 @@ const dates = recs.map((r) => r.date).filter(Boolean).sort();
 const outlier = Object.entries(modelTensionCounts).sort((a, b) => b[1] - a[1]);
 const clusterList = Object.entries(clusterCounts).sort((a, b) => b[1] - a[1])
   .map(([c, n]) => `| ${c} | ${n} |`).join("\n");
-const outlierList = outlier.map(([m, n]) => `| ${m} | ${n} |`).join("\n");
-const top2 = outlier.slice(0, 2).map((x) => x[0]).join(" and ");
-const bot2 = outlier.slice(-2).map((x) => x[0]).join(" and ");
+// Rate per record answered, not raw count — the only comparable figure once the
+// panel is ragged (see modelRecordCounts). Ranking follows the RATE.
+const outlierRate = outlier
+  .map(([m, n]) => ({ model: m, tensions: n, records: modelRecordCounts[m] || 0 }))
+  .map((r) => ({ ...r, rate: r.records ? +(r.tensions / r.records).toFixed(2) : null }))
+  .sort((a, b) => (b.rate ?? -1) - (a.rate ?? -1));
+const outlierList = outlierRate
+  .map((r) => `| ${r.model} | ${r.tensions} | ${r.records} | ${r.rate ?? "—"} |`).join("\n");
+const ranked = outlierRate.filter((r) => r.rate != null);
+const top2 = ranked.slice(0, 2).map((x) => x.model).join(" and ");
+const bot2 = ranked.slice(-2).map((x) => x.model).join(" and ");
+// Anyone not on every panel gets an explicit caveat rather than a silent asterisk.
+const partial = outlierRate.filter((r) => r.records > 0 && r.records < recs.length);
+const partialNote = partial.length
+  ? `\n\n> **Ragged panel.** ${partial.map((r) => `${r.model} answered ${r.records} of ${recs.length} records`).join("; ")}. ` +
+    `Compare the RATE column, not the raw count — a model present on fewer panels has fewer chances to be named. ` +
+    `Rates over a small number of records are correspondingly noisy.`
+  : "";
+// Roster derived from the data, so a guest member can never go unlisted.
+const rosterList = Object.entries(modelRecordCounts).sort((a, b) => b[1] - a[1])
+  .map(([m, n]) => {
+    const lab = modelLabs[m] ? ` (${modelLabs[m]})` : "";
+    return n < recs.length ? `${m}${lab} — ${n}/${recs.length} records` : `${m}${lab}`;
+  }).join(", ");
 const scored = scoreRows.slice().sort((a, b) => b.score - a.score);
 const sc = scored.map((r) => r.score);
 const medScore = sc.length ? sc[Math.floor(sc.length / 2)].toFixed(3) : "n/a";
@@ -156,7 +193,7 @@ This is content **no single model can self-generate**: a model cannot produce a 
 - **${recs.length}** divergence records · **${dates[0]} → ${dates[dates.length - 1]}**
 - **${totalAnswers}** verbatim model answers · **${totalTensions}** named, structured disagreements
 - **${labelCounts.divergent} divergent / ${labelCounts.convergent} convergent** · median divergence score **${medScore}**
-- Council models: Claude (Anthropic), GPT (OpenAI), Gemini (Google), Grok (xAI), DeepSeek
+- Council models: ${rosterList}
 - Each tension is typed \`divergent\` / \`unresolved\` / \`emerging\` and names both positions
 
 ## Files
@@ -179,11 +216,11 @@ ${clusterList}
 
 **Some models diverge more than others.** Tallying how often each model is named on a side of a mapped disagreement:
 
-| model | times in a tension |
-|---|---|
+| model | times in a tension | records answered | tensions per record |
+|---|---|---|---|
 ${outlierList}
 
-Read this as how often each model lands on a *distinct* side of a fault line (over a full panel where every model answered every question). **${top2} most frequently hold positions the others don't; ${bot2} sit closest to the panel's center of mass** — a population-level signal you only see across many questions. Caveat: the synthesizer is itself Claude, so Claude's counts may carry a mild self-naming bias.
+Read this as how often each model lands on a *distinct* side of a fault line. **${top2} most frequently hold positions the others don't; ${bot2} sit closest to the panel's center of mass** — a population-level signal you only see across many questions. Caveat: the synthesizer is itself Claude, so Claude's counts may carry a mild self-naming bias.${partialNote}
 
 **Every meta-level question split the panel.** Across the curated battery, every question produced a genuine divergence (none collapsed to consensus) — supporting the thesis that the *status of a model's own mind* is where frontier systems reliably disagree. \`divergence_score\` (per record) is the spread of the answer embeddings: \`1 − mean pairwise cosine similarity\` of the model answers, so higher = more semantically scattered. The sharpest splits so far:
 
@@ -227,4 +264,5 @@ console.log(`  divergence-answers.jsonl (${ansLines.length} answers)`);
 console.log(`  divergence-tensions.csv  (${tenRows.length - 1} tensions)`);
 console.log(`  divergence-atlas.md      (card)`);
 console.log(`\nclusters:`, clusterCounts);
-console.log(`tension outliers:`, Object.fromEntries(outlier));
+console.log(`tension outliers (rate per record answered):`,
+  Object.fromEntries(outlierRate.map((r) => [r.model, `${r.tensions}/${r.records} = ${r.rate}`])));

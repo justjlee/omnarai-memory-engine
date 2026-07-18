@@ -218,6 +218,14 @@ export async function synthesizeCouncil(question, answers, { maxTokens = 2048 } 
     .map((a) => `### ${a.model} (${a.lab}, ${a.model_id})\n${a.text}`)
     .join("\n\n");
 
+  // The legal voice list must reflect the ACTUAL panel — extended panels (e.g.
+  // a guest member) would otherwise have their tensions dropped by the
+  // hardcoded five-name rule. Identical output for the standard council.
+  const synthSystem = SYNTH_SYSTEM.replace(
+    "(Claude, GPT-4o, Gemini, Grok, DeepSeek)",
+    `(${answered.map((a) => a.model).join(", ")})`
+  );
+
   const userMessage =
     `The open question, sent verbatim to the panel:\n\n"${question}"\n\n` +
     `The panel's answers:\n\n${panel}\n\n` +
@@ -232,7 +240,7 @@ export async function synthesizeCouncil(question, answers, { maxTokens = 2048 } 
     // enrichment) pass a larger maxTokens so the TENSION_MAP block can't truncate.
     max_tokens: maxTokens,
     temperature: 0.7,
-    system: SYNTH_SYSTEM,
+    system: synthSystem,
     messages: [{ role: "user", content: userMessage }],
   });
 
