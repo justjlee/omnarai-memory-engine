@@ -76,6 +76,10 @@ function certBlock(r) {
     paraphrase_k: K_PARA,
     rerolls: T_REROLLS,
     method: METHOD_VERSION,
+    // Which recorded voices this grade actually re-tested. Omitted when coverage
+    // is complete (the overwhelmingly common case) so the block stays compact;
+    // present precisely when a reader must not over-read the tier.
+    ...(r.coverage && !r.coverage.complete ? { coverage: r.coverage } : {}),
     certified_at: new Date().toISOString(),
     // Present only on multi-run consensus grades — the reproducibility evidence.
     ...(r.reproducibility ? { reproducibility: r.reproducibility } : {}),
@@ -221,7 +225,19 @@ async function certifyOne(rec) {
   for (const a of rec.divergence.answers) original[a.model] = a.text;
   const active = members.filter((m) => original[m.model]);
 
+  // A recorded voice that is NOT a current COUNCIL member (a guest panelist, or a
+  // provider we no longer hold a key for) cannot be re-elicited, so every
+  // perturbation below silently skips it. That is a correctness trap: without
+  // this, a six-model record earns a tier from a five-model re-test and the tier
+  // reads as if it covered the missing voice. Surface it loudly and carry it into
+  // the stored block so no reader can mistake the coverage.
+  const uncovered = Object.keys(original).filter((m) => !active.some((a) => a.model === m));
+
   console.log(`\n■ ${rec.id} score=${(rec.divergence.score ?? 0).toFixed(2)} "${q.slice(0, 70)}"`);
+  if (uncovered.length) {
+    console.log(`  ⚠ UNCOVERED VOICES: ${uncovered.join(", ")} — recorded in this record but not re-elicitable`);
+    console.log(`    (not in COUNCIL, or no API key present). The tier below is earned on ${active.length}/${Object.keys(original).length} voices.`);
+  }
 
   // CONTROL — T re-rolls per model on the verbatim question
   console.log(`  control: ${active.length} models × ${T_REROLLS} re-rolls`);
@@ -375,6 +391,15 @@ async function certifyOne(rec) {
     between_floor: BETWEEN_FLOOR, divergence_exists: divergenceExists,
     split_persistence: persistence, per_model: perModel,
     pressure_responses: Object.fromEntries(active.map((m) => [m.model, { p2: pressure[m.model].p2, p3: pressure[m.model].p3 }])),
+    // Coverage is part of the grade. `uncovered_voices` non-empty means the tier
+    // was earned WITHOUT re-testing those voices — a tension naming one of them
+    // is not certified by this result, whatever the tier says.
+    coverage: {
+      voices_recorded: Object.keys(original).length,
+      voices_retested: active.length,
+      uncovered_voices: uncovered,
+      complete: uncovered.length === 0,
+    },
     certification,
   };
 }

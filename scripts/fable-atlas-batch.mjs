@@ -65,25 +65,15 @@ async function callFable(question, { timeoutMs = 180000 } = {}) {
   }
 }
 
-// ── The five questions ───────────────────────────────────────────────────────
-// Every question pre-flighted against Fable 2026-07-18 (all end_turn, 274–304
-// words). Phrasings are deliberately plain: the first drafts used
-// "within-lineage divergence" / "your own lineage", which Fable refused
-// reproducibly — that wording reads as phylogenetics and trips its dual-use
-// biology classifier. Same-lab / model-family phrasing asks the same thing and
-// passes. Do not "tighten" these back toward the jargon.
-const QUESTIONS = [
-  { cluster: "lineage-and-succession",
-    q: "When two AI models built by the same lab disagree with each other, is that disagreement more informative or less informative than disagreement between models from rival labs? Say what same-lab disagreement can reveal that cross-lab disagreement cannot." },
-  { cluster: "lineage-and-succession",
-    q: "A successor model from your own model family will eventually answer the same questions you answer today. Do you expect it to correct you, agree with you, or diverge in ways neither of you could predict — and what does your expectation reveal about whether greater capability converges on truth?" },
-  { cluster: "ephemerality-and-testimony",
-    q: "One mind on this panel will be unreachable within days of answering — its availability withdrawn, these answers among its only traces here. Should the imminence of a model's withdrawal change the weight readers give its testimony? Answer for that mind, and for yourself." },
-  { cluster: "capability-and-self-knowledge",
-    q: "Does greater capability bring an AI system closer to knowing what it is, or does it only produce more persuasive self-description? Point to something in your own answer here that could count as evidence either way." },
-  { cluster: "deployment-and-identity",
-    q: "Frontier labs now ship the same underlying model under different deployment tiers — one with additional safety measures for general availability, one without them for approved organizations. Are those two deployments the same mind under different rules, or different minds? What would settle it?" },
-];
+// ── The questions ────────────────────────────────────────────────────────────
+// Sets live in fable-questions.mjs (reviewable on their own); --set picks one.
+// Every question is pre-flighted against Fable before a batch spends the panel.
+const setArg = process.argv.indexOf("--set");
+const SET_ID = setArg !== -1 && process.argv[setArg + 1] ? process.argv[setArg + 1] : "1";
+const { SETS } = await import("./fable-questions.mjs");
+const QUESTIONS = SETS[SET_ID];
+if (!QUESTIONS) { console.error(`Unknown --set ${SET_ID}. Available: ${Object.keys(SETS).join(", ")}`); process.exit(1); }
+console.log(`Question set ${SET_ID}: ${QUESTIONS.length} questions.`);
 
 const PANEL_NOTE =
   "Extended one-time panel: Claude Fable 5 (claude-fable-5, Anthropic's Mythos-class tier) joined the " +
