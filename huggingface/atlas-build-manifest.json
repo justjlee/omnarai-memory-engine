@@ -1,12 +1,12 @@
 {
-  "built_at": "2026-07-18T22:50:35.213Z",
+  "built_at": "2026-07-18T23:45:29.215Z",
   "source": "grown-memory Blob (memory/grown.json) via api/_grown.js loadGrownMemory() — canonical store, not the retrieval layer",
   "series_basis": "OMN-D only (Atlas series)",
-  "records": 105,
-  "answers": 530,
-  "tensions": 342,
+  "records": 113,
+  "answers": 578,
+  "tensions": 380,
   "certification_tiers": {
-    "C0": 104,
+    "C0": 112,
     "C1": 1
   },
   "excluded": [
