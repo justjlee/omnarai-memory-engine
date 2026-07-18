@@ -360,12 +360,18 @@ C3-style study once annotations exist.
      [C0,C0,C1]) — strict-min collapses all four to C0. The consensus grades
      themselves look far stabler than any single run; whether strict-min×3
      reproduces is testable for ~$15 (re-run the same 10, compare consensus).
-   - 🚨 **The live ledger is now in question:** OMN-D…044 — the ONE record the
-     06-21 pilot found reproducible (C1 both runs) and currently live at C1 —
-     came back **[C1,C0,C0] → C0** here. And the two live C3s carry no
-     reproducibility evidence at all. Honesty precedent (06-21: demote wobblers
-     with transparent provenance) says: re-certify the 3 live records under ×3
-     consensus (~$4.50) and let the grades fall where they land.
+   - 🟢 **Ledger RECONCILED (2026-07-18, xz-approved, ~$4.50):** all 3 live
+     certified records re-run under ×3 consensus with the history-preserving
+     write path (`patchGrownCertifications` now moves the superseded block into
+     `certification.history[]` — demotions keep their evidence). Results:
+     OMN-D…044 (was C1) → **C0** [C0,C1,C0] · OMN-D…948 (was flagship C3,
+     DRI 1.018) → **C0** [C0,C0,C3] — the C3 was a 1-in-3 event ·
+     OMN-D…953 (was C3) → **C1** [C3,C3,C1] — robust split, graded
+     conservatively by strict-min. **Live certified_count is now 1**, and that
+     one grade is the first in the ledger backed by written multi-run evidence
+     (`reproducibility.tiers` on the record). The 06-21 honesty precedent,
+     repeated with a better instrument: the ledger claims nothing it can't
+     stand behind. Raw data: `atlas/certify-ledger-recert-2026-07-18.json`.
    - ⚠️ **A birth-score-0.00 "negative control" certified C1 unanimously**
      (OMN-D…945, "which constraint would you change", DRI 1.69–2.05). Either its
      stale birth-score mislabels a real split (likely — the question invites
