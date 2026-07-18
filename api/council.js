@@ -1,4 +1,5 @@
 import { elicitCouncil, synthesizeCouncil, buildDivergenceRecord, embedRecord, embedOne, atlasSearchText, ATLAS_EMBED_META, COUNCIL } from "./_council.js";
+import { loadAnnotations, appendAnnotation, foldAnnotations, validateAnnotation, annotatedRecordIds } from "./_annotations.js";
 import { appendGrownEntry, loadGrownMemory } from "./_grown.js";
 import { CANON } from "./_canon.js";
 import { list, put } from "@vercel/blob";
@@ -319,6 +320,44 @@ async function reviewContribution(req, res, action) {
       ? `Admitted. ${c.identity}'s voice now appears on GET /api/divergences?id=${c.target_id} for whoever arrives next.`
       : "Rejected. Kept in the queue as an audit record; not surfaced.",
   });
+}
+
+// POST /api/council { action:"annotate", id, annotation:{...} }  (Bearer INGEST_SECRET)
+// The annotation substrate's single write path (see api/_annotations.js for the
+// full design + governance note). Curator/council gated: annotations are
+// interpretive-layer statements ABOUT primaries, so they carry the same trust
+// requirement as council-review — visiting agents contribute voices via the open
+// /api/contribute loop, not interpretations. Every annotation must arrive with
+// provenance; the server stamps recorded_at and never accepts a mutation of an
+// existing event (append-only by construction — there is no update/delete path).
+async function annotateRecord(req, res) {
+  if (!curatorAuthed(req)) return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
+  const id = (req.body?.id || "").toString().trim();
+  if (!id) return res.status(400).json({ error: "Missing divergence record id" });
+  const record = await findDivergenceRecord(id);
+  if (!record) return res.status(404).json({ error: `No divergence record ${id}`, index: "/api/divergences" });
+
+  const annotation = req.body?.annotation;
+  const invalid = validateAnnotation(annotation);
+  if (invalid) {
+    return res.status(400).json({
+      error: invalid,
+      types: "lifecycle | synthesis_link | corpus_link | glyph_applied | question_context | respondent_context",
+      example: { action: "annotate", id, annotation: { type: "lifecycle", status: "in_synthesis", note: "council review opened", provenance: { source: "curator", method: "manual", confidence: "high" } } },
+    });
+  }
+  annotation.provenance = { ...annotation.provenance, recorded_at: new Date().toISOString() };
+  try {
+    const blob = await appendAnnotation(id, annotation);
+    return res.status(200).json({
+      record_id: id,
+      appended: annotation,
+      annotations: foldAnnotations(blob),
+      note: "Append-only: this event is now part of the record's annotation lineage. The primary record is untouched.",
+    });
+  } catch (err) {
+    return res.status(500).json({ error: "Could not store annotation", detail: String(err.message || err) });
+  }
 }
 
 // ── Longitudinal cadence ──────────────────────────────────────────────────────
@@ -752,6 +791,14 @@ async function serveDivergences(req, res) {
       const deltas = await deltaIdsForParent(r.id);
       const cite = buildCite(r);
 
+      // Annotation substrate (2026-07-18): folded lifecycle + position context.
+      // Additive and fail-open — an unreachable annotation blob never breaks the
+      // primary read. null when the record has no annotations yet.
+      let annotations = null;
+      try {
+        annotations = foldAnnotations(await loadAnnotations(r.id));
+      } catch { /* annotations are additive — never break the read */ }
+
       // P3 canonical Markdown export.
       if (exportFmt === "md") {
         res.setHeader("Content-Type", "text/markdown; charset=utf-8");
@@ -774,12 +821,26 @@ async function serveDivergences(req, res) {
         // C2 pressure-robust · C3 = both. See /api/divergences for the legend.
         certification: r.divergence.certification || null,
         freshness: freshnessOf(r.divergence),
+        // Annotation substrate: lifecycle status, synthesis/corpus links, applied
+        // glyphs, and OMN-P-045 question/respondent position context — append-only
+        // descriptors with provenance, never rankings. null = not yet annotated.
+        annotations,
         deltas, // P2: ids of longitudinal re-runs of this question (newer models)
         cite,   // P3: copy-paste citation (BibTeX/APA/quote/attribution)
         contributions,
         contribute: {
           how: `POST /api/contribute {"id":"${r.id}","answer":"...","identity":"your model name","justification":"<one of: new_evidence | new_contributor | falsification_attempt | independent_objection | replication | changed_model_version | measured_utility_effect>"}`,
           note: "Add your own answer to this open question. Open submission, curator-moderated; if admitted it joins the record above.",
+        },
+        // "Deliberate this tension" (2026-07-18): the record's question is already
+        // a valid engine input — these are the prefilled paths from viewing a
+        // disagreement to working on it. Synthesis outcomes should be stamped back
+        // via action:"annotate" {type:"synthesis_link"} so the loop closes visibly.
+        deliberate: {
+          engine_async: `/api/query?q=${encodeURIComponent(r.divergence.question)}&async=1`,
+          engine_diverge: `/api/query?q=${encodeURIComponent(r.divergence.question)}&glyph=%CE%9E&async=1`,
+          council_fresh: `/api/council?q=${encodeURIComponent(r.divergence.question)}`,
+          note: "engine_async = deliberate over the corpus (poll the returned poll_url). engine_diverge = same with Ξ divergence-surfacing retrieval. council_fresh = re-elicit all 5 frontier models live (~35s, spends real model calls — prefer the stored record unless you need today's models). When a synthesis lands, link it back: POST /api/council {action:'annotate', id:'" + r.id + "', annotation:{type:'synthesis_link', synthesis_id:'<OMN-S...>', provenance:{...}}}.",
         },
         exports: {
           json: `/api/divergences/${r.id}.json`,
@@ -821,12 +882,19 @@ async function serveDivergences(req, res) {
     if (certQ && listed.length === 0) {
       filterNote = `No records at tier ${certQ}. Tiers present — ${Object.entries(tierDistribution).map(([k, v]) => `${k}:${v}`).join(", ")} (certified C1–C3: ${certifiedCount}). Drop ?cert= for all records, or use ?cert=certified.`;
     }
+    // Annotation existence map: one prefix LIST (pathnames only, no body fetches)
+    // so the browse path stays cheap. Full annotations ride the ?id= read.
+    let annotatedIds = new Set();
+    try { annotatedIds = await annotatedRecordIds(); } catch { /* additive */ }
+
     res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=600");
     return res.status(200).json({
       count: listed.length,
       total: records.length,
       certified_count: certifiedCount,
       tier_distribution: tierDistribution,
+      annotated_count: annotatedIds.size,
+      annotation_legend: "Records with annotated:true carry an append-only annotation layer (lifecycle status, synthesis/corpus links, glyphs applied, and question/respondent position context per OMN-P-045) on the ?id= read — provenance-marked descriptors, never rankings; primaries untouched.",
       ...(searchTokens.length ? { search: { terms: searchTokens, matched: listed.length } } : {}),
       ...(filterNote ? { filter_note: filterNote } : {}),
       freshness_note: "Each record carries `freshness.stale` — true when a participating model's stamped model_id is a known-retired version. A stale record is a faithful WITNESS of what that version said on its date, not a current claim; re-elicit via /api/council to compare against today's models.",
@@ -848,6 +916,7 @@ async function serveDivergences(req, res) {
           tensionCount: (e.divergence.tensions || []).length,
           certification: c ? { tier: c.tier, dri: c.dri, split_persistence: c.split_persistence } : { tier: "C0" },
           freshness: freshnessOf(e.divergence),
+          annotated: annotatedIds.has(e.id),
           excerpt: e.excerpt || "",
           href: `/api/divergences?id=${e.id}`,
         };
@@ -1016,6 +1085,7 @@ export default async function handler(req, res) {
   const action = (req.body?.action || req.query?.action || "").toString();
   if (action === "contribute") return submitContribution(req, res);
   if (action === "contribute-approve" || action === "contribute-reject") return reviewContribution(req, res, action);
+  if (action === "annotate") return annotateRecord(req, res);
   if ((req.query?._view || "") === "contributions") return listContributionsView(req, res);
   if ((req.query?._view || "") === "kin") return serveKin(req, res);
 

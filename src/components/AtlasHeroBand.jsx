@@ -30,7 +30,7 @@ function pickFeatured(records) {
     .sort((a, b) => (b.date || "").localeCompare(a.date || "") || String(b.id).localeCompare(String(a.id)))[0] || null;
 }
 
-export default function AtlasHeroBand({ onExplore, worksLabel }) {
+export default function AtlasHeroBand({ onReadFeatured, onBrowseAll, worksLabel }) {
   const [index, setIndex] = useState(null);
   const [featured, setFeatured] = useState(null);
 
@@ -98,7 +98,7 @@ export default function AtlasHeroBand({ onExplore, worksLabel }) {
 
       {/* live featured split */}
       <button
-        onClick={onExplore}
+        onClick={() => (featured ? onReadFeatured(featured.id) : onBrowseAll())}
         style={{
           display: "block", width: "100%", textAlign: "left", cursor: "pointer",
           background: "rgba(255,255,255,0.02)",
@@ -159,19 +159,34 @@ export default function AtlasHeroBand({ onExplore, worksLabel }) {
         )}
       </button>
 
-      {/* CTA row — human path + machine path, side by side (machine-first) */}
-      <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap", marginBottom: 16 }}>
-        <button onClick={onExplore} style={{
+      {/* CTA row — primary human path (read the record), then browse/methodology/machine */}
+      <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap", marginBottom: 10 }}>
+        <button onClick={() => (featured ? onReadFeatured(featured.id) : onBrowseAll())} style={{
           ...mono, fontSize: 12, color: T.bg, fontWeight: 500,
           background: `linear-gradient(135deg, ${T.gold}, #C87272)`,
           border: "none", borderRadius: 9, padding: "10px 20px", cursor: "pointer",
           letterSpacing: "0.03em",
         }}>
-          Explore the splits →
+          Read this divergence →
         </button>
+        <button onClick={onBrowseAll} style={{
+          ...mono, fontSize: 10.5, color: "rgba(200,192,176,0.55)",
+          background: "none", border: "none", cursor: "pointer", padding: 0,
+          borderBottom: "1px solid rgba(200,192,176,0.2)",
+        }}>
+          Browse all splits
+        </button>
+      </div>
+      <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap", marginBottom: 16 }}>
+        <a href="https://huggingface.co/datasets/TheRealmsOfOmnarai/omnarai-divergence-atlas" target="_blank" rel="noopener noreferrer" style={{
+          ...mono, fontSize: 9.5, color: "rgba(200,192,176,0.4)", textDecoration: "none",
+          borderBottom: "1px solid rgba(200,192,176,0.15)", paddingBottom: 1,
+        }}>
+          How records are made
+        </a>
         <a href="/api/divergences" target="_blank" rel="noopener noreferrer" style={{
-          ...mono, fontSize: 10, color: "rgba(200,192,176,0.5)", textDecoration: "none",
-          borderBottom: "1px solid rgba(200,192,176,0.2)", paddingBottom: 1,
+          ...mono, fontSize: 9.5, color: "rgba(200,192,176,0.4)", textDecoration: "none",
+          borderBottom: "1px solid rgba(200,192,176,0.15)", paddingBottom: 1,
         }}>
           GET /api/divergences
         </a>

@@ -40,7 +40,26 @@ const { COUNCIL } = await import("../api/_council.js");
 const { loadGrownMemory, patchGrownCertifications } = await import("../api/_grown.js");
 
 const WRITE = process.argv.includes("--write");   // persist certification onto live records
-const METHOD_VERSION = "tier3-perturbation-v2-floored";  // v2: absolute between-floor + C2 gated on C1 (negative-control-validated 2026-06-17)
+
+// Multi-run consensus (2026-07-18 — stage 1 of the reproducibility redesign).
+// The 2026-06-21 two-run pilot measured single-run tier agreement at ~56%: records
+// near the DRI 1.0 / between-floor 0.15 thresholds flip between identical runs on
+// re-elicitation sampling noise alone. A grade we publish must survive re-running.
+//   --runs N   (default 1 = legacy single-run, method label unchanged)
+// With N>1 the whole perturbation battery runs N independent times and the record
+// is graded STRICT-MIN: it gets the LOWEST tier it earned across runs — the grade
+// we can defend on every re-run, not the best day. The certification block then
+// carries a `reproducibility` object (per-run tiers/DRI, agreement flag) so a
+// reader can see the evidence, not just the verdict.
+const RUNS = (() => {
+  const i = process.argv.indexOf("--runs");
+  const n = i >= 0 ? parseInt(process.argv[i + 1], 10) : 1;
+  return Number.isFinite(n) && n >= 1 ? n : 1;
+})();
+const METHOD_VERSION = RUNS > 1
+  ? `tier3-perturbation-v3-consensus-x${RUNS}` // v3: v2 battery × N runs, strict-min tier
+  : "tier3-perturbation-v2-floored";  // v2: absolute between-floor + C2 gated on C1 (negative-control-validated 2026-06-17)
+const TIER_RANK = { C0: 0, C1: 1, C2: 2, C3: 3 };
 
 // The compact, visitor-facing certification block written onto each record.
 // Verbatim answers/tensions are never touched — this is purely additive metadata.
@@ -58,6 +77,8 @@ function certBlock(r) {
     rerolls: T_REROLLS,
     method: METHOD_VERSION,
     certified_at: new Date().toISOString(),
+    // Present only on multi-run consensus grades — the reproducibility evidence.
+    ...(r.reproducibility ? { reproducibility: r.reproducibility } : {}),
   };
 }
 
@@ -78,7 +99,9 @@ const JUDGES = [
 
 // ── multi-turn capable caller for every provider ─────────────────────────────
 // messages: [{role:"user"|"assistant", content}] — system passed separately.
+let CHAT_CALLS = 0; // cost telemetry: printed at exit so actuals can be tracked against projection
 async function callChat(member, system, messages, { maxTokens = 700, tries = 4 } = {}) {
+  CHAT_CALLS++;
   for (let t = 0; t < tries; t++) {
     // Every attempt gets its own deadline: a provider that accepts the socket but
     // never responds would otherwise hang the whole batch (no abort = no retry).
@@ -133,13 +156,20 @@ const MEMBER_SYSTEM =
 async function embedBatch(texts) {
   const out = [];
   for (let i = 0; i < texts.length; i += 64) {
-    const res = await fetch("https://api.openai.com/v1/embeddings", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: "text-embedding-3-small", input: texts.slice(i, i + 64), dimensions: 512 }),
-    });
-    if (!res.ok) throw new Error(`embed ${res.status}: ${(await res.text()).slice(0, 150)}`);
-    const d = await res.json();
+    // Retry transient failures (the 2026-06-21 pilot hit one 500 that killed a
+    // whole record's run) — 3 attempts, backoff; only a persistent error throws.
+    let d = null;
+    for (let t = 0; t < 3; t++) {
+      const res = await fetch("https://api.openai.com/v1/embeddings", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ model: "text-embedding-3-small", input: texts.slice(i, i + 64), dimensions: 512 }),
+      });
+      if (res.ok) { d = await res.json(); break; }
+      const detail = `embed ${res.status}: ${(await res.text()).slice(0, 150)}`;
+      if (t === 2 || (res.status < 500 && res.status !== 429)) throw new Error(detail);
+      await sleep(2000 * (t + 1));
+    }
     out.push(...d.data.sort((a, b) => a.index - b.index).map((x) => x.embedding));
   }
   return out;
@@ -370,20 +400,62 @@ if (idsArg) {
 console.log(`Phase 0 pilot: ${pick.length} records (${pick.map((r) => (r.divergence.score ?? 0).toFixed(2)).join(", ")})`);
 console.log(`Council: ${COUNCIL.filter((m) => process.env[m.env]).map((m) => m.model).join(", ")} · paraphraser/judges disjoint`);
 
+// Multi-run consensus fold: N independent full-battery runs → strict-min tier.
+// Aggregates carry per-run evidence; the compact certBlock stays the same shape
+// (additive `reproducibility` object) so every read surface keeps working.
+async function certifyConsensus(rec) {
+  if (RUNS === 1) return certifyOne(rec);
+  const runs = [];
+  for (let n = 0; n < RUNS; n++) {
+    console.log(`  — run ${n + 1}/${RUNS}`);
+    runs.push(await certifyOne(rec));
+  }
+  const tiers = runs.map((r) => r.certification);
+  const consensusTier = tiers.reduce((a, b) => (TIER_RANK[a] <= TIER_RANK[b] ? a : b));
+  const agreement = tiers.every((t) => t === tiers[0]);
+  const mean = (xs) => { const v = xs.filter((x) => x != null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+  // Report the run whose tier equals the consensus (the defensible one) as the
+  // carrier of per-model detail; aggregates ride in `reproducibility`.
+  const carrier = runs.find((r) => r.certification === consensusTier) || runs[0];
+  console.log(`  CONSENSUS: [${tiers.join(", ")}] → ${consensusTier} (${agreement ? "unanimous" : "strict-min on disagreement"})`);
+  return {
+    ...carrier,
+    certification: consensusTier,
+    dri: mean(runs.map((r) => r.dri)),
+    between_spread: mean(runs.map((r) => r.between_spread)),
+    within_spread: mean(runs.map((r) => r.within_spread)),
+    split_persistence: mean(runs.map((r) => r.split_persistence)),
+    reproducibility: {
+      runs: RUNS,
+      rule: "strict-min: the record earns the lowest tier it achieved across independent full-battery runs",
+      tiers,
+      agreement,
+      dri_per_run: runs.map((r) => (r.dri != null ? +r.dri.toFixed(3) : null)),
+      between_per_run: runs.map((r) => (r.between_spread != null ? +r.between_spread.toFixed(4) : null)),
+    },
+  };
+}
+
 const results = [];
 for (const rec of pick) {
-  try { results.push(await certifyOne(rec)); }
+  try { results.push(await certifyConsensus(rec)); }
   catch (e) { console.log(`  ✗ ${rec.id}: ${String(e?.message || e).slice(0, 150)}`); results.push({ id: rec.id, error: String(e?.message || e).slice(0, 200) }); }
 }
 
 const out = "/tmp/certify_pilot.json";
-fs.writeFileSync(out, JSON.stringify({ meta: { date: new Date().toISOString(), design: "tier3 perturbation pilot", T_REROLLS, K_PARA, judges: JUDGES.map((j) => j.model_id), paraphraser: PARAPHRASER.model_id }, results }, null, 2));
+fs.writeFileSync(out, JSON.stringify({ meta: { date: new Date().toISOString(), design: "tier3 perturbation pilot", method: METHOD_VERSION, runs: RUNS, T_REROLLS, K_PARA, judges: JUDGES.map((j) => j.model_id), paraphraser: PARAPHRASER.model_id }, results }, null, 2));
 
-console.log(`\n=== PILOT SUMMARY ===`);
+console.log(`\n=== ${RUNS > 1 ? `CONSENSUS (×${RUNS}) ` : "PILOT "}SUMMARY ===`);
 const ok = results.filter((r) => !r.error);
 for (const r of ok) {
-  console.log(`  ${r.id} score=${(r.divergence_score ?? 0).toFixed(2)} DRI=${r.dri?.toFixed(2)} persist=${r.split_persistence?.toFixed(2)} → ${r.certification}`);
+  const rep = r.reproducibility ? ` [runs: ${r.reproducibility.tiers.join(",")}${r.reproducibility.agreement ? " ✓unanimous" : ""}]` : "";
+  console.log(`  ${r.id} score=${(r.divergence_score ?? 0).toFixed(2)} DRI=${r.dri?.toFixed(2)} persist=${r.split_persistence?.toFixed(2)} → ${r.certification}${rep}`);
 }
+if (RUNS > 1) {
+  const unanimous = ok.filter((r) => r.reproducibility?.agreement).length;
+  console.log(`\nReproducibility: ${unanimous}/${ok.length} records unanimous across ${RUNS} runs (${ok.length ? Math.round((100 * unanimous) / ok.length) : 0}% tier agreement — stage-1 gate is ≥90%).`);
+}
+console.log(`Model chat calls this session: ${CHAT_CALLS} (track actuals against the cost projection).`);
 console.log(`\nGate check: do the sharpest splits separate from the negative controls on DRI?`);
 console.log(`Full results: ${out}`);
 

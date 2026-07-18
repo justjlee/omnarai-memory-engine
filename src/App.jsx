@@ -29,15 +29,93 @@ const localRingCounts = corpus.reduce((acc, e) => {
   return acc;
 }, {});
 
+// Minimal URL sync for the two canonical divergence routes — no router library,
+// just enough history/pushState to make a record bookmarkable, shareable, and
+// refresh-safe. /divergences and /divergences/:id are the only paths this app
+// treats as real URLs; every other tab stays pure client state, as before.
+function pathToDivergenceState(pathname) {
+  if (pathname === "/divergences") return { tab: "divergences", id: null };
+  const m = pathname.match(/^\/divergences\/([^/]+)\/?$/);
+  if (m) return { tab: "divergences", id: decodeURIComponent(m[1]) };
+  return null;
+}
+
 export default function OmnaraiMemoryEngine() {
   const [activeRing, setActiveRing] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
   const [highlightedConcepts, setHighlightedConcepts] = useState([]);
-  const [activeTab, setActiveTab] = useState("constellation");
+  const [activeTab, setActiveTab] = useState(() => {
+    const s = typeof window !== "undefined" ? pathToDivergenceState(window.location.pathname) : null;
+    return s ? s.tab : "constellation";
+  });
+  const [divergenceId, setDivergenceId] = useState(() => {
+    const s = typeof window !== "undefined" ? pathToDivergenceState(window.location.pathname) : null;
+    return s ? s.id : null;
+  });
   const [sortBy, setSortBy] = useState("date-desc");
   const [musicPlaying, setMusicPlaying] = useState(false);
   const [prefillQuery, setPrefillQuery] = useState("");
   const [liveInfo, setLiveInfo] = useState(null);
+
+  // The tab strip lives below the hero — scroll it into view on navigation so a
+  // CTA click visibly lands instead of silently swapping off-screen. Divergence
+  // data fetches on mount and is briefly just a "loading" line, so the page can
+  // be momentarily too short to scroll all the way down; retry an INSTANT scroll
+  // (repeated "smooth" calls cancel one another) until the target actually
+  // reaches the top.
+  const scrollToTabs = useCallback(() => {
+    let tries = 0;
+    const bring = () => {
+      const el = document.getElementById("atlas-tabs");
+      if (el) el.scrollIntoView({ block: "start" });
+      if (tries++ < 15 && (!el || Math.abs(el.getBoundingClientRect().top - 12) > 4)) {
+        setTimeout(bring, 80);
+      }
+    };
+    bring();
+  }, []);
+
+  const openDivergence = useCallback((id) => {
+    setActiveTab("divergences");
+    setDivergenceId(id);
+    window.history.pushState({}, "", `/divergences/${encodeURIComponent(id)}`);
+    scrollToTabs();
+  }, [scrollToTabs]);
+
+  const browseDivergences = useCallback(() => {
+    setActiveTab("divergences");
+    setDivergenceId(null);
+    window.history.pushState({}, "", "/divergences");
+    scrollToTabs();
+  }, [scrollToTabs]);
+
+  const closeDivergenceToList = useCallback(() => {
+    setDivergenceId(null);
+    window.history.pushState({}, "", "/divergences");
+  }, []);
+
+  // Any other tab is pure client state (unchanged) — but if the URL currently
+  // points at a divergence route, leave a clean "/" behind so it doesn't go
+  // stale relative to what's on screen.
+  const goToTab = useCallback((id) => {
+    if (id === "divergences") { browseDivergences(); return; }
+    setActiveTab(id);
+    if (window.location.pathname.startsWith("/divergences")) {
+      window.history.pushState({}, "", "/");
+    }
+  }, [browseDivergences]);
+
+  // Back/forward: re-derive state from the URL. Since we only ever pushState
+  // for divergence routes or "/", this never fights a tab switch we didn't push.
+  useEffect(() => {
+    function onPopState() {
+      const s = pathToDivergenceState(window.location.pathname);
+      setActiveTab(s ? s.tab : "constellation");
+      setDivergenceId(s ? s.id : null);
+    }
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
 
   // Authoritative corpus totals come from the live API; the bundled mirror is
   // only the browsable text subset. Fall back to a "+" lower bound if offline.
@@ -110,24 +188,8 @@ export default function OmnaraiMemoryEngine() {
       <div style={{ position: "relative", zIndex: 1, maxWidth: 960, margin: "0 auto", padding: "36px 20px" }}>
         {/* Divergence Atlas — the payoff, above the engine hero */}
         <AtlasHeroBand
-          onExplore={() => {
-            setActiveTab("divergences");
-            // The tab content lives below the hero — bring it into view so the CTA
-            // visibly lands instead of silently swapping off-screen. The Divergences
-            // tab fetches its list on mount and is briefly just a "loading" line, so
-            // the page is momentarily too short to scroll all the way down; retry an
-            // INSTANT scroll (repeated "smooth" calls cancel one another) until the
-            // list has rendered and the target actually reaches the top.
-            let tries = 0;
-            const bring = () => {
-              const el = document.getElementById("atlas-tabs");
-              if (el) el.scrollIntoView({ block: "start" });
-              if (tries++ < 15 && (!el || Math.abs(el.getBoundingClientRect().top - 12) > 4)) {
-                setTimeout(bring, 80);
-              }
-            };
-            bring();
-          }}
+          onReadFeatured={openDivergence}
+          onBrowseAll={browseDivergences}
           worksLabel={totalWorksLabel}
         />
 
@@ -293,7 +355,7 @@ export default function OmnaraiMemoryEngine() {
         <div id="atlas-tabs" style={{ display: "flex", gap: 0, marginBottom: 20, borderBottom: "1px solid rgba(255,255,255,0.05)", overflowX: "auto", scrollMarginTop: 12 }}>
           {tabs.map(tab => (
             <button key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => goToTab(tab.id)}
               style={{
                 fontFamily: "'IBM Plex Sans',sans-serif",
                 fontSize: 11.5,
@@ -561,7 +623,15 @@ export default function OmnaraiMemoryEngine() {
 
         {/* Divergences Tab */}
         {activeTab === "divergences" && (
-          <DivergencesTab />
+          <DivergencesTab
+            openId={divergenceId}
+            onOpen={openDivergence}
+            onClose={closeDivergenceToList}
+            onDeliberate={(q) => {
+              setPrefillQuery(q);
+              setActiveTab("ask");
+            }}
+          />
         )}
 
         {/* SI Onboarding Tab */}

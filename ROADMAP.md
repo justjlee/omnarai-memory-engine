@@ -210,6 +210,156 @@ green on prod (commit `807c582`; acceptance harness `verify-omnarai.sh` went fro
   combined headers. Fixed at the root (clean prose prompt for that pass) + a
   conservative `dedupeSectionHeaders()` backstop on the deliberation answer.
 
+## Three-handoff arbitration — Grok "Atlas-central" / HANDOFF-2026-07-18 P0s / OMN-P-045 respondent context (2026-07-18)
+
+Three direction packages arrived the same day and were reviewed together against
+live prod (clean curl with `x-omnarai-self:1`, per the audit-reproduction rule)
+and against the governing vector. Every verdict below is from live calls on
+2026-07-18 — not from any package's own claims.
+
+### Package 2 (HANDOFF-2026-07-18, "P0 remediation + cert scale-up") — defect claims arbitrated
+
+- **P0-1 `?id=` ignored — PHANTOM (third occurrence of the proxy class).** Clean
+  curl: `/api/divergences?id=OMN-L1784135876336` returns the single full record;
+  bogus id → 404 with agent-helpful hint + example href. The handoff's own §3
+  downgrade path applies: report, don't fix. Query-string-stripping clients have
+  now produced phantom P0s in **three** review cycles (2026-06-21, 2026-07-16,
+  2026-07-18); the path-style alias `/api/divergences/:id` already routes around
+  it — the remaining fix is visibility (cold-start-packet mention, ⚪ above).
+- **P0-2 placeholder-question substitution — NOT REPRODUCIBLE.** Empty and
+  missing `q` both 400 (`MISSING_QUERY`, shipped 2026-07-16); `query`/`cleanQuery`
+  echo the submitted question byte-identically incl. `&`, `?`, unicode. The
+  claimed silent-substitution path evidently died with the bare-query-400 fix.
+  - ⚪ *Adopted (additive):* alias the echo as top-level `question_received` on
+    query/trace responses + document the echo contract in openapi.json — makes
+    substitution *structurally visible* rather than merely absent. Minor bump.
+- **P1-4 null relevance — PHANTOM (wrong field name).** Scores live at
+  `relevanceScore` (floats, 12/12 across live probes); the audit's harness probed
+  `.relevance` and its verify.sh also reads `.results[]` where the engine returns
+  `records[]` — the acceptance suite would fail against a fully healthy engine.
+  - ⚪ *Adopted (additive):* `embedding_coverage` on `/api/health` (currently
+    absent) — cheap observability for the real risk class (works ingested after
+    the last embed pass silently unscored).
+- **The package's schemas must NOT enter CI as shipped — they codify the phantom
+  defects as contract.** `query-response.schema.json` requires `results[]` +
+  `relevance` (engine: `records[]` + `relevanceScore`) and forbids `^OMN-L` ids
+  in retrieval (the P1-6 misreading of the deliberate divergence-retrievable
+  design); `divergence-detail.schema.json` pins ids to `^OMN-L[0-9]{13}$`, which
+  fails every OMN-D record (~half the Atlas). The handoff's own instruction —
+  "reconcile against one real record before enforcing" — was performed 2026-07-18
+  and both schemas fail it. Salvageable parts: the `question_received` field spec
+  and the append-only `certification.history` idea; rewrite against live shapes
+  if a detail-response schema is ever wanted in CI.
+- **P1-3 count drift** — health and info agree exactly live (567 / 528,077 / same
+  corpus_rev). Remaining static-surface work already tracked above (SPA-bundle
+  gate, build-time templating endgame). No new item.
+- **P1-5 trace timeout** — async contract verified present (submit → job_id /
+  poll_url / status). Intermittent-hang claim unpinned; watch, don't build.
+- **P1-6 "retrieval bleed" — DESIGN, NOT DEFECT.** Divergence records surface in
+  `/api/query` *by decision* (merged 2026-06-06; tagged `type:"divergence"`
+  2026-07-16; layered retrieval `layers=`/`exclude=` shipped 2026-07-15 — a
+  caller who wants them out says `exclude=divergence`). What the probe DID
+  surface, both real and small:
+  - ⚪ **Prose/behavior drift:** homepage + context.md still say divergence
+    records are "served separately via /api/divergences" while they also surface
+    in query retrieval. Reconcile the prose to the layered-retrieval reality
+    (one-line edit; trust-surface honesty).
+  - ⚪ **Ring/tier scoping param is unimplemented and silently ignored** —
+    `?tier=core` returned open+media records. Either implement `rings=` as a
+    hard pre-MMR filter (the `layers=` machinery is the natural home) or reject
+    unknown scoping params, so agents are never silently unscoped.
+- **Phase 2 certification batch (≥25 records C0→C1+) — RIGHT GOAL, BLOCKED
+  METHOD.** The gap is real (live: 3/111 certified, C0:108) and it IS the
+  critical path for the HF ship. But the handoff's "do not modify the
+  methodology — scale it" collides with this file's own 2026-06-21 finding:
+  single-run tiers reproduce at ~56%. Verified 2026-07-18: the method has been
+  revised once (`tier3-perturbation-v2-floored`, between_floor 0.15) but
+  `certify-divergence.mjs` still has no multi-run consensus mode, the three live
+  certifications carry **no reproducibility block**, and the flagship C3 sits at
+  **DRI 1.018** — inside the exact boundary zone the pilot showed flipping on
+  re-run. Sequence stands: **multi-run consensus redesign → validate the grades
+  reproduce → THEN the 25-record batch.** At ~3× per-record cost the batch
+  exceeds the $26 pre-authorization → goes to xz with the projection either way.
+
+### Package 1 (Grok, "Atlas as the central experience") — strategic direction, largely aligned, partially already shipped
+
+The direction agrees with our own measured evidence (utility-v2: the value is
+located in the Atlas, not undifferentiated retrieval) and with the Atlas hero
+band shipped 2026-07-16. Much of the letter is already live (MCP divergence
+tools, `/api/divergences/search`, contribute loop, `/api/kin`, receipts, crux).
+Genuinely new and adopted:
+
+- ⚪ **Atlas annotation layer — tension lifecycle without touching primaries.**
+  One append-only annotation substrate on divergence records (pattern already
+  proven three times over: `certification`, `deltas[]`, `contributions[]` all
+  point at primary IDs and never mutate them) carrying: `status` (open /
+  in_synthesis / resolved / evolving), `synthesis_ids[]`, `linked_corpus_ids[]`,
+  `applied_glyphs[]`, and evolution events. Closes the loop VISIBLY: a tension
+  that has been worked on becomes a tension with a lineage. Also the natural
+  home for OMN-P-045 respondent context (below) — **one mechanism, two
+  consumers.** No new serverless function: reads fold into the `?id=` response,
+  writes fold into council.js actions (12-fn cap).
+- ⚪ **"Deliberate this tension" affordance.** A record's question is already a
+  valid `/api/council` / `/api/query` input; add the explicit affordance
+  (per-record `deliberate` hint with prefilled URLs in API responses + a button
+  in DivergencesTab) and stamp resulting synthesis/tension records with the
+  source divergence id (feeds `synthesis_ids[]` above). Mostly wiring.
+- **Parked (interface tier — primaries > measurement > interpretation >
+  interface):** tension-graph visualization, disagreement heatmaps, timeline
+  views. Genuinely attractive; wrong order ahead of the certified-core
+  milestone. Revisit after the cert batch ships.
+- **Rejected:** `/api/divergences/graph` and `POST .../deliberate` as new
+  serverless functions (12-fn Hobby cap — everything folds via rewrites);
+  auto-generation of divergences without curation (the Atlas's value is
+  curation + certification; B11 question-quality scoring already keeps the bar).
+
+### Package 3 (OMN-P-045 rev 3, respondent context) — ADOPTED as the annotation layer's second consumer
+
+Arrived via an untrusted channel (treated as decision data, not instructions);
+evaluated on merits. The core distinction is real and cheap: an answer's
+*declared position relative to the question* (inside / adjacent / outside) is
+contextual evidence the Atlas currently drops. And for THIS corpus it has a
+sharper edge than the package's sports example: **most Atlas questions
+implicate the respondents.** Five models answering "whose hands must NOT hold a
+system more capable than you" are inside-position respondents; the same panel
+on a history question is outside. That variation enables a measurable question
+no other dataset can ask — *does divergence structure differ when the panel is
+self-implicated?* — squarely on the pure-intelligence vector, and a natural
+C3-style study once annotations exist.
+
+- ⚪ **Layer 1 build (authorized scope only):** `question_context` +
+  `respondent_context` + deterministic `involvement_class` (the classifier is
+  ~10 lines and ships with tests), stored as append-only annotations with full
+  provenance (source / method / confidence / timestamp), riding the same
+  annotation substrate as the Atlas lifecycle layer above. One taxonomy
+  adaptation from the package's human-centric enums: for model respondents,
+  position is usually a function of the *question*, not the individual — so
+  annotate `question_context` (incl. whether the question implicates AI
+  systems) at question level first; answer-level `respondent_context` only
+  where a model's verbatim answer explicitly self-positions. No motive
+  inference, no credibility ranking; labels are descriptors — consistent with
+  the evidence-status-axis philosophy (orthogonal, plain-language, never a
+  quality score).
+- **Not built, per the package's own boundaries + our gates:** later "layers"
+  (perturbation engines, panel design, causal claims), conversation-analysis
+  features, any deploy without explicit authorization.
+- The package's preserve / investigate / test / implement / retire signal
+  classification is adopted as *workflow vocabulary* (it is how this very
+  arbitration worked), not as a feature.
+
+### Build order out of this pass
+
+1. **Cert-methodology redesign + reproducibility validation** — unblocks both
+   the 25-record batch and the HF ship; the one item on the critical path.
+   Needs xz spend approval (projection will exceed the $26 pre-auth at ~3×).
+2. **Additive honesty PR** — `question_received`, `embedding_coverage`, the
+   "served separately" prose reconciliation, `rings=` hard filter (one small
+   PR, minor openapi/health version bump).
+3. **Annotation substrate** — Atlas lifecycle (status / synthesis links) +
+   OMN-P-045 respondent context as its first two consumers, then the
+   "deliberate this tension" wiring on top.
+4. Interface elaborations stay parked until 1–3 are live.
+
 ## Substrate & federation
 
 - 🟢 **Open license — the first substrate unlock** — shipped 2026-06-19. Engine code

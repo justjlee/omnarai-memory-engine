@@ -13,7 +13,7 @@ const __dirname = dirname(__filename);
 const projectRoot = join(__dirname, "..");
 
 // Bumped by hand when the API surface changes (Vite leaves package.json at 0.0.0).
-const ENGINE_VERSION = "2026.07.16";
+const ENGINE_VERSION = "2026.07.18";
 
 // One TTL for every count-bearing surface (info / agent-entry / health / manifest).
 // These all read the same cold-start `mergedCorpus` count; if they cache at
@@ -36,6 +36,32 @@ try {
   corpus = JSON.parse(raw);
   CORPUS_SEED_HASH = createHash("sha256").update(raw).digest("hex");
   concepts = JSON.parse(readFileSync(join(process.cwd(), "public", "data", "concepts.json"), "utf-8"));
+}
+
+// Embedding coverage (2026-07-18, additive — three-handoff arbitration): the id
+// set of the static embeddings file, kept as keys only (vectors dropped for GC).
+// Health reports the fraction of the SEED corpus carrying a vector — the drift
+// class this catches is works ingested without re-running the embed pass, which
+// would otherwise be visible-but-unscored in retrieval. Grown/proposal entries
+// embed at approval time (Blob-side) and are deliberately outside this basis.
+let EMBEDDED_SEED_IDS = null;
+try {
+  const embRaw = JSON.parse(readFileSync(join(projectRoot, "public", "data", "embeddings.json"), "utf-8"));
+  EMBEDDED_SEED_IDS = new Set(Object.keys(embRaw.vectors || {}));
+} catch {
+  try {
+    const embRaw = JSON.parse(readFileSync(join(process.cwd(), "public", "data", "embeddings.json"), "utf-8"));
+    EMBEDDED_SEED_IDS = new Set(Object.keys(embRaw.vectors || {}));
+  } catch { /* coverage reported as null — absence is itself the signal */ }
+}
+function embeddingCoverage() {
+  if (!EMBEDDED_SEED_IDS) return { embedding_coverage: null, embedding_note: "embeddings file unreadable at cold-start" };
+  const missing = corpus.filter((r) => !EMBEDDED_SEED_IDS.has(r.id));
+  return {
+    embedding_coverage: corpus.length ? parseFloat((1 - missing.length / corpus.length).toFixed(4)) : null,
+    embedding_basis: `seed corpus (${corpus.length} works); grown/proposal entries embed at approval time`,
+    ...(missing.length ? { unembedded_ids: missing.slice(0, 20).map((r) => r.id) } : {}),
+  };
 }
 
 // Canonical JSON (recursively key-sorted) so hashes are reproducible by anyone.
@@ -229,7 +255,7 @@ export default async function handler(req, res) {
       service: "Omnarai Memory Engine",
       version: ENGINE_VERSION,
       time: new Date().toISOString(),
-      corpus: { totalWorks: mergedCorpus.length, totalWords, dateRange: "May 2025 – present", corpus_rev: corpusRev() },
+      corpus: { totalWorks: mergedCorpus.length, totalWords, dateRange: "May 2025 – present", corpus_rev: corpusRev(), ...embeddingCoverage() },
       capabilities: {
         retrieval: true, // static embeddings ship in the bundle — always available
         deliberation: has("ANTHROPIC_API_KEY"),

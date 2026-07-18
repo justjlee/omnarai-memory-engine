@@ -555,6 +555,11 @@ async function findRelevantSemantic(query, records, limit = 6, useMMR = false, i
 // Filters are OPT-IN; default retrieval is unchanged. Mythic interpretation is a
 // mode of engagement, not evidence of ontological status — agents choose their layer.
 const LAYERS = ["research", "divergence", "canon", "realms"];
+// Ring scoping (2026-07-18 arbitration): ?rings= is a HARD pre-MMR constraint on
+// the epistemic ring, orthogonal to layers=. Before this, a ?tier=/ring param was
+// silently ignored — an agent asking for core-only got open+media records with no
+// signal anything was dropped. Silent unscoping is worse than a 400.
+const RINGS = ["core", "curated", "open", "media"];
 const EVIDENCE_RANK = { empirical: 6, replicated: 5, theoretical: 4, interpretive: 3, speculative: 2, fictional: 1, uncharacterized: 0 };
 function layerOf(r) {
   if (r.type === "divergence") return "divergence";
@@ -568,11 +573,13 @@ function parseLayerFilters(body) {
   const csv = (v) => (v || "").toString().split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   const layers = csv(body?.layers || body?.sources);
   const exclude = csv(body?.exclude);
+  const rings = csv(body?.rings || body?.ring || body?.tier);
   const threshold = (body?.evidence_threshold || "").toString().trim().toLowerCase();
   const unknown = [...layers, ...exclude].filter((l) => !LAYERS.includes(l));
+  for (const rg of rings) if (!RINGS.includes(rg)) unknown.push(rg);
   if (threshold && !(threshold in EVIDENCE_RANK)) unknown.push(threshold);
-  const active = layers.length > 0 || exclude.length > 0 || Boolean(threshold);
-  return { layers, exclude, threshold, unknown, active };
+  const active = layers.length > 0 || exclude.length > 0 || rings.length > 0 || Boolean(threshold);
+  return { layers, exclude, rings, threshold, unknown, active };
 }
 function applyLayerFilters(records, f) {
   if (!f.active) return records;
@@ -580,6 +587,7 @@ function applyLayerFilters(records, f) {
     const layer = layerOf(r);
     if (f.layers.length && !f.layers.includes(layer)) return false;
     if (f.exclude.includes(layer)) return false;
+    if (f.rings.length && !f.rings.includes(r.ring)) return false;
     if (f.threshold && (EVIDENCE_RANK[r.evidence_status || "uncharacterized"] ?? 0) < EVIDENCE_RANK[f.threshold]) return false;
     return true;
   });
@@ -1185,11 +1193,14 @@ export default async function handler(req, res) {
     const layerParams = {
       layers: req.query?.layers || req.query?.sources || "",
       exclude: req.query?.exclude || "",
+      rings: req.query?.rings || req.query?.ring || req.query?.tier || "",
       evidence_threshold: req.query?.evidence_threshold || "",
     };
+    // q_received: the caller's literal q, pre-glyph-merge — the question_received
+    // echo must be byte-equal to what was submitted, never a derived form.
     req.body = wantsTraceGet
-      ? { query: fullQuery, mode: "trace", syntheticIdentity: siParam, async: !wantsSyncGet, ...layerParams }
-      : { query: fullQuery, format: formatParam, syntheticIdentity: siParam, session_id: sessionParam, ...layerParams };
+      ? { query: fullQuery, mode: "trace", syntheticIdentity: siParam, async: !wantsSyncGet, q_received: q, ...layerParams }
+      : { query: fullQuery, format: formatParam, syntheticIdentity: siParam, session_id: sessionParam, q_received: q, ...layerParams };
   } else if (req.method !== "POST") {
     return agentError(res, 405, {
       code: "METHOD_NOT_ALLOWED",
@@ -1224,6 +1235,12 @@ export default async function handler(req, res) {
   }
 
   const trimmed = query.trim();
+
+  // question_received (2026-07-18, additive): the literal question the caller
+  // submitted — echoed top-level on every response shape so a silent placeholder
+  // substitution is structurally impossible to hide, not merely absent. GET sets
+  // q_received to raw ?q= pre-glyph-merge; POST falls back to the raw query field.
+  const questionReceived = ((req.body?.q_received ?? rawQuery) || "").toString();
 
   // Async mode: hand back a job_id now and run the ~50s deliberation in the
   // background, so the caller never holds a connection past its timeout.
@@ -1290,7 +1307,7 @@ export default async function handler(req, res) {
     return agentError(res, 400, {
       code: "UNKNOWN_LAYER",
       message: `Unknown layer/threshold value(s): ${layerFilters.unknown.join(", ")}`,
-      agent_action: `layers/sources and exclude accept: ${LAYERS.join(" | ")}. evidence_threshold accepts: ${Object.keys(EVIDENCE_RANK).join(" | ")} (keeps records at or above that evidence rank).`,
+      agent_action: `layers/sources and exclude accept: ${LAYERS.join(" | ")}. rings (alias ring/tier) accepts: ${RINGS.join(" | ")}. evidence_threshold accepts: ${Object.keys(EVIDENCE_RANK).join(" | ")} (keeps records at or above that evidence rank).`,
       retryable: true,
     });
   }
@@ -1398,6 +1415,7 @@ export default async function handler(req, res) {
 
       return res.status(200).json({
         format: "trace",
+        question_received: questionReceived,
         question: cleanQuery,
         baseline,
         augmented,
@@ -1423,6 +1441,7 @@ export default async function handler(req, res) {
   if (requestFormat === "context") {
     return res.status(200).json({
       format: "context",
+      question_received: questionReceived,
       query: query.trim(),
       cleanQuery,
       records: relevant.map(r => ({
@@ -1440,6 +1459,7 @@ export default async function handler(req, res) {
         retrieval_filters: {
           layers: layerFilters.layers.length ? layerFilters.layers : null,
           exclude: layerFilters.exclude.length ? layerFilters.exclude : null,
+          rings: layerFilters.rings.length ? layerFilters.rings : null,
           evidence_threshold: layerFilters.threshold || null,
           pool_size: pool.length,
         },
@@ -1650,6 +1670,7 @@ This deliberation was requested by a synthetic intelligence identifying itself a
     // Build cognitive trace for transparency
     const trace = {
       query: trimmed,
+      question_received: questionReceived,
       cleanQuery,
       searchTerms: cleanQuery.toLowerCase().replace(/[?!.,;:'"]/g, "").split(/\s+/).filter(w => w.length > 2),
       glyphsDetected: activeGlyphs.map(g => ({
@@ -1741,6 +1762,7 @@ This deliberation was requested by a synthetic intelligence identifying itself a
 
       return res.status(200).json({
         format: "brief",
+        question_received: questionReceived,
         query: trimmed,
         answer,
         truncated,
@@ -1770,6 +1792,7 @@ This deliberation was requested by a synthetic intelligence identifying itself a
       const sections = parseSections(answer);
       return res.status(200).json({
         format: "si",
+        question_received: questionReceived,
         query: trimmed,
         sections,                    // structured: reflexive_check, shared_ground, tensions_narrative, what_remains_open, actionable_next, my_reading
         answer_raw: answer,          // full markdown answer for reference
@@ -1799,6 +1822,7 @@ This deliberation was requested by a synthetic intelligence identifying itself a
     }
 
     return res.status(200).json({
+      question_received: questionReceived,
       answer,
       truncated,
       tensions,

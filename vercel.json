@@ -41,6 +41,14 @@
       "destination": "/try.html"
     },
     {
+      "source": "/divergences/:id",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/divergences",
+      "destination": "/index.html"
+    },
+    {
       "source": "/api/trace",
       "destination": "/api/query?mode=trace"
     },
