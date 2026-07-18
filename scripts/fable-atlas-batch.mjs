@@ -71,7 +71,7 @@ async function callFable(question, { timeoutMs = 180000 } = {}) {
 const setArg = process.argv.indexOf("--set");
 const SET_ID = setArg !== -1 && process.argv[setArg + 1] ? process.argv[setArg + 1] : "1";
 const { SETS } = await import("./fable-questions.mjs");
-const QUESTIONS = SETS[SET_ID];
+let QUESTIONS = SETS[SET_ID];   // reassigned by --resume to the unrun remainder
 if (!QUESTIONS) { console.error(`Unknown --set ${SET_ID}. Available: ${Object.keys(SETS).join(", ")}`); process.exit(1); }
 console.log(`Question set ${SET_ID}: ${QUESTIONS.length} questions.`);
 
@@ -111,13 +111,26 @@ const existingQs = grown.entries.filter((e) => e.divergence?.question || e.prove
   .map((e) => e.divergence?.question || e.provenance.question);
 console.log(`Existing divergence records: ${existingQs.length}. Batch: ${QUESTIONS.length}.`);
 const [existingVecs, newVecs] = await Promise.all([embed(existingQs), embed(QUESTIONS.map((b) => b.q))]);
+// A duplicate is normally an authoring mistake, so the default is to ABORT rather
+// than quietly ask a question the Atlas already answered. --resume inverts that:
+// after a crashed run, the questions already committed to the store ARE the
+// duplicates, and skipping them is exactly right. (fable-atlas-batch persists the
+// whole set in one write at the end, so a mid-run death leaves committed records
+// from an earlier recovery plus the unrun remainder.)
+const RESUME = process.argv.includes("--resume");
+const todo = [];
 for (let i = 0; i < QUESTIONS.length; i++) {
   const sims = existingVecs.map((u) => cos(u, newVecs[i]));
   const max = sims.length ? Math.max(...sims) : 0;
-  const flag = max > DEDUP_THRESHOLD ? "  ✗ DUPLICATE" : "  ✓";
+  const dup = max > DEDUP_THRESHOLD;
+  const flag = dup ? (RESUME ? "  ↷ already committed, skipping" : "  ✗ DUPLICATE") : "  ✓";
   console.log(`${flag} maxSim=${max.toFixed(3)} [${QUESTIONS[i].cluster}] ${QUESTIONS[i].q.slice(0, 70)}…`);
-  if (max > DEDUP_THRESHOLD) { console.error("Duplicate question — edit the batch before running."); process.exit(1); }
+  if (dup && !RESUME) { console.error("Duplicate question — edit the batch, or pass --resume to skip committed ones."); process.exit(1); }
+  if (!dup) todo.push(QUESTIONS[i]);
 }
+if (RESUME) console.log(`--resume: ${todo.length} of ${QUESTIONS.length} still to run.`);
+if (!todo.length) { console.log("Nothing left to run."); process.exit(0); }
+QUESTIONS = todo;
 if (DRY) { console.log("--dry: stopping before council calls."); process.exit(0); }
 
 // ── 2. sequential generation (guest retried once; run aborts if Fable absent —
