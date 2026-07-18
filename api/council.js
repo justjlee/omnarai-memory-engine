@@ -696,6 +696,10 @@ function recordToMarkdown(r, cite, deltaIds) {
   L.push(`# ${r.title || r.id}`, "");
   L.push(`**Record:** \`${r.id}\`  ·  **Date:** ${r.date || "—"}  ·  **Ring:** ${r.ring || "—"}`);
   L.push(`**Panel:** ${(r.contributors || []).join(", ") || "—"}`, "");
+  // Non-standard panel composition must travel with the record — a reader of the
+  // .md export otherwise cannot tell a deliberately extended council from the
+  // standard one.
+  if (d.panel_note) L.push("", `> **Panel note.** ${d.panel_note}`, "");
   L.push("## Question", "", d.question || r.excerpt || "", "");
   L.push("## Verbatim answers", "");
   for (const a of d.answers || []) {
@@ -813,7 +817,14 @@ async function serveDivergences(req, res) {
         contributors: r.contributors || [],
         question: r.divergence.question,
         method: r.divergence.method,
+        // Taxonomy bucket, when the writing batch recorded one.
+        cluster: r.divergence.cluster || null,
         answers: r.divergence.answers || [],
+        // Panel composition note for non-standard councils (a guest member on a
+        // one-time batch). Load-bearing for honest reading: without it a
+        // six-answer record looks like the standard five-model panel with an
+        // extra voice, rather than a deliberately extended one. null = standard.
+        panel_note: r.divergence.panel_note || null,
         tensions: r.divergence.tensions || [],
         deliberation_card: r.divergence.deliberation_card || null,
         // Perturbation certification (null until the record has been run through
