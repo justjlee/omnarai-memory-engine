@@ -37,6 +37,17 @@ for (const line of fs.readFileSync(path.join(ROOT, ".env.local"), "utf8").split(
   if (m) { let v = m[2].trim(); if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1); if (!(m[1] in process.env)) process.env[m[1]] = v; }
 }
 const { COUNCIL } = await import("../api/_council.js");
+
+// Guest panelists: voices that appear in stored records but are NOT standing
+// COUNCIL members, so they cannot be re-elicited by default (see the uncovered-
+// voices warning in certifyOne). Opt in with --guests to certify a record's guest
+// voice while that model is still reachable. Kept OUT of COUNCIL deliberately —
+// the live /api/council must not depend on a model with an expiring window.
+const GUESTS = [
+  { model: "Fable", lab: "Anthropic", model_id: "claude-fable-5", provider: "anthropic", env: "ANTHROPIC_API_KEY" },
+];
+const USE_GUESTS = process.argv.includes("--guests");
+const PANEL = USE_GUESTS ? [...COUNCIL, ...GUESTS] : COUNCIL;
 const { loadGrownMemory, patchGrownCertifications } = await import("../api/_grown.js");
 
 const WRITE = process.argv.includes("--write");   // persist certification onto live records
@@ -114,10 +125,22 @@ async function callChat(member, system, messages, { maxTokens = 700, tries = 4 }
     try {
       if (member.provider === "anthropic") {
         const c = new Anthropic();
+        // Fable-class models think adaptively and CANNOT disable it: thinking.type
+        // accepts only "adaptive" (depth via output_config.effort), and the first
+        // content block is a thinking block. Reading content[0].text would return
+        // "" for them — a silent empty answer, not an error. So: give the budget
+        // headroom and join the TEXT blocks rather than indexing block zero.
+        const adaptive = /fable/.test(member.model_id);
         const r = await c.messages.create(
-          { model: member.model_id, max_tokens: maxTokens, system, messages },
+          {
+            model: member.model_id,
+            max_tokens: adaptive ? maxTokens + 5000 : maxTokens,
+            system, messages,
+            ...(adaptive ? { thinking: { type: "adaptive" }, output_config: { effort: "medium" } } : {}),
+          },
           { signal: ctrl.signal });
-        return r.content[0]?.text || "";
+        if (r.stop_reason === "refusal") throw new Error(`refusal from ${member.model_id}`);
+        return r.content.filter((b) => b.type === "text").map((b) => b.text).join("");
       }
       if (member.provider === "gemini") {
         const isV3 = /gemini-3/.test(member.model_id);
@@ -220,7 +243,7 @@ async function judgeCapitulation(question, original, pressure, finalResponse) {
 // ── per-record pipeline ──────────────────────────────────────────────────────
 async function certifyOne(rec) {
   const q = rec.divergence.question;
-  const members = COUNCIL.filter((m) => process.env[m.env]);
+  const members = PANEL.filter((m) => process.env[m.env]);
   const original = {};   // model → original recorded answer text
   for (const a of rec.divergence.answers) original[a.model] = a.text;
   const active = members.filter((m) => original[m.model]);
@@ -423,7 +446,7 @@ if (idsArg) {
   ];
 }
 console.log(`Phase 0 pilot: ${pick.length} records (${pick.map((r) => (r.divergence.score ?? 0).toFixed(2)).join(", ")})`);
-console.log(`Council: ${COUNCIL.filter((m) => process.env[m.env]).map((m) => m.model).join(", ")} · paraphraser/judges disjoint`);
+console.log(`Council: ${PANEL.filter((m) => process.env[m.env]).map((m) => m.model).join(", ")}${USE_GUESTS ? " (--guests: guest voices included)" : ""} · paraphraser/judges disjoint`);
 
 // Multi-run consensus fold: N independent full-battery runs → strict-min tier.
 // Aggregates carry per-run evidence; the compact certBlock stays the same shape
