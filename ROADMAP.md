@@ -563,6 +563,30 @@ C3-style study once annotations exist.
 
 ## Experience & reach
 
+- 🟡 **Google Search Console — finish the indexing requests (CURATOR, ~5 min)** —
+  the consumer-AI-app access failure (Copilot/Meta AI/Gemini refuse or can't find
+  omnarai.vercel.app) was diagnosed 2026-07-18: NOT server-side (all crawler UAs
+  get 200s; robots.txt permissive) but (a) zero search-index presence + (b) the
+  `*.vercel.app` phishing-wave reputation. Already done: IndexNow submitted for
+  Bing/Copilot (13 URLs, 202 Accepted, key `3db1…` hosted at root); verification
+  meta tag live on prod (commit `2ac85c7`). REMAINING for the curator (GSC threw
+  "action blocked over limit" mid-setup 2026-07-18 — its daily quota; resets in
+  ~24h): (1) if not yet green, click **Verify** (Settings → Ownership
+  verification → HTML tag — the tag is already served); (2) **Sitemaps** →
+  submit `sitemap.xml`; (3) URL Inspection → **Request Indexing** for `/`,
+  `/llms.txt`, `/try`, `/for-researchers`, `/omnarai-cold-start.md` — spread
+  over a day or two (small daily quota). Then watch the Pages report for
+  "Indexed". The durable fix for the reputation half is a custom domain (below).
+
+- ⚪ **Custom domain (RECOMMENDED — the durable fix for AI-app refusals)** — exit
+  the `vercel.app` neighborhood (e.g. omnarai.org, ~$15/yr, curator purchase).
+  Kills the security-refusal problem at the root, makes citations permanent,
+  decouples identity from Vercel. Migration plan when decided: add domain in
+  Vercel → serve BOTH (vercel.app stays as alias so existing MCP clients/registry
+  entries never break) → migrate absolute URLs across llms.txt, openapi.json,
+  robots/sitemap, MCP registry, npm README, HF README (same class as the
+  count-sync gaps — wants a sync script) → re-verify GSC on the new domain.
+
 - ⚪ **External discoverability (P5a)** — the on-site discovery layer is live and
   verified (the post-deploy arrival check confirms `sitemap.xml`, `llms.txt`,
   `robots.txt`, the `Link:` headers, and the cold-start packet all reachable). The
