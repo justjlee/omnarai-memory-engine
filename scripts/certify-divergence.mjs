@@ -485,9 +485,17 @@ async function certifyConsensus(rec) {
 }
 
 const results = [];
+// Per-record checkpoint (2026-07-18): the host died twice mid-batch today and a
+// crash used to lose every completed record's full payload (the output file was
+// written only at exit). Flush results-so-far after EVERY record — a killed run
+// costs at most the record in flight, and the survivors' ids feed a --ids resume.
+const CHECKPOINT = path.join(ROOT, "atlas", "certify-checkpoint.json");
 for (const rec of pick) {
   try { results.push(await certifyConsensus(rec)); }
   catch (e) { console.log(`  ✗ ${rec.id}: ${String(e?.message || e).slice(0, 150)}`); results.push({ id: rec.id, error: String(e?.message || e).slice(0, 200) }); }
+  try {
+    fs.writeFileSync(CHECKPOINT, JSON.stringify({ meta: { method: METHOD_VERSION, runs: RUNS, updatedAt: new Date().toISOString(), done: results.length, of: pick.length, chat_calls: CHAT_CALLS }, results }, null, 2));
+  } catch { /* checkpoint is best-effort — never kill the batch over it */ }
 }
 
 const out = "/tmp/certify_pilot.json";
