@@ -383,10 +383,30 @@ C3-style study once annotations exist.
      self-varies more) than the 2026-06 panel did on the same questions. If it
      holds beyond n=10 it's a longitudinal finding ("is cross-model divergence
      closing over generations?") — exactly what the OMN-DD delta namespace is for.
-   - **Next decision (xz):** (a) ~$15 — validate strict-min×3 reproducibility on
-     the same 10; (b) ~$4.50 — re-certify the 3 live certified records ×3 and
-     reconcile the ledger; (c) hold. Spent so far ~$15 of the $75 ceiling; the
-     25-record batch stays blocked until a consensus method passes its own gate.
+   - 🟢 **STAGE 2 COMPLETE — GATE PASSED (2026-07-18, xz approved both follow-ups):
+     10/10 (100%) consensus-vs-consensus agreement.** Full table + provenance
+     caveats in `atlas/certify-stage2-2026-07-18.md`. Single runs kept wobbling
+     (three fresh within-stage-2 disagreements) and strict-min absorbed every
+     one — the consensus grade is stable even though individual runs are not.
+     **The method is validated; the 25-record batch is UNBLOCKED on method.**
+   - 🟢 **"Negative control" worry CLOSED:** OMN-D…945 = six runs, six C1s across
+     two independent stages (DRI 1.20–2.05). Its birth score 0.00 was a stale
+     label on a genuinely divergent question, not a floor leak. Evidence-backed
+     C1 written to the ledger. ⚪ *Cheap hygiene follow-up:* re-score birth
+     `score`/`label` fields across the Atlas (embedding-only, ~$0.10) so the
+     "expected negative" bucket stops lying to future pilots.
+   - **Ledger after the campaign: certified_count = 2, both evidence-backed C1s**
+     (953 [C3,C3,C1], 945 [C1,C1,C1]×2), demotions preserved in
+     `certification.history[]`. The certification legend's language rule holds:
+     nothing public says "genuine divergence" without surviving perturbation.
+   - **Batch decision (xz):** ~$38 of $75 spent (incl. ~$5 lost to two host
+     failures mid-run). The 25-record ×3 batch ≈ $37.50 → ~$75.50 total, right
+     at the ceiling. Recommend running it as-approved-method when ready; newest
+     records first per HANDOFF-2026-07-18 §2 ordering (freshness, then
+     tensionCount desc). Note the DRI<1.0 pattern (today's panel converges more
+     than the recorded 2026-06 splits) predicts a mostly-C0 outcome on
+     re-elicitation-based certification — the certified core may be small and
+     honest rather than large; that is the finding, not a failure.
 2. 🟢 **Additive honesty PR** — SHIPPED & verified on prod: `question_received`
    echoed byte-identically on every response shape (incl. `&`/`?`/unicode) +
    trace object; `rings=` (alias ring/tier) hard pre-MMR filter, 400 UNKNOWN_LAYER
