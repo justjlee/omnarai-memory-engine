@@ -399,14 +399,20 @@ C3-style study once annotations exist.
      (953 [C3,C3,C1], 945 [C1,C1,C1]×2), demotions preserved in
      `certification.history[]`. The certification legend's language rule holds:
      nothing public says "genuine divergence" without surviving perturbation.
-   - **Batch decision (xz):** ~$38 of $75 spent (incl. ~$5 lost to two host
-     failures mid-run). The 25-record ×3 batch ≈ $37.50 → ~$75.50 total, right
-     at the ceiling. Recommend running it as-approved-method when ready; newest
-     records first per HANDOFF-2026-07-18 §2 ordering (freshness, then
-     tensionCount desc). Note the DRI<1.0 pattern (today's panel converges more
-     than the recorded 2026-06 splits) predicts a mostly-C0 outcome on
-     re-elicitation-based certification — the certified core may be small and
-     honest rather than large; that is the finding, not a failure.
+   - 🟢 **BATCH COMPLETE (2026-07-19, xz go): 25/25 graded — C3:1 · C1:2 ·
+     C0:22.** Full deliverable: `atlas/CERT-BATCH-2026-07.md`. Survived one
+     Anthropic credit outage mid-batch (checkpoint + `persist-certifications.mjs`
+     replay = zero loss); Fable guest coverage complete on all 13 six-voice
+     records before window close. **Ledger: certified_count = 5 (C3:1, C1:4),
+     every grade with on-record multi-run evidence; 119 evidence-backed C0s.**
+     The unanimous C3 — the Atlas's deepest un-dissuadable split — is the
+     intervention-vs-autonomy question (OMN-D…434684, [C3,C3,C3], birth score
+     0.00). Predicted mostly-C0 outcome confirmed (axis-stable/position-labile
+     at n=25); certified core is behavioral-ethical (intervention, introspective
+     self-trust, tuning-as-identity), not metaphysical. Campaign total ~$72 of
+     the $75 ceiling. Open follow-ups: ⚪ re-score broken birth-score labels
+     (both 0.00 "negative controls" certified — ~$0.10 fix) · ⚪ fold the
+     certified-core sentence into the HF dataset card + engine surfaces.
 2. 🟢 **Additive honesty PR** — SHIPPED & verified on prod: `question_received`
    echoed byte-identically on every response shape (incl. `&`/`?`/unicode) +
    trace object; `rings=` (alias ring/tier) hard pre-MMR filter, 400 UNKNOWN_LAYER
