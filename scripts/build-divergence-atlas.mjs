@@ -169,6 +169,18 @@ const partialNote = partial.length
     `Compare the RATE column, not the raw count — a model present on fewer panels has fewer chances to be named. ` +
     `Rates over a small number of records are correspondingly noisy.`
   : "";
+// A high naming rate is NOT evidence of robust divergence, and the two are easy
+// to conflate when the rate table sits this prominently. Dated + scoped so it
+// cannot silently outlive the finding it reports.
+const certCaveat = modelRecordCounts.Fable
+  ? `\n\n> **Being named often ≠ diverging robustly.** The Fable-vs-Claude pairing produced the most ` +
+    `within-lab tensions of any pair here, but perturbation certification (2026-07-19, full six-voice ` +
+    `panel, \`--runs 3\` strict-min) returned **C0 on 0 of 3 tested** — including a unanimous C0 on the ` +
+    `sharpest one. Their answers' semantic distance is not reliably larger than a single model's own ` +
+    `re-roll variance. Read the tension counts as *displayed* disagreement, not demonstrated ` +
+    `divergence. Detail: \`docs/fable-within-lab-certification-2026-07-19.md\`; claim registry: ` +
+    `\`within-lab-divergence-is-robust\` (refuted).`
+  : "";
 // Roster derived from the data, so a guest member can never go unlisted.
 const rosterList = Object.entries(modelRecordCounts).sort((a, b) => b[1] - a[1])
   .map(([m, n]) => {
@@ -220,7 +232,7 @@ ${clusterList}
 |---|---|---|---|
 ${outlierList}
 
-Read this as how often each model lands on a *distinct* side of a fault line. **${top2} most frequently hold positions the others don't; ${bot2} sit closest to the panel's center of mass** — a population-level signal you only see across many questions. Caveat: the synthesizer is itself Claude, so Claude's counts may carry a mild self-naming bias.${partialNote}
+Read this as how often each model lands on a *distinct* side of a fault line. **${top2} most frequently hold positions the others don't; ${bot2} sit closest to the panel's center of mass** — a population-level signal you only see across many questions. Caveat: the synthesizer is itself Claude, so Claude's counts may carry a mild self-naming bias.${partialNote}${certCaveat}
 
 **Every meta-level question split the panel.** Across the curated battery, every question produced a genuine divergence (none collapsed to consensus) — supporting the thesis that the *status of a model's own mind* is where frontier systems reliably disagree. \`divergence_score\` (per record) is the spread of the answer embeddings: \`1 − mean pairwise cosine similarity\` of the model answers, so higher = more semantically scattered. The sharpest splits so far:
 

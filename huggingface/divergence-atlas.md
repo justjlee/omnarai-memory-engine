@@ -68,6 +68,8 @@ Read this as how often each model lands on a *distinct* side of a fault line. **
 
 > **Ragged panel.** Fable answered 13 of 113 records. Compare the RATE column, not the raw count — a model present on fewer panels has fewer chances to be named. Rates over a small number of records are correspondingly noisy.
 
+> **Being named often ≠ diverging robustly.** The Fable-vs-Claude pairing produced the most within-lab tensions of any pair here, but perturbation certification (2026-07-19, full six-voice panel, `--runs 3` strict-min) returned **C0 on 0 of 3 tested** — including a unanimous C0 on the sharpest one. Their answers' semantic distance is not reliably larger than a single model's own re-roll variance. Read the tension counts as *displayed* disagreement, not demonstrated divergence. Detail: `docs/fable-within-lab-certification-2026-07-19.md`; claim registry: `within-lab-divergence-is-robust` (refuted).
+
 **Every meta-level question split the panel.** Across the curated battery, every question produced a genuine divergence (none collapsed to consensus) — supporting the thesis that the *status of a model's own mind* is where frontier systems reliably disagree. `divergence_score` (per record) is the spread of the answer embeddings: `1 − mean pairwise cosine similarity` of the model answers, so higher = more semantically scattered. The sharpest splits so far:
 
 | score | cluster | question |
@@ -90,4 +92,4 @@ Read this as how often each model lands on a *distinct* side of a fault line. **
 ## License
 CC BY-SA 4.0. Verbatim model outputs are reproduced for research into cross-model divergence; each is attributed to its model and date.
 
-*Generated 2026-07-18 from 113 live records.*
+*Generated 2026-07-19 from 113 live records.*

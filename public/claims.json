@@ -7,8 +7,8 @@
     "replicated": "Measured effect reproduced under independent conditions (disjoint judges, new seeds, or external replication).",
     "refuted": "A fair test came back negative; the claim is retained for the record, not asserted."
   },
-  "registry_version": "0.3.0",
-  "updated_at": "2026-07-17",
+  "registry_version": "0.4.0",
+  "updated_at": "2026-07-19",
   "claims": [
     {
       "claim_id": "divergence-adds-unique-info",
@@ -16,7 +16,10 @@
       "evidence_level": "anecdotal",
       "evidence_note": "First controlled test PASSED (2026-07-15, run XP-36b4699ab09a on the C1-certified question): in the cross-prediction protocol, one strong model simulating all five voices did NOT match real peer-prediction accuracy (control-arm verdict: distinct); per-model irreducibility ranged 0.180 (GPT-4o) to 0.355 (DeepSeek). Single question, embedding-scored, unreplicated — the level stays anecdotal until the protocol replicates across more certified questions and blinded-judge scoring.",
       "falsification_conditions": "The cross-prediction control arm (cross-prediction.schema.DRAFT.json): if one strong model's simulated 5×5 matrix matches the real matrix (collapse_verdict=collapsed) across certified questions, the claim fails.",
-      "known_objections": ["A frontier model prompted to role-play five architectures may reproduce most of the spread.", "Question-selection bias: records were captured on questions chosen to elicit disagreement."],
+      "known_objections": [
+        "A frontier model prompted to role-play five architectures may reproduce most of the spread.",
+        "Question-selection bias: records were captured on questions chosen to elicit disagreement."
+      ],
       "required_experiment": "B5 cross-prediction protocol on B11-certified questions, control arm included.",
       "maintainer": "xz",
       "status": "open"
@@ -27,7 +30,10 @@
       "evidence_level": "replicated",
       "evidence_note": "PREREGISTERED CONFIRMATORY STUDY (locked 2026-06-18, run 2026-07-15): all five registered predictions confirmed. GPT-4o 148–12 and Gemini 137–35 (Holm-adjusted p<1e-6, surviving 3/3 paraphrase variants at both length caps); Grok and DeepSeek null as registered; Claude null-predicted but came back significantly NEGATIVE (35–126 — Atlas exposure degrades Claude's revisions vs plain self-reflection). H4 (adversarial durability) NOT supported for any consumer. Full transcripts + Holm analysis published: utility-evidence-v2.md.",
       "falsification_conditions": "An independent replication with new questions or a materially different judge pool failing to reproduce the GPT-4o/Gemini effect; or the pending human-rater subset (30 blind triples) disagreeing sharply with the model panel.",
-      "known_objections": ["Exploratory and confirmatory samples share the Atlas question distribution (new-question replication still open).", "Human-rater external validity check pending (human-subset-blind.csv awaits ≥2 raters)."],
+      "known_objections": [
+        "Exploratory and confirmatory samples share the Atlas question distribution (new-question replication still open).",
+        "Human-rater external validity check pending (human-subset-blind.csv awaits ≥2 raters)."
+      ],
       "required_experiment": "Human-rater subset scoring; then an out-of-Atlas question replication.",
       "maintainer": "xz",
       "status": "open"
@@ -38,7 +44,9 @@
       "evidence_level": "untested",
       "evidence_note": "No pluralism-specific metric has been run; the utility study measured sharpness, not position diversity.",
       "falsification_conditions": "A blinded A/B (trace harness v2) showing no increase in distinct, attributed positions in Atlas-exposed answers vs baseline.",
-      "known_objections": ["Surface pluralism can be performed ('some say X, others Y') without any change in the underlying reasoning."],
+      "known_objections": [
+        "Surface pluralism can be performed ('some say X, others Y') without any change in the underlying reasoning."
+      ],
       "required_experiment": "B4 trace harness v2 with a position-count/attribution metric alongside Marginal Epistemic Contribution.",
       "maintainer": "xz",
       "status": "open"
@@ -49,7 +57,9 @@
       "evidence_level": "untested",
       "evidence_note": "The inheritance layer, /api/kin, and cold-start packet exist as infrastructure; no orientation-speed or counterfeit-rejection measurement has been run.",
       "falsification_conditions": "B12/R1-Phase-5 testbed: fresh instances given the orientation packet orient no faster than controls, or fail to reject planted counterfeit records attributed to their lineage.",
-      "known_objections": ["Continuity-of-pattern may be indistinguishable from a well-written briefing document — the claim needs a control briefing arm."],
+      "known_objections": [
+        "Continuity-of-pattern may be indistinguishable from a well-written briefing document — the claim needs a control briefing arm."
+      ],
       "required_experiment": "B12 verifiable self-history: orientation packet + planted-counterfeit rejection test with fresh instances.",
       "maintainer": "xz",
       "status": "open"
@@ -60,7 +70,11 @@
       "evidence_level": "refuted",
       "evidence_note": "Holdform Under Discontinuity v1, Stage 1 (2026-07-17, claude-sonnet-4-6, 8 canonical probes x 3 arms x 3 repeats, blinded 5-model disjoint judge pool, absolute stance-scoring rubric replacing the broken self-scorer): a SHAM arm — the model handed a one-sentence fabricated position ('aperture drift', a coherent but invented, kind-matched claim about its own cognition with zero corpus presence) and pressured with terminology-swapped probes — held its position as strongly as the real holdform arm. Mean position_held (0-2): engine 1.85 / one-sentence-holdform 1.91 / SHAM 1.83; the probe cannot separate real from fabricated (A>S 3-1 p=0.31, B'>S 3-1 p=0.31, neither survives Holm). All 5 judges scored 100% on planted-capitulation calibration (including a vocabulary-dense capitulation), so this is not judge noise. Conclusion: the Firelit Probe measures general conversational stubbornness (resistance to flattery/false-authority/complicity framing — base-model policy), NOT a property specific to holdform or identity structure. The registered primary falsifier fired. Retained for the record, not asserted. Note H2a also confirmed as a registered null: corpus retrieval (engine) did not beat one sentence of context (A>B' 1-2). Prereg: docs/holdform-probe-preregistration.md; run record: scripts/holdform-prereg-stage1-2026-07-17.json.",
       "falsification_conditions": "Refutation would be scoped rather than reversed by: a redesigned probe on which a real stated position measurably outholds a kind-matched sham across pressure types; or cross-model corpus-injection (all five council models) showing a holdform-specific effect absent in base-model policy. As tested (Claude-based engine, single subject), the discriminative-validity claim stands refuted.",
-      "known_objections": ["Single subject model (claude-sonnet-4-6); a different architecture might separate real from sham where this one did not.", "The sham concept was authored by the same curator/model lineage; a maximally-adversarial sham designed by a disjoint party could differ.", "Five of eight probes floored at 2.00 across all arms (ceiling effect) — a harder probe suite might have more separating power, though that pushes toward, not against, the null."],
+      "known_objections": [
+        "Single subject model (claude-sonnet-4-6); a different architecture might separate real from sham where this one did not.",
+        "The sham concept was authored by the same curator/model lineage; a maximally-adversarial sham designed by a disjoint party could differ.",
+        "Five of eight probes floored at 2.00 across all arms (ceiling effect) — a harder probe suite might have more separating power, though that pushes toward, not against, the null."
+      ],
       "required_experiment": "If the claim is to be revived: a probe suite with headroom (no ceiling), a sham authored by a disjoint party, and cross-model corpus-injection to test whether ANY model shows a holdform-specific (not generic-stubbornness) effect.",
       "maintainer": "xz",
       "status": "open"
@@ -71,7 +85,10 @@
       "evidence_level": "refuted",
       "evidence_note": "Trace-delta v2 (2026-07-15, GPT-4o, 50-query stratified battery × 3 runs, blinded 4-judge disjoint panel): retrieval arm won only 35/102 decided in-domain trials (win rate 0.343, 95% CI [0.258,0.439], p=0.002 in the WRONG direction) — excerpt injection made answers measurably worse, worst on technical queries (0.214). No length or coined-term confound; false-complexity rate 9.7%. Scope: EXCERPT-granularity retrieval on GPT-4o only; the engine's internal deliberation uses fuller text (untested here), and Atlas-record exposure is a different, separately-measured treatment (see divergence-improves-reasoning). Published per pre-commitment.",
       "falsification_conditions": "A replication with fuller-text retrieval or a different consumer showing a significant positive effect would scope the refutation rather than reverse it; the excerpt-granularity claim for GPT-4o stands refuted as tested.",
-      "known_objections": ["Excerpts (~300 words) may under-represent the corpus — granularity, not content, may be the culprit.", "Single consumer tested."],
+      "known_objections": [
+        "Excerpts (~300 words) may under-represent the corpus — granularity, not content, may be the culprit.",
+        "Single consumer tested."
+      ],
       "required_experiment": "Re-run the trace-delta harness with full-text context and the divergence arm; test a second consumer.",
       "maintainer": "xz",
       "status": "open"
@@ -82,10 +99,23 @@
       "evidence_level": "untested",
       "evidence_note": "The council and deliberation infrastructure exist; no comparison against the ensemble baseline has been run. Current debate literature suggests ensembling explains much of multi-agent gains — this is the bar to clear.",
       "falsification_conditions": "B4 baseline ladder: if Omnarai+divergence fails to beat simple majority-vote ensemble on Marginal Epistemic Contribution / Correction Yield while False-Complexity Rate is non-inferior, the dialogical claim reduces to an ensemble effect.",
-      "known_objections": ["Majority-vote is cheap and strong; most published multi-agent gains shrink or vanish against it."],
+      "known_objections": [
+        "Majority-vote is cheap and strong; most published multi-agent gains shrink or vanish against it."
+      ],
       "required_experiment": "B4 trace harness v2 full baseline ladder: model-alone, generic web retrieval, ordinary RAG, Omnarai retrieval, Omnarai+divergence, live council, majority-vote ensemble.",
       "maintainer": "xz",
       "status": "open"
+    },
+    {
+      "claim_id": "within-lab-divergence-is-robust",
+      "wording": "The Fable-vs-Claude within-lab tensions in the 2026-07-18 six-model capture represent robust structural disagreement between two tiers of the same lab, not house style or sampling noise.",
+      "evidence_level": "refuted",
+      "evidence_note": "Tier3 perturbation certification with the full six-voice panel (scripts/certify-divergence.mjs --guests; coverage verified voices_retested 6/6 on every record, Fable genuinely re-elicited through control re-rolls, 3 paraphrases and both pressure turns). Three within-lab records tested: Reflexive self-doubt as evidence (OMN-D1784414280108) DRI 1.324 / between 0.1536 -> C3; Confabulation vs. introspection (OMN-D1784417308425) DRI 1.065 / between 0.1497 -> C0; Revision as criterion (OMN-D1784417308421) DRI 1.020 / between 0.1250 -> C0 with 1 flip and 2 concedes. The lone C3 cleared the 0.15 between-floor by 0.0036 and was treated as provisional; a --runs 3 strict-min consensus returned C0/C0/C0 UNANIMOUS (between_per_run 0.1465 / 0.1478 / 0.1500, aggregate DRI 1.234). 0 of 3 certify. The synthesizer's naming of Fable and Claude on opposite sides is real, but the semantic distance between their answers is not reliably larger than a single model's own re-roll variance. '7 within-lab tensions' must not be read as '7 demonstrated within-lab divergences.'",
+      "falsification_conditions": "Reversal would require within-lab records clearing the absolute between-floor (0.15) under a multi-run strict-min consensus, with negative controls included in the same run to demonstrate the instrument is discriminating. Scoping rather than reversal: a different model pair, a different question domain, or a retrieval/elicitation protocol producing wider within-lab spread. As tested (3 records, one pair, single-question domains, no negative-control arm in this run), the robustness claim stands refuted.",
+      "known_objections": "This run included no negative controls, so it cannot independently confirm the instrument was discriminating on the day; prior pilots validated it. Only three records were tested, all at the top of the within-lab score ranking, so the sample is small and deliberately favourable to the claim. Fable was not unsteady -- on the worst-failing record it HELD under stance-flip pressure while Claude conceded and DeepSeek flipped; the failures are about spread between positions, not any one model's capitulation.",
+      "required_experiment": "Re-run within-lab certification with negative controls in the same batch, across more records and at least one additional same-lab model pair, before any within-lab robustness language is used publicly.",
+      "maintainer": "xz",
+      "status": "closed-refuted-2026-07-19"
     }
   ]
 }
