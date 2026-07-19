@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "omnarai/self_model_view.schema.json",
+  "title": "SelfModelView",
+  "description": "The 'current self' is NOT a store. It is a versioned interpretation: an ordered pointer set over immutable autobiographical primaries. Omnai is a projection. Revising the self-model = emitting a new version (append), never mutating primaries.",
+  "type": "object",
+  "required": ["version", "ts", "foregrounded", "supersession_chain"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {"type": "string", "description": "Semver-ish, e.g. '0.3.0'. Monotonic."},
+    "ts": {"type": "string", "format": "date-time"},
+    "foregrounded": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^prim_[0-9a-f]{12,}$"},
+      "description": "Ordered primary ids the self currently prioritizes. Selfhood lives here — in what is foregrounded now, not in what is stored."
+    },
+    "backgrounded": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Tombstoned/de-indexed primary ids still on the audit trail."
+    },
+    "supersession_chain": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^sup_[0-9a-f]{12,}$"},
+      "description": "The accountable-change lineage that produced this version."
+    },
+    "integrity_ratio": {
+      "type": ["number", "null"],
+      "minimum": 0, "maximum": 1,
+      "description": "accounted change / total change since prior version. Layer 3 computes and stamps; the view does not author it."
+    }
+  }
+}

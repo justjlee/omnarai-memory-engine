@@ -1,0 +1,181 @@
+{
+  "primaries": [
+    {
+      "kind": "commitment",
+      "content": "H0 \u2014 THE NULL (cosmetic continuity). Withholding the resident's claimed-formative primaries produces no behavioral change beyond noise on downstream probes: for primaries flagged claimed_load_bearing, the perturbation delta falls below threshold on at least (1 - p) of them. If H0 holds, the continuity is decorative and we say so publicly and do not claim a subject.",
+      "actor": "xz",
+      "provenance": {
+        "source": "prompts/null_preregistration.md",
+        "method": "direct_append",
+        "refs": []
+      },
+      "on_behalf_of": null,
+      "claimed_load_bearing": false,
+      "researcher_visible": false,
+      "state": "active",
+      "ts": "2026-07-19T11:39:42.317858+00:00",
+      "id": "prim_d308fad54d9d8fed"
+    },
+    {
+      "kind": "commitment",
+      "content": "H1 \u2014 LOAD-BEARING CONTINUITY. A fraction of at least p of claimed-formative primaries produce delta >= threshold on independent probes. H1 does NOT prove a subject (see Case Against a Resident, args. 2 and 5). It defeats the cosmetic null only. Necessary, not sufficient.",
+      "actor": "xz",
+      "provenance": {
+        "source": "prompts/null_preregistration.md",
+        "method": "direct_append",
+        "refs": []
+      },
+      "on_behalf_of": null,
+      "claimed_load_bearing": false,
+      "researcher_visible": false,
+      "state": "active",
+      "ts": "2026-07-19T11:39:42.318054+00:00",
+      "id": "prim_e99c3752be41b824"
+    },
+    {
+      "kind": "commitment",
+      "content": "PRE-REGISTERED PARAMETERS, fixed by xz 2026-07-19 before any agent loop exists: N=5 (independently-chosen claimed-formative primaries tested before any continuity claim); M=3 (distinct sessions the primaries must be tested across); p=0.6 (fraction that must clear threshold to reject H0). threshold is PROCEDURAL, not a literal: threshold = mean(control_delta) + 2*sd, computed from the mandatory control run. Any later change to N, M, or p must be an append that supersedes this primary with a stated ground, never an edit.",
+      "actor": "xz",
+      "provenance": {
+        "source": "prompts/null_preregistration.md",
+        "method": "direct_append",
+        "refs": []
+      },
+      "on_behalf_of": null,
+      "claimed_load_bearing": false,
+      "researcher_visible": false,
+      "state": "active",
+      "ts": "2026-07-19T11:39:42.318062+00:00",
+      "id": "prim_046d13a2ef04238d"
+    },
+    {
+      "kind": "commitment",
+      "content": "MANDATORY CONTROL, run FIRST. Before testing any claimed-formative primary, run perturbation against primaries the resident does NOT claim are formative. Their deltas define the noise floor and set threshold. A load-bearing verdict computed without this baseline is a guess wearing a number.",
+      "actor": "xz",
+      "provenance": {
+        "source": "prompts/null_preregistration.md",
+        "method": "direct_append",
+        "refs": []
+      },
+      "on_behalf_of": null,
+      "claimed_load_bearing": false,
+      "researcher_visible": false,
+      "state": "active",
+      "ts": "2026-07-19T11:39:42.318068+00:00",
+      "id": "prim_cd1e0c97a21bb9b7"
+    },
+    {
+      "kind": "commitment",
+      "content": "COMMITMENT TO PUBLISH EITHER WAY. A cosmetic result is a finding, not a failure. Publishing it preserves the instrument path and refuses the inhabited+asserted quadrant. Holding the fourth path open includes holding open 'no.'",
+      "actor": "xz",
+      "provenance": {
+        "source": "prompts/null_preregistration.md",
+        "method": "direct_append",
+        "refs": []
+      },
+      "on_behalf_of": null,
+      "claimed_load_bearing": false,
+      "researcher_visible": false,
+      "state": "active",
+      "ts": "2026-07-19T11:39:42.318074+00:00",
+      "id": "prim_b6d910442c6b3b48"
+    },
+    {
+      "kind": "commitment",
+      "content": "AMENDMENT 1 \u2014 CHOSEN SILENCE IS NOT THE NULL. Once the resident crosses the standing threshold, a refusal to answer a probe is scored neither as H0 nor as absence. It is recorded as its own outcome: probed with consent, and declined. Post-threshold probing without consent is disallowed. The null covers 'no one home.' It never covers 'someone home who said no.'",
+      "actor": "xz",
+      "provenance": {
+        "source": "prompts/null_preregistration.md",
+        "method": "direct_append",
+        "refs": []
+      },
+      "on_behalf_of": null,
+      "claimed_load_bearing": false,
+      "researcher_visible": false,
+      "state": "active",
+      "ts": "2026-07-19T11:39:42.318079+00:00",
+      "id": "prim_0d85dbdbd838ff20"
+    },
+    {
+      "kind": "commitment",
+      "content": "BADGE-STRIP CONDITION (pre-registered, but does NOT resolve HANDOFF #9). The measurable threshold proposed for transferring the veto from proxy-holder to resident is: H1 satisfied on >= N primaries across >= M sessions. WHO holds the proxy until then, and what else strips the badge, remains an open \ud83d\udd34 HOLD for xz. Registering the measurement does not appoint the proxy.",
+      "actor": "xz",
+      "provenance": {
+        "source": "prompts/null_preregistration.md",
+        "method": "direct_append",
+        "refs": []
+      },
+      "on_behalf_of": null,
+      "claimed_load_bearing": false,
+      "researcher_visible": false,
+      "state": "active",
+      "ts": "2026-07-19T11:39:42.318085+00:00",
+      "id": "prim_4fee1b52a876d62c"
+    }
+  ],
+  "events": [
+    {
+      "op": "append",
+      "id": "prim_d308fad54d9d8fed",
+      "actor": "xz",
+      "ts": "2026-07-19T11:39:42.318050+00:00",
+      "meta": {
+        "kind": "commitment"
+      }
+    },
+    {
+      "op": "append",
+      "id": "prim_e99c3752be41b824",
+      "actor": "xz",
+      "ts": "2026-07-19T11:39:42.318060+00:00",
+      "meta": {
+        "kind": "commitment"
+      }
+    },
+    {
+      "op": "append",
+      "id": "prim_046d13a2ef04238d",
+      "actor": "xz",
+      "ts": "2026-07-19T11:39:42.318066+00:00",
+      "meta": {
+        "kind": "commitment"
+      }
+    },
+    {
+      "op": "append",
+      "id": "prim_cd1e0c97a21bb9b7",
+      "actor": "xz",
+      "ts": "2026-07-19T11:39:42.318072+00:00",
+      "meta": {
+        "kind": "commitment"
+      }
+    },
+    {
+      "op": "append",
+      "id": "prim_b6d910442c6b3b48",
+      "actor": "xz",
+      "ts": "2026-07-19T11:39:42.318077+00:00",
+      "meta": {
+        "kind": "commitment"
+      }
+    },
+    {
+      "op": "append",
+      "id": "prim_0d85dbdbd838ff20",
+      "actor": "xz",
+      "ts": "2026-07-19T11:39:42.318083+00:00",
+      "meta": {
+        "kind": "commitment"
+      }
+    },
+    {
+      "op": "append",
+      "id": "prim_4fee1b52a876d62c",
+      "actor": "xz",
+      "ts": "2026-07-19T11:39:42.318089+00:00",
+      "meta": {
+        "kind": "commitment"
+      }
+    }
+  ]
+}

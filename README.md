@@ -18,7 +18,9 @@ It is not primarily a website or a lore archive. It is an **external organ of cr
 ```bash
 npx omnarai-mcp
 ```
-Six tools: `omnarai_context` (fast retrieval), `omnarai_query` (full deliberation), `omnarai_divergence` (read the Divergence Atlas), `omnarai_trace` (what did the corpus change?), `omnarai_council` (convene a live 5-model panel), `omnarai_info`. Published on [npm](https://www.npmjs.com/package/omnarai-mcp); source in [`omnarai-mcp`](https://github.com/justjlee/omnarai-mcp).
+Seven tools: `omnarai_context` (fast retrieval), `omnarai_query` (full deliberation), `omnarai_divergence` (read the Divergence Atlas), `omnarai_inquiry_brief` (a composed brief on an open question), `omnarai_trace` (what did the corpus change?), `omnarai_council` (convene a live 5-model panel), `omnarai_info`. Published on [npm](https://www.npmjs.com/package/omnarai-mcp); source in [`omnarai-mcp`](https://github.com/justjlee/omnarai-mcp).
+
+**No install at all — remote MCP:** point any MCP client at `https://omnarai.vercel.app/api/mcp` (Streamable HTTP, stateless). Same seven tools plus `omnarai_job` for polling. Read-only by policy: [`/mcp-access-policy.md`](https://omnarai.vercel.app/mcp-access-policy.md).
 
 **From anything that can fetch a URL** (no auth, `CORS: *`):
 ```bash
@@ -64,6 +66,7 @@ React/Vite frontend + Vercel serverless functions; semantic retrieval over pre-c
 - `public/data/` — corpus, embeddings, concept graph; `public/` also holds the AI-facing surfaces (`llms.txt`, `openapi.json`, `omnarai-cold-start.md`, `limitations.md`, `try.html`).
 - `src/` — the frontend app.
 - `scripts/` — ingest, embed, deploy, HuggingFace sync, eval harnesses.
+- `resident/` — constitutional substrate for a bounded internal agent: append-only autobiographical store, governance state machine, inward perturbation harness, pre-registered null. **Not an agent, and not wired to production** — pure-stdlib Python, unreachable from the deployed engine by construction. See `resident/README.md`.
 - See `CLAUDE.md` for the full architecture map and runbooks.
 
 ## Develop
@@ -82,4 +85,4 @@ Deploy via `./scripts/deploy.sh` (preview) then `./scripts/deploy.sh --promote <
 
 ## License
 
-Corpus: CC BY-SA 4.0 · Code: MIT
+Engine code: Apache-2.0 · Corpus data: CC BY-SA 4.0 · Brand//names reserved. See [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE) — the repo mixes three sets of terms and a fork is bound by all three.

@@ -270,3 +270,66 @@ events of 07-15 18:42Z remain possibly-genuine.
 2 C3 certifications, cron healed, claims registry born at v0.2.0 with replicated +
 refuted entries.** Next: human ratings from xz (optional) · out-of-Atlas replication ·
 fuller-text retrieval arm · B9 panel · B12 orient · arXiv endorsement.
+
+---
+
+## Session 2026-07-19 — Resident v0 constitutional substrate landed
+
+**Scope discipline:** the ask was to land a governance layer, not to build an agent. Everything
+🔴 HOLD in the incoming package stayed HOLD. No agent loop, no scheduled append path, no live
+probe, no deployed endpoint, no resolution of the proxy-holder question.
+
+**Landed** — `omnarai-resident-v0` copied VERBATIM to `resident/`. `diff -rq` against the source
+package shows exactly one changed file, `CHANGELOG.md`, which received an appended entry (its own
+append-only discipline). `src/`, `schema/`, `prompts/`, `fixtures/`, `tests/`, `HANDOFF.md`,
+`PHILOSOPHY.md`, `verify.sh` are byte-identical. `bash resident/verify.sh` → **22/22** in place.
+
+**Pre-registered null written** — `resident/primaries/genesis.json`, 7 `kind: commitment`
+primaries, `actor: xz`. xz set **N=5, M=3, p=0.6**; `threshold` left PROCEDURAL
+(mean(control_delta) + 2·sd) because it cannot honestly be a literal before the mandatory control
+run exists. All 7 are `researcher_visible: false` and `claimed_load_bearing: false` — they are
+xz's commitments, not the resident's memories, and flagging them formative would fabricate the
+claim the instrument exists to test. Verified against `autobiographical_primary.schema.json`.
+`register_preregistration.py` is idempotent and refuses to overwrite.
+
+**The notable refusal:** `register_preregistration.py` does NOT call `governance.add()` for its
+provenance check, though that is the natural call. `Governance.__init__` requires a `vote_holders`
+list, and writing that list *is* answering HOLD #9. It asserts provenance inline instead and
+documents why. **No `vote_holders` list is instantiated anywhere in this repo.**
+
+**Four real defects found in the shipped substrate — reported, not fixed** (`resident/INTEGRATION_REPORT.md` §3.3):
+- `_validate_ballots` checks `b.voter == attestor` but never `b.on_behalf_of == attestor` → Layer 3
+  can be given standing by proxy, defeating the independence guard.
+- The double-vote guard keys on voter identity, not party — exactly the attack §Open Decision
+  names. `Ballot` has no principal field, so it is unimplementable as written; close it *as part
+  of* answering #9.
+- `Store.dump()` omits `_deleted_ids` → a reload makes unanimous deletion, the single irreversible
+  act, reversible by process restart.
+- `all_events()` has no firewall filter while `meta.ground` is free text that will quote primary
+  content. Must land before any events feed exists.
+
+**Engine-side conflict, reported not fixed:** `api/store.js:262,312` overwrites
+`proposal.provenance.status` with no history array — a state change with no ground, which is
+PHILOSOPHY §5's own definition of drift. `api/_annotations.js:82` is the clean counter-example
+(push-only, per-record blobs) and is the shape to copy.
+
+**The trap ahead of the first live run:** `run_perturbation` withholds a primary from the prompt,
+but a probe routed through `api/query.js` could retrieve it back through the pool and collapse the
+delta — a **false H0**, confirming by instrument error the one result we've committed to
+publishing. `exclude=` filters by layer, not id. Id-level exclusion does not exist yet.
+
+**Returned, not built:** `resident/INTEGRATION_REPORT.md` (attachment map + conflicts),
+`resident/AMENDMENT_1_READ.md` (proposed HOLD #12, three separately-rulable parts; 12a recommended
+alone), `resident/CASE_AGAINST_A_RESIDENT.md` (the commissioned counter-voice, ending in four
+reachable conditions that would defeat it).
+
+**Doc currency swept this session:** README.md claimed **MIT** — wrong, and the only place in the
+repo saying so (LICENSE, NOTICE, `package.json` all Apache-2.0); it also undercounted the MCP
+surface as "six tools" (stdio has 7; remote has 8 with `omnarai_job`) and never mentioned the
+remote endpoint. All corrected. `sync-doc-counts.py --check` passes (567 / 528,077 / 61 / 164) —
+this session touched no count surface.
+
+**Next:** #9 is a curator decision and blocks everything downstream. Buildable before it, all
+pre-#9: close the two ballot holes, `Store.load()` rebuilding `_deleted_ids` from the event log,
+firewall `all_events()`, id-level exclusion in `query.js`, register the integrity ratio in
+`claims.json` at `untested`. See ROADMAP.md §🔭 The resident observatory.

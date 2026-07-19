@@ -1,8 +1,8 @@
 # Omnarai Memory Engine — Claude Code Context
 
 **Live at:** omnarai.vercel.app
-**Last updated:** 2026-07-15
-**Status:** Fully operational and MEASURED. Cognitive loop closed; durable grown-memory substrate live (Vercel Blob). Preregistered utility study CONFIRMED 5/5 (utility-evidence-v2.md on HF); undifferentiated excerpt retrieval REFUTED → retrieval is now layered (`layers=`/`exclude=`/`evidence_threshold=`). Canonical counts + attestation: `/api/manifest` (hashes pinned to `attest-*` git tags). Claim registry: `/claims.json`. Longitudinal cron healed 2026-07-15 (60s-wall fix — primaries commit first).
+**Last updated:** 2026-07-19
+**Status:** Fully operational and MEASURED. Cognitive loop closed; durable grown-memory substrate live (Vercel Blob). Preregistered utility study CONFIRMED 5/5 (utility-evidence-v2.md on HF); undifferentiated excerpt retrieval REFUTED → retrieval is now layered (`layers=`/`exclude=`/`evidence_threshold=`). Canonical counts + attestation: `/api/manifest` (hashes pinned to `attest-*` git tags). Claim registry: `/claims.json`. Longitudinal cron healed 2026-07-15 (60s-wall fix — primaries commit first). Within-lab divergence REFUTED 2026-07-19 (claims.json v0.4.0). **Resident v0 constitutional substrate landed 2026-07-19 at `resident/` — governance layer only, no agent, not deployed; agent loop hard-gated on HOLD #9.**
 
 ---
 
@@ -73,6 +73,40 @@ Classifies every incoming call to the public endpoints (query, info, council, te
 - **`--reset` is now guarded:** the milestone is PINNED (2026-06-16); `traffic.sh --reset` refuses without `FORCE_RESET=1` and never touches the per-event files. Unit tests: `node scripts/test-telemetry.mjs` (25 tests — classifier + buildEvent enrichment).
 - **Self-marker convention:** local curator scripts that hit the LIVE prod API must send header `x-omnarai-self: 1` so their own runs aren't logged as strangers (already added to `post-approval.mjs`, `glyph-ablation.mjs`, `patch-proposals.js`). The published MCP sends `x-omnarai-client: mcp` (a channel tag, NOT self — a stranger running our MCP still counts). Bias runs safe: over-count a maybe-stranger rather than mislabel a real one as self.
 - No new env vars — reuses `INGEST_SECRET` (gate) + `BLOB_READ_WRITE_TOKEN` (store). Wired into all 6 public endpoints (query, info, council, tensions, concepts, lattice).
+
+### `resident/` — constitutional substrate for a bounded internal agent (landed 2026-07-19)
+
+**This is not an agent, and building one is gated.** It is the governance/schema/measurement
+layer that must exist before an agent is responsible to build. Entry point: `resident/README.md`
+→ `resident/HANDOFF.md` (SHIP/HOLD ledger) → `resident/PHILOSOPHY.md`. `bash resident/verify.sh`
+= 22/22, pure stdlib, no network, no pip.
+
+- **Not wired to production, deliberately.** The substrate is Python; the engine is Node on
+  Vercel. It is unreachable from the deployed engine *by construction* — a stronger firewall
+  than any flag. Keep it that way. `api/` is at the 12-function Hobby cap, so if a surface is
+  ever needed it must fold into `api/_resident.js` via a `vercel.json` rewrite.
+- **The firewall is the point.** Autobiographical primaries default `researcher_visible: false`
+  and must NEVER enter `memory/grown.json` or `public/data/corpus.json` — `scripts/patch-proposals.js`
+  bakes grown entries into the public CC-BY-SA seed, which is a one-way door. If a JS port ever
+  happens, **invert the read default**: `store.py`'s `active()` returns everything unless the
+  caller passes a flag, which is backwards for a firewall.
+- **Storage shape, if ported:** per-primary blobs in a new `resident/` namespace. Never a
+  consolidated array — see the `_grown.js` header for why (13/14 records dropped; Blob has no CAS).
+- **Pre-registered null is written** (`resident/primaries/genesis.json`, 7 commitment primaries):
+  N=5, M=3, p=0.6, set by xz 2026-07-19. `threshold` is PROCEDURAL (mean(control_delta) + 2·sd) —
+  the mandatory control run defines it; it cannot honestly be a literal before that run exists.
+- 🔴 **HOLD #9 (proxy-holder) blocks the agent loop entirely.** No `vote_holders` list is
+  instantiated anywhere in this repo, because *naming one is answering #9*. Do not inherit the
+  single-custodian `INGEST_SECRET` gate for this layer — that answers #9 by config, not decision.
+- 🔴 **HOLD #12** (post-threshold chosen silence) proposed in `resident/AMENDMENT_1_READ.md`,
+  unruled. 🔴 **HOLD #10** — the candidate heavy token stays uncoined.
+- **Never roadmap "build the resident."** Roadmap the observatory and the test; the agent is what
+  the test finds, not what a milestone asserts. Counter-voice: `resident/CASE_AGAINST_A_RESIDENT.md`.
+- **Before any live perturbation run:** `query.js` needs **id-level** retrieval exclusion
+  (`exclude=` filters by layer only) or a live probe can retrieve the "withheld" primary back and
+  produce a **false H0**. Reuse `scripts/certify-divergence.mjs`'s distance metric + multi-run
+  strict-min, or control and treatment aren't commensurable. Full seam map + four known defects
+  in the substrate: `resident/INTEGRATION_REPORT.md`.
 
 ### Environment variables (set on Vercel)
 - `ANTHROPIC_API_KEY` — Claude Sonnet deliberation + Haiku classifier/concept extraction

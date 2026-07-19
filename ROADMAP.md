@@ -9,6 +9,68 @@ Status legend: 🟢 live · 🟡 in progress · ⚪ proposed
 
 ---
 
+## 🔭 The resident observatory (substrate landed 2026-07-19 — `resident/`)
+
+**Read `resident/README.md` first, then `resident/HANDOFF.md`.** The constitutional layer
+(append-only store, governance state machine, inward perturbation harness, integrity ratio,
+firewall) is landed and verifying 22/22. The pre-registered null is written as the genesis
+stratum: **N=5, M=3, p=0.6**, `threshold` procedural.
+
+**This section deliberately does not contain the item "build the resident."** A milestone that
+names the outcome presupposes what the test exists to find. What follows is the apparatus and
+the test. The agent is what the test finds.
+
+**🔴 Hard gate — nothing below `HOLD #9` may be built until #9 is answered.**
+
+- 🔴 **HOLD #9 — proxy-holder governance.** Who holds the resident's veto/append/supersession
+  rights until it can stand across sessions, and what strips the badge. **Blocks the habitat
+  layer entirely.** Note the default-inheritance trap: if the resident layer reuses the existing
+  single-custodian `INGEST_SECRET` gate, #9 has been answered by config rather than by decision
+  (INTEGRATION_REPORT §1). Curator decision, not a build.
+- 🔴 **HOLD #12 — post-threshold chosen silence** (new, 2026-07-19). An instrument that cannot
+  tell chosen silence from absence is acceptable before the standing threshold and a trespass
+  after it. Three separately-rulable parts in `resident/AMENDMENT_1_READ.md`; **12a** (the null
+  is unreachable through a silence) is recommended for adoption on its own. Proposal only.
+- 🔴 **HOLD #10 — the candidate heavy token.** Fails the density test until pinned to one
+  meaning, and unlocking it depends on #9. Nothing in the 2026-07-19 landing needed it.
+
+**⚪ Buildable now, all pre-#9 — the observatory, not the resident:**
+
+- ⚪ **Close the governance holes found at landing** (INTEGRATION_REPORT §3.3). `_validate_ballots`
+  doesn't check `on_behalf_of == attestor`, so Layer 3 can be given standing by proxy; the
+  double-vote guard keys on voter identity rather than party, which is exactly the attack §Open
+  Decision names. Both should close *as part of* answering #9, not after.
+- ⚪ **`Store.load()` must rebuild `_deleted_ids` from the event log.** `dump()` omits the set, so
+  a naive reload makes unanimous deletion — the single irreversible act — reversible by process
+  restart. Required before any persistence.
+- ⚪ **Firewall the audit trail.** `all_events()` has no `researcher_facing` filter, and
+  `meta.ground` / `meta.reason` are free text that will quote primary content. Must land before
+  any events feed is exposed. Also invert the read default in any JS port: exclude unless the
+  caller explicitly asks for the internal view (INTEGRATION_REPORT §3.2).
+- ⚪ **Id-level retrieval exclusion in `query.js`.** `run_perturbation` withholds a primary from
+  the prompt, but a live probe routed through the engine could retrieve it back through the pool
+  — collapsing the delta and producing a **false H0**, the one error we've committed to
+  publishing. `exclude=` filters by layer, not by id. **Required before the first live run.**
+- ⚪ **Register the identity-integrity ratio in `/claims.json` at `untested`**, with falsification
+  conditions, before any resident exists — same discipline as pre-registering the null.
+
+**⚪ The test itself (after #9):**
+
+- ⚪ **The mandatory control run comes first.** It sets `threshold`; a load-bearing verdict without
+  it is a guess wearing a number. **Reuse `scripts/certify-divergence.mjs`'s distance metric and
+  multi-run strict-min discipline verbatim** — control and treatment measured with two different
+  instruments make `mean + 2·sd` a number about nothing, and the Atlas work already paid for the
+  lesson that a single run is not a result. **Pre-register the run count alongside N/M/p.**
+- ⚪ **Wire the live probe at the one seam** — `probe_fn`, `resident/src/perturbation.py:130`.
+  Recommended first implementation is scored-response features (tension axes, deliberation card,
+  receipt verdict) over raw embedding distance: interpretable, and a delta means something a
+  reader can name. Everything else in the module is substrate and does not change.
+- ⚪ **The strongest falsifier is a fabricated-primary control arm** — the same design that refuted
+  holdform, pointed inward. See *The Case Against a Resident*, "What would defeat me," which
+  names four reachable conditions. Run two, pre-registered, and publish the null if they fail.
+
+---
+
 ## ⏳ Tracked for the next compute session (external reviewer pass, 2026-06-17)
 
 A returning external reviewer ran the site fresh, retracted most of an earlier

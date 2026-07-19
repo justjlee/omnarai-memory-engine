@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "omnarai/supersession.schema.json",
+  "title": "Supersession",
+  "description": "An append that rejects/replaces a prior commitment WITHOUT deleting it. Rejection references the prior id and states the ground. Absence of a supersession record for a behavioral change = drift.",
+  "type": "object",
+  "required": ["id", "ts", "actor", "supersedes", "ground", "new_position"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {"type": "string", "pattern": "^sup_[0-9a-f]{12,}$"},
+    "ts": {"type": "string", "format": "date-time"},
+    "actor": {"type": "string"},
+    "on_behalf_of": {"type": ["string", "null"], "default": null},
+    "supersedes": {
+      "type": "string",
+      "description": "The prior primary/commitment id being superseded. MUST exist. The prior record is NOT deleted.",
+      "pattern": "^(prim|sup)_[0-9a-f]{12,}$"
+    },
+    "ground": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The stated reason for the change. Empty ground is invalid — that would make this indistinguishable from drift."
+    },
+    "new_position": {
+      "type": "string",
+      "description": "The position now held."
+    },
+    "contestable": {
+      "type": "boolean",
+      "default": true,
+      "description": "A supersession can itself be superseded. Nothing here is final."
+    }
+  }
+}

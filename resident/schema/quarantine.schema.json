@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "omnarai/quarantine.schema.json",
+  "title": "Quarantine",
+  "description": "A reversible, non-unanimous hold on a suspect entry pending resolution. The release valve that stops unanimity-to-delete from being weaponized (poison-then-lock-the-door). Any addition lacking sufficient provenance can be quarantined.",
+  "type": "object",
+  "required": ["id", "ts", "actor", "target", "reason", "resolution"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {"type": "string", "pattern": "^qua_[0-9a-f]{12,}$"},
+    "ts": {"type": "string", "format": "date-time"},
+    "actor": {"type": "string"},
+    "target": {"type": "string", "description": "Primary id being quarantined.", "pattern": "^prim_[0-9a-f]{12,}$"},
+    "reason": {"type": "string", "enum": ["insufficient_provenance", "suspected_injection", "disputed_authorship", "under_council"]},
+    "resolution": {
+      "type": "string",
+      "enum": ["pending", "released_active", "released_tombstoned", "escalated_to_deletion"],
+      "default": "pending",
+      "description": "escalated_to_deletion hands off to the unanimity path; it does not itself delete."
+    }
+  }
+}

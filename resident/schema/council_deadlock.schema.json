@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "omnarai/council_deadlock.schema.json",
+  "title": "CouncilRecord",
+  "description": "When parties cannot agree (e.g. a deletion vote fails to reach unanimity), the DISAGREEMENT ITSELF becomes a primary. Deadlock feeds the system rather than breaking it. Also the record form for any convened council around an unresolved question.",
+  "type": "object",
+  "required": ["id", "ts", "question", "subject_ref", "positions", "outcome"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {"type": "string", "pattern": "^cnc_[0-9a-f]{12,}$"},
+    "ts": {"type": "string", "format": "date-time"},
+    "question": {"type": "string", "description": "The unresolved question, e.g. 'Should primary prim_X be forgotten?'"},
+    "subject_ref": {"type": "string", "description": "The record the council is convened around."},
+    "positions": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["party", "stance", "ground"],
+        "properties": {
+          "party": {"type": "string"},
+          "stance": {"type": "string", "enum": ["delete", "forget", "retain", "quarantine", "abstain"]},
+          "ground": {"type": "string"}
+        },
+        "additionalProperties": false
+      }
+    },
+    "attestation": {
+      "type": ["object", "null"],
+      "description": "Layer 3 attests to the legibility of the process. It does NOT appear as a party in positions[]. It never votes.",
+      "properties": {
+        "attestor": {"type": "string"},
+        "legible": {"type": "boolean"},
+        "note": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "outcome": {
+      "type": "string",
+      "enum": ["unanimous_delete", "forgotten", "retained", "quarantined_pending", "deadlock_recorded"],
+      "description": "deadlock_recorded: no unanimity; nothing deleted; the disagreement persists as this primary."
+    }
+  }
+}

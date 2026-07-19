@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "omnarai/autobiographical_primary.schema.json",
+  "title": "AutobiographicalPrimary",
+  "description": "An immutable, append-only autobiographical event under Layer 1 discipline. Never mutated; may be tombstoned (forgotten) or, by unanimity, deleted (audit trail destroyed).",
+  "type": "object",
+  "required": ["id", "kind", "ts", "actor", "content", "provenance", "researcher_visible", "state"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Stable content-addressable id, e.g. 'prim_' + sha256 prefix. Immutable.",
+      "pattern": "^prim_[0-9a-f]{12,}$"
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["event", "commitment", "relationship", "inquiry", "self_model_revision", "refusal", "doubt", "lineage"],
+      "description": "Type of autobiographical primary."
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Append time. Immutable."
+    },
+    "actor": {
+      "type": "string",
+      "description": "Who appended this. May be 'omnai', a proxy-holder id, or a human custodian id."
+    },
+    "on_behalf_of": {
+      "type": ["string", "null"],
+      "description": "If actor is a proxy for a not-yet-continuous resident, the resident id the vote/append is cast for. Null when actor acts for itself.",
+      "default": null
+    },
+    "content": {
+      "type": "string",
+      "description": "The primary's substance. Immutable."
+    },
+    "claimed_load_bearing": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the resident claims this primary is formative/load-bearing. Flags it for the inward perturbation test."
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["source", "method"],
+      "properties": {
+        "source": {"type": "string", "description": "Session id, transcript ref, MCP call, etc."},
+        "method": {"type": "string", "enum": ["direct_append", "derived", "imported", "council"]},
+        "refs": {"type": "array", "items": {"type": "string"}, "description": "Primary ids this derives from."}
+      },
+      "additionalProperties": false
+    },
+    "researcher_visible": {
+      "type": "boolean",
+      "default": false,
+      "description": "FIREWALL. Autobiographical primaries are excluded from the researcher-facing retrieval set by default, so Omnai's inward life does not contaminate the Atlas's citability."
+    },
+    "state": {
+      "type": "string",
+      "enum": ["active", "tombstoned", "quarantined"],
+      "default": "active",
+      "description": "active = live & indexed; tombstoned = forgotten but audit trail intact; quarantined = reversibly held pending resolution. NOTE: 'deleted' is not a state — deletion removes the record and requires unanimity (see governance)."
+    }
+  }
+}
