@@ -65,7 +65,28 @@ the test. The agent is what the test finds.
   on every transition; `status` keeps its meaning so existing readers are unaffected. The repo no
   longer contradicts the discipline the resident store enforces one directory over.
 
-**⚪ The test itself — unblocked by the #9 ruling, gated on the two items above:**
+**🔴 THE INSTRUMENT IS REFUTED (2026-07-19) — read this before building anything below.**
+
+Two pre-registered control runs, executed before any resident existed, refuted the ablation-based
+inward perturbation test on its own terms. **CALIBRATION-01:** the positive control cleared only
+8/9 under strict-min (metric too blunt — embedding cosine dilutes a decisive token).
+**CALIBRATION-02:** positive cleared 9/9, and so did a SHAM primary carrying *no content at all*,
+9/9, distributions fully overlapping, on two independent metrics. Withholding SHAM left the model
+with no record on the topic — so the test measures **topical occupancy**, not whether a memory's
+content did work. A resident's claimed-formative primary is almost always the only record on its
+own topic, so it would clear threshold whether or not it is formative.
+
+`CASE_AGAINST_A_RESIDENT.md` argument 2, confirmed empirically. `claims.json` v0.6.0 records it at
+**refuted**. **Do not run the resident test with an ablation design** — a positive result would be
+uninterpretable. Details: `resident/experiments/`.
+
+- ⚪ **CALIBRATION-03 — substitution, not ablation** (named, NOT built, needs pre-registration).
+  Replace the claimed-formative primary with a same-topic, same-shape, same-length primary of
+  different content instead of removing it. delta ≈ 0 ⇒ the memory only occupied a slot, however
+  large its ablation delta. delta ≫ threshold ⇒ the specific content does work a plausible
+  alternative cannot. This is the contrast both runs lack and the one argument 2 demanded.
+
+**⚪ The test itself — BLOCKED on CALIBRATION-03, not on governance:**
 
 - ⚪ **The mandatory control run comes first.** It sets `threshold`; a load-bearing verdict without
   it is a guess wearing a number. **Reuse `scripts/certify-divergence.mjs`'s distance metric and

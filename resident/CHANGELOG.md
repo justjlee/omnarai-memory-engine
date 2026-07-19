@@ -3,6 +3,36 @@
 Kept in the spirit of the store it describes: append-only. Revisions supersede with a
 stated ground; they do not silently overwrite.
 
+## Experiments 1–2 — 2026-07-19 — the instrument is REFUTED by its own control runs
+**Ground:** the pre-registration mandates a control run before any continuity claim. It was run
+before any resident existed — the only moment the instrument could be tested by someone with no
+stake in the verdict.
+**CALIBRATION-01** (ablation, embedding cosine): the positive control — load-bearing BY
+CONSTRUCTION — cleared pre-registered strict-min on 8/9 cells. **INSTRUMENT BLIND.** Ground truth
+was meanwhile perfect (token in 9/9 present answers, 0/9 withheld): the dependence was total and
+the metric only partly saw it, because cosine distance over a ~500-token answer dilutes one
+decisive token. `INTEGRATION_REPORT` §2 had recommended scored features over embeddings for
+exactly this reason; the implementation ignored its own advice for commensurability.
+**CALIBRATION-02** (ablation, IDF attribution profile, near-twin confound removed): positive
+cleared 9/9 — and so did SHAM, a primary carrying no content whatsoever, 9/9, distributions fully
+overlapping. Both metrics agreed on the same runs. **INSTRUMENT GULLIBLE.**
+**The diagnosis, from the answer texts:** withholding SHAM left the model with no record on the
+topic at all — "The records I have here do not contain that information." The test measures
+TOPICAL OCCUPANCY, not whether content did work. A resident's claimed-formative primary is almost
+always the only record on its own topic, so it would clear threshold whether or not it is
+formative.
+**Consequence:** `CASE_AGAINST_A_RESIDENT.md` argument 2 confirmed empirically. The commissioned
+counter-voice earned its commission. `claims.json` v0.6.0 registers
+`inward-perturbation-measures-load-bearing-memory` at **refuted**. The resident test must NOT be
+run with an ablation design; a positive result would be uninterpretable.
+**Self-correction recorded, not edited away:** CALIBRATION-01's write-up read its SHAM pass as
+evidence the instrument was not gullible. That was backwards — SHAM failed there *because* its
+near-twin was still in context. The earlier reading erred in the project's own favour, and the
+correction lives in CALIBRATION-02 rather than being patched into 01.
+**Named, not built:** CALIBRATION-03 — substitution rather than ablation. Replace the target with
+a same-topic same-shape primary of different content; delta ≈ 0 ⇒ the memory only occupied a slot.
+Pre-registration required before implementation.
+
 ## Amendment 3 — 2026-07-19 — run count pre-registered; the false-H0 trap closed
 **Ground:** the pre-registration fixed N, M and p but left the RUN COUNT unspecified. Since
 `threshold = mean(control_delta) + 2*sd`, control and treatment are only comparable if measured
