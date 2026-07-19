@@ -40,6 +40,13 @@ const LOG_KEY = "telemetry/access-log.json";
 const EVENTS_PREFIX = "telemetry/events/";
 const RECENT_CAP = 1000; // last N stranger events verbatim in the aggregate log
 const DAY_VISITOR_CAP = 300; // distinct ipHashes tracked per day in the rollup
+// Day-read limits. The LIST is paged to exhaustion (metadata, cheap) so `total`
+// is always honest; only BODY fetches are capped, because those are one HTTP GET
+// each and a 3000-event day would otherwise fan out 3000 requests inside a 60s
+// Hobby function. Override per-request with &limit=.
+const DAY_BODY_LIMIT = 1000;        // default event bodies returned, newest first
+const DAY_LIST_CEILING = 20000;     // absolute stop for the pagination loop
+const BODY_FETCH_CONCURRENCY = 100; // parallel body fetches per batch
 
 // Local curator scripts set this header so their own traffic is never logged as a
 // stranger. See scripts/_self-header.* and the convention note in CLAUDE.md.
@@ -64,11 +71,27 @@ export function ipHash(req) {
 // silently manufacture "growth" in the headline totals. They stay LOGGED (a
 // monitor is still a stranger, and dropping events would break the loss-proof
 // record), but they are subtracted from the reported signal. See `summarize()`.
-const MONITOR_RE = /sentineloracle|uptimerobot|uptime-kuma|pingdom|statuscake|betteruptime|betterstack|checkly|site24x7|hetrixtools|freshping|cron-job\.org|datadog|newrelic|healthchecks\.io|statusca[kt]e|monitoring|uptime/i;
+// The last two arms catch pollers that name themselves nothing in particular but
+// SAY what they are ("mcp-ledger/1.0 (health probe; …)"). A liveness poller is a
+// monitor whatever it's called; a discovery crawler that indexes us once is not,
+// and stays in bot-crawler.
+const MONITOR_RE = /sentineloracle|uptimerobot|uptime-kuma|pingdom|statuscake|betteruptime|betterstack|checkly|site24x7|hetrixtools|freshping|cron-job\.org|datadog|newrelic|healthchecks\.io|statusca[kt]e|monitoring|uptime|liveness|health[\s-]?(probe|check)/i;
 // Known crawler/bot user-agents (corpus scrapers, search indexers, AI fetchers).
 const BOT_RE = /gptbot|oai-searchbot|chatgpt-user|claudebot|claude-web|anthropic-ai|ccbot|perplexitybot|bytespider|amazonbot|applebot|google|bingbot|baiduspider|yandex|duckduckbot|facebookexternalhit|slurp|semrush|ahrefs/i;
+// Generic bot/crawler/registry signals, for the long tail we can't enumerate.
+// Two conventions do the work: a name ending in Bot/crawler/spider/scraper, and
+// the "+https://…" contact URL that well-behaved automated clients embed. Both
+// are self-declarations — a client saying "I am automation". Checked AFTER the
+// named lists (so a known bot keeps its specific match) but BEFORE BROWSER_RE,
+// because a crawler that spoofs "Mozilla/5.0 (compatible; XBot/1.0; +https://…)"
+// would otherwise land in external-browser and be read as a human arrival.
+// Registries/indexers (aisec-registry, PRSM-MCP-Graph) declare the contact URL
+// without a Bot suffix; the `\+https?:` arm is what catches them.
+const GENERIC_BOT_RE = /bot\/|bot;|bot\)|[-_.]bot\b|crawler|spider|scraper|indexer|registry|\+https?:/i;
 // Programmatic clients / agent frameworks (the high-signal "an agent called us" bucket).
-const AGENT_RE = /python-requests|httpx|aiohttp|node-fetch|undici|axios|got\/|okhttp|go-http|java\/|curl|wget|libwww|urllib|ruby|guzzle|openai|langchain|llama|autogpt|crewai|dify/i;
+// `^node$` is Node 18+'s built-in fetch default UA — a bare "node" is a script,
+// not an unknown non-browser, and it was the largest un-bucketed UA on 2026-07-19.
+const AGENT_RE = /^node$|python-requests|httpx|aiohttp|node-fetch|undici|axios|got\/|okhttp|go-http|java\/|curl|wget|libwww|urllib|ruby|guzzle|openai|langchain|llama|autogpt|crewai|dify/i;
 const BROWSER_RE = /mozilla|chrome|safari|firefox|edg\/|opera|gecko/i;
 
 /**
@@ -99,6 +122,8 @@ export function classifyCaller(req) {
   if (clientTag === "mcp") return { category: "mcp-client", log: true };
   if (BOT_RE.test(ua)) return { category: "bot-crawler", log: true };
   if (AGENT_RE.test(ua)) return { category: "ai-agent", log: true };
+  // The long tail of self-declaring automation. Must precede BROWSER_RE.
+  if (GENERIC_BOT_RE.test(ua)) return { category: "bot-crawler", log: true };
   if (!ua.trim()) return { category: "unknown-no-ua", log: true };
   if (!BROWSER_RE.test(ua)) return { category: "unknown-nonbrowser", log: true };
   // A browser UA with no referer to us: someone hitting an API URL directly, an
@@ -318,13 +343,37 @@ export async function readAccessLog() {
  * Read the loss-proof per-event record for one day (YYYY-MM-DD), newest first.
  * Curator-gated read path: /api/info?_view=traffic&day=YYYY-MM-DD. Never throws.
  */
-export async function readDayEvents(day) {
+export async function readDayEvents(day, { limit = DAY_BODY_LIMIT } = {}) {
   try {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return { day, count: 0, events: [], error: "day must be YYYY-MM-DD" };
-    const { blobs } = await list({ prefix: `${EVENTS_PREFIX}${day}/`, limit: 1000 });
-    const events = (
-      await Promise.all(
-        blobs.map(async (b) => {
+
+    // 1. Enumerate the WHOLE day. `list` returns at most 1000 per page; the old
+    //    code took one page and called a 1000+-event day "truncated", which read
+    //    as "we lost the tail" when the tail was merely unrequested. On
+    //    2026-07-19 that silently hid every event after 17:02 UTC. Listing is
+    //    metadata-only and cheap, so `total` is now always exact — the count you
+    //    reason about is never the count you happened to fetch.
+    const blobs = [];
+    let cursor;
+    do {
+      const page = await list({ prefix: `${EVENTS_PREFIX}${day}/`, limit: 1000, cursor });
+      blobs.push(...page.blobs);
+      cursor = page.hasMore ? page.cursor : undefined;
+    } while (cursor && blobs.length < DAY_LIST_CEILING);
+
+    // 2. Fetch BODIES for the newest `limit` only. Event pathnames are
+    //    `<prefix>/<day>/<ISO-ts-without-punctuation>-<rand>.json`, so pathname
+    //    order IS chronological order — we can pick the newest slice without
+    //    fetching anything. Bodies are one HTTP GET each; unbounded fan-out on a
+    //    high-traffic day is what would actually break this endpoint.
+    const ordered = blobs.slice().sort((a, b) => (a.pathname < b.pathname ? 1 : -1));
+    const cap = Math.max(1, Math.min(limit, DAY_LIST_CEILING));
+    const wanted = ordered.slice(0, cap);
+
+    const events = [];
+    for (let i = 0; i < wanted.length; i += BODY_FETCH_CONCURRENCY) {
+      const batch = await Promise.all(
+        wanted.slice(i, i + BODY_FETCH_CONCURRENCY).map(async (b) => {
           try {
             const r = await fetch(`${b.url}?ts=${Date.now()}`, { cache: "no-store" });
             return r.ok ? await r.json() : null;
@@ -332,10 +381,23 @@ export async function readDayEvents(day) {
             return null;
           }
         })
-      )
-    ).filter(Boolean);
+      );
+      events.push(...batch.filter(Boolean));
+    }
     events.sort((a, b) => (a.at < b.at ? 1 : -1));
-    return { day, count: events.length, truncated: blobs.length >= 1000, events };
+
+    return {
+      day,
+      // `total` = every event the day actually has. `count` = how many bodies
+      // this response carries. They differ ONLY when a limit was applied, and
+      // `truncated` says so explicitly — never infer loss from count alone.
+      total: blobs.length,
+      count: events.length,
+      truncated: events.length < blobs.length,
+      window: events.length < blobs.length ? "newest-first" : "complete",
+      listCeilingHit: blobs.length >= DAY_LIST_CEILING,
+      events,
+    };
   } catch {
     return { day, count: 0, events: [] };
   }

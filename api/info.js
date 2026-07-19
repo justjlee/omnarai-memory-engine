@@ -140,7 +140,11 @@ export default async function handler(req, res) {
     const dayParam = (req.query?.day || "").toString();
     if (dayParam) {
       const day = dayParam === "today" ? new Date().toISOString().slice(0, 10) : dayParam;
-      return res.status(200).json(await readDayEvents(day));
+      // &limit= caps how many event BODIES come back (newest first); the `total`
+      // in the response always reflects the full day regardless.
+      const rawLimit = parseInt((req.query?.limit || "").toString(), 10);
+      const opts = Number.isFinite(rawLimit) && rawLimit > 0 ? { limit: rawLimit } : {};
+      return res.status(200).json(await readDayEvents(day, opts));
     }
     const logData = await readAccessLog();
     return res.status(200).json({

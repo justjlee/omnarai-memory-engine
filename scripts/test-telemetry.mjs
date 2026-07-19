@@ -26,6 +26,22 @@ t("nonbrowser UA", classifyCaller(req({ "user-agent": "somecustomclient/0.1" }))
 t("external browser", classifyCaller(req({ "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605" })), { category: "external-browser", log: true });
 t("external referer still stranger", classifyCaller(req({ referer: "https://example.com", "user-agent": "Mozilla/5.0 Chrome/125" })), { category: "external-browser", log: true });
 
+// ── generic bot/registry long tail (2026-07-19) ───────────────────────────────
+// Every UA below is real traffic from the 2026-07-19 event files, and every one
+// was landing in unknown-nonbrowser or — worse — external-browser, where a
+// crawler reads as a human arrival. The classifier is the thing every headline
+// number is derived from, so these are pinned verbatim.
+t("Bot suffix behind a Mozilla mask is NOT a browser", classifyCaller(req({ "user-agent": "Mozilla/5.0 (compatible; AwarioBot/1.0; +https://awario.com/bots.html)" })), { category: "bot-crawler", log: true });
+t("SynaptoRadarBot is a bot", classifyCaller(req({ "user-agent": "SynaptoRadarBot/0.1 (+https://hml.search.synapto.com)" })), { category: "bot-crawler", log: true });
+t("self-declared crawler", classifyCaller(req({ "user-agent": "agent-tools.cloud-crawler/0.1 (+https://agent-tools.cloud)" })), { category: "bot-crawler", log: true });
+t("registry indexer", classifyCaller(req({ "user-agent": "aisec-registry/0.2 (+https://sec.sqrx.io)" })), { category: "bot-crawler", log: true });
+t("contact-URL convention alone is enough", classifyCaller(req({ "user-agent": "PRSM-MCP-Graph/1.0 (+https://prsm.network)" })), { category: "bot-crawler", log: true });
+t("bare node UA is a script, not an unknown", classifyCaller(req({ "user-agent": "node" })), { category: "ai-agent", log: true });
+// Guard the other direction: the generic net must not swallow real browsers or
+// our own MCP client (whose tag is checked before any UA pattern).
+t("plain Chrome stays a browser", classifyCaller(req({ "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36" })), { category: "external-browser", log: true });
+t("our MCP client keeps its own bucket", classifyCaller(req({ "x-omnarai-client": "mcp", "user-agent": "omnarai-mcp/1.6.2 (+https://omnarai.vercel.app)" })), { category: "mcp-client", log: true });
+
 // ── monitor category (2026-07-19): liveness pollers are logged but not reach ──
 t("sentineloracle is a monitor", classifyCaller(req({ "user-agent": "SentinelOracle/0.1 (+https://glimind.com/opt-out; liveness-only, never invokes tools)" })), { category: "monitor", log: true });
 t("uptimerobot is a monitor", classifyCaller(req({ "user-agent": "Mozilla/5.0 (compatible; UptimeRobot/2.0)" })), { category: "monitor", log: true });
