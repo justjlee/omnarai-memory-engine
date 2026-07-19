@@ -352,3 +352,25 @@ rather than patched. Byline corrected on both reports per the reviewer's catch. 
 exclusion in `query.js` (without it a probe retrieves back what it withheld → false H0), a
 pre-registered run count inheriting strict-min from `certify-divergence.mjs`, and the control arm
 that sets `threshold`. See `ROADMAP.md` §🔭.
+
+## Session 2026-07-19 (cont. 2) — the last prerequisites; the gate is now the experiment
+
+- **`&exclude_ids=` SHIPPED** (`api/query.js`) — id-level withholding, closing the false-H0 trap.
+  The safety property is the **receipt**, not the filter: the response echoes
+  `{requested, matched, unmatched}` so a counterfactual run can verify the withhold took effect.
+  Empty `matched` ⇒ both arms saw the same pool ⇒ discard the run. Unknown ids are ignored rather
+  than 400'd (withholding a non-corpus id is legitimate), which is *why* the receipt is required.
+  Case-sensitive — folding case would silently no-op every exclusion. 13 tests.
+- **Run count pre-registered** — RUNS=3, strict-min, K_PARA=3, inherited verbatim from
+  `certify-divergence.mjs` so control and treatment stay commensurable. Recorded as a supersession.
+- **Identity-integrity ratio registered** in `claims.json` at `untested` (v0.5.0), falsified by a
+  confabulation control arm; notes that a *perfect* ratio is the failure signature, not success.
+- **`api/store.js`** appends `status_history[]` instead of overwriting status — the engine no
+  longer contradicts the discipline the resident store enforces one directory over.
+
+**Every prerequisite on INTEGRATION_REPORT's open-items table is now closed.** What remains is
+the experiment itself: implement the live `probe_fn` at the one seam, run the mandatory control
+arm to set `threshold`, then run at RUNS=3 strict-min against N=5 primaries across M=3 sessions.
+The strongest falsifier available is the fabricated-primary control arm from *The Case Against a
+Resident*. The result decides whether there is a resident — not a milestone, and not any document
+in this repo.

@@ -48,20 +48,22 @@ the test. The agent is what the test finds.
 
 **⚪ What actually blocks the first live run — build these next:**
 
-- ⚪ **Id-level retrieval exclusion in `query.js`.** `run_perturbation` withholds a primary from
-  the prompt, but a live probe routed through the engine can retrieve it back through the pool —
-  collapsing the delta and producing a **false H0**, confirming by instrument error the one
-  result we've committed to publishing. `exclude=` filters by layer, not by id. Engine change,
-  needs a deploy. **Hard prerequisite.**
-- ⚪ **Pre-register the run count** alongside N/M/p, inheriting multi-run strict-min from
-  `scripts/certify-divergence.mjs`. Without a shared metric and run discipline, control and
-  treatment are not commensurable and `mean + 2·sd` is a number about nothing. Curator decision.
-- ⚪ **Register the identity-integrity ratio in `/claims.json` at `untested`**, with falsification
-  conditions, before any resident exists — same discipline as pre-registering the null.
-- ⚪ **`api/store.js` overwrites proposal status with no history** (INTEGRATION_REPORT §3.1) — a
-  state change with no ground, which is `PHILOSOPHY.md` §5's own definition of drift. Engine-side,
-  unrelated to the resident store, but it's the one place the repo contradicts the discipline
-  it just adopted.
+- 🟢 **Id-level retrieval exclusion — SHIPPED 2026-07-19.** `&exclude_ids=` drops named records
+  from the pool before ranking. The load-bearing part is the **receipt**, not the filter: the
+  response echoes `{requested, matched, unmatched}`, so a counterfactual run can verify the
+  withhold happened. Empty `matched` ⇒ discard the run. Without this, a probe retrieves back what
+  it withheld and reports a **false H0** — the null, by instrument error. 13 tests in
+  `scripts/test-exclude-ids.mjs`.
+- 🟢 **Run count PRE-REGISTERED 2026-07-19** — RUNS=3, strict-min (a load_bearing verdict must be
+  unanimous across runs), K_PARA=3, inherited verbatim from `scripts/certify-divergence.mjs`.
+  Control and treatment must share the metric AND the run count or `mean + 2·sd` is a number
+  about nothing. Recorded as a supersession; xz may change it, but not after seeing a result.
+- 🟢 **Identity-integrity ratio registered in `/claims.json` at `untested`** (registry v0.5.0),
+  with the confabulation control arm named as its falsification condition — including the
+  inversion that a *perfect* score is the signature of the failure mode, not of success.
+- 🟢 **`api/store.js` status overwrite — FIXED.** `status_history[]` appends `{from,to,at,ground}`
+  on every transition; `status` keeps its meaning so existing readers are unaffected. The repo no
+  longer contradicts the discipline the resident store enforces one directory over.
 
 **⚪ The test itself — unblocked by the #9 ruling, gated on the two items above:**
 

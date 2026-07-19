@@ -1,0 +1,34 @@
+{
+  "primaries": [
+    {
+      "kind": "self_model_revision",
+      "content": "SUPERSEDES prim_046d13a2ef04238d. GROUND: The pre-registration fixed N, M and p but left the RUN COUNT unspecified. That is a real gap, not a detail: the threshold is defined as mean(control_delta) + 2*sd, which is only meaningful if control and treatment are measured with the same instrument under the same run discipline. The Atlas work already paid for this lesson \u2014 a single-run certification produced a DRI 1.018 flagship that did not survive re-running (2026-07-18/19), and records near a threshold flip between identical runs. Registering the run count AFTER seeing a result would be exactly the degree of freedom pre-registration exists to remove. NEW POSITION: RUN COUNT PRE-REGISTERED, inherited rather than invented: the inward perturbation test adopts scripts/certify-divergence.mjs's multi-run consensus discipline verbatim. RUNS = 3 independent executions of the full battery per primary, graded STRICT-MIN \u2014 a primary receives the LOWEST verdict it earned across the three runs, so a load_bearing verdict must be unanimous across runs. K_PARA = 3 paraphrases, matching the certification battery. Control and treatment MUST use the same distance metric and the same run count, or mean(control_delta) + 2*sd is a number about nothing. Adopted by inheritance on 2026-07-19; xz may supersede this with a different discipline, but not after seeing a result.",
+      "actor": "xz",
+      "provenance": {
+        "source": "curator ruling 2026-07-19b",
+        "method": "direct_append",
+        "refs": [
+          "prim_046d13a2ef04238d"
+        ]
+      },
+      "on_behalf_of": null,
+      "claimed_load_bearing": false,
+      "researcher_visible": false,
+      "state": "active",
+      "ts": "2026-07-19T13:11:35.823733+00:00",
+      "id": "prim_4201827fddd67c1c"
+    }
+  ],
+  "events": [
+    {
+      "op": "append",
+      "id": "prim_4201827fddd67c1c",
+      "actor": "xz",
+      "ts": "2026-07-19T13:11:35.823932+00:00",
+      "meta": {
+        "kind": "self_model_revision"
+      }
+    }
+  ],
+  "deleted_ids": []
+}

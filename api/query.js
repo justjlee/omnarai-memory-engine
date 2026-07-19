@@ -571,19 +571,47 @@ function layerOf(r) {
 // Parse "a,b" lists; unknown names are reported back, never silently ignored.
 function parseLayerFilters(body) {
   const csv = (v) => (v || "").toString().split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  // Record ids are NOT lowercased — OMN-085, OMN-D1780752664952, prim_* are
+  // case-bearing. Folding case here would silently fail to match every id.
+  const csvExact = (v) => (v || "").toString().split(",").map((s) => s.trim()).filter(Boolean);
   const layers = csv(body?.layers || body?.sources);
   const exclude = csv(body?.exclude);
   const rings = csv(body?.rings || body?.ring || body?.tier);
+  const excludeIds = csvExact(body?.exclude_ids);
   const threshold = (body?.evidence_threshold || "").toString().trim().toLowerCase();
   const unknown = [...layers, ...exclude].filter((l) => !LAYERS.includes(l));
   for (const rg of rings) if (!RINGS.includes(rg)) unknown.push(rg);
   if (threshold && !(threshold in EVIDENCE_RANK)) unknown.push(threshold);
-  const active = layers.length > 0 || exclude.length > 0 || rings.length > 0 || Boolean(threshold);
-  return { layers, exclude, rings, threshold, unknown, active };
+  // NOTE: unknown ids are deliberately NOT pushed to `unknown`. Withholding an id
+  // that isn't in the pool is a legitimate request (the target may not be a corpus
+  // record at all), so it must not 400. Verification happens through the
+  // exclude_ids_matched receipt below instead.
+  const active = layers.length > 0 || exclude.length > 0 || rings.length > 0
+    || excludeIds.length > 0 || Boolean(threshold);
+  return { layers, exclude, rings, excludeIds, threshold, unknown, active };
 }
+
+// Id-level withholding (2026-07-19). `exclude_ids=` drops specific records from the
+// candidate pool BEFORE MMR — the granularity `exclude=` (which filters by LAYER)
+// cannot express.
+//
+// WHY THIS EXISTS, because it is not a convenience feature:
+// the inward perturbation test measures behavior with a memory present vs withheld.
+// If the "withheld" record can be retrieved back through the pool, the two arms are
+// identical, the delta collapses to noise, and the test reports H0 — the cosmetic-
+// continuity null — by INSTRUMENT ERROR. That is the one result the project has
+// publicly committed to publishing, so producing it accidentally is the most
+// expensive failure available here. See resident/INTEGRATION_REPORT.md §2.
+//
+// The safety property is NOT the filter. It is `exclude_ids_matched` in the response:
+// a caller can verify the withhold actually took effect. A harness that asks to
+// withhold prim_X and gets matched:[] must discard the run rather than score it.
+// Silent non-exclusion is precisely how a false null gets manufactured.
 function applyLayerFilters(records, f) {
   if (!f.active) return records;
+  const dropIds = new Set(f.excludeIds || []);
   return records.filter((r) => {
+    if (dropIds.size && dropIds.has(r.id)) return false;
     const layer = layerOf(r);
     if (f.layers.length && !f.layers.includes(layer)) return false;
     if (f.exclude.includes(layer)) return false;
@@ -591,6 +619,17 @@ function applyLayerFilters(records, f) {
     if (f.threshold && (EVIDENCE_RANK[r.evidence_status || "uncharacterized"] ?? 0) < EVIDENCE_RANK[f.threshold]) return false;
     return true;
   });
+}
+
+// Which requested ids were actually present in the pool and therefore actually
+// dropped. Computed against the PRE-filter corpus so it reports real removals, not
+// coincidental absences.
+function matchedExcludedIds(corpus, f) {
+  if (!f.excludeIds?.length) return null;
+  const present = new Set(corpus.map((r) => r.id));
+  const matched = f.excludeIds.filter((id) => present.has(id));
+  const unmatched = f.excludeIds.filter((id) => !present.has(id));
+  return { requested: f.excludeIds, matched, unmatched };
 }
 
 // Keyword-based relevance scoring (fallback)
@@ -1107,6 +1146,10 @@ function buildReceipt({ relevant, tensions, deliberationCard, retrievalMethod })
   };
 }
 export { buildReceipt };  // pure helper — exported for tests / reuse
+// Retrieval-filter helpers — pure, exported for tests. The withhold path
+// (exclude_ids) guards against a false H0 in counterfactual runs, so it is
+// pinned by scripts/test-exclude-ids.mjs rather than trusted.
+export { parseLayerFilters, applyLayerFilters, matchedExcludedIds, LAYERS, RINGS };
 
 export default async function handler(req, res) {
   // CORS headers
@@ -1195,6 +1238,8 @@ export default async function handler(req, res) {
       exclude: req.query?.exclude || "",
       rings: req.query?.rings || req.query?.ring || req.query?.tier || "",
       evidence_threshold: req.query?.evidence_threshold || "",
+      // Id-level withholding — required for a valid counterfactual/perturbation run.
+      exclude_ids: req.query?.exclude_ids || "",
     };
     // q_received: the caller's literal q, pre-glyph-merge — the question_received
     // echo must be byte-equal to what was submitted, never a derived form.
@@ -1312,6 +1357,7 @@ export default async function handler(req, res) {
     });
   }
   const pool = applyLayerFilters(corpus, layerFilters);
+  const excludedIds = matchedExcludedIds(corpus, layerFilters);
   if (layerFilters.active && pool.length === 0) {
     return agentError(res, 400, {
       code: "EMPTY_LAYER_POOL",
@@ -1462,9 +1508,14 @@ export default async function handler(req, res) {
           rings: layerFilters.rings.length ? layerFilters.rings : null,
           evidence_threshold: layerFilters.threshold || null,
           pool_size: pool.length,
+          // The withhold RECEIPT. A perturbation harness must check
+          // exclude_ids.matched before scoring a run: if it asked to withhold a
+          // record and matched is empty, the two arms were identical and the delta
+          // is meaningless. Scoring it anyway manufactures a false H0.
+          ...(excludedIds ? { exclude_ids: excludedIds } : {}),
         },
       } : {}),
-      layers_available: "Filter retrieval with &layers= (alias &sources=), &exclude=, &evidence_threshold=. Layers: research | divergence | canon | realms. Measured basis: undifferentiated excerpt retrieval tested WORSE than no retrieval (see /claims.json fast-path-retrieval-improves-answers) — choose your layer.",
+      layers_available: "Filter retrieval with &layers= (alias &sources=), &exclude=, &evidence_threshold=, &exclude_ids=. Layers: research | divergence | canon | realms. exclude_ids takes record ids and drops them from the pool BEFORE ranking — the response echoes which ids actually matched, so a counterfactual run can verify the withhold took effect. Measured basis: undifferentiated excerpt retrieval tested WORSE than no retrieval (see /claims.json fast-path-retrieval-improves-answers) — choose your layer.",
       concepts: relatedConcepts,
       conceptSubgraph,
       contributors: [...new Set(relevant.flatMap(r => r.contributors || []))],

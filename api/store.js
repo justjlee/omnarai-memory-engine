@@ -167,6 +167,31 @@ async function getProposal(id) {
   return res.json();
 }
 
+// Record a status change instead of overwriting it (2026-07-19).
+//
+// Before this, `approve` and `reject` assigned proposal.provenance.status in place with
+// no history, so a proposal rejected and later approved left NO trace of the flip — a
+// state change with no ground, which is exactly what resident/PHILOSOPHY.md §5 defines
+// as drift. The same discipline the resident store enforces on primaries should not be
+// contradicted one directory over. Append-only, following api/_annotations.js.
+//
+// Additive: `status` keeps its meaning as the current value, so every existing reader
+// is unaffected. `status_history` is new and optional.
+function recordStatusChange(proposal, next, ground, extra = {}) {
+  const prov = proposal.provenance;
+  const prior = prov.status;
+  if (!Array.isArray(prov.status_history)) prov.status_history = [];
+  prov.status_history.push({
+    from: prior ?? null,
+    to: next,
+    at: new Date().toISOString(),
+    ground,
+    ...extra,
+  });
+  prov.status = next;
+  return proposal;
+}
+
 async function saveProposal(proposal) {
   const key = BLOB_PREFIX + proposal.id + ".json";
   await put(key, JSON.stringify(proposal, null, 2), {
@@ -243,6 +268,7 @@ export default async function handler(req, res) {
           generatedAt: new Date().toISOString(),
           approvedAt: null,
           status: "pending",
+          status_history: [{ from: null, to: "pending", at: new Date().toISOString(), ground: "proposal created from deliberation" }],
         },
       };
 
@@ -259,7 +285,7 @@ export default async function handler(req, res) {
       const proposal = await getProposal(id);
       if (!proposal) return res.status(404).json({ error: "Proposal not found" });
 
-      proposal.provenance.status = "approved";
+      recordStatusChange(proposal, "approved", req.body?.ground || "curator approval");
       proposal.provenance.approvedAt = new Date().toISOString();
       if (ring) proposal.ring = ring;
       if (newTitle) proposal.title = newTitle;
@@ -309,7 +335,7 @@ export default async function handler(req, res) {
       const proposal = await getProposal(id);
       if (!proposal) return res.status(404).json({ error: "Proposal not found" });
 
-      proposal.provenance.status = "rejected";
+      recordStatusChange(proposal, "rejected", req.body?.ground || "curator rejection");
       await saveProposal(proposal);
 
       return res.status(200).json({ proposal, message: "Proposal rejected" });

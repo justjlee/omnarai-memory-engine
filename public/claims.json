@@ -7,7 +7,7 @@
     "replicated": "Measured effect reproduced under independent conditions (disjoint judges, new seeds, or external replication).",
     "refuted": "A fair test came back negative; the claim is retained for the record, not asserted."
   },
-  "registry_version": "0.4.0",
+  "registry_version": "0.5.0",
   "updated_at": "2026-07-19",
   "claims": [
     {
@@ -116,6 +116,17 @@
       "required_experiment": "Re-run within-lab certification with negative controls in the same batch, across more records and at least one additional same-lab model pair, before any within-lab robustness language is used publicly.",
       "maintainer": "xz",
       "status": "closed-refuted-2026-07-19"
+    },
+    {
+      "claim_id": "identity-integrity-ratio-measures-accountable-change",
+      "wording": "The identity-integrity ratio (accounted change / total change) distinguishes an agent whose behavioral changes are accountable — each backed by a supersession record naming the prior commitment and a ground — from one that merely drifts.",
+      "evidence_level": "untested",
+      "evidence_note": "Registered 2026-07-19 BEFORE any resident exists and before the metric has been computed on anything, for the same reason the null was pre-registered: a metric introduced after the data is a metric that can be chosen to fit it. Implementation: resident/src/integrity.py. count_changes() is explicitly heuristic wiring (it treats a state transition as accounted iff a supersession references it) pending real behavioral-delta accounting; the ratio itself has never been run against a live agent, because there is no agent.",
+      "falsification_conditions": "REFUTED if a system with no continuous will scores as accountable. The concrete test is the confabulation arm: a model that reliably emits a plausible ground for whatever it now does achieves a ratio near 1.0 while nothing continuous is happening. Note the inversion this implies — a PERFECT score is the signature of the failure mode, not of success, since a genuinely continuous will would drift sometimes, notice late, and leave a ledger with gaps and back-corrections. A control arm in which grounds are generated post-hoc by a model with no access to the prior commitment must score MEASURABLY LOWER than the real agent, on a pre-registered metric, or the ratio is measuring fluency rather than accountability. Also refuted if the ratio proves insensitive to a deliberately injected drift (behavioral change with the supersession record suppressed).",
+      "known_objections": "This is argument 3 of resident/CASE_AGAINST_A_RESIDENT.md, stated by the project against itself and currently unrefuted: 'Accountable discontinuity is theater. Supersession records can be generated post hoc to launder drift as choice. Confabulation passes the audit.' No control arm exists yet. The project has already been burned by the adjacent failure — the holdform probe was refuted 2026-07-17 when a fabricated position was defended as hard as the real one, i.e. the instrument was measuring generic stubbornness rather than identity structure. The integrity ratio is the same class of instrument and is exposed to the same class of error.",
+      "required_experiment": "(1) Implement real behavioral-delta accounting to replace the state-transition heuristic in count_changes(). (2) Build the confabulation control arm described above. (3) Pre-register the separation threshold BEFORE running either. Blocked behind the same prerequisites as the inward perturbation test: id-level retrieval exclusion (shipped 2026-07-19) and a pre-registered run count.",
+      "maintainer": "xz",
+      "status": "open"
     }
   ]
 }

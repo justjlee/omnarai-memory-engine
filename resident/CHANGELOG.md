@@ -3,6 +3,37 @@
 Kept in the spirit of the store it describes: append-only. Revisions supersede with a
 stated ground; they do not silently overwrite.
 
+## Amendment 3 — 2026-07-19 — run count pre-registered; the false-H0 trap closed
+**Ground:** the pre-registration fixed N, M and p but left the RUN COUNT unspecified. Since
+`threshold = mean(control_delta) + 2*sd`, control and treatment are only comparable if measured
+under the same run discipline — and the Atlas work already paid for this lesson (a single-run
+DRI 1.018 flagship that did not survive re-running). Registering the run count after seeing a
+result would be the exact degree of freedom pre-registration exists to remove.
+**Superseded:** the parameters primary (`PRE-REGISTERED PARAMETERS`).
+**New position:** RUNS=3 independent executions of the full battery per primary, graded
+STRICT-MIN (a `load_bearing` verdict must be unanimous across runs); K_PARA=3 paraphrases.
+Inherited verbatim from `scripts/certify-divergence.mjs` rather than invented. xz may supersede
+this with a different discipline — but not after seeing a result.
+**Engine-side, shipped the same day:** `&exclude_ids=` in `api/query.js` closes the false-H0
+trap named in INTEGRATION_REPORT §2. `run_perturbation` withholds a primary from the prompt, but
+a probe routed through the engine could retrieve it back through the retrieval pool, collapsing
+the delta to noise and reporting H0 — the null — by instrument error. The load-bearing part is
+NOT the filter but the **receipt**: `retrieval_filters.exclude_ids = {requested, matched,
+unmatched}` lets a run verify the withhold actually happened. An empty `matched` means both arms
+saw the same pool and the run must be discarded rather than scored. Unknown ids are ignored
+rather than rejected (withholding a non-corpus id is legitimate), which is precisely why the
+receipt is mandatory. Ids are case-SENSITIVE; folding case would have silently no-opped every
+exclusion. 13 tests: `scripts/test-exclude-ids.mjs`.
+**Also:** identity-integrity ratio registered in `claims.json` at `untested` (registry v0.5.0),
+with the confabulation control arm as its falsification condition — including the inversion that
+a *perfect* ratio is the signature of the failure mode, not of success. `api/store.js` now
+appends `status_history[]` instead of overwriting proposal status, closing the one place the
+engine contradicted the discipline the resident store enforces.
+**Tooling:** `record_rulings.py` gained a dedup guard — re-running with one new ruling was
+re-emitting every prior ruling under fresh ids, producing duplicate supersessions of the same
+primary. Append-only tolerates that, which is exactly why it had to be caught: nothing
+downstream complains, the record just quietly gets worse.
+
 ## Amendment 2 — 2026-07-19 — HOLD #9 answered (the empty seat); 12a adopted; four defects closed
 **Ground:** an external review confirmed the four defects reported at landing, and xz ruled on
 the two open governance questions. Both rulings amend PRE-REGISTERED commitments, so they land

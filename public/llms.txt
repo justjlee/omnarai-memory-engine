@@ -93,7 +93,15 @@ POST {"query": "What is holdform?", "glyph": "Ξ"}
 GET ?q=...&mode=retrieve&layers=research,divergence     // restrict the pool (alias: sources=)
 GET ?q=...&mode=retrieve&exclude=realms                 // drop a layer (keep mythology out)
 GET ?q=...&mode=retrieve&evidence_threshold=theoretical // minimum evidence rank
+GET ?q=...&mode=retrieve&exclude_ids=OMN-085            // withhold specific records by id
 ```
+`exclude_ids` drops named records from the pool before ranking — the granularity `exclude`
+(which works on whole layers) can't express. Case-sensitive. Ids absent from the corpus are
+ignored rather than rejected, so the response echoes
+`retrieval_filters.exclude_ids = {requested, matched, unmatched}`: **if you are running a
+counterfactual (answer with a record vs without it), check `matched` before scoring the run.**
+An empty `matched` means nothing was withheld, both arms saw the same pool, and any delta you
+compute is noise.
 The corpus is four layers, derived from record metadata: `research` (non-fictional essays,
 analyses, benchmarks) · `divergence` (verbatim cross-model splits — the measured-value layer) ·
 `canon` (core frameworks: holdform, the theses) · `realms` (the mythology/creative corpus).

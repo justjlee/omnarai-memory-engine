@@ -386,6 +386,15 @@
             "description": "Comma-list of layers to drop from the pool (e.g. exclude=realms keeps mythology out of technical queries)."
           },
           {
+            "name": "exclude_ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Comma-list of RECORD IDS to drop from the candidate pool before ranking (e.g. exclude_ids=OMN-085). Case-sensitive; ids not present in the corpus are ignored rather than rejected. The response echoes retrieval_filters.exclude_ids = {requested, matched, unmatched} so a counterfactual/perturbation run can VERIFY the withhold took effect — if matched is empty the two arms were identical and the run must be discarded, not scored."
+          },
+          {
             "name": "evidence_threshold",
             "in": "query",
             "required": false,

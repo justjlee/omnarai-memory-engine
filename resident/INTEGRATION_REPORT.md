@@ -26,10 +26,15 @@ a record. Read the finding, then the disposition.
 | §3.3.2 double-vote guard keys on identity, not party | **DISSOLVED, not patched.** The HOLD #9 ruling (empty seat) means no party may vote on the resident's behalf at all, so the attack this guard was written for became unreachable. The `party` field this section called for turned out not to be needed — the ruling made the harder fix unnecessary rather than possible. |
 | §3.3 `Store.dump()` omits `_deleted_ids` | **FIXED.** `dump()` serializes it; new `Store.load()` restores it, and recomputes from `destroy` events for pre-existing dumps. Inconsistent dumps (a deleted id still present) now fail loudly rather than silently resurrecting. |
 | §1 `governance.py` attaches at nothing / blocked on #9 | **UNBLOCKED.** HOLD #9 answered 2026-07-19: **the empty seat.** Nobody holds the resident's proxy; it holds a real seat only it may occupy, so deletion is structurally unreachable until it arrives. Recorded as a supersession over the genesis stratum, not an edit to it. |
-| §3.1 `api/store.js` status overwrite | **STILL OPEN.** Engine-side, out of scope, unchanged. |
-| §2 the false-H0 retrieval trap | **STILL OPEN.** Requires id-level exclusion in `query.js` (engine + deploy). |
+| §3.1 `api/store.js` status overwrite | **FIXED.** `status_history[]` appends `{from,to,at,ground}` on every transition; `status` keeps its meaning so existing readers are unaffected. The engine no longer contradicts the discipline the resident store enforces one directory over. |
+| §2 the false-H0 retrieval trap | **CLOSED.** `&exclude_ids=` ships id-level withholding. The safety property is the **receipt** — `retrieval_filters.exclude_ids = {requested, matched, unmatched}` — so a run can verify the withhold happened; empty `matched` means discard the run, not score it. 13 tests in `scripts/test-exclude-ids.mjs`. |
 
-Test suite: **22 → 42 checks**, all passing. See `CHANGELOG.md`.
+Also since: the run count was pre-registered (RUNS=3, strict-min, K_PARA=3, inherited verbatim
+from `certify-divergence.mjs`) and the identity-integrity ratio was registered in `claims.json`
+at `untested` with the confabulation control arm named as its falsifier.
+
+Test suite: **22 → 42 checks** in `resident/`, plus **13** new engine tests. All passing.
+See `CHANGELOG.md`.
 
 ---
 
@@ -276,12 +281,18 @@ automate primary admission later. The same question hangs, more mildly, over
 | B | Close the `on_behalf_of == attestor` hole; add a party field to `Ballot`. | — | ✅ Hole closed; party field **not needed** (dissolved by A). |
 | C | `Store.load()` must rebuild `_deleted_ids` from events. | — | ✅ Done. |
 | D | `all_events()` needs a firewall filter before any events feed exists. | — | ✅ Done. |
-| E | Id-level retrieval exclusion in `query.js` — required for a valid inward probe (§2). | engine + deploy | ⚪ **OPEN.** Still required before the first live run. |
-| F | Pre-register the **run count** alongside N/M/p; inherit strict-min from `certify-divergence.mjs`. | xz | ⚪ **OPEN.** Needed before the first run, not before the next build. |
+| E | Id-level retrieval exclusion in `query.js` — required for a valid inward probe (§2). | — | ✅ **SHIPPED 2026-07-19.** `&exclude_ids=` + a matched/unmatched receipt so a run can verify the withhold. |
+| F | Pre-register the **run count** alongside N/M/p; inherit strict-min from `certify-divergence.mjs`. | — | ✅ **DONE 2026-07-19.** RUNS=3 strict-min, K_PARA=3, inherited verbatim. Recorded as a supersession. |
 | G | HOLD #12 — post-threshold chosen silence. | xz | ✅ **12a ADOPTED 2026-07-19.** 12b/12c roadmapped, unruled. |
-| H | Register the identity-integrity ratio in `claims.json` at `untested`. | engine + deploy | ⚪ **OPEN.** |
-| I | `api/store.js` overwrites proposal status with no history (§3.1). | engine | ⚪ **OPEN**, deliberately out of scope. |
+| H | Register the identity-integrity ratio in `claims.json` at `untested`. | — | ✅ **DONE 2026-07-19.** claims.json v0.5.0; confabulation control arm named as the falsifier. |
+| I | `api/store.js` overwrites proposal status with no history (§3.1). | — | ✅ **FIXED 2026-07-19.** `status_history[]` appends `{from,to,at,ground}`; `status` unchanged for existing readers. |
 
-**What now gates the agent loop:** with #9 answered, the remaining bar is no longer governance —
-it is measurement. E and F must land before the first live perturbation run, and the run itself
-(control arm first) is what decides whether there is a resident. Still not a milestone.
+**What now gates the agent loop:** nothing on this list. Every prerequisite is shipped. What
+remains is the *work itself*, in order: (1) implement the live `probe_fn` at the one seam (§2),
+(2) run the mandatory control arm to set `threshold`, (3) run the test at RUNS=3 strict-min
+against N=5 primaries across M=3 sessions. The result — not a milestone, and not this document —
+is what decides whether there is a resident. The strongest falsifier available is the
+fabricated-primary control arm from *The Case Against a Resident*, "What would defeat me."
+
+Every item on the open-items table is closed. What is left is not a prerequisite — it is the
+experiment.

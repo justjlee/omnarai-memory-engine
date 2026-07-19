@@ -14,23 +14,54 @@ That the first real use of the supersession mechanism is the project amending it
 pre-registration is the intended demonstration. If the machinery could not survive being
 turned on its own founding document, it would not be worth pointing at a resident.
 
-Idempotent: refuses to overwrite an existing ruling file for the same date.
+Idempotent two ways: it refuses to overwrite an existing ruling file, AND it skips any
+target already superseded by a previously-written batch. The second guard matters — without
+it, re-running with one new ruling appended re-emits every prior ruling under fresh ids, so
+the log grows duplicate supersessions of the same primary with identical content. Append-only
+tolerates that, which is exactly why it has to be caught here: nothing downstream will
+complain, it just quietly becomes a worse record.
 """
 from __future__ import annotations
 import json
 import os
+import pathlib
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 from store import Store, Primary  # noqa: E402
 
-DATE = "2026-07-19"
+DATE = "2026-07-19b"
 GENESIS = os.path.join(os.path.dirname(__file__), "primaries", "genesis.json")
 OUT = os.path.join(os.path.dirname(__file__), "primaries", f"rulings-{DATE}.json")
 
 # Content-prefix → the genesis primary each ruling supersedes. Resolved against the real
 # file rather than hardcoded by id, so a regenerated genesis can't silently orphan these.
 RULINGS = [
+    {
+        "supersedes_prefix": "PRE-REGISTERED PARAMETERS",
+        "ground": (
+            "The pre-registration fixed N, M and p but left the RUN COUNT unspecified. That is "
+            "a real gap, not a detail: the threshold is defined as mean(control_delta) + 2*sd, "
+            "which is only meaningful if control and treatment are measured with the same "
+            "instrument under the same run discipline. The Atlas work already paid for this "
+            "lesson — a single-run certification produced a DRI 1.018 flagship that did not "
+            "survive re-running (2026-07-18/19), and records near a threshold flip between "
+            "identical runs. Registering the run count AFTER seeing a result would be exactly "
+            "the degree of freedom pre-registration exists to remove."
+        ),
+        "new_position": (
+            "RUN COUNT PRE-REGISTERED, inherited rather than invented: the inward perturbation "
+            "test adopts scripts/certify-divergence.mjs's multi-run consensus discipline "
+            "verbatim. RUNS = 3 independent executions of the full battery per primary, graded "
+            "STRICT-MIN — a primary receives the LOWEST verdict it earned across the three runs, "
+            "so a load_bearing verdict must be unanimous across runs. K_PARA = 3 paraphrases, "
+            "matching the certification battery. Control and treatment MUST use the same "
+            "distance metric and the same run count, or mean(control_delta) + 2*sd is a number "
+            "about nothing. "
+            "Adopted by inheritance on 2026-07-19; xz may supersede this with a different "
+            "discipline, but not after seeing a result."
+        ),
+    },
     {
         "supersedes_prefix": "BADGE-STRIP CONDITION",
         "ground": (
@@ -84,6 +115,15 @@ RULINGS = [
 ]
 
 
+def already_superseded() -> set[str]:
+    """Target ids that a previous ruling batch has already superseded."""
+    seen: set[str] = set()
+    for f in sorted(pathlib.Path(os.path.dirname(__file__), "primaries").glob("rulings-*.json")):
+        for p in json.loads(f.read_text(encoding="utf-8")).get("primaries", []):
+            seen.update(p.get("provenance", {}).get("refs", []))
+    return seen
+
+
 def find_target(primaries: list[dict], prefix: str) -> dict:
     hits = [p for p in primaries if p["content"].startswith(prefix)]
     if len(hits) != 1:
@@ -99,11 +139,16 @@ def main() -> int:
         raise SystemExit("genesis stratum missing; run register_preregistration.py first")
 
     genesis = json.loads(open(GENESIS, encoding="utf-8").read())["primaries"]
+    prior = already_superseded()
     store = Store()
     written = []
+    skipped = []
 
     for r in RULINGS:
         target = find_target(genesis, r["supersedes_prefix"])
+        if target["id"] in prior:
+            skipped.append((target["id"], r["supersedes_prefix"]))
+            continue
         # A supersession is itself an append. It is recorded as a primary of kind
         # `self_model_revision` carrying the prior id + ground, so the chain is walkable
         # from the log alone without a second store.
@@ -124,6 +169,12 @@ def main() -> int:
             researcher_visible=False,
         ))
         written.append((p.id, target["id"], r["supersedes_prefix"]))
+
+    for tid, prefix in skipped:
+        print(f"  skip {tid} ({prefix}...) — already superseded by an earlier batch")
+    if not written:
+        print("nothing new to record; no file written.")
+        return 0
 
     with open(OUT, "w", encoding="utf-8") as fh:
         fh.write(store.dump())
