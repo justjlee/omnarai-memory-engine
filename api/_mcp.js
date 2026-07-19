@@ -19,6 +19,7 @@
  */
 
 import { runInquiryBrief } from "./_inquiry.js";
+import { originHeaders } from "./_quota.js";
 
 const ORIGIN = "https://omnarai.vercel.app";
 const SERVER_VERSION = "1.0.0";
@@ -31,9 +32,16 @@ const FETCH_OPTS = {
 // Curator verification calls arrive with x-omnarai-self: 1 — propagate that
 // marker into the inner self-fetches so they don't register as phantom
 // stranger events in access telemetry (firstExternalAt is PINNED; never reset).
+//
+// Also forwards the ORIGINAL caller's identity for the council daily cap. These
+// inner fetches leave from Vercel's egress, so without this every remote-MCP
+// user in the world shares one IP hash — the first user to spend the daily cap
+// would lock out all of them. originHeaders() signs the hash with INGEST_SECRET
+// so a forged header can't buy unlimited runs. See api/_quota.js.
 function fetchOptsFor(req) {
-  if (!req?.headers?.["x-omnarai-self"]) return FETCH_OPTS;
-  return { headers: { ...FETCH_OPTS.headers, "x-omnarai-self": "1" } };
+  const headers = { ...FETCH_OPTS.headers, ...originHeaders(req) };
+  if (req?.headers?.["x-omnarai-self"]) headers["x-omnarai-self"] = "1";
+  return { headers };
 }
 
 // ── Tool surface ──────────────────────────────────────────────────────────────

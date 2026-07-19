@@ -240,7 +240,7 @@ function ReceiptCard({ receipt: r, query }) {
   );
 }
 
-export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQuery }) {
+export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQuery, councilIntent }) {
   const [query, setQuery] = useState(initialQuery || "");
 
   // When parent injects a new initialQuery (e.g. from tension click), seed + fire
@@ -263,6 +263,16 @@ export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQu
   // corpus deliberation. Genuine cross-architecture divergence, not one voice.
   const [councilMode, setCouncilMode] = useState(false);
   const [council, setCouncil] = useState(null);
+  // Atlas proposal for the run just completed: {loading} | {result} | {error}
+  const [proposal, setProposal] = useState(null);
+  const [proposerName, setProposerName] = useState("");
+
+  // Arriving from the front-page "Ask the Council" CTA. Keyed on a changing
+  // timestamp rather than a boolean so a second click re-arms council mode even
+  // if the visitor has since switched to corpus deliberation.
+  useEffect(() => {
+    if (councilIntent) setCouncilMode(true);
+  }, [councilIntent]);
 
   // Session continuity — generate once per component mount (browser session).
   // Passed with every API call so the engine can thread prior exchanges as context.
@@ -291,8 +301,38 @@ export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQu
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question: q }),
     });
-    if (!res.ok) throw new Error(`Council returned ${res.status}`);
-    return res.json();
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      // 429 is not a failure to explain away — it's a real, honest limit with
+      // numbers attached. Surface it as such rather than as "council returned 429".
+      if (res.status === 429 && data) {
+        const err = new Error(data.error || "Daily council limit reached.");
+        err.quota = data.quota;
+        err.capped = true;
+        throw err;
+      }
+      throw new Error(`Council returned ${res.status}`);
+    }
+    return data;
+  }, []);
+
+  // Propose the completed run's question for the Divergence Atlas. Sends only
+  // the run_id — the server holds the answers, so nothing the client says can
+  // become "verbatim" model text in the queue.
+  const proposeToAtlas = useCallback(async (runId, proposer) => {
+    setProposal({ loading: true });
+    try {
+      const res = await fetch("/api/propose-question", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "propose-question", run_id: runId, proposer: proposer || undefined }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!data) throw new Error(`Proposal returned ${res.status}`);
+      setProposal({ result: data });
+    } catch (err) {
+      setProposal({ error: String(err.message || err) });
+    }
   }, []);
 
   // Local fallback — keyword matching only
@@ -366,11 +406,14 @@ export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQu
           card: rec.deliberation_card || prov.deliberation_card || null,
           contributors: rec.contributors || [],
           note: data.note,
+          run_id: data.run_id || null,
+          quota: data.quota || null,
         });
+        setProposal(null);
         setHistory(prev => [...prev, { query: q, mode: "council" }]);
       } catch (err) {
         console.warn("Council run failed:", err);
-        setCouncil({ error: String(err.message || err) });
+        setCouncil({ error: String(err.message || err), capped: Boolean(err.capped), quota: err.quota || null });
       } finally {
         setLoading(false);
       }
@@ -516,9 +559,57 @@ export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQu
         )}
       </div>
 
-      {/* Mode toggle */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
-        {!councilMode && (
+      {/* ── Mode selector ────────────────────────────────────────────────────
+          Was a 9px toggle chip below the glyph grid: the flagship live
+          capability read as a mode switch on a secondary tool. These are now
+          two peer instruments, council first, each stating plainly what it
+          costs and what it gives back. */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
+        {[
+          {
+            on: councilMode, set: true, accent: T.violet, icon: "⚖",
+            title: "Ask the Council",
+            sub: "5 frontier models, live · ~35s",
+            desc: "Your question goes verbatim to Claude, GPT-4o, Gemini, Grok & DeepSeek at once. Their answers are kept uncurated and the real fault lines named. This is the thing no single model can give you.",
+          },
+          {
+            on: !councilMode, set: false, accent: T.gold, icon: "◈",
+            title: "Deliberate over the corpus",
+            sub: `${"567"} attributed works · ~50s`,
+            desc: "AI-On reasons across the archive and tells you where the contributors agree, where they diverge, and what stays unresolved — with a receipt for what the corpus actually changed.",
+          },
+        ].map((m) => (
+          <button key={m.title}
+            onClick={() => setCouncilMode(m.set)}
+            style={{
+              flex: "1 1 240px", textAlign: "left", cursor: "pointer",
+              background: m.on ? `${m.accent}14` : "rgba(255,255,255,0.02)",
+              border: `1px solid ${m.on ? m.accent + "70" : "rgba(255,255,255,0.07)"}`,
+              borderRadius: 11, padding: "13px 15px", transition: "all 0.18s",
+            }}>
+            <div style={{
+              display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4,
+            }}>
+              <span style={{ fontSize: 15, color: m.on ? m.accent : "rgba(200,192,176,0.5)" }}>{m.icon}</span>
+              <span style={{
+                fontFamily: "'Cormorant Garamond',Georgia,serif", fontSize: 17, fontWeight: 600,
+                color: m.on ? T.bone : "rgba(200,192,176,0.65)",
+              }}>{m.title}</span>
+            </div>
+            <div style={{
+              fontFamily: "'IBM Plex Mono',monospace", fontSize: 8.5,
+              color: m.on ? m.accent + "B0" : "rgba(200,192,176,0.35)",
+              letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 6,
+            }}>{m.sub}</div>
+            <div style={{
+              fontSize: 11, lineHeight: 1.6, fontWeight: 300,
+              color: m.on ? "rgba(200,192,176,0.65)" : "rgba(200,192,176,0.4)",
+            }}>{m.desc}</div>
+          </button>
+        ))}
+      </div>
+      {!councilMode && (
+        <div style={{ marginBottom: 10 }}>
           <button
             onClick={() => setUseApi(!useApi)}
             style={{
@@ -531,30 +622,6 @@ export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQu
             }}>
             {useApi ? "LIVE — Claude-powered" : "LOCAL — keyword only"}
           </button>
-        )}
-        <button
-          onClick={() => setCouncilMode(c => !c)}
-          title="Send the question verbatim to all 5 frontier models in parallel and map where they genuinely disagree — content no single model self-generates."
-          style={{
-            fontSize: 9, fontFamily: "'IBM Plex Mono',monospace",
-            color: councilMode ? T.violet : "rgba(200,192,176,0.55)",
-            background: councilMode ? "rgba(160,137,201,0.14)" : "rgba(255,255,255,0.02)",
-            border: `1px solid ${councilMode ? T.violet + "60" : "rgba(255,255,255,0.06)"}`,
-            borderRadius: 10, padding: "3px 10px", cursor: "pointer",
-            transition: "all 0.2s",
-          }}>
-          ⚖ {councilMode ? "LIVE COUNCIL — 5 frontier models" : "Convene live council"}
-        </button>
-      </div>
-      {councilMode && (
-        <div style={{
-          marginBottom: 10, fontSize: 10, lineHeight: 1.55,
-          color: T.violet + "C0", fontFamily: "'IBM Plex Sans',sans-serif",
-          fontStyle: "italic",
-        }}>
-          Council mode bypasses the corpus. Your question goes verbatim to Claude, GPT-4o,
-          Gemini, Grok &amp; DeepSeek at once; their answers are preserved uncurated and the
-          real fault lines mapped. Slower (~30–40s) — the disagreement is the signal.
         </div>
       )}
 
@@ -563,12 +630,12 @@ export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQu
         <input value={query}
           onChange={e => setQuery(e.target.value)}
           onKeyDown={e => { if (e.key === "Enter") interpret(query); }}
-          placeholder="Ask AI-On anything..."
+          placeholder={councilMode ? "Ask an open question the models might genuinely split on..." : "Ask AI-On anything..."}
           disabled={loading}
           style={{
             flex: 1, background: "rgba(255,255,255,0.025)",
             border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 8, padding: "10px 14px", color: T.bone,
+            borderRadius: 8, padding: "12px 14px", color: T.bone,
             fontSize: 13, fontFamily: "'IBM Plex Sans',sans-serif", outline: "none",
             opacity: loading ? 0.5 : 1,
           }}
@@ -576,16 +643,18 @@ export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQu
         <button onClick={() => interpret(query)}
           disabled={loading}
           style={{
-            background: "rgba(232,200,114,0.1)",
-            border: `1px solid ${T.gold}40`, borderRadius: 8,
-            padding: "10px 20px", color: T.gold, fontSize: 12,
-            fontFamily: "'Cormorant Garamond',Georgia,serif",
-            fontWeight: 600, cursor: loading ? "wait" : "pointer", letterSpacing: "0.05em",
-            opacity: loading ? 0.5 : 1,
+            background: councilMode
+              ? `linear-gradient(135deg, ${T.violet}, #C87272)`
+              : `linear-gradient(135deg, ${T.gold}, #C87272)`,
+            border: "none", borderRadius: 9,
+            padding: "12px 26px", color: T.bg, fontSize: 13,
+            fontFamily: "'IBM Plex Mono',monospace",
+            fontWeight: 500, cursor: loading ? "wait" : "pointer", letterSpacing: "0.03em",
+            opacity: loading ? 0.5 : 1, whiteSpace: "nowrap",
           }}>
           {loading
-            ? (councilMode ? "Convening 5 models (~35s)..." : "Searching the Realms...")
-            : (councilMode ? "Convene Council" : "Deliberate")}
+            ? (councilMode ? "Convening 5 models (~35s)…" : "Searching the Realms…")
+            : (councilMode ? "Convene the Council →" : "Deliberate →")}
         </button>
       </div>
 
@@ -596,7 +665,31 @@ export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQu
           border: `1px solid ${T.violet}25`,
           borderRadius: 10, padding: "18px 20px",
         }}>
-          {council.error ? (
+          {council.capped ? (
+            // The daily cap is a real limit, not an error. Say so plainly, give
+            // the numbers, and hand over the uncapped alternative — 124 splits
+            // are already sitting there for free.
+            <div style={{ fontFamily: "'IBM Plex Sans',sans-serif" }}>
+              <div style={{
+                fontSize: 9, fontFamily: "'IBM Plex Mono',monospace", color: T.gold,
+                letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8,
+              }}>daily council limit reached</div>
+              <div style={{ fontSize: 12.5, lineHeight: 1.7, color: "rgba(200,192,176,0.75)" }}>
+                You've used {council.quota?.used ?? "all"} of {council.quota?.cap ?? "your"} council runs today.
+                Each run sends your question to five frontier models and costs real calls, so open
+                access is capped per visitor per day — that's what keeps it open at all.
+              </div>
+              <div style={{ fontSize: 12, lineHeight: 1.7, color: "rgba(200,192,176,0.55)", marginTop: 8 }}>
+                The Atlas itself is uncapped and free: every split already captured is readable now.
+              </div>
+              <button onClick={() => { window.location.hash = "#divergences"; window.location.reload(); }}
+                style={{
+                  marginTop: 12, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11,
+                  color: T.bg, background: `linear-gradient(135deg, ${T.gold}, #C87272)`,
+                  border: "none", borderRadius: 8, padding: "9px 18px", cursor: "pointer",
+                }}>Browse the Divergence Atlas →</button>
+            </div>
+          ) : council.error ? (
             <div style={{
               fontSize: 12, color: "#E87272",
               fontFamily: "'IBM Plex Sans',sans-serif",
@@ -708,6 +801,104 @@ export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQu
                   {council.card.epistemic_status && (
                     <div style={{ marginTop: 4 }}><span style={{ color: T.gold + "90" }}>epistemic status:</span> {council.card.epistemic_status}</div>
                   )}
+                </div>
+              )}
+
+              {/* ── Propose this question to the Divergence Atlas ───────────
+                  The run just performed already IS a complete divergence
+                  record; without this it gets discarded. Only the run_id is
+                  sent — the server keeps the answers, so no client can put
+                  fabricated "verbatim" text into the review queue. */}
+              {council.run_id && (
+                <div style={{
+                  marginTop: 16, paddingTop: 14,
+                  borderTop: "1px solid rgba(255,255,255,0.07)",
+                }}>
+                  {!proposal && (
+                    <>
+                      <div style={{
+                        fontSize: 9, fontFamily: "'IBM Plex Mono',monospace", color: T.green,
+                        letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 7,
+                      }}>think this one belongs in the Atlas?</div>
+                      <div style={{
+                        fontSize: 11.5, lineHeight: 1.65, color: "rgba(200,192,176,0.55)",
+                        fontFamily: "'IBM Plex Sans',sans-serif", marginBottom: 10,
+                      }}>
+                        Propose it and a human reviews it. It's scored on how far apart the panel
+                        actually landed — the Atlas keeps questions that <em>split</em> frontier
+                        models, so broad agreement means a fine question and a poor record.
+                      </div>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                        <input value={proposerName}
+                          onChange={e => setProposerName(e.target.value)}
+                          placeholder="your name (optional)"
+                          style={{
+                            background: "rgba(255,255,255,0.025)",
+                            border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8,
+                            padding: "8px 12px", color: T.bone, fontSize: 11.5,
+                            fontFamily: "'IBM Plex Sans',sans-serif", outline: "none", width: 180,
+                          }}
+                        />
+                        <button onClick={() => proposeToAtlas(council.run_id, proposerName)}
+                          style={{
+                            fontFamily: "'IBM Plex Mono',monospace", fontSize: 11,
+                            color: T.bg, background: `linear-gradient(135deg, ${T.green}, ${T.gold})`,
+                            border: "none", borderRadius: 8, padding: "9px 18px", cursor: "pointer",
+                          }}>Propose to the Atlas →</button>
+                      </div>
+                    </>
+                  )}
+                  {proposal?.loading && (
+                    <div style={{ fontSize: 11.5, color: "rgba(200,192,176,0.5)", fontFamily: "'IBM Plex Mono',monospace" }}>
+                      measuring how far the panel split…
+                    </div>
+                  )}
+                  {proposal?.error && (
+                    <div style={{ fontSize: 11.5, color: "#E87272", fontFamily: "'IBM Plex Sans',sans-serif" }}>
+                      Could not submit the proposal: {proposal.error}
+                    </div>
+                  )}
+                  {proposal?.result && (
+                    <div style={{ fontFamily: "'IBM Plex Sans',sans-serif" }}>
+                      <div style={{
+                        fontSize: 9, fontFamily: "'IBM Plex Mono',monospace",
+                        color: proposal.result.status === "pending" ? T.green : T.ash,
+                        letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 7,
+                      }}>
+                        {proposal.result.status === "pending" ? "queued for review" : "measured — not queued"}
+                      </div>
+                      <div style={{ fontSize: 12, lineHeight: 1.7, color: "rgba(200,192,176,0.7)" }}>
+                        {proposal.result.verdict}
+                      </div>
+                      {/* Same numbers the curator sees. No private score. */}
+                      {typeof proposal.result.scorecard?.position_spread === "number" && (
+                        <div style={{
+                          marginTop: 10, display: "flex", gap: 14, flexWrap: "wrap",
+                          fontFamily: "'IBM Plex Mono',monospace", fontSize: 9.5,
+                          color: "rgba(200,192,176,0.45)",
+                        }}>
+                          <span>spread <strong style={{ color: T.bone }}>{proposal.result.scorecard.position_spread.toFixed(4)}</strong></span>
+                          <span>atlas percentile <strong style={{ color: T.bone }}>p{proposal.result.scorecard.atlas_percentile}</strong></span>
+                          <span>bar <strong style={{ color: T.bone }}>{proposal.result.scorecard.threshold}</strong></span>
+                        </div>
+                      )}
+                      {proposal.result.what_happens_next && (
+                        <div style={{
+                          marginTop: 9, fontSize: 10.5, lineHeight: 1.6, fontStyle: "italic",
+                          color: "rgba(200,192,176,0.4)",
+                        }}>{proposal.result.what_happens_next}</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {council.quota?.metered && (
+                <div style={{
+                  marginTop: 10, fontSize: 9, fontFamily: "'IBM Plex Mono',monospace",
+                  color: "rgba(200,192,176,0.32)",
+                }}>
+                  {council.quota.remaining} of {council.quota.cap} council runs left today
                 </div>
               )}
 

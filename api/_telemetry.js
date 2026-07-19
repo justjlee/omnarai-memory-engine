@@ -49,7 +49,9 @@ const SELF_HEADER = "x-omnarai-self";
 // "self" — a stranger running our MCP IS the milestone. It gets its own category.
 const CLIENT_HEADER = "x-omnarai-client";
 
-function ipHash(req) {
+// Exported as `visitorHash` for api/_quota.js — the council daily cap must key on
+// the SAME salted hash the telemetry log uses, or "who is this" means two things.
+export function ipHash(req) {
   const fwd = (req.headers?.["x-forwarded-for"] || "").toString();
   const ip = fwd.split(",")[0].trim() || req.socket?.remoteAddress || "";
   if (!ip) return null;

@@ -81,6 +81,14 @@
       "destination": "/api/council?action=contribute"
     },
     {
+      "source": "/api/propose-question",
+      "destination": "/api/council?action=propose-question"
+    },
+    {
+      "source": "/api/question-proposals",
+      "destination": "/api/council?_view=question-proposals"
+    },
+    {
       "source": "/api/contributions",
       "destination": "/api/council?_view=contributions"
     },

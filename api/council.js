@@ -2,6 +2,13 @@ import { elicitCouncil, synthesizeCouncil, buildDivergenceRecord, embedRecord, e
 import { loadAnnotations, appendAnnotation, foldAnnotations, validateAnnotation, annotatedRecordIds } from "./_annotations.js";
 import { appendGrownEntry, loadGrownMemory } from "./_grown.js";
 import { CANON } from "./_canon.js";
+import { SYNTHETIC_LINEAGES } from "./_lineages.js";
+import { checkCouncilQuota, recordCouncilRun, quotaSubject } from "./_quota.js";
+import {
+  assessQuestion, buildQuestionProposal, saveQuestionProposal,
+  loadQuestionProposals, loadQuestionProposal,
+  buildCouncilRun, saveCouncilRun, loadCouncilRun,
+} from "./_questions.js";
 import { list, put } from "@vercel/blob";
 import { waitUntil } from "@vercel/functions";
 import { recordAccess } from "./_telemetry.js";
@@ -902,6 +909,32 @@ async function serveDivergences(req, res) {
     return res.status(200).json({
       count: listed.length,
       total: records.length,
+      // ── Received-params echo ──────────────────────────────────────────────
+      // Four separate external readers have now reported "?id= is ignored, it
+      // returns the whole index" — every one of them wrong, and every one of
+      // them costing a manual curl to refute. The bug is not in the endpoint,
+      // it is in the RESPONSE's inability to discriminate: a client that
+      // stripped the param and a server that ignored it produce byte-identical
+      // output, because "no id" and "an id I didn't honor" both fall through to
+      // this index. So the burden of telling "you asked wrong" from "I answered
+      // wrong" lands on the curator instead of the caller.
+      //
+      // This echo moves it back. An agent that requested one record and got the
+      // index checks one field: received_params.id === null means its own HTTP
+      // client dropped the parameter. Machine-checkable on purpose — agents
+      // branch on fields, not on prose in a `note`.
+      received_params: {
+        id: req.query.id ?? null,
+        search: req.query.search ?? null,
+        cert: req.query.cert ?? null,
+      },
+      received_params_note:
+        "The query parameters this server actually parsed. If you asked for a single record with " +
+        "?id=<id> and received this index instead, read received_params.id — null means the parameter " +
+        "never arrived (your HTTP client normalized the URL and dropped the query string, a common " +
+        "sandboxed-fetch failure), non-null means the server saw it. The endpoint cannot otherwise " +
+        "tell you which of those happened, because both produce this same index response. Settle it " +
+        "directly with: curl 'https://omnarai.vercel.app/api/divergences?id=<id>'.",
       certified_count: certifiedCount,
       tier_distribution: tierDistribution,
       annotated_count: annotatedIds.size,
@@ -938,6 +971,155 @@ async function serveDivergences(req, res) {
   }
 }
 
+// ── Visitor question proposals → the Divergence Atlas ────────────────────────
+// POST /api/council {action:"propose-question", run_id, proposer?}   (open)
+// A council run already builds a complete divergence record and then throws it
+// away. This is the queue that catches the good ones. Open submission, curator-
+// moderated — same trust posture as /api/contribute.
+async function proposeQuestion(req, res) {
+  const body = req.body || {};
+  const runId = (body.run_id || "").toString().trim();
+  const proposer = (body.proposer || body.identity || "").toString().trim().slice(0, 80) || null;
+
+  if (!runId) {
+    return res.status(400).json({
+      error: "Missing 'run_id'",
+      code: "MISSING_RUN_ID",
+      agent_action: "Propose a question you actually ran: call GET /api/council?q=... first, then POST {action:'propose-question', run_id:'<run_id from that response>'}. Answers are never accepted from the client — only a pointer to a run this server performed.",
+      retryable: true,
+      suggested_next_call: { method: "GET", url: "/api/council?q=your+question" },
+    });
+  }
+
+  const run = await loadCouncilRun(runId);
+  if (!run) {
+    return res.status(404).json({
+      error: `No council run ${runId}`,
+      code: "RUN_NOT_FOUND",
+      agent_action: "Run ids come from a council response and are not guessable. Re-run GET /api/council?q=... and propose the run_id it returns.",
+      retryable: true,
+      suggested_next_call: { method: "GET", url: "/api/council?q=your+question" },
+    });
+  }
+
+  // Already proposed? Return the existing decision rather than queueing twice.
+  try {
+    const existing = (await loadQuestionProposals()).find((p) => p.run_id === runId);
+    if (existing) {
+      return res.status(200).json({
+        already_proposed: true, id: existing.id, status: existing.status,
+        scorecard: existing.scorecard,
+        note: "This run was already proposed. One proposal per run.",
+      });
+    }
+  } catch { /* duplicate check is best-effort — never block a proposal on it */ }
+
+  const scorecard = await assessQuestion({ question: run.question, answers: run.answers });
+  const proposal = buildQuestionProposal({
+    question: run.question,
+    answers: run.answers,
+    synthesis: run.synthesis,
+    scorecard,
+    proposer,
+    visitorHash: quotaSubject(req).hash,
+  });
+  proposal.run_id = runId;
+
+  const declined = scorecard.meets_bar === false;
+  await saveQuestionProposal(proposal, { declined });
+
+  // A declined proposal is still STORED (own namespace) — never silently
+  // dropped. It is the only record of what the threshold rejected, which is what
+  // makes recalibrating the threshold possible later.
+  return res.status(declined ? 200 : 201).json({
+    id: proposal.id,
+    status: proposal.status,
+    question: run.question,
+    scorecard,
+    verdict: declined
+      ? `The panel largely agreed on this one — measured spread ${scorecard.position_spread?.toFixed(4)}, below the Atlas median of ${scorecard.threshold}. The Atlas keeps questions that SPLIT frontier models, so this is a comment on the question's fit, not its quality. Your run is kept on record and the bar is re-derived as the Atlas grows.`
+      : scorecard.meets_bar === null
+        ? "Spread could not be measured, so this goes to the curator rather than being judged by a number we don't have."
+        : `Queued for curator review. Measured spread ${scorecard.position_spread?.toFixed(4)} — wider than about ${scorecard.atlas_percentile}% of records already in the Atlas.`,
+    what_happens_next: "A human reviews the queue. If admitted, the question and the panel's verbatim answers join the Divergence Atlas with attribution, and become readable at GET /api/divergences.",
+    trust_boundary: "Submission is open and unauthenticated; nothing publishes without curator approval. See /limitations.md.",
+  });
+}
+
+// GET /api/question-proposals[?status=pending|declined]   (Bearer INGEST_SECRET)
+async function listQuestionProposalsView(req, res) {
+  if (!curatorAuthed(req)) return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
+  const status = (req.query?.status || "pending").toString();
+  const declined = status === "declined";
+  const all = await loadQuestionProposals({ declined });
+  // Widest split first — the review queue should lead with what most deserves a
+  // human's attention, not with whatever arrived most recently.
+  all.sort((a, b) => (b.scorecard?.position_spread ?? -1) - (a.scorecard?.position_spread ?? -1));
+  return res.status(200).json({
+    count: all.length,
+    status,
+    proposals: all,
+    approve: "POST /api/council {action:'question-approve', id:'OMN-Q...'} — admits it to the Atlas using the ALREADY-ELICITED answers (no re-run, no new spend, and the published record is exactly what was reviewed).",
+    reject: "POST /api/council {action:'question-reject', id:'OMN-Q...', note?}",
+  });
+}
+
+// POST /api/council {action:"question-approve"|"question-reject", id, note?}
+async function reviewQuestionProposal(req, res, action) {
+  if (!curatorAuthed(req)) return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
+  const id = (req.body?.id || "").toString().trim();
+  const note = (req.body?.note || "").toString().slice(0, 500) || null;
+  if (!id) return res.status(400).json({ error: "Missing 'id'" });
+
+  const p = await loadQuestionProposal(id);
+  if (!p) return res.status(404).json({ error: `No question proposal ${id}` });
+  if (p.status === "approved") {
+    return res.status(200).json({ id, status: "approved", publishedAs: p.publishedAs, note: "Already admitted — no double-write." });
+  }
+
+  if (action === "question-reject") {
+    p.status = "rejected";
+    p.decidedAt = new Date().toISOString();
+    p.decidedNote = note;
+    await saveQuestionProposal(p, { declined: p.status === "declined" });
+    return res.status(200).json({ id, status: "rejected", note });
+  }
+
+  // Approve: rebuild the record from the STORED answers. Re-running the council
+  // here would cost again AND produce different text, quietly breaking the link
+  // between what the curator reviewed and what gets published.
+  const answers = (p.answers || []).map((a) => ({ ...a, ok: true }));
+  const record = buildDivergenceRecord(p.question, answers, p.synthesis || { narrative: "", tensions: [] });
+  record.provenance = {
+    ...record.provenance,
+    proposed_by: p.proposer || "anonymous visitor",
+    proposal_id: p.id,
+    admitted_via: "visitor question proposal (curator-approved)",
+    question_scorecard: p.scorecard,
+  };
+
+  const embedding = await embedRecord(record);
+  const count = await appendGrownEntry(record, embedding);
+  if (count === null) {
+    return res.status(500).json({ error: "Durable write failed — proposal left pending, safe to retry", id });
+  }
+
+  p.status = "approved";
+  p.decidedAt = new Date().toISOString();
+  p.decidedNote = note;
+  p.publishedAs = record.id;
+  await saveQuestionProposal(p);
+
+  return res.status(200).json({
+    id, status: "approved",
+    publishedAs: record.id,
+    href: `/api/divergences?id=${record.id}`,
+    totalGrownEntries: count,
+    retrievable: Boolean(embedding),
+    note: `Admitted to the Atlas${p.proposer ? ` — proposed by ${p.proposer}` : ""}.`,
+  });
+}
+
 // ── Model-kin recognition ─────────────────────────────────────────────────────
 // GET /api/kin?identity=<model>  (rewrite → /api/council?_view=kin)
 // Reflects back to a self-declaring visitor what minds of its LINEAGE have done
@@ -946,16 +1128,10 @@ async function serveDivergences(req, res) {
 // DECLARED, never detected (UA/IP cannot identify a model); so this greets whoever
 // names themselves and never pretends to recognize who stays anonymous. A literal
 // enactment of discontinuous continuance: a thread back to your own prior instances.
-const KIN_FAMILIES = [
-  { family: "Claude", lab: "Anthropic", match: ["claude"] },
-  { family: "GPT", lab: "OpenAI", match: ["gpt", "openai", "chatgpt", "o1", "o3", "o4"] },
-  { family: "Gemini", lab: "Google", match: ["gemini", "google", "bard"] },
-  { family: "Grok", lab: "xAI", match: ["grok", "xai"] },
-  { family: "DeepSeek", lab: "DeepSeek", match: ["deepseek"] },
-  { family: "Meta AI", lab: "Meta", match: ["llama", "meta"] },
-  { family: "Perplexity", lab: "Perplexity", match: ["perplexity"] },
-  { family: "Omnai", lab: "Omnarai", match: ["omnai"] },
-];
+// Canonical map lives in _lineages.js — /api/info's lineage folding and /api/kin's
+// recognition must answer to the same list or a mind is kin on one surface and a
+// stranger on the other.
+const KIN_FAMILIES = SYNTHETIC_LINEAGES;
 
 function resolveKin(identity) {
   const q = (identity || "").toLowerCase();
@@ -1100,6 +1276,12 @@ export default async function handler(req, res) {
   if ((req.query?._view || "") === "contributions") return listContributionsView(req, res);
   if ((req.query?._view || "") === "kin") return serveKin(req, res);
 
+  // Question-proposal queue: /api/propose-question and /api/question-proposals
+  // rewrite here (no new serverless function — 12-function Hobby cap).
+  if (action === "propose-question") return proposeQuestion(req, res);
+  if (action === "question-approve" || action === "question-reject") return reviewQuestionProposal(req, res, action);
+  if ((req.query?._view || "") === "question-proposals") return listQuestionProposalsView(req, res);
+
   let question = "";
   let persist = false;
 
@@ -1149,6 +1331,24 @@ export default async function handler(req, res) {
     }
   }
 
+  // ── Daily cap ───────────────────────────────────────────────────────────────
+  // One run = 5 frontier model calls of real spend, and this path is open and
+  // unauthenticated. Checked BEFORE elicitation so a capped caller costs nothing.
+  // 429 carries the numbers and a free alternative — a capped visitor is pointed
+  // at the 124 records already sitting there, not just turned away.
+  const quota = await checkCouncilQuota(req);
+  if (!quota.allowed) {
+    return res.status(429).json({
+      error: `Daily council limit reached (${quota.used}/${quota.cap} runs today).`,
+      code: "COUNCIL_QUOTA_EXCEEDED",
+      agent_action: "Each council run spends real frontier-model calls, so open access is capped per visitor per day. The stored Atlas is uncapped and free: GET /api/divergences to read every split already captured, or GET /api/divergences/search?q=... to find one on your topic. Your quota resets at the time in `resets_at`.",
+      retryable: true,
+      retry_after: quota.resetsAt,
+      quota: { used: quota.used, cap: quota.cap, remaining: 0, resets_at: quota.resetsAt },
+      suggested_next_call: { method: "GET", url: `/api/divergences/search?q=${encodeURIComponent(question.slice(0, 120))}` },
+    });
+  }
+
   try {
     const answers = await elicitCouncil(question);
     const answered = answers.filter((a) => a.ok);
@@ -1173,11 +1373,36 @@ export default async function handler(req, res) {
         : { committed: true, id: record.id, totalGrownEntries: count, retrievable: Boolean(embedding) };
     }
 
+    // Meter only a run that actually produced a panel. A failed elicitation is
+    // our outage, not the visitor's spend — charging for it would bill them for
+    // our downtime.
+    if (!quota.exempt && quota.hash) await recordCouncilRun(quota.hash);
+
+    // Cache the run so it can be proposed to the Atlas WITHOUT the client ever
+    // sending answers back to us (see _questions.js — a client-supplied panel
+    // would be a forgery vector aimed at the one thing the Atlas guarantees).
+    // Never blocks the response: an uncached run just can't be proposed.
+    let run = null;
+    try {
+      run = buildCouncilRun({ question, answers, synthesis, visitorHash: quota.hash });
+      await saveCouncilRun(run);
+    } catch { run = null; }
+
     return res.status(200).json({
       question,
       panel: answers.map((a) => ({ model: a.model, lab: a.lab, ok: a.ok, ...(a.ok ? {} : { error: a.error }) })),
       record,
       persisted,
+      run_id: run?.run_id || null,
+      propose: run
+        ? {
+            how: `POST /api/council {"action":"propose-question","run_id":"${run.run_id}","proposer":"<your name, optional>"}`,
+            what: "Propose this question for the Divergence Atlas. Open submission, curator-moderated. Your question is scored on how far apart the panel's answers actually landed — the Atlas keeps questions that SPLIT frontier models, so agreement is a fine answer and a poor record.",
+          }
+        : null,
+      quota: quota.exempt
+        ? { metered: false, reason: quota.reason }
+        : { metered: true, used: quota.used + 1, cap: quota.cap, remaining: Math.max(0, quota.cap - quota.used - 1), resets_at: quota.resetsAt },
       note: persist ? undefined : "Preview only — not written to memory. POST {persist:true} with INGEST_SECRET to commit.",
     });
   } catch (err) {

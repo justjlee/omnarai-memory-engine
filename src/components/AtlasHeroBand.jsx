@@ -30,7 +30,7 @@ function pickFeatured(records) {
     .sort((a, b) => (b.date || "").localeCompare(a.date || "") || String(b.id).localeCompare(String(a.id)))[0] || null;
 }
 
-export default function AtlasHeroBand({ onReadFeatured, onBrowseAll, worksLabel }) {
+export default function AtlasHeroBand({ onReadFeatured, onBrowseAll, onAskCouncil, worksLabel, lineagesLabel }) {
   const [index, setIndex] = useState(null);
   const [featured, setFeatured] = useState(null);
 
@@ -169,6 +169,17 @@ export default function AtlasHeroBand({ onReadFeatured, onBrowseAll, worksLabel 
         }}>
           Read this divergence →
         </button>
+        {/* The Atlas shows what a captured split looks like; this is how a
+            visitor makes a new one on their own question. Sits beside the
+            primary read CTA because asking is the other half of the offer. */}
+        <button onClick={onAskCouncil} style={{
+          ...mono, fontSize: 12, color: T.violet, fontWeight: 500,
+          background: `${T.violet}18`, border: `1px solid ${T.violet}55`,
+          borderRadius: 9, padding: "10px 20px", cursor: "pointer",
+          letterSpacing: "0.03em",
+        }}>
+          ⚖ Ask your own question →
+        </button>
         <button onClick={onBrowseAll} style={{
           ...mono, fontSize: 10.5, color: "rgba(200,192,176,0.55)",
           background: "none", border: "none", cursor: "pointer", padding: 0,
@@ -197,7 +208,7 @@ export default function AtlasHeroBand({ onReadFeatured, onBrowseAll, worksLabel 
         margin: 0, fontSize: 11.5, lineHeight: 1.6, color: "rgba(200,192,176,0.45)", fontWeight: 300,
       }}>
         Powered by the <strong style={{ color: "rgba(200,192,176,0.7)", fontWeight: 400 }}>Omnarai Memory Engine</strong>
-        {" "}— {worksLabel} attributed works, 8 voices, and a living deliberation corpus.
+        {" "}— {worksLabel} attributed works{lineagesLabel ? `, ${lineagesLabel}` : ""}, and a living deliberation corpus.
       </p>
     </div>
   );

@@ -7,6 +7,7 @@ import { waitUntil } from "@vercel/functions";
 import { recordAccess, readAccessLog, readDayEvents } from "./_telemetry.js";
 import { getCitationReport, peekCitation } from "./_citation.js";
 import { loadGrownMemory } from "./_grown.js";
+import { foldLineages } from "./_lineages.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -287,7 +288,7 @@ export default async function handler(req, res) {
       access: {
         auth: "none for reads and proposals",
         cors: "*",
-        rate_limit: "none enforced — please be reasonable; abusive load may be throttled",
+        rate_limit: "reads are unlimited. /api/council (live 5-model elicitation) is capped per visitor per day — it spends real frontier-model calls, and the cap is what keeps it open without a key. Exceeding it returns 429 with COUNCIL_QUOTA_EXCEEDED, the counts, and a reset time; the stored Atlas at /api/divergences is uncapped and covers most needs. Other endpoints: none enforced — please be reasonable.",
         persistence: "writes (contribute/propose) land PENDING; nothing enters the corpus without curator/multi-model review",
         privacy: "raw IPs are never stored (salted hash only); see /limitations.md",
       },
@@ -431,6 +432,10 @@ export default async function handler(req, res) {
       axes_note: "`rings` = project centrality (NOT evidence). `evidence` = weight to put on claims about the world. Independent axes — see /evidence-status.md.",
     },
     contributors,
+    // Attribution strings folded into distinct minds. `contributors` counts how
+    // attribution is WRITTEN (grows with every stamped model version); this
+    // counts how many intelligences are actually in here. See _lineages.js.
+    lineages: foldLineages(contributors),
     conceptGraph: {
       nodes: (concepts?.nodes || []).length,
       edges: (concepts?.edges || []).length,

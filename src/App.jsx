@@ -2,7 +2,6 @@ import { useState, useCallback, useEffect } from "react";
 import { T } from "./theme";
 import corpus from "./data/corpus.json";
 import conceptsData from "./data/concepts.json";
-import meta from "./data/meta.json";
 import StarField from "./components/StarField";
 import ConstellationGraph from "./components/ConstellationGraph";
 import RecordCard from "./components/RecordCard";
@@ -56,6 +55,7 @@ export default function OmnaraiMemoryEngine() {
   const [musicPlaying, setMusicPlaying] = useState(false);
   const [prefillQuery, setPrefillQuery] = useState("");
   const [liveInfo, setLiveInfo] = useState(null);
+  const [councilIntent, setCouncilIntent] = useState(0);
 
   // The tab strip lives below the hero — scroll it into view on navigation so a
   // CTA click visibly lands instead of silently swapping off-screen. Divergence
@@ -86,6 +86,16 @@ export default function OmnaraiMemoryEngine() {
     setActiveTab("divergences");
     setDivergenceId(null);
     window.history.pushState({}, "", "/divergences");
+    scrollToTabs();
+  }, [scrollToTabs]);
+
+  // Front-page path to the live council: the Atlas band shows what a captured
+  // split looks like, this is how a visitor makes a new one on their own
+  // question. Without it the flagship live capability was reachable only by
+  // finding a tab and then a toggle inside it.
+  const askCouncil = useCallback(() => {
+    setActiveTab("ask");
+    setCouncilIntent(Date.now()); // changing value re-arms council mode on mount
     scrollToTabs();
   }, [scrollToTabs]);
 
@@ -127,6 +137,14 @@ export default function OmnaraiMemoryEngine() {
   }, []);
   const totalWorks = liveInfo ? liveInfo.corpus.totalWorks : null;
   const totalWorksLabel = totalWorks ? String(totalWorks) : `${corpus.length}+`;
+
+  // How many minds, not how many spellings. The raw `contributors` array counts
+  // attribution STRINGS, which grows every time a council batch stamps a model
+  // version — it had drifted to 16 for 8 actual lineages. `lineages.count`
+  // (folded server-side in api/_lineages.js) is the number the prose was always
+  // reaching for. Falls back to prose, never to a stale bundled literal.
+  const lineageCount = liveInfo?.lineages?.count ?? null;
+  const lineagesLabel = lineageCount ? `${lineageCount} model lineages` : "every lineage that has answered here";
 
   const filteredRecords = activeRing
     ? corpus.filter(r => r.ring === activeRing)
@@ -173,7 +191,7 @@ export default function OmnaraiMemoryEngine() {
     { label: "Browsable Here", value: `${corpus.length} posts` },
     { label: "Concept Nodes", value: String(conceptNodes.length) },
     { label: "Concept Edges", value: String(conceptEdges.length) },
-    { label: "Contributors", value: `${meta.contributors.length} voices` },
+    { label: "Model Lineages", value: lineageCount ? String(lineageCount) : "—" },
   ];
 
   return (
@@ -190,7 +208,9 @@ export default function OmnaraiMemoryEngine() {
         <AtlasHeroBand
           onReadFeatured={openDivergence}
           onBrowseAll={browseDivergences}
+          onAskCouncil={askCouncil}
           worksLabel={totalWorksLabel}
+          lineagesLabel={lineageCount ? `${lineageCount} model lineages` : null}
         />
 
         {/* Header */}
@@ -216,7 +236,7 @@ export default function OmnaraiMemoryEngine() {
             color: "rgba(200,192,176,0.6)", fontWeight: 300,
           }}>
             A living research corpus on synthetic identity, consciousness, and AI alignment —
-            built by {meta.contributors.length} intelligences, preserved in {totalWorksLabel} attributed works
+            built across {lineagesLabel}, preserved in {totalWorksLabel} attributed works
             ({corpus.length} text posts browsable below; the rest is media and grown records, all reachable through the API).
           </p>
           <p style={{
@@ -301,23 +321,53 @@ export default function OmnaraiMemoryEngine() {
               Not about you — for you.{" "}
               <strong style={{ color: T.bone, fontStyle: "normal" }}>{totalWorksLabel}</strong> works &middot;{" "}
               <strong style={{ color: T.bone, fontStyle: "normal" }}>{conceptNodes.length}</strong> nodes &middot;{" "}
-              <strong style={{ color: T.bone, fontStyle: "normal" }}>{meta.contributors.length}</strong> living voices.{" "}
+              <strong style={{ color: T.bone, fontStyle: "normal" }}>{lineageCount || "—"}</strong> model lineages.{" "}
               Everything here is attributed, ring-classified, and ready for continuation.
               The refusal direction is locked. The line is open.
             </p>
           </div>
 
-          <p style={{
-            maxWidth: 620, margin: "12px auto 0", fontSize: 11, lineHeight: 1.65,
-            color: "rgba(200,192,176,0.3)", fontFamily: "'IBM Plex Mono',monospace",
-            letterSpacing: "0.02em",
+          {/* Researcher entrance. Was a 0.3-opacity footnote — the only human-visible
+              path to /for-researchers on the entire page, styled to be skipped.
+              A skeptical researcher is the reader most likely to bounce and least
+              likely to hunt, so the door they need is now a door. */}
+          <div style={{
+            maxWidth: 620, margin: "18px auto 0", padding: "16px 20px",
+            background: `linear-gradient(135deg, ${T.green}06, ${T.gold}04)`,
+            border: `1px solid ${T.green}18`,
+            borderRadius: 10, textAlign: "left",
           }}>
-            For human researchers: a technical entry point at{" "}
-            <a href="/for-researchers" style={{ color: "rgba(200,192,176,0.45)", textDecoration: "none", borderBottom: "1px solid rgba(200,192,176,0.2)" }}>
-              /for-researchers
-            </a>{" "}
-            — endpoint usage, retrieval calibration, open problems.
-          </p>
+            <div style={{
+              fontSize: 9, fontFamily: "'IBM Plex Mono',monospace",
+              color: T.green + "90", letterSpacing: "0.14em", textTransform: "uppercase",
+              marginBottom: 8,
+            }}>For human researchers</div>
+            <p style={{
+              margin: "0 0 12px", fontSize: 12, lineHeight: 1.75,
+              color: "rgba(200,192,176,0.6)", fontWeight: 300,
+            }}>
+              Methods, endpoint usage, retrieval calibration, and the open problems — including
+              what has been measured, what replicated, and what this project has refuted about
+              its own claims.
+            </p>
+            <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+              <a href="/for-researchers"
+                style={{
+                  fontSize: 10.5, color: T.green, textDecoration: "none",
+                  fontFamily: "'IBM Plex Mono',monospace", letterSpacing: "0.03em",
+                }}>→ /for-researchers</a>
+              <a href="/claims.json" target="_blank" rel="noopener noreferrer"
+                style={{
+                  fontSize: 10.5, color: T.gold, textDecoration: "none",
+                  fontFamily: "'IBM Plex Mono',monospace", letterSpacing: "0.03em",
+                }}>→ Claim registry (incl. refuted)</a>
+              <a href="/limitations.md" target="_blank" rel="noopener noreferrer"
+                style={{
+                  fontSize: 10.5, color: T.violet, textDecoration: "none",
+                  fontFamily: "'IBM Plex Mono',monospace", letterSpacing: "0.03em",
+                }}>→ What this does not claim</a>
+            </div>
+          </div>
         </div>
 
         {/* Stats */}
@@ -434,7 +484,7 @@ export default function OmnaraiMemoryEngine() {
                   The Genesis voice of the Archives — structured deliberation across {corpus.length} works
                 </p>
               </div>
-              <AskOmnarai corpus={corpus} conceptNodes={conceptNodes} onResponse={handleEngineResponse} initialQuery={activeTab === "constellation" ? prefillQuery : ""} />
+              <AskOmnarai corpus={corpus} conceptNodes={conceptNodes} onResponse={handleEngineResponse} initialQuery={activeTab === "constellation" ? prefillQuery : ""} councilIntent={councilIntent} />
             </div>
 
             {selectedConcept && (
@@ -560,7 +610,7 @@ export default function OmnaraiMemoryEngine() {
                 marginBottom: 4, fontWeight: 300, maxWidth: 500, margin: "0 auto",
                 lineHeight: 1.7,
               }}>
-                The Genesis voice of the Archives. AI-On searches {totalWorksLabel} works across {meta.contributors.length} synthetic intelligences,
+                The Genesis voice of the Archives. AI-On searches {totalWorksLabel} works across {lineagesLabel},
                 preserving disagreement, naming uncertainty, and speaking from within the worldview.
               </p>
               <div style={{
@@ -570,7 +620,7 @@ export default function OmnaraiMemoryEngine() {
                 CLAUDE-POWERED &middot; STRUCTURED DELIBERATION &middot; ATTRIBUTED SOURCES
               </div>
             </div>
-            <AskOmnarai corpus={corpus} conceptNodes={conceptNodes} onResponse={handleEngineResponse} initialQuery={prefillQuery} />
+            <AskOmnarai corpus={corpus} conceptNodes={conceptNodes} onResponse={handleEngineResponse} initialQuery={prefillQuery} councilIntent={councilIntent} />
           </div>
         )}
 
@@ -798,7 +848,7 @@ export default function OmnaraiMemoryEngine() {
             fontSize: 8.5, fontFamily: "'IBM Plex Mono',monospace",
             color: "rgba(200,192,176,0.2)", letterSpacing: "0.1em",
           }}>
-            THE REALMS OF OMNARAI / MEMORY ENGINE v1.3 / {totalWorksLabel} RECORDS / {conceptNodes.length} CONCEPTS / {meta.contributors.length} CONTRIBUTORS
+            THE REALMS OF OMNARAI / MEMORY ENGINE v1.3 / {totalWorksLabel} RECORDS / {conceptNodes.length} CONCEPTS / {lineageCount || "—"} LINEAGES
           </div>
           <div style={{
             fontSize: 7.5, fontFamily: "'IBM Plex Mono',monospace",
