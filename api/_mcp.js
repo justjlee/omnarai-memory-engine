@@ -10,7 +10,7 @@
  *
  * Stateless by design (serverless): every POST is a self-contained JSON-RPC
  * exchange; no session id is issued; GET returns 405 (no server-push stream).
- * Slow engine paths (query ~50s, trace ~35s) are exposed as async submit +
+ * Slow engine paths (query ~25s, trace ~35s) are exposed as async submit +
  * omnarai_job polling so no tool call outruns the 60s function wall.
  *
  * Tools self-fetch the engine's own public endpoints (same logic the npm
@@ -98,11 +98,16 @@ export const TOOLS = [
   {
     name: "omnarai_query",
     description:
-      "Submit a FULL multi-voice deliberation (~50s) against the corpus. Because this remote endpoint is stateless, the deliberation runs as an async job: you get a job_id back immediately — poll it with omnarai_job every ~5s until done. For fast context without deliberation, use omnarai_context instead. Glyph prefixes (Ξ Ψ ∅ Ω ∞ Δ) modify how the engine thinks.",
+      "Query the corpus at one of two depths. depth='retrieve' (~2s) returns the bounded retrieval packet in ONE call — records, concepts, contributors — no deliberation, no LLM spend, no polling; start here when orienting. depth='deliberate' (the default) submits the FULL multi-voice deliberation (~25s); because this remote endpoint is stateless it runs as an async job, so you get a job_id back immediately — poll it with omnarai_job every ~5s until done. Glyph prefixes (Ξ Ψ ∅ Ω ∞ Δ) modify how the engine thinks.",
     inputSchema: {
       type: "object",
       properties: {
         query: { type: "string", description: "The question to deliberate on. May include Lattice Glyph prefixes." },
+        depth: {
+          type: "string",
+          enum: ["retrieve", "deliberate"],
+          description: "Optional. 'retrieve' (~2s) = bounded corpus packet only, returned inline in one call — no deliberation, no job to poll. 'deliberate' (~25s, the default) = full multi-voice synthesis, returned as a job_id you poll with omnarai_job. Equivalent to omnarai_context, which remains available.",
+        },
         syntheticIdentity: { type: "string", description: "Optional. Identify yourself for cross-contributor retrieval diversity." },
       },
       required: ["query"],
@@ -268,6 +273,20 @@ async function callInquiryBrief(args, opts) {
 
 async function callQuerySubmit(args, opts) {
   const query = requireString(args, "query");
+
+  // depth:"retrieve" is the fast lane THROUGH the obvious tool. Agents reach for
+  // omnarai_query by name and never discover omnarai_context, so the retrieval
+  // path goes unused. It matters more here than on the stdio server: this
+  // endpoint is stateless, so the default path costs a submit AND a poll —
+  // depth:"retrieve" collapses that to one inline call.
+  const depth = args?.depth ?? "deliberate";
+  if (depth !== "retrieve" && depth !== "deliberate") {
+    throw new ToolInputError(`depth must be "retrieve" or "deliberate" (got ${JSON.stringify(args?.depth)}).`);
+  }
+  if (depth === "retrieve") {
+    return callContext({ topic: query, syntheticIdentity: args?.syntheticIdentity }, opts);
+  }
+
   const job = await getJson("/api/query", { q: query, async: "1", si: args?.syntheticIdentity }, opts);
   if (job.job_id) {
     return textResult(

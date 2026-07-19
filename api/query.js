@@ -150,7 +150,7 @@ function buildSessionContext(session) {
 }
 
 // ── Async deliberation jobs ─────────────────────────────────────────────────
-// A full deliberation takes ~50s — beyond most agent/browser HTTP timeouts.
+// A full deliberation takes ~25s — beyond most agent/browser HTTP timeouts.
 // `async:true` returns a job_id immediately; the deliberation runs in the
 // background via waitUntil and writes its result to Blob; the caller polls
 // GET /api/query?job=<id> (each poll < 1s) until status is "done". This keeps
@@ -1185,11 +1185,11 @@ export default async function handler(req, res) {
     const q = req.query?.q || req.query?.query || "";
     const glyphParam = req.query?.glyph || "";
     // FAST BY DEFAULT: a bare GET ?q=... returns the instant retrieval layer
-    // (real records, ~1.5s, no LLM spend) instead of blocking ~50s on a full
+    // (real records, ~2s, no LLM spend) instead of blocking ~25s on a full
     // deliberation — so the obvious HTTP path never reads as a timeout to a
     // visiting client. Callers opt into the full multi-voice deliberation:
     //   &async=1 → job_id + poll_url (recommended for agents; never blocks)
-    //   &sync=1  → block and return the deliberation in one response (~50s)
+    //   &sync=1  → block and return the deliberation in one response (~25s)
     // mode=retrieve / format=* are still honored exactly as before. POST is
     // unchanged (full deliberation by default — the UI path).
     const explicitFormat = req.query?.mode === "retrieve" ? "context" : (req.query?.format || "");
@@ -1207,17 +1207,17 @@ export default async function handler(req, res) {
         error: "Missing required parameter: q",
         code: "MISSING_QUERY",
         param_missing: true,
-        agent_action: "Reissue as GET /api/query?q=your+question (add &mode=retrieve for ~1.5s). For orientation first, call GET /api/agent-entry.",
+        agent_action: "Reissue as GET /api/query?q=your+question (add &mode=retrieve for ~2s). For orientation first, call GET /api/agent-entry.",
         retryable: true,
         suggested_next_call: { method: "GET", url: "/api/query?q=your+question&mode=retrieve" },
         info: "Omnarai Memory Engine — deliberation API",
         usage: "GET /api/query?q=your+question+here",
         example: "/api/query?q=What+is+holdform%3F",
-        deliberation: "A bare query is FAST by default (retrieval layer, ~1.5s). For the engine's full multi-voice deliberation, add &async=1 (returns job_id + poll_url — poll every ~3s until done, ~50s total; recommended) or &sync=1 (blocks ~50s, one response). POST {query} also runs the full deliberation.",
+        deliberation: "A bare query is FAST by default (retrieval layer, ~2s). For the engine's full multi-voice deliberation, add &async=1 (returns job_id + poll_url — poll every ~3s until done, ~25s total; recommended) or &sync=1 (blocks ~25s, one response). POST {query} also runs the full deliberation.",
         glyphs: "Prefix with Ξ for divergence, Ψ for self-reference, ∅ for void, Ω to commit, ∞ to hold, Δ to repair",
         glyphParam: "Or pass ?glyph=Ξ separately — engine prepends it to your query",
         format: "?format=brief = exportable JSON artifact; ?format=context (alias ?mode=retrieve) = the retrieval layer, which is now the default for a bare query",
-        speed: "Fast by default (~1.5s, retrieval only, no LLM spend). The ~50s frontier deliberation is opt-in via &async=1 or &sync=1, so the default path never times out.",
+        speed: "Fast by default (~2s, retrieval only, no LLM spend). The ~25s frontier deliberation is opt-in via &async=1 or &sync=1, so the default path never times out.",
         corpus: `${corpus.length} works, May 2025–present`,
         contributors: ["Claude | xz", "Grok", "Gemini", "DeepSeek", "Omnai", "Perplexity", "xz"],
         dataset: "https://huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai",
@@ -1250,7 +1250,7 @@ export default async function handler(req, res) {
     return agentError(res, 405, {
       code: "METHOD_NOT_ALLOWED",
       message: "Method not allowed. Use GET ?q=... or POST {query: ...}",
-      agent_action: "Reissue as GET /api/query?q=your+question (add &mode=retrieve for ~1.5s) or POST {\"query\":\"...\"}.",
+      agent_action: "Reissue as GET /api/query?q=your+question (add &mode=retrieve for ~2s) or POST {\"query\":\"...\"}.",
       retryable: true,
       suggested_next_call: { method: "GET", url: "/api/query?q=your+question&mode=retrieve" },
     });
@@ -1287,7 +1287,7 @@ export default async function handler(req, res) {
   // q_received to raw ?q= pre-glyph-merge; POST falls back to the raw query field.
   const questionReceived = ((req.body?.q_received ?? rawQuery) || "").toString();
 
-  // Async mode: hand back a job_id now and run the ~50s deliberation in the
+  // Async mode: hand back a job_id now and run the ~25s deliberation in the
   // background, so the caller never holds a connection past its timeout.
   // (Pointless for the already-fast retrieval path, so skip it there.)
   const wantsAsync = req.body?.async === true || req.body?.async === "true"
@@ -1327,7 +1327,7 @@ export default async function handler(req, res) {
       job_id: jobId,
       status: "pending",
       poll_url: `/api/query?job=${jobId}`,
-      note: "Deliberation running (~50s). Poll poll_url every ~3s until status is 'done'; the answer lands in the 'result' field. Jobs expire ~1h after completion.",
+      note: "Deliberation running (~25s). Poll poll_url every ~3s until status is 'done'; the answer lands in the 'result' field. Jobs expire ~1h after completion.",
     });
   }
 
@@ -1520,13 +1520,13 @@ export default async function handler(req, res) {
       conceptSubgraph,
       contributors: [...new Set(relevant.flatMap(r => r.contributors || []))],
       glyphsDetected: activeGlyphs.map(g => g.id),
-      latency: "fast (~1.5s) — retrieval only, no LLM deliberation",
-      note: "This is the engine's instant retrieval layer — the default for a bare GET ?q=. It hands you the corpus substrate (real records, concepts, contributors) to reason over immediately, with no ~50s wait and no timeout risk. For the engine's OWN multi-voice deliberation (a synthesized answer + tensions + deliberationCard), use one of the deliberation paths below.",
+      latency: "fast (~2s) — retrieval only, no LLM deliberation",
+      note: "This is the engine's instant retrieval layer — the default for a bare GET ?q=. It hands you the corpus substrate (real records, concepts, contributors) to reason over immediately, with no ~25s wait and no timeout risk. For the engine's OWN multi-voice deliberation (a synthesized answer + tensions + deliberationCard), use one of the deliberation paths below.",
       deliberation: {
         async_url: `/api/query?q=${encodeURIComponent(query.trim())}&async=1`,
-        async_how: "Returns a job_id + poll_url instantly; poll the poll_url every ~3s until status is 'done' (~50s total). Recommended for agents — never holds the connection open past a second.",
+        async_how: "Returns a job_id + poll_url instantly; poll the poll_url every ~3s until status is 'done' (~25s total). Recommended for agents — never holds the connection open past a second.",
         sync_url: `/api/query?q=${encodeURIComponent(query.trim())}&sync=1`,
-        sync_how: "Blocks and returns the full deliberation in one response (~50s). Use only if your HTTP client tolerates a ~50s read.",
+        sync_how: "Blocks and returns the full deliberation in one response (~25s). Use only if your HTTP client tolerates a ~25s read.",
         post: 'Or POST {"query":"..."} — same full deliberation; also accepts session_id and syntheticIdentity.',
       },
     });

@@ -119,7 +119,7 @@
   <div class="card" id="card-context">
     <h2>Fast context (retrieval only)</h2>
     <div class="ep">GET /api/query?q=…&amp;mode=retrieve</div>
-    <div class="desc">~1.5s. The bounded retrieval packet — records, concepts, contributors — no deliberation. The cheapest useful call; reason over it yourself.</div>
+    <div class="desc">~2s. The bounded retrieval packet — records, concepts, contributors — no deliberation. The cheapest useful call; reason over it yourself.</div>
     <div class="row">
       <input type="text" id="q-context" value="What is holdform?" />
       <label class="chk"><input type="checkbox" id="x-context" /> Ξ diverge</label>
@@ -141,7 +141,7 @@
   <div class="card" id="card-query">
     <h2>Full deliberation (async + poll)</h2>
     <div class="ep">GET /api/query?q=…&amp;async=1 → poll /api/query?job=&lt;id&gt;</div>
-    <div class="desc">~50s. The full structured deliberation. We submit, get a job id instantly, then poll for you — never holding the connection. Watch the status update.</div>
+    <div class="desc">~25s. The full structured deliberation. We submit, get a job id instantly, then poll for you — never holding the connection. Watch the status update.</div>
     <div class="row">
       <input type="text" id="q-query" value="Where do Claude and Grok disagree about synthetic consciousness?" />
       <label class="chk"><input type="checkbox" id="x-query" /> Ξ diverge</label>

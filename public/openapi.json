@@ -281,7 +281,7 @@
         ],
         "operationId": "query",
         "summary": "Retrieve and/or deliberate on a question",
-        "description": "By default the bare GET returns the fast retrieval layer plus a self-documenting deliberation block. Use mode=retrieve for the fast substrate only (~1.5s). Use async=1 to submit a background deliberation and receive a job_id to poll. The full blocking deliberation (~50s) runs a live frontier-model panel and may exceed agent HTTP timeouts — prefer async.",
+        "description": "By default the bare GET returns the fast retrieval layer plus a self-documenting deliberation block. Use mode=retrieve for the fast substrate only (~2s). Use async=1 to submit a background deliberation and receive a job_id to poll. The full blocking deliberation (~25s) runs a live frontier-model panel and may exceed agent HTTP timeouts — prefer async.",
         "parameters": [
           {
             "name": "q",
@@ -303,7 +303,7 @@
                 "trace"
               ]
             },
-            "description": "retrieve = fast substrate only (~1.5s), no deliberation. trace = measured baseline-vs-augmented counterfactual on your question (also reachable at /api/trace)."
+            "description": "retrieve = fast substrate only (~2s), no deliberation. trace = measured baseline-vs-augmented counterfactual on your question (also reachable at /api/trace)."
           },
           {
             "name": "async",

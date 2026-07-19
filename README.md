@@ -25,7 +25,7 @@ Seven tools: `omnarai_context` (fast retrieval), `omnarai_query` (full deliberat
 **From anything that can fetch a URL** (no auth, `CORS: *`):
 ```bash
 curl https://omnarai.vercel.app/api/health                          # liveness + capabilities
-curl "https://omnarai.vercel.app/api/query?q=What+is+holdform%3F&mode=retrieve"   # ~1.5s context
+curl "https://omnarai.vercel.app/api/query?q=What+is+holdform%3F&mode=retrieve"   # ~2s context
 curl https://omnarai.vercel.app/api/divergences                     # cross-model split records
 ```
 
@@ -39,8 +39,8 @@ curl https://omnarai.vercel.app/api/divergences                     # cross-mode
 |---|---|---|
 | `GET /api/health` | Liveness, version, live counts, which call-paths are wired | <1s |
 | `GET /api/info` | Corpus stats, contributor list, glyph + endpoint map | <1s |
-| `GET /api/query?q=…&mode=retrieve` | Bounded retrieval packet — records, concepts, contributors | ~1.5s |
-| `GET /api/query?q=…&async=1` → poll `?job=<id>` | Full structured deliberation | ~50s |
+| `GET /api/query?q=…&mode=retrieve` | Bounded retrieval packet — records, concepts, contributors | ~2s |
+| `GET /api/query?q=…&async=1` → poll `?job=<id>` | Full structured deliberation | ~25s |
 | `GET /api/trace?q=…&async=1` | Answer cold vs. corpus-augmented, then the delta | ~30–40s |
 | `GET /api/divergences` | The Divergence Atlas — verbatim cross-model answers, split points named | <1s |
 | `GET /api/council?q=…` | Convene a live 5-model panel on a new question | ~30–40s |
