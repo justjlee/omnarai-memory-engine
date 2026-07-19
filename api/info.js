@@ -13,7 +13,7 @@ const __dirname = dirname(__filename);
 const projectRoot = join(__dirname, "..");
 
 // Bumped by hand when the API surface changes (Vite leaves package.json at 0.0.0).
-const ENGINE_VERSION = "2026.07.18";
+const ENGINE_VERSION = "2026.07.19";
 
 // One TTL for every count-bearing surface (info / agent-entry / health / manifest).
 // These all read the same cold-start `mergedCorpus` count; if they cache at
