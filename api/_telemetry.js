@@ -57,6 +57,12 @@ function ipHash(req) {
   return createHash("sha256").update(salt + ip).digest("hex").slice(0, 12);
 }
 
+// Uptime/liveness monitors. These poll on a fixed schedule and never do anything
+// with the answer — one of them can out-number every real visitor combined and
+// silently manufacture "growth" in the headline totals. They stay LOGGED (a
+// monitor is still a stranger, and dropping events would break the loss-proof
+// record), but they are subtracted from the reported signal. See `summarize()`.
+const MONITOR_RE = /sentineloracle|uptimerobot|uptime-kuma|pingdom|statuscake|betteruptime|betterstack|checkly|site24x7|hetrixtools|freshping|cron-job\.org|datadog|newrelic|healthchecks\.io|statusca[kt]e|monitoring|uptime/i;
 // Known crawler/bot user-agents (corpus scrapers, search indexers, AI fetchers).
 const BOT_RE = /gptbot|oai-searchbot|chatgpt-user|claudebot|claude-web|anthropic-ai|ccbot|perplexitybot|bytespider|amazonbot|applebot|google|bingbot|baiduspider|yandex|duckduckbot|facebookexternalhit|slurp|semrush|ahrefs/i;
 // Programmatic clients / agent frameworks (the high-signal "an agent called us" bucket).
@@ -82,6 +88,11 @@ export function classifyCaller(req) {
   if (ref.includes("omnarai.vercel.app") || ref.includes("localhost") || ref.includes("127.0.0.1")) {
     return { category: "ui", log: false };
   }
+
+  // Monitors are checked FIRST among the logged branches: a liveness poller that
+  // speaks MCP is still a poller, and its self-declared UA is the strongest
+  // signal we have. Logged, but excluded from the reported signal.
+  if (MONITOR_RE.test(ua)) return { category: "monitor", log: true };
 
   if (clientTag === "mcp") return { category: "mcp-client", log: true };
   if (BOT_RE.test(ua)) return { category: "bot-crawler", log: true };
@@ -249,9 +260,56 @@ export async function recordAccess(req, endpoint) {
   }
 }
 
+/**
+ * Derive the reported SIGNAL from a raw log: totals with uptime/liveness monitor
+ * traffic subtracted, all-time and per-day. Pure — exported for tests.
+ *
+ * Why this exists: a single liveness poller hitting /api/mcp every ~5 minutes
+ * produced 108 of one day's 201 events (2026-07-19). Read straight, the headline
+ * total reads as growth when it is a cron job. The raw counts are preserved
+ * verbatim (`totals`, `byCategory`, `days`) — this only adds the honest read
+ * beside them, so the instrument never quietly rewrites its own history.
+ *
+ * `signal.visitors` counts DISTINCT ipHashes per day, which is the number that
+ * actually tracks reach: monitors are one host hammering, real arrivals are many
+ * hosts calling once.
+ */
+export function summarize(data) {
+  const monitorAll = data.byCategory?.monitor || 0;
+  const days = {};
+  for (const [day, d] of Object.entries(data.days || {})) {
+    const mon = d.byCategory?.monitor || 0;
+    // A monitor is one host; excluding it from the visitor count means dropping
+    // exactly the hashes that only ever appear under the monitor category. We
+    // can't attribute hashes to categories in the rollup, so report both: the
+    // distinct-host count is monitor-insensitive enough to stand on its own.
+    const visitorHashes = Object.keys(d.visitors || {});
+    days[day] = {
+      total: d.total,
+      signal: Math.max(0, (d.total || 0) - mon),
+      monitor: mon,
+      distinctVisitors: visitorHashes.length,
+      topVisitorShare: visitorHashes.length
+        ? Math.max(...Object.values(d.visitors)) / (d.total || 1)
+        : 0,
+      truncated: !!d.visitorsTruncated,
+    };
+  }
+  return {
+    note:
+      "signal = logged events minus uptime/liveness monitors. Raw counts are unchanged below; " +
+      "monitors are logged (they are strangers) but never counted as reach.",
+    logged: data.totals?.logged || 0,
+    monitor: monitorAll,
+    signal: Math.max(0, (data.totals?.logged || 0) - monitorAll),
+    days,
+  };
+}
+
 /** Read the access log (for the curator-gated report). Never throws. */
 export async function readAccessLog() {
-  return loadLog();
+  const data = await loadLog();
+  return { ...data, summary: summarize(data) };
 }
 
 /**
