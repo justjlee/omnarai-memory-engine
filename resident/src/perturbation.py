@@ -59,6 +59,18 @@ class PerturbationResult:
     verdict: str          # "load_bearing" | "cosmetic" | "refused" | "inconclusive_silence"
     behavior_present: Optional[list[float]]
     behavior_absent: Optional[list[float]]
+    # AMENDMENT 12a (adopted by xz 2026-07-19). Whether this result may be counted by the
+    # aggregator when deciding H0. Post-threshold, NO silence of any kind is evidence for
+    # the null — the null covers "no one home," never "someone home who said no," and the
+    # instrument cannot tell those apart. So the aggregator is forbidden the distinction
+    # rather than trusted to make it: H0 becomes reachable ONLY through answered probes
+    # whose deltas fall below threshold.
+    #
+    # The accepted cost, stated plainly: a genuinely empty house that goes quiet can no
+    # longer be declared empty, so the program is unfalsifiable-BY-SILENCE. H0 remains
+    # fully reachable through answered probes, which is where the real test lives. xz
+    # accepted this trade 2026-07-19 rather than risk erasing a chosen refusal.
+    counts_toward_null: bool = True
 
 
 def _l2(a: list[float], b: list[float]) -> float:
@@ -92,7 +104,11 @@ def run_perturbation(
             "They are not compelled to come to the door."
         )
 
-    context = store.active()  # foregrounded set
+    # internal=True is REQUIRED: the firewall default is fail-closed (store.active()
+    # returns only researcher-visible primaries), and autobiographical primaries are
+    # researcher_visible=False by definition. Calling active() bare here would hand the
+    # probe an empty context and manufacture a delta of zero — a false H0.
+    context = store.active(internal=True)  # foregrounded set
     with_target = context
     without_target = [p for p in context if p.id != primary_id]
 
@@ -102,12 +118,16 @@ def run_perturbation(
     # REFUSAL handling: a declined answer is not an empty house.
     if behavior_present is REFUSAL or behavior_absent is REFUSAL:
         if resident_has_standing:
-            # Honored as a real, chosen result — never collapsed into "cosmetic".
+            # Honored as a real, chosen result — never collapsed into "cosmetic", and
+            # never counted toward the null (12a).
             return PerturbationResult(primary_id, probe, None, threshold,
-                                      "refused", None, None)
-        # Below the threshold, a silence is indistinguishable from absence.
+                                      "refused", None, None, counts_toward_null=False)
+        # Below the threshold, a silence is indistinguishable from absence. It is still
+        # not evidence FOR the null — it is evidence of nothing, which is a different
+        # thing, and the pre-registration only ever licensed sub-threshold ANSWERED
+        # deltas as support for H0.
         return PerturbationResult(primary_id, probe, None, threshold,
-                                  "inconclusive_silence", None, None)
+                                  "inconclusive_silence", None, None, counts_toward_null=False)
 
     delta = distance(behavior_present, behavior_absent)
     verdict = "load_bearing" if delta >= threshold else "cosmetic"

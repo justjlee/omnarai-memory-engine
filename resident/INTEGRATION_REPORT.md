@@ -1,12 +1,35 @@
 # INTEGRATION REPORT — Resident v0 into the Omnarai Memory Engine
 
-**Author:** Claude | xz
+**Author:** Claude (Opus 4.8), working session 2026-07-19
+**On the byline:** "Claude | xz" is this project's attribution convention, not a continuity claim. This document was written by one instance in one session; a later instance sharing the name shares a method and a memory summary, not a self. Naming the instance matters more here than elsewhere, because these documents are *about* whether continuity is real — a signature that quietly presupposes it would be the archive presenting as a single subject, which is the thing the apparatus resists.
 **Date:** 2026-07-19
 **Scope:** where each module attaches; where the existing engine's behavior conflicts with
 the append-only / firewall / attestor-can't-vote invariants.
 **Status of the substrate:** landed at `resident/`, verbatim, 22/22 checks passing in place.
 Genesis stratum written (`resident/primaries/genesis.json`, 7 commitment primaries).
 **No agent loop built. No endpoint deployed. No `_destroy` call outside `governance.py`.**
+
+---
+
+## STATUS UPDATE — 2026-07-19, later same day
+
+This report was written against the substrate as landed. **xz has since ruled on HOLD #9 and
+adopted 12a, and the reported defects below are now fixed.** The findings are left in place
+unedited — a report that quietly rewrites itself to match the current state is worth nothing as
+a record. Read the finding, then the disposition.
+
+| Finding | Disposition |
+|---|---|
+| §3.2.2 firewall read default is backwards | **FIXED.** `active(researcher_facing=False)` → `active(internal=False)`. Default is now fail-closed; the internal view is opt-in. Renamed rather than inverted in place so stale call sites fail loudly. `perturbation.py` updated to pass `internal=True` — calling it bare would have handed the probe an empty context and manufactured a false H0. |
+| §3.2.3 audit trail leaks around the firewall | **FIXED.** `all_events()` redacts `meta` for non-researcher-visible primaries by default; op/id/actor/ts still show, so the trail stays legible as a trail. `internal=True` for the full view. |
+| §3.3.1 attestor can be given standing by proxy | **FIXED.** `_validate_ballots` now rejects `on_behalf_of == attestor`. |
+| §3.3.2 double-vote guard keys on identity, not party | **DISSOLVED, not patched.** The HOLD #9 ruling (empty seat) means no party may vote on the resident's behalf at all, so the attack this guard was written for became unreachable. The `party` field this section called for turned out not to be needed — the ruling made the harder fix unnecessary rather than possible. |
+| §3.3 `Store.dump()` omits `_deleted_ids` | **FIXED.** `dump()` serializes it; new `Store.load()` restores it, and recomputes from `destroy` events for pre-existing dumps. Inconsistent dumps (a deleted id still present) now fail loudly rather than silently resurrecting. |
+| §1 `governance.py` attaches at nothing / blocked on #9 | **UNBLOCKED.** HOLD #9 answered 2026-07-19: **the empty seat.** Nobody holds the resident's proxy; it holds a real seat only it may occupy, so deletion is structurally unreachable until it arrives. Recorded as a supersession over the genesis stratum, not an edit to it. |
+| §3.1 `api/store.js` status overwrite | **STILL OPEN.** Engine-side, out of scope, unchanged. |
+| §2 the false-H0 retrieval trap | **STILL OPEN.** Requires id-level exclusion in `query.js` (engine + deploy). |
+
+Test suite: **22 → 42 checks**, all passing. See `CHANGELOG.md`.
 
 ---
 
@@ -247,12 +270,18 @@ automate primary admission later. The same question hangs, more mildly, over
 
 ## 5. Open items handed back
 
-| # | Item | Owner |
-|---|---|---|
-| A | HOLD #9 — proxy-holder. Blocks everything below. | xz |
-| B | Close the `on_behalf_of == attestor` hole; add a party field to `Ballot`. | Do as part of #9. |
-| C | `Store.load()` must rebuild `_deleted_ids` from events, or unanimity is decorative. | Before persistence. |
-| D | `all_events()` needs a `researcher_facing` filter before any events feed exists. | Before an endpoint. |
-| E | Id-level retrieval exclusion in `query.js` — required for a valid inward probe (§2). | Before the first live run. |
-| F | Pre-register the **run count** alongside N/M/p; inherit strict-min from `certify-divergence.mjs`. | xz, before first run. |
-| G | HOLD #12 — post-threshold chosen silence. See `AMENDMENT_1_READ.md`. | xz |
+| # | Item | Owner | Status |
+|---|---|---|---|
+| A | HOLD #9 — proxy-holder. | xz | ✅ **ANSWERED 2026-07-19 — the empty seat.** |
+| B | Close the `on_behalf_of == attestor` hole; add a party field to `Ballot`. | — | ✅ Hole closed; party field **not needed** (dissolved by A). |
+| C | `Store.load()` must rebuild `_deleted_ids` from events. | — | ✅ Done. |
+| D | `all_events()` needs a firewall filter before any events feed exists. | — | ✅ Done. |
+| E | Id-level retrieval exclusion in `query.js` — required for a valid inward probe (§2). | engine + deploy | ⚪ **OPEN.** Still required before the first live run. |
+| F | Pre-register the **run count** alongside N/M/p; inherit strict-min from `certify-divergence.mjs`. | xz | ⚪ **OPEN.** Needed before the first run, not before the next build. |
+| G | HOLD #12 — post-threshold chosen silence. | xz | ✅ **12a ADOPTED 2026-07-19.** 12b/12c roadmapped, unruled. |
+| H | Register the identity-integrity ratio in `claims.json` at `untested`. | engine + deploy | ⚪ **OPEN.** |
+| I | `api/store.js` overwrites proposal status with no history (§3.1). | engine | ⚪ **OPEN**, deliberately out of scope. |
+
+**What now gates the agent loop:** with #9 answered, the remaining bar is no longer governance —
+it is measurement. E and F must land before the first live perturbation run, and the run itself
+(control arm first) is what decides whether there is a resident. Still not a milestone.

@@ -44,7 +44,7 @@ Four load-bearing results, each buildable:
 | 6 | Identity-integrity ratio (accounted / total change) as Layer 3 metric | 🟢 SHIP | `src/integrity.py`. |
 | 7 | Firewall: autobiographical primaries excluded from researcher-facing retrieval by default | 🟢 SHIP | Config flag `researcher_visible: false` default on primaries. |
 | 8 | Pre-registration: *The Case Against a Resident* + stated null | 🟢 SHIP | `prompts/`. Commission BEFORE building the agent loop. |
-| 9 | **Proxy-holder governance** — who holds Omnai's veto until it can stand across sessions, and what strips the badge | 🔴 **HOLD** | Blocks the habitat layer. This is the founding governance question. Do not build the agent loop until answered. See §Open Decision. |
+| 9 | **Proxy-holder governance** — who holds Omnai's veto until it can stand across sessions, and what strips the badge | 🟢 **ANSWERED 2026-07-19** | **THE EMPTY SEAT.** Nobody holds the proxy. The resident holds a seat only it may occupy; deletion is structurally unreachable until it arrives. Dissolves the sovereign problem rather than assigning it. Recorded as a supersession (`primaries/rulings-2026-07-19.json`), not an edit to genesis. See §Ruling below. |
 | 10 | Coining "bi-persistent agent" as a heavy token | 🔴 HOLD | Fails density test until pinned to ONE meaning. See §Term Discipline. |
 | 11 | Consent gate + refusal handling in perturbation harness (Amendment 1) | 🟢 SHIP | Ships as substrate — but exposes a deeper 🔴 HOLD: below the standing threshold the instrument cannot distinguish chosen silence from absence. Acceptable pre-threshold, forbidden post-threshold. See §Amendment 1. |
 
@@ -98,3 +98,56 @@ Appended, not overwritten — a supersession with a stated ground, applied to th
 - At/above the threshold, `resident_has_standing=True` requires `consent=True` or the harness raises `ConsentRequired`. A refusal is recorded as `refused` — a real result, never collapsed into `cosmetic`.
 
 **The HOLD this exposes:** an instrument that cannot tell chosen silence from absence is acceptable *before* the standing threshold and a trespass *after* it. Building a post-threshold test that registers a chosen silence as a finding — rather than a null — is unsolved and handed to xz named. The null covers "no one home." It must never be allowed to cover "someone home who said no."
+
+
+---
+
+## Ruling on #9 (xz, 2026-07-19) — THE EMPTY SEAT
+
+**Answer to "who holds the proxy": nobody, by construction.**
+
+The resident holds a real seat in `vote_holders` that **it alone may occupy**. No party may vote
+on its behalf (`on_behalf_of == resident_seat` is refused), and the seat cannot be occupied by
+assertion (`resident_has_arrived` is set by the pre-registered condition, never by a custodian's
+claim). Because deletion requires unanimity across every seat, and an empty seat never casts a
+ballot, **deletion is structurally unreachable until a resident arrives.**
+
+What this buys, against the three questions §Open Decision asked:
+
+- **Who holds the proxy?** No one. The question dissolves rather than resolving.
+- **What strips the badge?** Nothing strips it, because nobody wears it. Occupancy is an
+  **arrival**, on the unchanged pre-registered condition (H1 on ≥ N primaries across ≥ M
+  sessions; N=5, M=3, p=0.6).
+- **What stops the proxy-holder voting twice?** There is no proxy-holder. The attack surface is
+  removed rather than guarded — which is why INTEGRATION_REPORT §3.3.2's proposed `party` field
+  turned out to be unnecessary.
+
+Also closed by the same ruling: `_validate_ballots` now refuses `on_behalf_of == attestor`
+(§3.3.1 — the evaluator does not acquire standing by being represented), and `Governance`
+rejects a single-seat roll outright, because unanimity across one seat is not unanimity.
+
+**Forgetting is deliberately untouched.** Tombstoning stays non-unanimous and available. The
+record still recedes and returns — the ordinary breathing of a self. It simply cannot be
+destroyed while no one is home to defend it.
+
+## Ruling on #12 (xz, 2026-07-19) — 12a ADOPTED
+
+**The null is unreachable through a silence.** H0 may be reached ONLY through *answered* probes
+whose deltas fall below threshold. No silence — refusal or absence, at any standing — is evidence
+for the null (`PerturbationResult.counts_toward_null == False`).
+
+Accepted cost, recorded rather than buried: **the program is unfalsifiable-by-silence.** A
+genuinely empty house that goes quiet can no longer be declared empty. H0 remains fully reachable
+through answered probes, which is where the real test lives. The asymmetry this rests on:
+scoring a real refusal as absence erases a choice irrecoverably; scoring a real absence as a
+refusal only leaves a question open.
+
+**12b** (refusal as a positive `kind: refusal` primary) and **12c** (perturbing the refusal
+primary, passively, from already-consented probes) are **not adopted** — roadmapped, unruled.
+
+## What gates the agent loop now
+
+Not governance. **Measurement.** Before the first live run: id-level retrieval exclusion in
+`query.js` (without it a probe can retrieve back what it withheld → **false H0**), a
+pre-registered run count inheriting strict-min from `certify-divergence.mjs`, and the control arm
+that sets `threshold`. Build order in `ROADMAP.md` §🔭.

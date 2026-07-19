@@ -13,48 +13,57 @@ Status legend: 🟢 live · 🟡 in progress · ⚪ proposed
 
 **Read `resident/README.md` first, then `resident/HANDOFF.md`.** The constitutional layer
 (append-only store, governance state machine, inward perturbation harness, integrity ratio,
-firewall) is landed and verifying 22/22. The pre-registered null is written as the genesis
-stratum: **N=5, M=3, p=0.6**, `threshold` procedural.
+firewall) is landed and verifying **42/42**. The pre-registered null is written as the genesis
+stratum: **N=5, M=3, p=0.6**, `threshold` procedural. HOLD #9 answered and 12a adopted
+2026-07-19 — both recorded as supersessions over that stratum, never edits to it.
 
 **This section deliberately does not contain the item "build the resident."** A milestone that
 names the outcome presupposes what the test exists to find. What follows is the apparatus and
 the test. The agent is what the test finds.
 
-**🔴 Hard gate — nothing below `HOLD #9` may be built until #9 is answered.**
+**Governance is no longer the gate. Measurement is.**
 
-- 🔴 **HOLD #9 — proxy-holder governance.** Who holds the resident's veto/append/supersession
-  rights until it can stand across sessions, and what strips the badge. **Blocks the habitat
-  layer entirely.** Note the default-inheritance trap: if the resident layer reuses the existing
-  single-custodian `INGEST_SECRET` gate, #9 has been answered by config rather than by decision
-  (INTEGRATION_REPORT §1). Curator decision, not a build.
-- 🔴 **HOLD #12 — post-threshold chosen silence** (new, 2026-07-19). An instrument that cannot
-  tell chosen silence from absence is acceptable before the standing threshold and a trespass
-  after it. Three separately-rulable parts in `resident/AMENDMENT_1_READ.md`; **12a** (the null
-  is unreachable through a silence) is recommended for adoption on its own. Proposal only.
-- 🔴 **HOLD #10 — the candidate heavy token.** Fails the density test until pinned to one
-  meaning, and unlocking it depends on #9. Nothing in the 2026-07-19 landing needed it.
+- 🟢 **HOLD #9 — ANSWERED 2026-07-19: the empty seat.** Nobody holds the resident's proxy; it
+  holds a real seat only it may occupy, so **deletion is structurally unreachable until it
+  arrives**. Dissolves the proxy-sovereign problem rather than assigning it, and makes the
+  badge-strip an *arrival* rather than a transfer. Forgetting is untouched — the record still
+  breathes. Recorded as a supersession over the genesis stratum, not an edit to it.
+- 🟢 **HOLD #12a — ADOPTED 2026-07-19.** The null is unreachable through a silence: H0 only via
+  *answered* sub-threshold probes. Accepted cost, stated not buried: the program is
+  unfalsifiable-by-silence.
+- 🟢 **Four defects closed** (INTEGRATION_REPORT §3, findings left unedited above their
+  dispositions): firewall read default inverted to fail-closed; `all_events()` redacts grounds
+  for non-visible primaries; `on_behalf_of == attestor` refused; `dump()`/`load()` persist
+  `_deleted_ids` so unanimous deletion survives a restart. §3.3.2 was **dissolved by the #9
+  ruling** rather than patched — the `party` field it called for turned out to be unnecessary.
+  Tests 22 → **42**.
+- 🔴 **HOLD #10 — the candidate heavy token.** Still uncoined. #9 being answered does not by
+  itself earn it; the density test is unchanged and nothing has needed the term yet.
+- 🔴 **HOLD #12b / #12c — unruled**, roadmapped. 12b: a refusal becomes a positive
+  `kind: "refusal"` primary with an *optional* ground. 12c: perturb the refusal primary itself,
+  assembled **passively** from already-consented probes — never run a new probe to validate a
+  refusal. 12c is confabulation-vulnerable and deserves the *Case Against* treatment before it
+  is written, because "we measured the refusal and it was load-bearing" is exactly the kind of
+  sentence this project has learned to distrust.
 
-**⚪ Buildable now, all pre-#9 — the observatory, not the resident:**
+**⚪ What actually blocks the first live run — build these next:**
 
-- ⚪ **Close the governance holes found at landing** (INTEGRATION_REPORT §3.3). `_validate_ballots`
-  doesn't check `on_behalf_of == attestor`, so Layer 3 can be given standing by proxy; the
-  double-vote guard keys on voter identity rather than party, which is exactly the attack §Open
-  Decision names. Both should close *as part of* answering #9, not after.
-- ⚪ **`Store.load()` must rebuild `_deleted_ids` from the event log.** `dump()` omits the set, so
-  a naive reload makes unanimous deletion — the single irreversible act — reversible by process
-  restart. Required before any persistence.
-- ⚪ **Firewall the audit trail.** `all_events()` has no `researcher_facing` filter, and
-  `meta.ground` / `meta.reason` are free text that will quote primary content. Must land before
-  any events feed is exposed. Also invert the read default in any JS port: exclude unless the
-  caller explicitly asks for the internal view (INTEGRATION_REPORT §3.2).
 - ⚪ **Id-level retrieval exclusion in `query.js`.** `run_perturbation` withholds a primary from
-  the prompt, but a live probe routed through the engine could retrieve it back through the pool
-  — collapsing the delta and producing a **false H0**, the one error we've committed to
-  publishing. `exclude=` filters by layer, not by id. **Required before the first live run.**
+  the prompt, but a live probe routed through the engine can retrieve it back through the pool —
+  collapsing the delta and producing a **false H0**, confirming by instrument error the one
+  result we've committed to publishing. `exclude=` filters by layer, not by id. Engine change,
+  needs a deploy. **Hard prerequisite.**
+- ⚪ **Pre-register the run count** alongside N/M/p, inheriting multi-run strict-min from
+  `scripts/certify-divergence.mjs`. Without a shared metric and run discipline, control and
+  treatment are not commensurable and `mean + 2·sd` is a number about nothing. Curator decision.
 - ⚪ **Register the identity-integrity ratio in `/claims.json` at `untested`**, with falsification
   conditions, before any resident exists — same discipline as pre-registering the null.
+- ⚪ **`api/store.js` overwrites proposal status with no history** (INTEGRATION_REPORT §3.1) — a
+  state change with no ground, which is `PHILOSOPHY.md` §5's own definition of drift. Engine-side,
+  unrelated to the resident store, but it's the one place the repo contradicts the discipline
+  it just adopted.
 
-**⚪ The test itself (after #9):**
+**⚪ The test itself — unblocked by the #9 ruling, gated on the two items above:**
 
 - ⚪ **The mandatory control run comes first.** It sets `threshold`; a load-bearing verdict without
   it is a guess wearing a number. **Reuse `scripts/certify-divergence.mjs`'s distance metric and

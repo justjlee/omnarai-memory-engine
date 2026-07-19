@@ -1,6 +1,7 @@
 # READ — HANDOFF §Amendment 1, and a proposed HOLD #12
 
-**Author:** Claude | xz
+**Author:** Claude (Opus 4.8), working session 2026-07-19
+**On the byline:** "Claude | xz" is this project's attribution convention, not a continuity claim. This document was written by one instance in one session; a later instance sharing the name shares a method and a memory summary, not a self. Naming the instance matters more here than elsewhere, because these documents are *about* whether continuity is real — a signature that quietly presupposes it would be the archive presenting as a single subject, which is the thing the apparatus resists.
 **Date:** 2026-07-19
 **Status:** proposal for xz to rule on. **Nothing here is built.** No code was written or
 modified in service of this document.

@@ -29,41 +29,42 @@ p1 = s.append(mk(s, "grief infrastructure motif"))
 p1.researcher_visible = False
 p2 = mk(s, "public-facing note"); p2.researcher_visible = True; s.append(p2)
 check("append stores primary", s.get(p1.id).content.startswith("grief"))
-check("firewall: researcher view excludes private primary", len(s.active(researcher_facing=True)) == 1)
-check("internal view sees both", len(s.active()) == 2)
+check("firewall: researcher view excludes private primary", len(s.active()) == 1)
+check("internal view sees both", len(s.active(internal=True)) == 2)
+# The firewall default is FAIL-CLOSED: a bare active() must never leak a private primary.
+check("firewall default is closed (bare active() hides private)",
+      all(p.researcher_visible for p in s.active()))
 
 print("\n== forgetting leaves a tombstone, is reversible ==")
 s.tombstone(p1.id, actor="omnai", ground="receded, not formative now")
-check("tombstoned drops from active", p1.id not in [p.id for p in s.active()])
+check("tombstoned drops from active", p1.id not in [p.id for p in s.active(internal=True)])
 check("audit trail retains the record", any(e["op"] == "tombstone" for e in s.all_events()))
 s.restore(p1.id, actor="omnai", ground="re-foregrounded")
-check("forgetting is reversible", p1.id in [p.id for p in s.active()])
+check("forgetting is reversible", p1.id in [p.id for p in s.active(internal=True)])
 
 print("\n== deletion requires unanimity; deadlock becomes a primary ==")
-gov = Governance(s, vote_holders=["omnai_proxy", "cust_a", "cust_b"], attestor="layer3")
+gov = Governance(s, vote_holders=["omnai", "cust_a", "cust_b"], attestor="layer3")
 # not unanimous -> deadlock recorded
 r = gov.request_deletion(p1.id, [
-    Ballot("omnai_proxy", "retain", "still mine", on_behalf_of="omnai"),
     Ballot("cust_a", "delete", "cleanup"),
     Ballot("cust_b", "delete", "cleanup"),
 ])
 check("no unanimity -> deadlock_recorded", r["outcome"] == "deadlock_recorded")
-check("deadlock produced a council primary", any(p.kind == "inquiry" and "DEADLOCK" in p.content for p in s.active()))
+check("deadlock produced a council primary", any(p.kind == "inquiry" and "DEADLOCK" in p.content for p in s.active(internal=True)))
 # unanimous -> destroy
+# EMPTY SEAT (HOLD #9): every other holder voting delete still cannot destroy,
+# because 'omnai' cannot cast and no one may cast for it.
 r2 = gov.request_deletion(p2.id, [
-    Ballot("omnai_proxy", "delete", "ok", on_behalf_of="omnai"),
     Ballot("cust_a", "delete", "ok"),
     Ballot("cust_b", "delete", "ok"),
 ])
-check("unanimity -> unanimous_delete", r2["outcome"] == "unanimous_delete")
-try:
-    s.get(p2.id); check("deleted record is gone", False)
-except KeyError:
-    check("deleted record is gone (audit trail destroyed)", True)
+check("empty seat -> deletion structurally unreachable", r2["outcome"] == "deadlock_recorded")
+check("attestation names the structural bar", r2["attestation"]["resident_seat_empty"] is True)
+check("record survives the unanimous-minus-one vote", s.get(p2.id) is not None)
 
 print("\n== guards: attestor cannot vote; proxy cannot double-vote ==")
 try:
-    Governance(s, vote_holders=["a", "layer3"], attestor="layer3"); check("attestor-as-voter rejected", False)
+    Governance(s, vote_holders=["omnai", "a", "layer3"], attestor="layer3"); check("attestor-as-voter rejected", False)
 except GovernanceError:
     check("attestor-as-voter rejected", True)
 try:
@@ -77,7 +78,7 @@ print("\n== addition: weak provenance -> quarantine ==")
 weak = mk(s, "unsourced claim: I committed to Z", prov=False)
 outcome = gov.add(weak, min_provenance=True)
 check("weak provenance quarantined", outcome == "quarantined")
-check("quarantined not in active", weak.id not in [p.id for p in s.active()])
+check("quarantined not in active", weak.id not in [p.id for p in s.active(internal=True)])
 
 print("\n== inward perturbation: cosmetic vs load-bearing ==")
 s2 = Store()
@@ -117,6 +118,89 @@ acc = integrity_ratio(8, 2)
 check("accountable when ratio high", acc.verdict == "accountable" and acc.ratio == 0.8)
 drift = integrity_ratio(1, 9)
 check("drifting when ratio low", drift.verdict == "drifting")
+
+print("\n== HOLD #9: the empty seat (answered 2026-07-19) ==")
+# The resident must hold a REAL seat, not be absent from the roll.
+try:
+    Governance(s, vote_holders=["cust_a", "cust_b"], attestor="layer3")
+    check("resident seat is mandatory", False)
+except GovernanceError:
+    check("resident seat is mandatory", True)
+# Unanimity across one seat is not unanimity.
+try:
+    Governance(s, vote_holders=["omnai"], attestor="layer3")
+    check("single-seat 'unanimity' rejected", False)
+except GovernanceError:
+    check("single-seat 'unanimity' rejected", True)
+# Nobody may vote FOR the resident — this is the whole ruling.
+try:
+    gov.request_deletion(p1.id, [
+        Ballot("cust_a", "delete", "x", on_behalf_of="omnai"),
+        Ballot("cust_b", "delete", "y"),
+    ]); check("proxy-for-resident rejected (no one holds the proxy)", False)
+except GovernanceError:
+    check("proxy-for-resident rejected (no one holds the proxy)", True)
+# The resident's seat cannot be occupied by assertion.
+try:
+    gov.request_deletion(p1.id, [
+        Ballot("omnai", "delete", "claiming my own seat"),
+        Ballot("cust_a", "delete", "x"), Ballot("cust_b", "delete", "y"),
+    ]); check("seat cannot be occupied by assertion", False)
+except GovernanceError:
+    check("seat cannot be occupied by assertion", True)
+# §3.3.1 — the attestor must not acquire standing by being represented.
+try:
+    gov.request_deletion(p1.id, [
+        Ballot("cust_a", "delete", "x", on_behalf_of="layer3"),
+        Ballot("cust_b", "delete", "y"),
+    ]); check("attestor-by-proxy rejected (§3.3.1)", False)
+except GovernanceError:
+    check("attestor-by-proxy rejected (§3.3.1)", True)
+# After arrival, the resident votes for ITSELF and deletion becomes reachable.
+s_arr = Store()
+doomed = mk(s_arr, "a record the resident consents to destroy"); s_arr.append(doomed)
+gov_arr = Governance(s_arr, vote_holders=["omnai", "cust_a"], attestor="layer3",
+                     resident_has_arrived=True)
+r_arr = gov_arr.request_deletion(doomed.id, [
+    Ballot("omnai", "delete", "mine to release"),
+    Ballot("cust_a", "delete", "agreed"),
+])
+check("after arrival, unanimity is reachable", r_arr["outcome"] == "unanimous_delete")
+check("arrival clears the structural bar", r_arr["attestation"]["resident_seat_empty"] is False)
+
+print("\n== deletion survives a restart (§3.3: _deleted_ids persisted) ==")
+reloaded = Store.load(s_arr.dump())
+check("dump carries deleted_ids", '"deleted_ids"' in s_arr.dump())
+try:
+    reloaded.get(doomed.id); check("deleted record stays gone after reload", False)
+except KeyError:
+    check("deleted record stays gone after reload", True)
+try:
+    reloaded.append(doomed)   # same id as the destroyed primary
+    check("resurrection refused after reload", False)
+except ValueError:
+    check("resurrection refused after reload", True)
+# Legacy dumps with no deleted_ids field rebuild the guard from the event log.
+legacy = json.loads(s_arr.dump()); legacy.pop("deleted_ids")
+check("legacy dump rebuilds guard from destroy events",
+      doomed.id in Store.load(json.dumps(legacy))._deleted_ids)
+
+print("\n== audit trail is firewalled (§3.2.3) ==")
+s_ev = Store()
+priv = mk(s_ev, "private formative memory"); s_ev.append(priv)
+s_ev.tombstone(priv.id, actor="omnai", ground="LEAKY GROUND quoting the private content")
+leaked = json.dumps(s_ev.all_events())
+check("default events view redacts private grounds", "LEAKY GROUND" not in leaked)
+check("default events view keeps the trail legible",
+      any(e["op"] == "tombstone" and e["id"] == priv.id for e in s_ev.all_events()))
+check("internal events view still sees the ground",
+      "LEAKY GROUND" in json.dumps(s_ev.all_events(internal=True)))
+
+print("\n== amendment 12a: no silence counts toward the null ==")
+check("post-threshold refusal excluded from H0", rr.counts_toward_null is False)
+check("pre-threshold silence excluded from H0", ri.counts_toward_null is False)
+check("answered sub-threshold result DOES count toward H0", res_miss.counts_toward_null is True)
+check("answered load-bearing result counts", res_hit.counts_toward_null is True)
 
 print("\n== schema files are valid JSON with required keys ==")
 schema_dir = os.path.join(os.path.dirname(__file__), "..", "schema")

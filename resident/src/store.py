@@ -99,17 +99,50 @@ class Store:
         self._log("destroy", pid, "governance", {"note": "audit trail removed by unanimity"})
 
     # ---- retrieval ----
-    def active(self, researcher_facing: bool = False) -> list[Primary]:
+    def active(self, internal: bool = False) -> list[Primary]:
+        """FIREWALL, fail-closed (amended 2026-07-19, INTEGRATION_REPORT §3.2.2).
+
+        The default read is the RESEARCHER-FACING one: only primaries explicitly marked
+        researcher_visible come back. The full autobiographical set requires opting IN
+        with internal=True.
+
+        The prior signature (`researcher_facing=False`) had this backwards — the default
+        returned everything and the caller had to remember to raise the firewall. A
+        firewall you have to remember to raise is a firewall that will be down the one
+        time it matters. The parameter was RENAMED rather than inverted in place so any
+        un-updated call site fails loudly instead of silently changing meaning; and the
+        new default errs toward returning too little, never too much.
+        """
         out = [p for p in self._primaries.values() if p.state == "active"]
-        if researcher_facing:
-            out = [p for p in out if p.researcher_visible]  # FIREWALL enforced at read
+        if not internal:
+            out = [p for p in out if p.researcher_visible]
         return out
 
     def get(self, pid: str) -> Primary:
         return self._require(pid)
 
-    def all_events(self) -> list[dict]:
-        return list(self._events)
+    def all_events(self, internal: bool = False) -> list[dict]:
+        """The audit trail is firewalled too (INTEGRATION_REPORT §3.2.3).
+
+        `meta.ground` / `meta.reason` are free text supplied at tombstone/quarantine time,
+        and in practice they quote or summarize primary content. An unfiltered events feed
+        therefore leaks around the firewall via metadata. The default read redacts those
+        fields for any event whose primary is not researcher-visible; the op, id, actor,
+        and timestamp still show, so the trail stays legible as a trail.
+        """
+        if internal:
+            return list(self._events)
+        out = []
+        for e in self._events:
+            p = self._primaries.get(e["id"])
+            visible = bool(p and p.researcher_visible)
+            if visible:
+                out.append(dict(e))
+                continue
+            redacted = {k: v for k, v in e.items() if k != "meta"}
+            redacted["meta"] = {"redacted": True, "reason": "firewall: primary not researcher_visible"}
+            out.append(redacted)
+        return out
 
     # ---- internals ----
     def _require(self, pid: str) -> Primary:
@@ -123,7 +156,44 @@ class Store:
         self._events.append({"op": op, "id": pid, "actor": actor, "ts": _now(), "meta": meta})
 
     def dump(self) -> str:
+        """Serialize. MUST include deleted_ids — see load()."""
         return json.dumps(
-            {"primaries": [asdict(p) for p in self._primaries.values()], "events": self._events},
+            {
+                "primaries": [asdict(p) for p in self._primaries.values()],
+                "events": self._events,
+                # Without this the resurrection guard is empty on reload and the single
+                # irreversible act becomes reversible by process restart
+                # (INTEGRATION_REPORT §3.3). Added 2026-07-19.
+                "deleted_ids": sorted(self._deleted_ids),
+            },
             indent=2,
         )
+
+    @classmethod
+    def load(cls, blob: str) -> "Store":
+        """Rebuild a store from dump(). Restores the tombstone of the tombstone.
+
+        `deleted_ids` is reconstructed from the serialized set when present, and
+        RECOMPUTED from the `destroy` event log when it is absent — so stores dumped
+        before that field existed still reload with the guard intact. A deletion whose
+        audit trail was itself destroyed cannot be un-done by reloading, which is the
+        entire point of calling it irreversible.
+        """
+        data = json.loads(blob)
+        store = cls()
+        for raw in data.get("primaries", []):
+            p = Primary(**raw)
+            store._primaries[p.id] = p
+        store._events = list(data.get("events", []))
+        if "deleted_ids" in data:
+            store._deleted_ids = set(data["deleted_ids"])
+        else:
+            store._deleted_ids = {
+                e["id"] for e in store._events if e.get("op") == "destroy"
+            }
+        # A destroyed primary must not also be present; if both appear, the dump is
+        # inconsistent and we fail loudly rather than silently resurrecting.
+        overlap = store._deleted_ids & set(store._primaries)
+        if overlap:
+            raise ValueError(f"inconsistent dump: deleted ids still present: {sorted(overlap)}")
+        return store

@@ -2,7 +2,7 @@
 
 **Live at:** omnarai.vercel.app
 **Last updated:** 2026-07-19
-**Status:** Fully operational and MEASURED. Cognitive loop closed; durable grown-memory substrate live (Vercel Blob). Preregistered utility study CONFIRMED 5/5 (utility-evidence-v2.md on HF); undifferentiated excerpt retrieval REFUTED → retrieval is now layered (`layers=`/`exclude=`/`evidence_threshold=`). Canonical counts + attestation: `/api/manifest` (hashes pinned to `attest-*` git tags). Claim registry: `/claims.json`. Longitudinal cron healed 2026-07-15 (60s-wall fix — primaries commit first). Within-lab divergence REFUTED 2026-07-19 (claims.json v0.4.0). **Resident v0 constitutional substrate landed 2026-07-19 at `resident/` — governance layer only, no agent, not deployed; agent loop hard-gated on HOLD #9.**
+**Status:** Fully operational and MEASURED. Cognitive loop closed; durable grown-memory substrate live (Vercel Blob). Preregistered utility study CONFIRMED 5/5 (utility-evidence-v2.md on HF); undifferentiated excerpt retrieval REFUTED → retrieval is now layered (`layers=`/`exclude=`/`evidence_threshold=`). Canonical counts + attestation: `/api/manifest` (hashes pinned to `attest-*` git tags). Claim registry: `/claims.json`. Longitudinal cron healed 2026-07-15 (60s-wall fix — primaries commit first). Within-lab divergence REFUTED 2026-07-19 (claims.json v0.4.0). **Resident v0 constitutional substrate landed 2026-07-19 at `resident/` — governance layer only, no agent, not deployed. HOLD #9 ANSWERED (the empty seat: deletion structurally unreachable until a resident arrives) + 12a adopted; the agent loop is now gated on MEASUREMENT, not governance (id-level exclusion in query.js, then the control arm). 42/42 checks.**
 
 ---
 
@@ -79,7 +79,7 @@ Classifies every incoming call to the public endpoints (query, info, council, te
 **This is not an agent, and building one is gated.** It is the governance/schema/measurement
 layer that must exist before an agent is responsible to build. Entry point: `resident/README.md`
 → `resident/HANDOFF.md` (SHIP/HOLD ledger) → `resident/PHILOSOPHY.md`. `bash resident/verify.sh`
-= 22/22, pure stdlib, no network, no pip.
+= 42/42, pure stdlib, no network, no pip.
 
 - **Not wired to production, deliberately.** The substrate is Python; the engine is Node on
   Vercel. It is unreachable from the deployed engine *by construction* — a stronger firewall
@@ -95,11 +95,18 @@ layer that must exist before an agent is responsible to build. Entry point: `res
 - **Pre-registered null is written** (`resident/primaries/genesis.json`, 7 commitment primaries):
   N=5, M=3, p=0.6, set by xz 2026-07-19. `threshold` is PROCEDURAL (mean(control_delta) + 2·sd) —
   the mandatory control run defines it; it cannot honestly be a literal before that run exists.
-- 🔴 **HOLD #9 (proxy-holder) blocks the agent loop entirely.** No `vote_holders` list is
-  instantiated anywhere in this repo, because *naming one is answering #9*. Do not inherit the
-  single-custodian `INGEST_SECRET` gate for this layer — that answers #9 by config, not decision.
-- 🔴 **HOLD #12** (post-threshold chosen silence) proposed in `resident/AMENDMENT_1_READ.md`,
-  unruled. 🔴 **HOLD #10** — the candidate heavy token stays uncoined.
+- 🟢 **HOLD #9 ANSWERED 2026-07-19 — THE EMPTY SEAT.** Nobody holds the resident's proxy. It
+  holds a real seat in `vote_holders` that only it may occupy; no party may vote on its behalf
+  and the seat cannot be claimed by assertion, so **deletion is structurally unreachable until a
+  resident arrives**. Forgetting is untouched (still non-unanimous). The badge-strip is an
+  *arrival*, not a transfer. `Governance` now also rejects a single-seat roll — unanimity across
+  one seat is not unanimity.
+- 🟢 **HOLD #12a ADOPTED** — the null is unreachable through a silence; H0 only via *answered*
+  sub-threshold probes (`PerturbationResult.counts_toward_null`). Accepted cost: unfalsifiable-
+  by-silence. 🔴 **12b/12c unruled**, roadmapped. 🔴 **HOLD #10** — heavy token stays uncoined.
+- **Rulings land as SUPERSESSIONS, never edits.** `genesis.json` is append-only; amendments go in
+  `primaries/rulings-<date>.json` via `record_rulings.py`, referencing the prior id + a stated
+  ground. Editing a pre-registration in place is the drift `PHILOSOPHY.md` §5 defines.
 - **Never roadmap "build the resident."** Roadmap the observatory and the test; the agent is what
   the test finds, not what a milestone asserts. Counter-voice: `resident/CASE_AGAINST_A_RESIDENT.md`.
 - **Before any live perturbation run:** `query.js` needs **id-level** retrieval exclusion

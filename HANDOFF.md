@@ -333,3 +333,22 @@ this session touched no count surface.
 pre-#9: close the two ballot holes, `Store.load()` rebuilding `_deleted_ids` from the event log,
 firewall `all_events()`, id-level exclusion in `query.js`, register the integrity ratio in
 `claims.json` at `untested`. See ROADMAP.md §🔭 The resident observatory.
+
+## Session 2026-07-19 (cont.) — #9 answered, 12a adopted, four defects closed
+
+An external review confirmed all four defects reported at landing. xz then ruled:
+
+- **HOLD #9 → THE EMPTY SEAT.** Nobody holds the resident's proxy; it holds a seat only it may
+  occupy, so deletion is structurally unreachable until it arrives. Dissolves the sovereign
+  problem rather than assigning it; makes the badge-strip an *arrival*. Forgetting untouched.
+- **HOLD #12a → ADOPTED.** The null is unreachable through a silence. Accepted cost stated, not
+  buried: unfalsifiable-by-silence. 12b/12c roadmapped, unruled.
+
+Both landed as **supersessions** over the genesis stratum (`primaries/rulings-2026-07-19.json`);
+`genesis.json` is byte-untouched. Four defects fixed, one (§3.3.2) dissolved by the #9 ruling
+rather than patched. Byline corrected on both reports per the reviewer's catch. Tests 22 → **42**.
+
+**The gate moved from governance to measurement.** Before the first live run: id-level retrieval
+exclusion in `query.js` (without it a probe retrieves back what it withheld → false H0), a
+pre-registered run count inheriting strict-min from `certify-divergence.mjs`, and the control arm
+that sets `threshold`. See `ROADMAP.md` §🔭.
