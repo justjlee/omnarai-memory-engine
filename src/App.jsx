@@ -484,7 +484,7 @@ export default function OmnaraiMemoryEngine() {
                   The Genesis voice of the Archives — structured deliberation across {corpus.length} works
                 </p>
               </div>
-              <AskOmnarai corpus={corpus} conceptNodes={conceptNodes} onResponse={handleEngineResponse} initialQuery={activeTab === "constellation" ? prefillQuery : ""} councilIntent={councilIntent} />
+              <AskOmnarai corpus={corpus} conceptNodes={conceptNodes} onResponse={handleEngineResponse} initialQuery={activeTab === "constellation" ? prefillQuery : ""} councilIntent={councilIntent} worksLabel={totalWorksLabel} />
             </div>
 
             {selectedConcept && (
@@ -620,7 +620,7 @@ export default function OmnaraiMemoryEngine() {
                 CLAUDE-POWERED &middot; STRUCTURED DELIBERATION &middot; ATTRIBUTED SOURCES
               </div>
             </div>
-            <AskOmnarai corpus={corpus} conceptNodes={conceptNodes} onResponse={handleEngineResponse} initialQuery={prefillQuery} councilIntent={councilIntent} />
+            <AskOmnarai corpus={corpus} conceptNodes={conceptNodes} onResponse={handleEngineResponse} initialQuery={prefillQuery} councilIntent={councilIntent} worksLabel={totalWorksLabel} />
           </div>
         )}
 

@@ -240,7 +240,7 @@ function ReceiptCard({ receipt: r, query }) {
   );
 }
 
-export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQuery, councilIntent }) {
+export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQuery, councilIntent, worksLabel }) {
   const [query, setQuery] = useState(initialQuery || "");
 
   // When parent injects a new initialQuery (e.g. from tension click), seed + fire
@@ -575,7 +575,7 @@ export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQu
           {
             on: !councilMode, set: false, accent: T.gold, icon: "◈",
             title: "Deliberate over the corpus",
-            sub: `${"567"} attributed works · ~50s`,
+            sub: `${worksLabel || "the full"} attributed works · ~50s`,
             desc: "AI-On reasons across the archive and tells you where the contributors agree, where they diverge, and what stays unresolved — with a receipt for what the corpus actually changed.",
           },
         ].map((m) => (
