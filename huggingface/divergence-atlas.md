@@ -92,4 +92,4 @@ Read this as how often each model lands on a *distinct* side of a fault line. **
 ## License
 CC BY-SA 4.0. Verbatim model outputs are reproduced for research into cross-model divergence; each is attributed to its model and date.
 
-*Generated 2026-07-19 from 113 live records.*
+*Generated 2026-07-20 from 113 live records.*

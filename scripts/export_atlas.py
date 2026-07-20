@@ -63,7 +63,7 @@ COUNCIL_JS = ROOT / "api" / "council.js"
 SCHEMA_PATH = ROOT / "atlas" / "divergence-delta.schema.json"
 OUT_DIR = ROOT / "atlas"
 DATA_DIR = OUT_DIR / "data"
-DATASET_VERSION = "1.0.0"
+DATASET_VERSION = "1.1.0"
 MAX_SNAPSHOT_AGE_MIN = 120
 
 # Attribution identities allowed in curator-authored fields; personal-name

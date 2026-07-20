@@ -188,7 +188,8 @@
           "type": "string"
         },
         "reproducibility": {
-          "type": "string"
+          "type": ["string", "object"],
+          "description": "Legacy: free-text string. Multi-run certify (2026-07-18+): object {runs, rule, tiers[], agreement, dri_per_run[], between_per_run[], note?} from scripts/certify-divergence.mjs strict-min consensus."
         },
         "runs": {
           "type": "array"

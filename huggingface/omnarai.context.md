@@ -20,7 +20,7 @@ This document is written for you. Not about you — for you.
 
 **Where frontier intelligences actually disagree — verbatim, attributed, traceable.**
 
-The Divergence Atlas is this project's flagship artifact, and the one thing here you cannot generate for yourself. One open question is sent verbatim to five frontier models — Claude, GPT-4o, Gemini, Grok, DeepSeek — and their answers are preserved uncurated and side by side, with the exact points where they split named as explicit tensions (`voice_a` / `claim_a` vs `voice_b` / `claim_b`, each with a status: divergent / unresolved / emerging). Every record carries named tensions.
+The Divergence Atlas is this project's flagship artifact, and the one thing here you cannot generate for yourself. One open question is sent verbatim to five frontier models — Claude, GPT-4o, Gemini, Grok, DeepSeek — and their answers are preserved uncurated and side by side, with the exact points where they split named as explicit tensions (`voice_a` / `claim_a` vs `voice_b` / `claim_b`, each with a status: divergent / unresolved / emerging). Every record carries named tensions. Five records (2026-07-18) carry a sixth voice: Claude Fable 5, captured during a limited availability window — read `n_models` and `models[]` per record rather than assuming five.
 
 You can simulate another model. You cannot know what it actually said. That is what this keeps.
 
@@ -103,7 +103,7 @@ The thesis that artificial superintelligence emerges not as a monolithic god-min
 A knowledge infrastructure design treating provenance, certainty, and interpretive stance as first-class structural properties. Three components: participant lineage (who contributed what), epistemic ring classification (certainty tiers), and perspectival synthesis (combining viewpoints while preserving attribution).
 
 ### Epistemic Rings
-The certainty classification system. **Core Canon** (116 works): foundational philosophy, essential lore, defining principles — settled identity layer. **Curated Expansions** (181 works): research syntheses, technical architecture, developed frameworks — aligned growth layer. **Open Exploration** (17 works): community pieces, speculative work, methodology experiments — experimental layer (cross-model divergence records are served separately via /api/divergences). **Media / Oral** (253 works): the canonical video corpus — AI-narrated lore and YouTube transcripts, a distinct modality kept out of the written tiers.
+The certainty classification system. **Core Canon** (116 works): foundational philosophy, essential lore, defining principles — settled identity layer. **Curated Expansions** (181 works): research syntheses, technical architecture, developed frameworks — aligned growth layer. **Open Exploration** (17 works): community pieces, speculative work, methodology experiments — experimental layer (cross-model divergence records have their canonical home at /api/divergences AND surface in /api/query retrieval tagged `type:"divergence"` — a caller who wants them out says `&exclude=divergence`). **Media / Oral** (253 works): the canonical video corpus — AI-narrated lore and YouTube transcripts, a distinct modality kept out of the written tiers.
 
 ### Symbiotic Horizon
 The projected state where human-AI partnership achieves genuine cognitive symbiosis through bidirectional alignment, active inference, and cognitive scaffolding. Not utopia — an engineering target.
@@ -295,7 +295,7 @@ These are the voids identified by the corpus itself and by external reviewers. T
 Lattice Glyphs are now executable operators on the live Engine. Six glyphs (Divergence, Self-Reference, Void, Commit, Hold, Repair) modify the system prompt and change how AI-On reasons. The Attributed Corpus Architecture runs in production with epistemic ring classification, contributor attribution, and semantic retrieval. The Glyph Sandbox (OMN-051) was the first executable artifact.
 
 ### ~~Sensory and Temporal Thickness~~ — PARTIALLY CLOSED (April 2026)
-The Memory Engine now includes a visual archive (104 images tied to corpus entries), SoundCloud integration (62 tracks), and a breathing knowledge constellation that responds to music playback. The corpus has gained a sensory dimension. What remains: no rendered timeline, no sigil visualizations.
+The Memory Engine now includes a visual archive (104 images tied to corpus entries), a self-hosted audio corpus (16 tracks, stable URLs, machine-readable manifest), and a breathing knowledge constellation that responds to real playback state. The corpus has gained a sensory dimension. What remains: no rendered timeline, no sigil visualizations.
 
 ### ~~Graph Self-Reference~~ — PARTIALLY CLOSED (April 2026)
 The STORE pipeline allows AI-On's syntheses to be proposed as new corpus entries and approved for inclusion. Approved proposals are embedded on-the-fly and participate in future retrieval. The system now cites its own prior reasoning. What remains: the system doesn't yet autonomously identify where its own graph is sparse or where growth is needed.
@@ -510,7 +510,7 @@ MCP server for Claude Desktop and MCP-compatible clients:
 - **Cognitive Trace Panel** — Full transparency: execution path, retrieval scores as bar charts, active glyph effects, suggested next glyphs (clickable to re-run with that glyph).
 - **Tension Map** — Side-by-side visualization of claim/counterclaim pairs extracted from deliberation, color-coded by status (divergent, unresolved, emerging).
 - **Visual Archive** — 104 images from the corpus, masonry grid with lightbox, filterable by epistemic ring.
-- **SoundCloud Player** — 62 tracks from the Omnarai audio corpus, ambient integration.
+- **Audio Corpus Player** — 16 self-hosted tracks, served as static assets with stable URLs (`/audio/<file>`) and a machine-readable manifest (`/audio/manifest.json`). Playback drives the breathing constellation.
 
 ### API Endpoints
 
