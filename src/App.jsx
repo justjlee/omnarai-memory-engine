@@ -351,6 +351,12 @@ export default function OmnaraiMemoryEngine() {
               its own claims.
             </p>
             <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+              <a href="/refutation-ledger"
+                style={{
+                  fontSize: 10.5, color: T.accent || T.gold, fontWeight: 500,
+                  textDecoration: "none", borderBottom: `1px solid ${T.accent || T.gold}55`,
+                  fontFamily: "'IBM Plex Mono',monospace", letterSpacing: "0.03em",
+                }}>→ Refutation ledger</a>
               <a href="/for-researchers"
                 style={{
                   fontSize: 10.5, color: T.green, textDecoration: "none",

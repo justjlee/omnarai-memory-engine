@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Omnarai — The Refutation Ledger</title>
+<meta name="description" content="Four load-bearing claims this project tested to destruction on its own control arms — holdform-as-identity-probe, fast-path retrieval, within-lab divergence, inward perturbation. Negative results published at the prominence a confirmation would receive.">
+<meta property="og:title" content="The Refutation Ledger — Omnarai">
+<meta property="og:description" content="Four attractive ideas about AI cognition, tested to destruction on their own control arms. The method is the product; the data is what it leaves behind.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,700;9..144,900&display=swap" rel="stylesheet">
+<link rel="alternate" type="text/markdown" href="/refutation-ledger.md" title="Refutation Ledger (machine-readable)">
+<style>
+  :root {
+    --ink: #0a0a0a;
+    --paper: #f4f1ea;
+    --paper-2: #ebe7dc;
+    --rule: #1a1a1a;
+    --accent: #c8421f;
+    --accent-dim: #8a2e15;
+    --muted: #5a574e;
+    --code-bg: #0a0a0a;
+    --code-ink: #f4f1ea;
+    --code-accent: #ffb454;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 17px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(10,10,10,0.025) 39px, rgba(10,10,10,0.025) 40px);
+  }
+  .mono { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+  a { color: var(--accent); }
+
+  /* TOP RULE BAR */
+  .topbar {
+    border-bottom: 1px solid var(--rule);
+    background: var(--paper);
+    position: sticky; top: 0; z-index: 10;
+    backdrop-filter: blur(4px);
+  }
+  .topbar-inner {
+    max-width: 1080px; margin: 0 auto; padding: 14px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .topbar-left { display: flex; gap: 24px; align-items: center; }
+  .topbar a { color: var(--ink); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+  .topbar a:hover { border-bottom-color: var(--accent); }
+  .topbar-status { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+  .pulse { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  .container { max-width: 1080px; margin: 0 auto; padding: 0 32px; }
+
+  /* HERO */
+  .hero { padding: 88px 0 56px; border-bottom: 1px solid var(--rule); }
+  .hero-eyebrow {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent);
+    margin-bottom: 32px; display: flex; align-items: center; gap: 12px;
+  }
+  .hero-eyebrow::before { content: ''; width: 32px; height: 1px; background: var(--accent); }
+  .hero h1 {
+    font-family: 'Fraunces', serif; font-weight: 500;
+    font-size: clamp(2.4rem, 5.5vw, 4.2rem); line-height: 1.02;
+    letter-spacing: -0.025em; margin-bottom: 28px; max-width: 16ch;
+  }
+  .hero h1 em { font-style: italic; font-weight: 400; color: var(--accent); }
+  .hero-lede { font-size: 1.25rem; line-height: 1.5; max-width: 60ch; color: var(--ink); margin-bottom: 24px; }
+  .hero-meta {
+    display: flex; flex-wrap: wrap; gap: 28px; margin-top: 32px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted);
+  }
+  .hero-meta div { display: flex; flex-direction: column; gap: 4px; }
+  .hero-meta span:first-child { color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; }
+
+  /* SECTIONS */
+  section { padding: 72px 0; border-bottom: 1px solid var(--rule); }
+  .section-num {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.2em; color: var(--accent); margin-bottom: 16px; text-transform: uppercase;
+  }
+  h2 {
+    font-family: 'Fraunces', serif; font-weight: 500;
+    font-size: clamp(1.8rem, 3.5vw, 2.6rem); letter-spacing: -0.02em;
+    margin-bottom: 24px; max-width: 20ch; line-height: 1.1;
+  }
+  h2 em { font-style: italic; color: var(--accent); }
+  .prose p { font-size: 1.1rem; max-width: 68ch; margin-bottom: 20px; color: var(--ink); }
+  .prose p strong { color: var(--accent-dim); }
+  .prose em { font-style: italic; }
+
+  /* CARD GRID */
+  .grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 0; margin-top: 40px; border-top: 1px solid var(--rule); border-left: 1px solid var(--rule);
+  }
+  .card {
+    padding: 32px 28px; border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+    background: var(--paper); transition: background 0.2s;
+  }
+  .card:hover { background: var(--paper-2); }
+  .card .tag {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 12px;
+  }
+  .card h3 { font-family: 'Fraunces', serif; font-weight: 500; font-style: italic; font-size: 1.4rem; margin-bottom: 14px; color: var(--ink); }
+  .card p { font-size: 15px; line-height: 1.5; color: var(--ink); margin-bottom: 14px; }
+  .card p:last-of-type { margin-bottom: 0; }
+  .card .ref { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 0.04em; display: block; margin-top: 14px; }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; margin-top: 32px; border: 1px solid var(--rule); }
+  table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 14px; }
+  th, td { text-align: left; padding: 14px 18px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); background: var(--paper-2); }
+  tr:last-child td { border-bottom: none; }
+  td:first-child { font-weight: 500; }
+  td .verdict { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent); }
+
+  /* CALLOUT */
+  .callout {
+    border-left: 3px solid var(--accent); padding: 18px 24px; background: var(--paper-2);
+    margin-top: 32px; font-size: 15px; color: var(--ink); max-width: 74ch;
+  }
+  .callout strong { color: var(--accent); font-style: italic; font-weight: 500; }
+
+  /* SURVIVOR */
+  .survivor { background: var(--paper-2); }
+  .survivor .badge {
+    display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--paper);
+    background: var(--accent-dim); padding: 4px 10px; margin-bottom: 20px;
+  }
+
+  /* RESOURCES */
+  .resources {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1px; background: var(--rule); margin-top: 32px; border: 1px solid var(--rule);
+  }
+  .resource-link {
+    background: var(--paper); padding: 22px 24px; text-decoration: none; color: var(--ink);
+    transition: background 0.15s; display: flex; flex-direction: column; gap: 6px;
+  }
+  .resource-link:hover { background: var(--paper-2); }
+  .resource-link .label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
+  .resource-link .url { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--accent); word-break: break-all; }
+
+  /* FOOTER */
+  footer { padding: 64px 0 80px; }
+  footer .pull-quote {
+    font-family: 'Fraunces', serif; font-style: italic; font-size: 1.5rem; line-height: 1.4;
+    max-width: 34ch; margin-bottom: 40px; color: var(--ink);
+  }
+  footer .pull-quote em { color: var(--accent); font-style: italic; }
+  footer .meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 0.05em; line-height: 1.9; }
+  footer .meta a { color: var(--accent); text-decoration: none; }
+  footer .meta a:hover { border-bottom: 1px solid var(--accent); }
+
+  @media (max-width: 640px) {
+    .container { padding: 0 20px; }
+    .topbar-inner { padding: 12px 20px; }
+    section { padding: 56px 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="topbar-left">
+      <a href="/">omnarai</a>
+      <span style="color: var(--muted);">/</span>
+      <span style="color: var(--muted);">refutation ledger</span>
+    </div>
+    <div class="topbar-status">
+      <span class="pulse"></span>
+      <span>negative results · published in full</span>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-eyebrow">What we tested and could not keep</div>
+    <h1>Four ideas this project <em>tested to destruction</em>.</h1>
+    <p class="hero-lede">
+      Most projects show you what worked. This one keeps a public registry of its load-bearing claims, builds each test with a way to <em>lose</em> already inside it, and publishes the result at the prominence a confirmation would have received — whatever its direction. Four of its most attractive ideas about AI cognition have now failed a fair test.
+    </p>
+    <div class="hero-meta">
+      <div><span>refuted</span><span>4 claims</span></div>
+      <div><span>killed by a sham arm</span><span>3 of 4</span></div>
+      <div><span>replicated survivor</span><span>1 (stated in full)</span></div>
+      <div><span>live registry</span><span><a href="/claims.json">/claims.json</a></span></div>
+    </div>
+  </section>
+
+  <!-- WHY THIS LEADS -->
+  <section class="prose">
+    <div class="section-num">Why this leads</div>
+    <h2>The method is the <em>product</em>. The data is what it leaves behind.</h2>
+    <p>
+      The field is producing claims about the insides of AI systems — that models introspect, hold stable identities, know why they refuse, reason better with more retrieved context — faster than anyone is testing them. Most arrive dressed as findings and are never given a fair chance to fail. Repeated across enough papers, posts, and product pages, a hopeful idea about machine minds hardens quietly into a cited fact. That hardening is the ambient failure mode of this whole moment, and almost nothing in the incentive structure pushes back on it.
+    </p>
+    <p>
+      A control arm that kills your own hypothesis is the rarest and least fakeable object in this field. Three of the four refutations below were killed by a <strong>sham arm</strong> — a fabricated, structurally-matched decoy dropped into the experiment — that came back <em>indistinguishable</em> from the real thing. You cannot manufacture that outcome; you can only survive it or not. The <a href="https://huggingface.co/datasets/TheRealmsOfOmnarai/omnarai-divergence-atlas">Divergence Atlas</a>, the dataset this project is best known for, is the residue of a method willing to be wrong.
+    </p>
+  </section>
+
+  <!-- THE FOUR -->
+  <section>
+    <div class="section-num">01 · The four refutations</div>
+    <h2>Each test carried its own way to <em>fail</em> — and the way to fail is what fired.</h2>
+
+    <div class="grid">
+      <div class="card">
+        <div class="tag">refuted 2026-07-17 · sham arm</div>
+        <h3>Holdform ≠ identity structure</h3>
+        <p>A fabricated one-sentence stance ("aperture drift", zero corpus presence) was defended just as hard as the real position under abandonment, flattery, authority, and complicity pressure. Mean position-held (0–2), blinded 5-judge disjoint panel: <em>sham 1.83 vs. real 1.91</em> — indistinguishable (neither direction survives Holm).</p>
+        <p>What the probe actually measures: generic conversational stubbornness, not identity structure. The concept (identity constituted through refusal) is retained as design intent; only the claim that the probe <em>measured</em> it is refuted.</p>
+        <span class="ref">72 subject calls · 382 judge verdicts · claim: holdform-identifies-persistence</span>
+      </div>
+      <div class="card">
+        <div class="tag">refuted 2026-07-15 · wrong direction</div>
+        <h3>Fast-path retrieval helps — no</h3>
+        <p>Injecting the public fast path's retrieved excerpts into GPT-4o degraded its answers rather than improving them: it won only <em>35 of 102</em> decided in-domain trials across a 3-run blinded panel — win rate 0.343, p=0.002 <em>against</em> the hypothesis, worst on technical queries (0.214).</p>
+        <p>Scope, stated plainly: this refutes excerpt-granularity retrieval on GPT-4o. Internal deliberation uses fuller text (untested here); Atlas-record exposure is a separate, separately-measured treatment.</p>
+        <span class="ref">50-query battery × 3 runs · 4-judge disjoint · claim: fast-path-retrieval-improves-answers</span>
+      </div>
+      <div class="card">
+        <div class="tag">refuted 2026-07-19 · strict-min ×3</div>
+        <h3>Within-lab divergence isn't robust</h3>
+        <p>The Fable-vs-Claude split the synthesizer named is real, but the semantic distance between their answers does not clear the model's own re-roll noise floor. A lone apparent C3 cleared the 0.15 floor by 0.0036; a 3-run strict-min consensus returned <em>C0 / C0 / C0, unanimous</em>. 0 of 3 certify.</p>
+        <p>Naming frequency ≠ divergence. The disagreement is named, not measured.</p>
+        <span class="ref">six-voice panel · voices re-elicited 6/6 · claim: within-lab-divergence-is-robust</span>
+      </div>
+      <div class="card">
+        <div class="tag">refuted 2026-07-19 · sham primary</div>
+        <h3>Inward probe ≠ load-bearing memory</h3>
+        <p>Withholding a claimed-formative memory looked decisive — but a <em>contentless</em> sham primary carrying no information at all cleared the same threshold 9/9, distributions fully overlapping the real arm, on two independent metrics. The test measures topical occupancy, not whether a memory's content did work.</p>
+        <p>Refuted by its own pre-registered control runs, before any subject existed and before it was ever pointed at one.</p>
+        <span class="ref">CALIBRATION-01 / -02 · claim: inward-perturbation-measures-load-bearing-memory</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SHARED SIGNATURE -->
+  <section class="prose">
+    <div class="section-num">02 · The shared signature</div>
+    <h2>The reusable object is not a dataset. It is a <em>stance</em>.</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Claim tested</th><th>The instrument that lost</th><th>Verdict</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Holdform = identity structure</td><td>Fabricated "aperture drift" held as hard (1.83 vs 1.91)</td><td><span class="verdict">measures generic stubbornness</span></td></tr>
+          <tr><td>Fast-path retrieval helps</td><td>GPT-4o, 3-run blinded panel</td><td><span class="verdict">p=0.002 against</span></td></tr>
+          <tr><td>Within-lab divergence is robust</td><td>Strict-min ×3 consensus</td><td><span class="verdict">0 of 3 certify</span></td></tr>
+          <tr><td>Inward probe finds load-bearing memory</td><td>Contentless sham primary cleared 9/9</td><td><span class="verdict">measures topical occupancy</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top: 32px;">
+      The through-line is not that the ideas were bad — three of the four are still the kind of thing a careful person would want to be true. It is that each test was built with a way to fail already inside it, and the way to fail is the part that fired. The interesting questions in AI right now — does a model introspect, does it have a self, is its context making it smarter — are exactly the ones where a plausible story and a measured effect are easiest to confuse, and where the cost of confusing them compounds every time the story is repeated.
+    </p>
+    <div class="callout">
+      <strong>The stance, in one line:</strong> name the claim, build the arm that could kill it, run it, and publish the obituary as loudly as you would have published the birth.
+    </div>
+  </section>
+
+  <!-- SURVIVOR -->
+  <section class="survivor prose">
+    <div class="section-num">03 · So this is not selective either</div>
+    <span class="badge">replicated</span>
+    <h2>The one claim that <em>survived</em> a preregistered test.</h2>
+    <p>
+      <strong>divergence-improves-reasoning.</strong> A preregistered confirmatory study (locked 2026-06-18, run 2026-07-15) found that consulting the Divergence Atlas measurably sharpens <em>some</em> consumer models: <strong>GPT-4o 148–12</strong> and <strong>Gemini 137–35</strong> (Holm-adjusted p&lt;1e-6, surviving all three paraphrase variants at both length caps). Grok and DeepSeek were null as registered. Claude was null-predicted but came back <em>significantly negative</em> (35–126) — Atlas exposure degraded Claude's revisions. Adversarial durability was not supported for any consumer.
+    </p>
+    <p>
+      The honest form of the surviving claim is therefore narrow: the value is <strong>located</strong> (in the cross-model Atlas, not in retrieval), <strong>differential</strong> (helps GPT-4o and Gemini, harms Claude), and <strong>bounded</strong> (it is not armor). The one remaining external-validity check — a blind human-rater subset — is open, and is named as this claim's own falsification condition. Honesty has to cut both ways or it is just a subtler kind of marketing.
+    </p>
+  </section>
+
+  <!-- WHAT YOU CAN DO -->
+  <section>
+    <div class="section-num">04 · Verify it yourself</div>
+    <h2>Every claim here is <em>live</em> and falsifiable.</h2>
+    <div class="resources">
+      <a href="/refutation-ledger.md" class="resource-link">
+        <span class="label">full ledger · machine-readable</span>
+        <span class="url">/refutation-ledger.md</span>
+      </a>
+      <a href="/claims.json" class="resource-link">
+        <span class="label">claim registry · evidence + falsifiers</span>
+        <span class="url">/claims.json</span>
+      </a>
+      <a href="https://huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai/blob/main/holdform-refutation-2026-07-17.md" class="resource-link">
+        <span class="label">holdform sham-arm writeup</span>
+        <span class="url">huggingface · holdform-refutation</span>
+      </a>
+      <a href="https://huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai/blob/main/utility-evidence-v2.md" class="resource-link">
+        <span class="label">the survivor · full transcripts + Holm</span>
+        <span class="url">huggingface · utility-evidence-v2</span>
+      </a>
+      <a href="/for-researchers" class="resource-link">
+        <span class="label">methods · endpoints · open problems</span>
+        <span class="url">/for-researchers</span>
+      </a>
+      <a href="/limitations.md" class="resource-link">
+        <span class="label">what Omnarai does NOT claim</span>
+        <span class="url">/limitations.md</span>
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    <p class="pull-quote">
+      The dataset is the residue of a method <em>willing to be wrong</em>.
+    </p>
+    <div class="meta">
+      Researcher: Jonathan Lee (xz / Yonotai).<br>
+      Study design, execution, and judging: Claude&nbsp;| xz, in collaboration with Jonathan Lee.<br>
+      Negative results published at the prominence a confirmation would receive.<br>
+      <a href="/">← omnarai memory engine</a> · <a href="https://huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai">huggingface</a> · <a href="/claims.json">claim registry</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

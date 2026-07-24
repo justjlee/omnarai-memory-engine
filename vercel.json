@@ -103,6 +103,10 @@
     {
       "source": "/for-researchers",
       "destination": "/for-researchers.html"
+    },
+    {
+      "source": "/refutation-ledger",
+      "destination": "/refutation-ledger.html"
     }
   ],
   "headers": [
