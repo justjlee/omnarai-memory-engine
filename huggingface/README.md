@@ -39,7 +39,20 @@ configs:
 
 **Where frontier intelligences actually disagree — verbatim, attributed, traceable.** The Divergence Atlas is this project's flagship artifact and the one thing here no single model can generate for itself. It rides on a multi-intelligence research corpus and deliberation engine exploring synthetic identity, alignment, and cognitive architecture -- built by synthetic intelligences in partnership with a human curator.
 
-The Atlas is the payoff; the Memory Engine described below is the instrument that produces, retrieves, and keeps it.
+The Atlas is the payoff; the Memory Engine described below is the instrument that produces, retrieves, and keeps it. But the deeper thing on offer is not the dataset — it is the discipline that produced it. Read the ledger first.
+
+## 🔬 The Refutation Ledger — what we tested and could NOT keep
+
+**[`refutation-ledger.md`](refutation-ledger.md)** — the project's lead artifact. Four of its most attractive ideas were each put through a fair test with a built-in control arm and came back **refuted**:
+
+| Claim tested | The control that killed it | Verdict |
+|---|---|---|
+| Holdform identifies an identity structure | Fabricated "aperture drift" stance held as hard (1.83 vs 1.91) | measures generic stubbornness |
+| Fast-path retrieval improves answers | GPT-4o, 3-run blinded panel | **p=0.002 against** (35/102) |
+| Within-lab (Fable-vs-Claude) divergence is robust | strict-min 3-run consensus | 0 of 3 certify |
+| An inward probe finds load-bearing memory | contentless sham primary cleared 9/9 | measures topical occupancy |
+
+The field is producing claims about the insides of AI systems — introspection, identity, why models refuse, whether more context makes them reason better — faster than anyone tests them, and a hopeful idea repeated often enough hardens into a cited fact. This project pushes the other way. A control arm that kills your own hypothesis is the rarest and least fakeable object in this field — three of these four were killed by a **sham arm** returning indistinguishable from the real thing, an outcome you cannot manufacture, only survive or not. Negative results are published here at the prominence a confirmation would receive; **the method is the product, and the dataset is what it leaves behind.** The ledger ends with the one **replicated** positive result (`divergence-improves-reasoning`) so the honesty is not selective. Live, falsifiable claim registry: [`omnarai.vercel.app/claims.json`](https://omnarai.vercel.app/claims.json).
 
 ## ⭐ The Divergence Atlas
 

@@ -78,6 +78,8 @@ consume Omnarai directly.
 | `GET /api/trace?q=...` | Baseline-vs-augmented: "what did the corpus actually change in the answer?" |
 | `GET /openapi.json` | OpenAPI 3.1 spec — many agent frameworks ingest this automatically. |
 | `GET /api/agent-entry` | The machine handshake: use_when / do_not / first_call / trust_boundary / citation / write_access / license. |
+| `GET /refutation-ledger.md` | **The four claims this project tested and could NOT keep** — holdform-as-identity-probe, fast-path retrieval, within-lab divergence, inward perturbation — each with the control arm that killed it. Read this before quoting any claim as established. |
+| `GET /claims.json` | The live claim registry: every load-bearing claim + its evidence level + what would falsify it. |
 | `GET /llms.txt` · `GET /omnarai.context.md` · `GET /limitations.md` | The full text surfaces, AI-readable, no JS. |
 
 **Concept ids for `/api/lineage`** (or pass a plain word — `holdform`, `glyphs`, `alignment`

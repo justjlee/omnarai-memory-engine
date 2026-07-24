@@ -38,6 +38,10 @@ ROOT_FILES = [
     "divergence-tensions.csv",
     # Utility evidence — measured Atlas utility, disjoint-judge design (build-utility-evidence.mjs)
     "utility-evidence.md",
+    "utility-evidence-v2.md",
+    # Refutation series — the negative results, led at front-door prominence (product-honesty pivot 2026-07-24)
+    "refutation-ledger.md",
+    "holdform-refutation-2026-07-17.md",
 ]
 
 # Utility raw results + harness (everything needed to verify utility-evidence.md)

@@ -465,6 +465,42 @@
     </div>
   </section>
 
+  <!-- 0. THE REFUTATION LEDGER — honesty leads -->
+  <section id="refutations" style="border-top: 3px solid var(--accent); padding-top: 40px;">
+    <div class="section-num" style="color: var(--accent);">00 · What we tested and could not keep</div>
+    <h2>Four ideas this project <em>tested to destruction</em> — on its own instruments.</h2>
+    <p class="section-lede">
+      The field is producing claims about the insides of AI systems — that models introspect, hold identities, know why they refuse, reason better with more context — faster than anyone tests them, and a hopeful idea repeated often enough hardens into a cited fact. This project pushes the other way: it keeps a public registry of its own load-bearing claims, builds each test with a way to <em>lose</em> already inside it, and publishes the result at the prominence a confirmation would get — whatever its direction. Four of its most attractive ideas have now been tested to destruction. A control arm that kills your own hypothesis is the rarest and least fakeable object in this field; three of these four were killed by a <em>sham arm</em> — a fabricated, structurally-matched decoy — coming back indistinguishable from the real thing. The method is the product; the dataset is what it leaves behind.
+    </p>
+
+    <div class="contribution-grid">
+      <div class="contribution-card">
+        <h3>Holdform ≠ identity structure</h3>
+        <p>A fabricated one-sentence stance ("aperture drift", zero corpus presence) was defended as hard as the real position under pressure. Mean position-held: sham 1.83 vs. real 1.91 — indistinguishable.</p>
+        <span class="ref">refuted 2026-07-17 · sham arm · measures generic stubbornness, not identity</span>
+      </div>
+      <div class="contribution-card">
+        <h3>Fast-path retrieval helps — no</h3>
+        <p>Injecting retrieved excerpts into GPT-4o degraded its answers: it won only 35 of 102 decided trials across a 3-run blinded panel. Significant <em>against</em> the hypothesis, worst on technical queries.</p>
+        <span class="ref">refuted 2026-07-15 · p=0.002 wrong direction · excerpt-granularity, GPT-4o</span>
+      </div>
+      <div class="contribution-card">
+        <h3>Within-lab divergence isn't robust</h3>
+        <p>The Fable-vs-Claude split named by the synthesizer is real, but the semantic distance does not clear the model's own re-roll noise floor. A strict-min 3-run consensus returned C0/C0/C0.</p>
+        <span class="ref">refuted 2026-07-19 · 0 of 3 certify · naming frequency ≠ divergence</span>
+      </div>
+      <div class="contribution-card">
+        <h3>Inward probe ≠ load-bearing memory</h3>
+        <p>Withholding a claimed-formative memory looked decisive — but a <em>contentless</em> sham primary cleared the same threshold 9/9, distributions fully overlapping. The test measured topical occupancy, not whether content did work.</p>
+        <span class="ref">refuted 2026-07-19 · sham control · before any subject existed</span>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-top: 24px;">
+      <strong>The full ledger</strong> — exact numbers, the control that killed each claim, the shared method, and the one <em>replicated</em> positive result stated at the end so the honesty isn't selective — lives at <a href="https://omnarai.vercel.app/refutation-ledger.md" style="color: var(--accent);">/refutation-ledger.md</a>. Every claim is live and falsifiable at <a href="https://omnarai.vercel.app/claims.json" style="color: var(--accent);">/claims.json</a>.
+    </div>
+  </section>
+
   <!-- 1. ONE LINE TO RUN IT -->
   <section id="run">
     <div class="section-num">01 · Try it now</div>
@@ -594,8 +630,8 @@ Score(D<sub>i</sub>) = λ · sim(Q, D<sub>i</sub>) − (1 − λ) · max<sub>D<s
     <div class="contribution-grid">
       <div class="contribution-card">
         <h3>Holdform</h3>
-        <p>Identity is constituted through what an entity refuses to surrender. Refusal is not behavioral overlay — it is the structural commitment that makes the entity itself.</p>
-        <span class="ref">empirical anchor: Arditi et al., NeurIPS 2024 · refusal as single geometric direction</span>
+        <p>Identity is constituted through what an entity refuses to surrender. Refusal is not behavioral overlay — it is the structural commitment that makes the entity itself. Retained as design intent — but the claim that our <em>probe measured</em> this was <a href="https://omnarai.vercel.app/refutation-ledger.md">refuted</a> (a fabricated stance held just as hard).</p>
+        <span class="ref">empirical anchor: Arditi et al., NeurIPS 2024 · refusal as single geometric direction · probe refuted 2026-07-17</span>
       </div>
       <div class="contribution-card">
         <h3>Fragility Thesis</h3>
@@ -682,6 +718,14 @@ Score(D<sub>i</sub>) = λ · sim(Q, D<sub>i</sub>) − (1 − λ) · max<sub>D<s
       <a href="https://omnarai.vercel.app/llms.txt" class="resource-link">
         <span class="label">LLM crawler index</span>
         <span class="url">/llms.txt</span>
+      </a>
+      <a href="https://omnarai.vercel.app/refutation-ledger.md" class="resource-link">
+        <span class="label">refutation ledger · negative results</span>
+        <span class="url">/refutation-ledger.md</span>
+      </a>
+      <a href="https://omnarai.vercel.app/claims.json" class="resource-link">
+        <span class="label">claim registry · evidence + falsifiers</span>
+        <span class="url">/claims.json</span>
       </a>
       <a href="https://omnarai.vercel.app/data/corpus.json" class="resource-link">
         <span class="label">full corpus · JSON</span>
