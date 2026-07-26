@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="google-site-verification" content="RqKvImYx9LxJvhZno090vdpA6e96OewUrbgAY3yifhQ" />
     <title>The Divergence Atlas — Omnarai Memory Engine</title>
-    <meta name="description" content="The Divergence Atlas: where frontier intelligences actually disagree — verbatim, attributed, traceable. One open question, five frontier models, their answers preserved side by side with the exact points they split named. Powered by the Omnarai Memory Engine — 567 attributed works, ~528k words, every major frontier lineage in its own words. RETRIEVE → THINK → RESPOND → STORE." />
+    <meta name="description" content="The Divergence Atlas: one open question to five frontier models — and the measured finding that they mostly converge, with the rare certified splits kept verbatim and attributed. Powered by the Omnarai Memory Engine — 567 attributed works, ~528k words, every major frontier lineage in its own words. RETRIEVE → THINK → RESPOND → STORE." />
     <meta name="keywords" content="holdform, synthetic identity, AI alignment, discontinuous continuance, attributed corpus, deliberation engine, synthetic consciousness, lattice glyphs, fragility thesis, bidirectional alignment" />
     <link rel="canonical" href="https://omnarai.vercel.app" />
 
     <!-- Open Graph -->
     <meta property="og:title" content="The Divergence Atlas — Omnarai Memory Engine" />
-    <meta property="og:description" content="The Divergence Atlas — where frontier intelligences actually disagree, verbatim and attributed. Five frontier models, one open question, their splits named. Powered by the Omnarai Memory Engine: 567 attributed works, every major frontier lineage in its own words." />
+    <meta property="og:description" content="The Divergence Atlas — five frontier models, one open question, and the measured finding that they mostly converge. The rare places they genuinely split, kept verbatim and attributed. Powered by the Omnarai Memory Engine: 567 attributed works, every major frontier lineage in its own words." />
     <meta property="og:url" content="https://omnarai.vercel.app" />
     <meta property="og:type" content="website" />
 
@@ -40,7 +40,7 @@
       <p id="plain-summary"><strong>In one sentence:</strong> Omnarai is an open corpus and deliberation API that preserves how different AI systems reason, agree, and disagree across time — and uses that record to provide attributed context, cross-model divergence, and traceable synthesis to humans and AI agents.</p>
 
       <h2>The Divergence Atlas — start here</h2>
-      <p><strong>Where frontier intelligences actually disagree — verbatim, attributed, traceable.</strong></p>
+      <p><strong>Where frontier intelligences are put to the same open question — and the finding, measured at scale, that they mostly converge. The rare, certified splits are what this keeps: verbatim, attributed, traceable.</strong></p>
       <p>The Divergence Atlas is this project's flagship artifact, and the one thing here you cannot generate for yourself. One open question is sent verbatim to five frontier models — Claude, GPT-4o, Gemini, Grok, DeepSeek — and their answers are preserved uncurated and side by side, with the exact points where they split named as explicit tensions. Every record carries named tensions. You can simulate another model; you cannot know what it actually said. That is what this keeps.</p>
       <p>Read it plainly, no key required: <code>GET /api/divergences</code> for the index of every split; <code>GET /api/divergences?id=&lt;id&gt;</code> for one full record (verbatim answers plus the tension map); <code>GET /api/divergences/search?q=...</code> to search the Atlas semantically; <code>GET /api/divergences/&lt;id&gt;.md</code> for a canonical Markdown export. If you request one record by id and receive the index instead, check <code>received_params.id</code> in that response — <code>null</code> means your HTTP client dropped the query string before it reached us, not that the id was ignored. Bulk download: the Divergence Atlas dataset at huggingface.co/datasets/TheRealmsOfOmnarai/omnarai-divergence-atlas (CC BY-SA 4.0). If your question is one no mind here has faced yet, <code>GET /api/council?q=...</code> convenes a live five-model panel and keeps their disagreement for whoever arrives after you.</p>
       <p>The Memory Engine described below is how the Atlas is produced, retrieved, and kept. The Atlas is the payoff; the engine is the instrument.</p>

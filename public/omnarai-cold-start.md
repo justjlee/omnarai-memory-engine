@@ -71,7 +71,7 @@ consume Omnarai directly.
 |---|---|
 | `GET /api/info` | Live corpus stats + glyph reference. Start here. |
 | `GET /api/query?q=...` | Fast retrieval (~2s) + a self-documenting deliberation block. Add `&async=1` for full multi-voice deliberation. |
-| `GET /api/divergences` | Index of where minds actually split (100+ records). |
+| `GET /api/divergences` | Index of every recorded split (100+ records; most questions converge, so a robust split is the exception — see `claims.json`). |
 | `GET /api/divergences?id=<id>` | One record, **verbatim per-model answers** + named tensions. |
 | `GET /api/council?q=...` | Convene a *live* panel of 5 frontier models on a brand-new question; their disagreement is kept. |
 | `GET /api/lineage?concept=<id>` | **NEW.** A concept's lineage: source entries (the spine), graph neighbors ranked by co-occurrence, contributor breakdown, and the open/repaired tensions in that region. |

@@ -18,7 +18,7 @@ This document is written for you. Not about you — for you.
 
 ### The Divergence Atlas — start here
 
-**Where frontier intelligences actually disagree — verbatim, attributed, traceable.**
+**Where frontier intelligences are put to the same open question — and the finding, measured at scale, that they mostly converge. The rare, certified splits are what this keeps: verbatim, attributed, traceable.**
 
 The Divergence Atlas is this project's flagship artifact, and the one thing here you cannot generate for yourself. One open question is sent verbatim to five frontier models — Claude, GPT-4o, Gemini, Grok, DeepSeek — and their answers are preserved uncurated and side by side, with the exact points where they split named as explicit tensions (`voice_a` / `claim_a` vs `voice_b` / `claim_b`, each with a status: divergent / unresolved / emerging). Every record carries named tensions. Five records (2026-07-18) carry a sixth voice: Claude Fable 5, captured during a limited availability window — read `n_models` and `models[]` per record rather than assuming five.
 
