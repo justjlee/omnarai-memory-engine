@@ -4,6 +4,22 @@ import DivergenceRecord from "./DivergenceRecord";
 
 const mono = { fontFamily: "'IBM Plex Mono',monospace" };
 
+const certTier = r => (r.certification || {}).tier || null;
+const tierRank = t => (t === "C3" ? 3 : t === "C1" ? 2 : 0);
+
+// A record's certification tier, shown as a chip on the browse list so the
+// splits that survived perturbation are findable without opening each one.
+// Language rule matches the detail view: certified ⇒ survived pressure;
+// "captured" (C0) ⇒ displayed only, no robustness test run yet.
+function TierChip({ tier }) {
+  if (!tier) return null;
+  if (tier === "C0") {
+    return <span style={{ ...mono, fontSize: 8.5, color: "rgba(200,192,176,0.35)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 5, padding: "1px 6px" }}>captured</span>;
+  }
+  const c = tier === "C3" ? T.green : T.gold;
+  return <span style={{ ...mono, fontSize: 8.5, color: c, border: `1px solid ${c}55`, borderRadius: 5, padding: "1px 6px" }}>{tier} · certified</span>;
+}
+
 function Header() {
   return (
     <div style={{ marginBottom: 18 }}>
@@ -59,6 +75,13 @@ export default function DivergencesTab({ openId, onOpen, onClose, onDeliberate }
     return <DivergenceRecord key={openId} record={record} loading={loadingRec} onBack={onClose} onOpenRecord={onOpen} onDeliberate={onDeliberate} />;
   }
 
+  // Certified splits rise to the top so the strongest evidence is the first
+  // thing a visitor sees; Array.sort is stable, so original order is preserved
+  // within each tier band.
+  const records = index
+    ? [...(index.records || [])].sort((a, b) => tierRank(certTier(b)) - tierRank(certTier(a)))
+    : [];
+
   return (
     <div>
       <Header />
@@ -66,7 +89,13 @@ export default function DivergencesTab({ openId, onOpen, onClose, onDeliberate }
       {index && index.count === 0 && (
         <p style={{ fontSize: 12, color: "rgba(200,192,176,0.4)", fontStyle: "italic" }}>No divergence records yet.</p>
       )}
-      {index && (index.records || []).map(r => (
+      {index && index.certified_count > 0 && (
+        <div style={{ fontSize: 11.5, color: "rgba(200,192,176,0.6)", background: "rgba(126,186,166,0.05)", border: "1px solid rgba(126,186,166,0.18)", borderRadius: 8, padding: "11px 15px", marginBottom: 16, lineHeight: 1.65 }}>
+          <span style={{ ...mono, color: T.green }}>{index.certified_count} of {index.count} splits certified</span>
+          {" "}— they held under paraphrase and adversarial pressure without collapsing, each graded across independent multi-run batteries. So far the certified core is <em>behavioral-ethical</em> (intervention, self-trust, tuning-as-identity), not metaphysical.
+        </div>
+      )}
+      {index && records.map(r => (
         <button key={r.id} onClick={() => onOpen(r.id)} style={{
           width: "100%", textAlign: "left", cursor: "pointer", display: "block",
           background: "rgba(255,255,255,0.012)", border: "1px solid rgba(255,255,255,0.06)",
@@ -80,10 +109,11 @@ export default function DivergencesTab({ openId, onOpen, onClose, onDeliberate }
           <div style={{ fontSize: 11.5, color: "rgba(200,192,176,0.5)", fontStyle: "italic", lineHeight: 1.5, marginBottom: 10, fontWeight: 300 }}>
             {r.question}
           </div>
-          <div style={{ display: "flex", gap: 14, flexWrap: "wrap", ...mono, fontSize: 9, color: "rgba(200,192,176,0.4)" }}>
+          <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "center", ...mono, fontSize: 9, color: "rgba(200,192,176,0.4)" }}>
             <span style={{ color: "#C87272" }}>{r.answerCount} voices</span>
             <span>{r.tensionCount} tensions</span>
             <span>{r.date}</span>
+            <TierChip tier={certTier(r)} />
             <span style={{ color: T.green }}>read →</span>
           </div>
         </button>

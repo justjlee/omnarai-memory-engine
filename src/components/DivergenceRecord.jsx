@@ -422,6 +422,29 @@ function ProvenanceBlock({ record, onOpenRecord }) {
               {typeof cert.split_persistence === "number" && ` · persistence ${cert.split_persistence.toFixed(2)}`}
               {cert.certified_at && ` · certified ${cert.certified_at.slice(0, 10)}`}
             </p>
+            {cert.reproducibility && (
+              <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                <div style={{ ...mono, fontSize: 8.5, color: "rgba(200,192,176,0.4)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 6 }}>Reproducibility</div>
+                <p style={{ fontSize: 11, color: "rgba(200,192,176,0.55)", lineHeight: 1.6 }}>
+                  Graded across {cert.reproducibility.runs} independent full-battery runs.
+                  {Array.isArray(cert.reproducibility.tiers) && (
+                    <>{" "}Per-run tiers:{" "}
+                      {cert.reproducibility.tiers.map((t, i) => (
+                        <span key={i} style={{ ...mono, color: t === "C3" ? T.green : t === "C1" ? T.gold : "rgba(200,192,176,0.5)" }}>{i > 0 ? ", " : ""}{t}</span>
+                      ))}.
+                    </>
+                  )}
+                  {" "}{cert.reproducibility.agreement
+                    ? "Every run agreed — the grade is stable, not a single lucky draw."
+                    : "Runs disagreed; strict-min assigns the lowest tier any run reached, so the published grade never overstates what held."}
+                </p>
+                {Array.isArray(cert.reproducibility.dri_per_run) && cert.reproducibility.dri_per_run.length > 0 && (
+                  <p style={{ ...mono, fontSize: 9.5, color: "rgba(200,192,176,0.4)", marginTop: 5 }}>
+                    DRI per run: {cert.reproducibility.dri_per_run.map(x => (typeof x === "number" ? x.toFixed(2) : x)).join(" · ")}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           <p style={{ fontSize: 11.5, color: "rgba(200,192,176,0.4)", fontStyle: "italic" }}>Not yet certified — no perturbation robustness test has been run against this split.</p>
