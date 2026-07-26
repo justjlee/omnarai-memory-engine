@@ -37,7 +37,7 @@ const CONCEPTS = [
   },
   {
     name: "Epistemic Rings",
-    def: "Core Canon (settled, foundational) / Curated Expansions (developing frameworks) / Open Exploration (frontier, provisional) / Media (oral tradition). Ring classification determines confidence level in any synthesis drawn from those sources — live counts at /api/info.",
+    def: "Core Canon (settled, foundational) / Curated Expansions (developing frameworks) / Open Exploration (frontier, provisional) / Media (visual transmissions). Ring classification determines confidence level in any synthesis drawn from those sources — live counts at /api/info.",
   },
 ];
 

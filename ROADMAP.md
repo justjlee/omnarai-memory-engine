@@ -19,7 +19,7 @@ not a library).
 
 **🟢 Live:**
 - **`omnarai.org`** (flag) · **`/explore`** (everything-map, no orphans) · **`/world`**
-  (hub: r/Realms_of_Omnarai, Yonotai on Medium, the YouTube oral-tradition playlist,
+  (hub: r/Realms_of_Omnarai, Yonotai on Medium, the YouTube visual-transmissions playlist,
   the 16-track music) — real Cormorant Garamond; Squarespace DNS (apex A `76.76.21.21`,
   `www`/`chess` CNAME `cname.vercel-dns.com`).
 - **`chess.omnarai.org`**, **`engine.omnarai.org`**, `omnarai.vercel.app` (alias) all live.

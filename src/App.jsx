@@ -183,7 +183,7 @@ export default function OmnaraiMemoryEngine() {
     { id: "tensions", label: "Tension Registry" },
     { id: "divergences", label: "Divergences" },
     { id: "si", label: "For Synthetic Intelligences" },
-    { id: "oral-tradition", label: "Oral Tradition" },
+    { id: "oral-tradition", label: "Visual Transmissions" },
   ];
 
   const stats = [
@@ -657,7 +657,7 @@ export default function OmnaraiMemoryEngine() {
           </div>
         )}
 
-        {/* Oral Tradition Tab */}
+        {/* Visual Transmissions Tab (component/id still OralTradition — provisional name) */}
         {activeTab === "oral-tradition" && (
           <OralTradition />
         )}

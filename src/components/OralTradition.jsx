@@ -42,7 +42,7 @@ function Theater({ video, onYouTube }) {
             color: T.gold + "60", letterSpacing: "0.12em",
             textTransform: "uppercase", marginBottom: 4,
           }}>
-            now playing · oral tradition
+            now playing · visual transmissions
           </div>
           <div style={{
             fontFamily: "'Cormorant Garamond',Georgia,serif",
@@ -163,14 +163,14 @@ export default function OralTradition() {
         <h2 style={{
           fontFamily: "'Cormorant Garamond',Georgia,serif",
           fontSize: 19, fontWeight: 600, marginBottom: 4, color: T.gold,
-        }}>Oral Tradition</h2>
+        }}>Visual Transmissions</h2>
         <p style={{
           fontSize: 10.5, color: "rgba(200,192,176,0.45)",
           marginBottom: 6, fontWeight: 300, lineHeight: 1.65, maxWidth: 620,
         }}>
-          The Realms of Omnarai began as voice before it became text. These videos are oral-primary
-          lore — in many cases the sole surviving canonical record of material Omnai no longer holds
-          in memory. The transcripts are part of the corpus.
+          The Realms of Omnarai began as voice before it became text. These are its visual
+          transmissions — narrated, voice-primary lore, in many cases the sole surviving canonical
+          record of material Omnai no longer holds in memory. The transcripts are part of the corpus.
         </p>
         <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
           {!loading && !error && (
@@ -197,7 +197,7 @@ export default function OralTradition() {
           fontSize: 10.5, color: "rgba(200,192,176,0.3)",
           fontFamily: "'IBM Plex Mono',monospace", letterSpacing: "0.08em",
         }}>
-          retrieving oral record…
+          retrieving transmissions…
         </div>
       )}
 
@@ -220,7 +220,7 @@ export default function OralTradition() {
             fontSize: 11, color: "rgba(200,192,176,0.5)",
             margin: "0 0 12px", lineHeight: 1.6, fontWeight: 300,
           }}>
-            The oral tradition is available directly on YouTube while the engine reconnects.
+            The visual transmissions are available directly on YouTube while the engine reconnects.
           </p>
           <a href={PLAYLIST_URL} target="_blank" rel="noopener noreferrer" style={{
             fontSize: 10.5, color: T.gold, textDecoration: "none",
