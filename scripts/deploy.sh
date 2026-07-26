@@ -20,7 +20,13 @@ cd "$(dirname "$0")/.."
 
 export PATH="/usr/local/bin:$HOME/.npm-global/bin:$PATH"
 
-DOMAIN="omnarai.vercel.app"
+DOMAIN="omnarai.vercel.app"   # primary — used for the post-deploy bundle verification below
+# All production custom domains that must be re-aliased to each new prod deployment.
+# Vercel does NOT auto-follow new prod deploys here (this script uses --prebuilt + a
+# manual alias), so any domain missing from this list silently serves a stale bundle.
+# engine.omnarai.org added 2026-07-26 (canonical migration to omnarai.org in progress) —
+# it was found parked on an old deployment precisely because it wasn't re-aliased here.
+PROD_DOMAINS=("omnarai.vercel.app" "engine.omnarai.org")
 
 # ── Count self-maintenance — no babysitting ──────────────────────────────────
 # Every deploy (preview AND promote) first rewrites the corpus-count literals
@@ -55,10 +61,12 @@ if [[ "${1:-}" == "--promote" ]]; then
   # The custom domain does NOT follow new prod deployments on its own — without
   # this re-alias, $DOMAIN keeps serving the previous bundle indefinitely.
   if [[ -n "$PROD_URL" ]]; then
-    echo ">> Re-aliasing $DOMAIN → $PROD_URL"
-    vercel alias set "$PROD_URL" "$DOMAIN"
+    for d in "${PROD_DOMAINS[@]}"; do
+      echo ">> Re-aliasing $d → $PROD_URL"
+      vercel alias set "$PROD_URL" "$d"
+    done
   else
-    echo ">> WARNING: could not parse prod deployment URL — re-alias $DOMAIN manually!"
+    echo ">> WARNING: could not parse prod deployment URL — re-alias manually: ${PROD_DOMAINS[*]}"
   fi
   sleep 4
   LIVE_BUNDLE=$(curl -s -H "x-omnarai-self:1" "https://$DOMAIN" | grep -oE 'index-[A-Za-z0-9_]+\.js' | head -1)
