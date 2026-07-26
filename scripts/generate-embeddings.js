@@ -99,8 +99,19 @@ async function embedBatch(texts) {
   });
   if (!res.ok) {
     const err = await res.text();
+    // Retry transient rate-limit / server errors with backoff (TPM ceiling is 1M and a full
+    // corpus re-embed runs right at it). Honor the "try again in Xms" hint when present.
+    if ((res.status === 429 || res.status >= 500) && (embedBatch._retries || 0) < 6) {
+      embedBatch._retries = (embedBatch._retries || 0) + 1;
+      const hint = err.match(/try again in ([\d.]+)s/);
+      const waitMs = hint ? Math.ceil(parseFloat(hint[1]) * 1000) + 300 : Math.min(2000 * embedBatch._retries, 15000);
+      console.log(`  ⏳ ${res.status} — backing off ${waitMs}ms (retry ${embedBatch._retries}/6)`);
+      await new Promise((r) => setTimeout(r, waitMs));
+      return embedBatch(texts);
+    }
     throw new Error(`OpenAI API error ${res.status}: ${err}`);
   }
+  embedBatch._retries = 0;
   const data = await res.json();
   return data.data.sort((a, b) => a.index - b.index).map((d) => d.embedding);
 }
@@ -113,6 +124,8 @@ async function embedAll(allTexts) {
       `  embedding batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(allTexts.length / BATCH_SIZE)} (${batch.length})...`
     );
     out.push(...(await embedBatch(batch)));
+    // Gentle pacing to stay under the per-minute token ceiling on a full re-embed.
+    await new Promise((r) => setTimeout(r, 350));
   }
   return out;
 }

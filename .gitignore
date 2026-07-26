@@ -36,3 +36,6 @@ corpus/pipeline_runs/
 # not build noise — exempt them from the global *.log rule
 !atlas/*.log
 atlas/recovery/*.log
+
+# transcript fetch checkpoint (large, regenerable)
+scripts/.transcripts-cache.json

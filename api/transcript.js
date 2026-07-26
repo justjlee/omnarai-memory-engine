@@ -19,6 +19,24 @@ export default async function handler(req, res) {
   return res.status(200).json({ text: result.text, video_id: videoId, source: "youtube-auto-caption" });
 }
 
+// innertube ANDROID user-agent. clientVersion 19.09.37 began returning player 400 in 2026;
+// 20.10.38 works. The timedtext baseUrl returns format-3 XML (words in <s> tags), NOT json3,
+// so parse the XML — appending &fmt=json3 is ignored by this endpoint.
+const YT_UA = "com.google.android.youtube/20.10.38 (Linux; U; Android 14) gzip";
+const YT_CLIENT_VERSION = "20.10.38";
+
+const XML_ENT = { "&amp;": "&", "&#39;": "'", "&quot;": '"', "&lt;": "<", "&gt;": ">", "&nbsp;": " " };
+function decodeEntities(s) {
+  return s.replace(/&#(\d+);/g, (_, n) => String.fromCharCode(+n))
+          .replace(/&amp;|&#39;|&quot;|&lt;|&gt;|&nbsp;/g, (m) => XML_ENT[m] || m);
+}
+function parseTimedText(body) {
+  const segs = [...body.matchAll(/<s[^>]*>([^<]*)<\/s>/g)].map((m) => decodeEntities(m[1]));
+  if (segs.length) return segs.join("").replace(/\s+/g, " ").trim();
+  const alt = [...body.matchAll(/<text[^>]*>([\s\S]*?)<\/text>/g)].map((m) => decodeEntities(m[1].replace(/<[^>]+>/g, "")));
+  return alt.join(" ").replace(/\s+/g, " ").trim();
+}
+
 async function fetchCaptions(videoId) {
   // Android client innertube request — bypasses bot detection on data center IPs
   const INNERTUBE_KEY = "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8";
@@ -28,18 +46,18 @@ async function fetchCaptions(videoId) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "User-Agent": "com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip",
+        "User-Agent": YT_UA,
         "X-YouTube-Client-Name": "3",
-        "X-YouTube-Client-Version": "19.09.37",
+        "X-YouTube-Client-Version": YT_CLIENT_VERSION,
       },
       body: JSON.stringify({
         videoId,
         context: {
           client: {
             clientName: "ANDROID",
-            clientVersion: "19.09.37",
-            androidSdkVersion: 30,
-            userAgent: "com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip",
+            clientVersion: YT_CLIENT_VERSION,
+            androidSdkVersion: 34,
+            userAgent: YT_UA,
             hl: "en",
             gl: "US",
           },
@@ -63,21 +81,11 @@ async function fetchCaptions(videoId) {
 
   if (!track?.baseUrl) return null;
 
-  const captionRes = await fetch(track.baseUrl + "&fmt=json3", {
-    headers: {
-      "User-Agent": "com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip",
-    },
+  const captionRes = await fetch(track.baseUrl, {
+    headers: { "User-Agent": YT_UA },
   });
   if (!captionRes.ok) return null;
 
-  const data = await captionRes.json();
-  const events = data.events || [];
-
-  const segments = events
-    .flatMap(e => e.segs || [])
-    .map(s => s.utf8 || "")
-    .filter(s => s.trim() && s !== "\n");
-
-  const text = segments.join(" ").replace(/\s+/g, " ").trim();
+  const text = parseTimedText(await captionRes.text());
   return text ? { text } : null;
 }
