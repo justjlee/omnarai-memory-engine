@@ -44,6 +44,14 @@ echo ">> Shape-literal guard (no frozen corpus counts in api/ or src/)"
 node scripts/check-shape-literals.mjs
 echo
 
+# HARD gate: no front-door doc pinned to a claim that has moved in /claims.json
+# (2026-07-26 guard — a stale "null for Claude" utility line survived a v1→v2 flip
+# in the highest-read-priority inheritance packet). Extends sync-doc-counts' no-drift
+# guarantee from NUMBERS to CLAIMS.
+echo ">> Claim-pin guard (front-door prose vs /claims.json)"
+node scripts/check-claim-pins.mjs
+echo
+
 if [[ "${1:-}" == "--promote" ]]; then
   # IMPORTANT: promotion is a real PRODUCTION deployment, not a preview alias.
   # Production-scoped env vars (OPENAI_API_KEY, YOUTUBE_API_KEY) are NOT injected

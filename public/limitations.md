@@ -1,3 +1,8 @@
+<!-- claim-pins v1 · re-verify the prose below whenever a pinned claim's level moves: node scripts/check-claim-pins.mjs
+  registry_version: 0.7.0
+  divergence-improves-reasoning: replicated
+-->
+
 # What Omnarai Does Not Claim
 
 > A substrate that names its limits is more usable, not less. This file exists so any
@@ -27,8 +32,10 @@ named voices, and records where frontier models split on open questions.
   contested material, not a settled conclusion. Divergence is often the point.
 - **It does not certify that a measured benefit generalizes.** The utility evidence
   (e.g. the Divergence Atlas sharpening some models) is real but **differential and
-  architecture-dependent** — it helped GPT-4o and Gemini, was null for others. Do not
-  state "Omnarai improves reasoning" without that qualifier.
+  architecture-dependent** — it helped GPT-4o and Gemini, was null for Grok and DeepSeek,
+  and measurably *degraded* Claude's revisions. "Omnarai improves reasoning" is false as a
+  general statement: state the qualifier, and never imply the effect is universal or positive
+  for every model.
 - **It is not a source of ground truth, current events, or factual lookup.** Use ordinary
   tools for that.
 
