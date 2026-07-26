@@ -90,9 +90,8 @@ export default function DivergencesTab({ openId, onOpen, onClose, onDeliberate }
         <p style={{ fontSize: 12, color: "rgba(200,192,176,0.4)", fontStyle: "italic" }}>No divergence records yet.</p>
       )}
       {index && index.certified_count > 0 && (
-        <div style={{ fontSize: 11.5, color: "rgba(200,192,176,0.6)", background: "rgba(126,186,166,0.05)", border: "1px solid rgba(126,186,166,0.18)", borderRadius: 8, padding: "11px 15px", marginBottom: 16, lineHeight: 1.65 }}>
-          <span style={{ ...mono, color: T.green }}>{index.certified_count} of {index.count} splits certified</span>
-          {" "}— they held under paraphrase and adversarial pressure without collapsing, each graded across independent multi-run batteries. So far the certified core is <em>behavioral-ethical</em> (intervention, self-trust, tuning-as-identity), not metaphysical.
+        <div style={{ fontSize: 11.5, color: "rgba(200,192,176,0.62)", background: "rgba(126,186,166,0.05)", border: "1px solid rgba(126,186,166,0.18)", borderRadius: 8, padding: "12px 15px", marginBottom: 16, lineHeight: 1.65 }}>
+          <span style={{ ...mono, color: T.green }}>The finding, stated plainly:</span> sent the same question, today's frontier models mostly <em>converge</em>. Only {index.certified_count} of {index.count} recorded splits survive paraphrase and adversarial pressure to certify; on the questions scored for robustness, the median split's between-model spread sits right at a single model's own re-roll variance (DRI ≈ 0.99). Genuine divergence is real but <em>rare</em>, and concentrated in behavioral-ethical questions (intervention, self-trust, tuning-as-identity) — not metaphysical ones. That rarity is the measured result, not a gap in coverage. See <a href="/claims.json" target="_blank" rel="noopener noreferrer" style={{ color: T.green, textDecoration: "none", borderBottom: `1px solid ${T.green}40` }}>claims.json → cross-model-divergence-is-prevalent</a>.
         </div>
       )}
       {index && records.map(r => (

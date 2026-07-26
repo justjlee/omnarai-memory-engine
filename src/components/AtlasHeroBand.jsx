@@ -160,7 +160,7 @@ export default function AtlasHeroBand({ onReadFeatured, onBrowseAll, onAskCounci
         color: "rgba(232,224,208,0.72)", fontWeight: 300,
         fontFamily: "'Cormorant Garamond',Georgia,serif", fontStyle: "italic",
       }}>
-        Where frontier intelligences actually disagree — verbatim, attributed, traceable.
+        Built to map where frontier minds diverge — and the finding, measured at scale, that they mostly don't. The rare splits that survive real pressure are what it keeps: verbatim, attributed, traceable.
       </p>
 
       {/* live, rotating featured split */}

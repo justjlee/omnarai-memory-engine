@@ -7,9 +7,25 @@
     "replicated": "Measured effect reproduced under independent conditions (disjoint judges, new seeds, or external replication).",
     "refuted": "A fair test came back negative; the claim is retained for the record, not asserted."
   },
-  "registry_version": "0.6.0",
-  "updated_at": "2026-07-19",
+  "registry_version": "0.7.0",
+  "updated_at": "2026-07-26",
   "claims": [
+    {
+      "claim_id": "cross-model-divergence-is-prevalent",
+      "wording": "On today's frontier model versions, asking five models the same open question reliably surfaces robust, structural cross-model divergence — disagreement larger than each model's own re-roll variance — as the common case. (The premise the Divergence Atlas was built on.)",
+      "evidence_level": "refuted",
+      "evidence_note": "Measured across the 2026-07 certification campaign (scripts/certify-divergence.mjs, --runs 3 strict-min consensus). Of 124 recorded splits, only 5 (4%) certify as robust under paraphrase + adversarial perturbation (tier C1+); the other 119 are C0. On the 33 questions carried through Divergence Robustness Index (DRI) scoring — a subset selected BECAUSE they looked divergent — the median DRI is 0.987 (mean 1.013): for the median question the between-model spread does not exceed a single model's own re-elicitation variance, and 19 of 33 fall below 1.0 (net-convergent). The prevalent case is convergence, not divergence. The strong reading — that robust cross-model divergence is the norm — is refuted. What survives, asserted only at that scope: genuine, certifiable divergence EXISTS but is RARE and concentrated in behavioral-ethical questions (intervention vs. autonomy, self-trust, tuning-as-identity), not metaphysical ones — the entire certified core is those 5 records. Downloads to date (2026-07-26): Atlas 47 all-time, 0 likes — so the finding also has essentially no external audience yet; reach, not the artifact, is the current bottleneck.",
+      "falsification_conditions": "Reversal (not scoping) would require a broader, temporally-diverse question set producing a median DRI meaningfully above 1.0 under the same multi-run instrument, or a certification rate materially above ~4%. Scoping rather than reversal: a later model generation that diverges more, a question domain engineered to split models, or a divergence metric more sensitive than embedding-distance DRI.",
+      "known_objections": [
+        "The 33 DRI-scored questions are a non-random subset chosen because they appeared divergent — this biases the sample TOWARD divergence, making the convergence result conservative, not inflated.",
+        "Embedding-distance DRI may under-detect real conceptual divergence carried in similar surface language.",
+        "Temporal monoculture — most records are single-day captures (2026-06-06); convergence measured on one generation need not hold across generations. A tentative 'divergence closing over generations' signal (DRI < 1.0 on current versions vs. higher recorded historical values) exists but is n~10 and unreplicated.",
+        "Mechanism is a hypothesis, not a measurement: shared pretraining data plus convergent alignment is the plausible cause, and differing weights evidently do NOT manifest as behavioral divergence on most questions — but why is not established here."
+      ],
+      "required_experiment": "Re-run the panel on a temporally-spread, deliberately outside-position question bank (the annotation layer found 109/111 questions are panel-implicating 'inside-position'; seeding an outside arm makes an inside/outside divergence comparison runnable) under --runs 3 strict-min, reporting the full DRI distribution as the primary outcome.",
+      "maintainer": "xz",
+      "status": "open"
+    },
     {
       "claim_id": "divergence-adds-unique-info",
       "wording": "Verbatim cross-model divergence records contain decision-relevant information that no single model can regenerate alone.",
