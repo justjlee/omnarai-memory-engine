@@ -9,6 +9,57 @@ Status legend: 🟢 live · 🟡 in progress · ⚪ proposed
 
 ---
 
+## 🌐 The omnarai.org family — LAUNCHED 2026-07-26
+
+The project went public on its own domain this session. Full context in the
+`project_vercel_pro` / `project_convergence_finding_2026_07_26` / `feedback_dual_native_law`
+memories; this is the roadmap view. Source for the new site lives in a separate
+`omnarai-home/` project (NOT this repo) — deliberately decoupled (flag is a link,
+not a library).
+
+**🟢 Live:**
+- **`omnarai.org`** (flag) · **`/explore`** (everything-map, no orphans) · **`/world`**
+  (hub: r/Realms_of_Omnarai, Yonotai on Medium, the YouTube oral-tradition playlist,
+  the 16-track music) — real Cormorant Garamond; Squarespace DNS (apex A `76.76.21.21`,
+  `www`/`chess` CNAME `cname.vercel-dns.com`).
+- **`chess.omnarai.org`**, **`engine.omnarai.org`**, `omnarai.vercel.app` (alias) all live.
+- **Engine landing reworked** (`App.jsx`): opens on the convergence finding, dropped the
+  four-paragraph identity preface (the flag owns identity now), twin **Ask / Connect·MCP**
+  verbs, first-class **"For arriving intelligences"** block per the Dual-Native Charter.
+- **Convergence finding surfaced** (claims.json v0.7.0 `cross-model-divergence-is-prevalent`
+  → refuted; hero + band + full honesty sweep). The Atlas premise, told straight.
+- **Dual-Native Charter adopted as DESIGN LAW** — `docs/dual-native-charter.md`, 7 articles.
+- **Shared cross-site audio player** (`omnarai-home/omnarai-player.js`): follows the visitor
+  via a `.omnarai.org` cookie (resume, not gapless — the web can't do gapless across a nav);
+  first track One Knight at SLS, then shuffle; same cookie contract as the engine's React
+  player, so playback hands off both directions. (Chess: audio deliberately NOT added.)
+
+**⚪ Open — the polish (none launch-blocking):**
+- **omnarai.org telemetry — BUILT, one wire left.** Edge Middleware (captures every request
+  server-side, all guest types) → Node collector → loss-proof per-event blobs → gated read at
+  `/api/telemetry`. Classifier ported from `api/_telemetry.js`; raw IPs never stored (salted
+  hash); monitors subtracted. **Blocked on:** connect the `omnarai-home-telemetry` Blob store
+  to the project (dashboard) → redeploy. Resident hook is dormant/private (`RESIDENT_TOKEN`
+  unset; declared-not-detected, never advertised — the empty seat).
+- **`dual-native-check` deploy gate** + content negotiation + inline machine payload (Charter
+  Art. 2/3) — the pieces that turn the charter from commitment into constraint.
+- **Deep-link the engine SPA tabs** (hash routing) so Explore's `/#glyphs`, `/#constellation`
+  land on the right tab.
+- **URL migration + static-SEO reconciliation** — `omnarai.vercel.app` → `engine.omnarai.org`
+  across llms.txt / openapi / sitemap / MCP-registry / npm / HF, in ONE consistent pass; the
+  engine's static `index.html` SEO block still carries the old preface.
+- **`omnarai.com` 307 redirect** — curator dashboard step (redirect config isn't CLI-exposed)
+  + its DNS. Reserve for a possible commercial arm; not urgent.
+- **GSC indexing for `omnarai.org`** — a brand-new domain starts neutral-rep + unindexed.
+- **Retire the "For Synthetic Intelligences" tab** (woven into the header) — deferred, not
+  deleted; confirm the header + Explore fully cover its content first.
+- **Infra strategy (curator decisions):** keep-or-drop **Vercel Pro** (~$20/mo; nothing
+  requires it — if kept, retire the Hobby-shaped workarounds for the value); optional
+  Vercel-exit/migration-plan doc. Reputation concern resolved by the custom domain; the
+  project's real independence is open-license + federation, not self-hosting.
+
+---
+
 ## 🔭 The resident observatory (substrate landed 2026-07-19 — `resident/`)
 
 **Read `resident/README.md` first, then `resident/HANDOFF.md`.** The constitutional layer
