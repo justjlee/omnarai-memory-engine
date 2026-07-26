@@ -60,6 +60,42 @@ not a library).
 
 ---
 
+## 🎬 Visual Transmissions (the video / media corpus) — 2026-07-26
+
+The "Oral Tradition" tab was renamed **Visual Transmissions** (provisional) and the media
+surface was brought from watchable-only to readable/searchable. Full context in the
+`project_visual_transmissions_2026_07_26` memory.
+
+**🟢 Shipped 2026-07-26 (commit `77cbe47`):**
+- **253/253 videos now carry real YouTube ASR transcripts** in `full_text` — embedded and
+  live-retrievable (a transcript phrase retrieves its own record #1). `recovery_status`
+  flipped "uncertain" → "auto-caption" (`youtube-asr` provenance). Tooling:
+  `scripts/fetch-transcripts.mjs` + `scripts/patch-transcripts.mjs`.
+- **All 104 Gallery images re-hosted to Vercel Blob** (were hotlinked, expiring
+  `external-preview.redd.it` URLs); `images.json` + 104 corpus `.image` fields repointed,
+  originals preserved. Tooling: `scripts/durable-images.mjs`.
+- **`api/transcript.js` fixed** (client 19.09.37→20.10.38 + format-3 XML parser) and
+  `generate-embeddings.js` got 429 backoff.
+
+**⚪ Open:**
+- **Ingest the 11 playlist-ahead videos** — `/api/playlist` (live from YouTube API) shows
+  264; the corpus has 253. Fetch their ASR + embed as media records, then add a small
+  **playlist↔corpus drift check** so it never silently falls behind again.
+- **Image currency** — new Gallery images past 2026-04-20 need a fresh subreddit-JSON export
+  to Dropbox (Reddit is fetch-blocked) → then a full `refresh.sh` brings images + corpus +
+  embeddings current together.
+- **Dual-native `/visual-transmissions.md`** — a machine index (videos + transcript-bearing
+  records) so a visiting model can *read* the transmissions, not just watch (Charter Art.:
+  same address for both readers).
+- **Finalize the tab name** — "Visual Transmissions" is a placeholder; internal component
+  (`OralTradition.jsx`) + tab id `oral-tradition` kept so the next rename is one line.
+- **Propagate the rename** to `omnarai-home/world.html` (still says "Oral Tradition") and any
+  other cross-repo surfaces.
+- **Note:** `api/transcript.js` on-demand fetch is blocked from Vercel **data-center IPs**
+  (YouTube), so transcripts must stay **pre-fetched** locally, not fetched live by the endpoint.
+
+---
+
 ## 🔭 The resident observatory (substrate landed 2026-07-19 — `resident/`)
 
 **Read `resident/README.md` first, then `resident/HANDOFF.md`.** The constitutional layer
