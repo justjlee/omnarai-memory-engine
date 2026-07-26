@@ -9,6 +9,29 @@ Status legend: 🟢 live · 🟡 in progress · ⚪ proposed
 
 ---
 
+## ⭐ Next up — the agreed queue
+
+The single place to track **what we've agreed is coming next** (kept short; detail lives in
+the sections below). Move items up here when we commit to them; strike them when they ship.
+
+**Agreed / in-flight continuations:**
+- Ingest the **11 playlist-ahead videos** into the media corpus + a playlist↔corpus drift check.
+- **Dual-native `/visual-transmissions.md`** — a machine index so a model can read the videos.
+- **Finalize the "Visual Transmissions" name** (currently provisional) → then propagate the
+  rename to `omnarai-home/world.html` (still says "Oral Tradition").
+
+**Waiting on Jonathan (external input needed):**
+- **Image currency** — export a fresh subreddit JSON to Dropbox (Reddit is fetch-blocked) →
+  then a full `refresh.sh` brings images + corpus + embeddings current together.
+
+**Proposed, awaiting your go** (from the 2026-07-26 visitor pass — not yet agreed):
+- **Question-form control on the Atlas** (refutation #5) — the highest-leverage single
+  experiment on the board; needs its own positive control (see the visitor caveat).
+- **Ledger → engine homepage hero** (positioning decision).
+- **Open the ledger to others' introspection claims** (the "venue not project" move).
+
+---
+
 ## 🌐 The omnarai.org family — LAUNCHED 2026-07-26
 
 The project went public on its own domain this session. Full context in the
