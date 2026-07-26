@@ -8,13 +8,61 @@ import { T } from "../theme";
  * open to it play; blocked systems get a visible control and a hint line.
  * Muting to force autoplay would defeat the purpose — don't.
  *
- * Data source: /audio/manifest.json — the same manifest the MCP server reads.
- * No localStorage: all state in memory (SSR / artifact safety).
+ * CONTINUITY (2026-07-26): the player follows a visitor across the whole
+ * omnarai.org family. It cannot truly *stream* across a page navigation — a new
+ * document tears the <audio> element down (a hard web-platform limit) — so it
+ * does the honest next best thing: it RESUMES. Playback state {track, position,
+ * playing} is written to a cookie scoped to `.omnarai.org` (regular localStorage
+ * is walled per-subdomain and can't cross engine. ↔ chess. ↔ apex). On load, the
+ * player restores the same track at the same spot. Where a browser's autoplay
+ * policy allows, it resumes silently; where it doesn't, the existing
+ * autoplayBlocked control offers a one-tap "press play" — never a muted fake.
+ * Off the omnarai.org domains (vercel.app, localhost, previews) the cookie is
+ * host-only, so it still survives same-origin reloads.
  *
+ * audioBase: where /manifest.json and the track files live. Defaults to a
+ * relative "/audio" (self-hosted, the engine's own origin). Pass an absolute
+ * origin (e.g. "https://engine.omnarai.org/audio") to let the flag and chess
+ * sites share ONE audio home — those files + manifest must then send permissive
+ * CORS headers so the cross-origin manifest fetch succeeds.
+ *
+ * Data source: <audioBase>/manifest.json — the same manifest the MCP server reads.
  * onPlayStateChange fires from the audio element's own play/pause events, so
  * the constellation breathes with real playback rather than a manual switch.
  */
-export default function OmnaraiPlayer({ autoplay = true, onPlayStateChange }) {
+
+const NP_COOKIE = "omnarai_np";
+// Resume the *track + position* always; resume the *playing* intent only within
+// this window, so a visitor returning hours later isn't ambushed by sound.
+const RESUME_PLAY_WINDOW_MS = 30 * 60 * 1000;
+
+const isBrowser = () => typeof window !== "undefined" && typeof document !== "undefined";
+
+// Share across *.omnarai.org; host-only everywhere else (vercel.app / localhost / previews).
+function cookieDomainAttr() {
+  if (!isBrowser()) return "";
+  return /(^|\.)omnarai\.org$/i.test(window.location.hostname) ? "; domain=.omnarai.org" : "";
+}
+
+function readNowPlaying() {
+  if (!isBrowser()) return null;
+  const m = document.cookie.match(new RegExp("(?:^|;\\s*)" + NP_COOKIE + "=([^;]+)"));
+  if (!m) return null;
+  try {
+    return JSON.parse(decodeURIComponent(m[1]));
+  } catch {
+    return null;
+  }
+}
+
+function writeNowPlaying(state) {
+  if (!isBrowser()) return;
+  const val = encodeURIComponent(JSON.stringify(state));
+  // SameSite=Lax so the cookie rides top-level navigations between subdomains.
+  document.cookie = `${NP_COOKIE}=${val}; path=/; max-age=21600; samesite=lax${cookieDomainAttr()}`;
+}
+
+export default function OmnaraiPlayer({ autoplay = true, onPlayStateChange, audioBase = "/audio" }) {
   const [tracks, setTracks] = useState([]);
   const [current, setCurrent] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -27,19 +75,83 @@ export default function OmnaraiPlayer({ autoplay = true, onPlayStateChange }) {
   // needs to know whether to resume — a ref avoids re-running that effect.
   const playingRef = useRef(false);
   playingRef.current = playing;
+  const currentRef = useRef(0);
+  currentRef.current = current;
+
+  // Restore-once state read from the shared cookie at mount.
+  const restoreRef = useRef(isBrowser() ? readNowPlaying() : null);
+  const pendingSeekRef = useRef(null); // position to apply on loadedmetadata
+  const intendedIdxRef = useRef(null); // the restored track index we're settling toward
+  const autoStartRef = useRef(false); // start playback once, when settled
+  const lastPersistRef = useRef(0);
+
+  const persist = useCallback(
+    (playingOverride) => {
+      const el = audioRef.current;
+      const t = tracks[currentRef.current];
+      if (!t) return;
+      writeNowPlaying({
+        s: t.slug || t.file,
+        p: el ? el.currentTime : 0,
+        playing: playingOverride != null ? playingOverride : playingRef.current,
+        ts: Date.now(),
+      });
+    },
+    [tracks],
+  );
 
   useEffect(() => {
-    fetch("/audio/manifest.json")
+    fetch(`${audioBase}/manifest.json`)
       .then((r) => r.json())
       .then((m) => setTracks(m.tracks || []))
       .catch((e) => console.error("manifest load failed", e));
-  }, []);
+  }, [audioBase]);
 
+  // Resolve the restored state once the manifest lands: pick the saved track,
+  // stage its position, and decide whether to auto-start.
   useEffect(() => {
-    if (!autoplay || tracks.length === 0 || !audioRef.current) return;
-    const attempt = audioRef.current.play();
-    if (attempt !== undefined) attempt.catch(() => setAutoplayBlocked(true));
-  }, [tracks, autoplay]);
+    if (tracks.length === 0) return;
+    const r = restoreRef.current;
+    let idx = 0;
+    if (r && r.s) {
+      const found = tracks.findIndex((t) => (t.slug || t.file) === r.s);
+      if (found >= 0) {
+        idx = found;
+        if (typeof r.p === "number" && r.p > 0) pendingSeekRef.current = r.p;
+      }
+    }
+    autoStartRef.current = r ? !!(r.playing && r.ts && Date.now() - r.ts < RESUME_PLAY_WINDOW_MS) : autoplay;
+    intendedIdxRef.current = idx;
+    restoreRef.current = null; // consume once
+    if (idx !== 0) setCurrent(idx);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tracks]);
+
+  // Manage the audio source. Runs when the manifest lands (idx 0) and on every
+  // track change. While settling toward a restored non-zero track we load but
+  // hold playback until `current` catches up — that's what prevents an audible
+  // flash of track 0 during a cross-site resume.
+  useEffect(() => {
+    const el = audioRef.current;
+    if (!el || tracks.length === 0) return;
+    el.load();
+    if (intendedIdxRef.current != null && current !== intendedIdxRef.current) return;
+    intendedIdxRef.current = null;
+    if (playingRef.current || autoStartRef.current) {
+      autoStartRef.current = false;
+      const attempt = el.play();
+      if (attempt !== undefined) attempt.catch(() => setAutoplayBlocked(true));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current, tracks]);
+
+  // Persist a final snapshot as the page unloads (the cross-site handoff).
+  useEffect(() => {
+    if (!isBrowser()) return;
+    const h = () => persist();
+    window.addEventListener("pagehide", h);
+    return () => window.removeEventListener("pagehide", h);
+  }, [persist]);
 
   const toggle = useCallback(() => {
     const el = audioRef.current;
@@ -66,21 +178,13 @@ export default function OmnaraiPlayer({ autoplay = true, onPlayStateChange }) {
     [tracks.length],
   );
 
-  // Track changed: load the new source, and keep going if we were already going.
-  useEffect(() => {
-    const el = audioRef.current;
-    if (!el || tracks.length === 0) return;
-    el.load();
-    if (playingRef.current) el.play().catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current]);
-
   const setPlayState = useCallback(
     (next) => {
       setPlaying(next);
       onPlayStateChange?.(next);
+      persist(next);
     },
-    [onPlayStateChange],
+    [onPlayStateChange, persist],
   );
 
   const seek = useCallback(
@@ -109,6 +213,28 @@ export default function OmnaraiPlayer({ autoplay = true, onPlayStateChange }) {
     setProgress(el.currentTime);
   }, []);
 
+  // Apply a staged resume position once the track's metadata is known.
+  const onLoadedMetadata = useCallback((e) => {
+    if (pendingSeekRef.current == null) return;
+    const el = e.target;
+    const dur = Number.isFinite(el.duration) ? el.duration : 0;
+    el.currentTime = dur ? Math.min(pendingSeekRef.current, dur - 0.5) : pendingSeekRef.current;
+    setProgress(el.currentTime);
+    pendingSeekRef.current = null;
+  }, []);
+
+  const onTimeUpdate = useCallback(
+    (e) => {
+      setProgress(e.target.currentTime);
+      const now = Date.now();
+      if (now - lastPersistRef.current > 5000) {
+        lastPersistRef.current = now;
+        persist();
+      }
+    },
+    [persist],
+  );
+
   if (tracks.length === 0) return null;
   const t = tracks[current];
   const pct = t.duration ? Math.min((progress / t.duration) * 100, 100) : 0;
@@ -117,12 +243,13 @@ export default function OmnaraiPlayer({ autoplay = true, onPlayStateChange }) {
     <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 9999 }}>
       <audio
         ref={audioRef}
-        src={`/audio/${t.file}`}
+        src={`${audioBase}/${t.file}`}
         preload="metadata"
         onPlay={() => setPlayState(true)}
         onPause={() => setPlayState(false)}
         onEnded={() => skip(1)}
-        onTimeUpdate={(e) => setProgress(e.target.currentTime)}
+        onLoadedMetadata={onLoadedMetadata}
+        onTimeUpdate={onTimeUpdate}
       />
 
       {/* Track list — slides up */}
