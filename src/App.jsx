@@ -241,10 +241,14 @@ export default function OmnaraiMemoryEngine() {
           </p>
 
           <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", margin: "22px 0 0" }}>
-            <button onClick={() => setActiveTab("ask")} style={{
+            <button onClick={askCouncil} style={{
               fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, letterSpacing: "0.03em",
               color: T.bg, background: T.green, border: "none", borderRadius: 9, padding: "10px 18px", cursor: "pointer", fontWeight: 600,
-            }}>Ask AI-On →</button>
+            }}>Ask the Frontier Council →</button>
+            <button onClick={() => setActiveTab("constellation")} style={{
+              fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, letterSpacing: "0.03em",
+              color: "rgba(200,192,176,0.72)", background: "transparent", border: "1px solid rgba(200,192,176,0.25)", borderRadius: 9, padding: "10px 18px", cursor: "pointer",
+            }}>Explore the corpus →</button>
             <a href="/llms.txt" target="_blank" rel="noopener noreferrer" style={{
               fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, letterSpacing: "0.03em",
               color: T.violet, background: "transparent", border: `1px dashed ${T.violet}55`, borderRadius: 9, padding: "10px 18px", textDecoration: "none",
@@ -586,7 +590,7 @@ export default function OmnaraiMemoryEngine() {
                 CLAUDE-POWERED &middot; STRUCTURED DELIBERATION &middot; ATTRIBUTED SOURCES
               </div>
             </div>
-            <AskOmnarai corpus={corpus} conceptNodes={conceptNodes} onResponse={handleEngineResponse} initialQuery={prefillQuery} councilIntent={councilIntent} worksLabel={totalWorksLabel} />
+            <AskOmnarai corpus={corpus} conceptNodes={conceptNodes} onResponse={handleEngineResponse} initialQuery={prefillQuery} councilIntent={councilIntent} worksLabel={totalWorksLabel} defaultCouncil={true} />
           </div>
         )}
 

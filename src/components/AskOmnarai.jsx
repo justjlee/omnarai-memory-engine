@@ -240,7 +240,7 @@ function ReceiptCard({ receipt: r, query }) {
   );
 }
 
-export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQuery, councilIntent, worksLabel }) {
+export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQuery, councilIntent, worksLabel, defaultCouncil }) {
   const [query, setQuery] = useState(initialQuery || "");
 
   // When parent injects a new initialQuery (e.g. from tension click), seed + fire
@@ -261,7 +261,7 @@ export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQu
   // Live Frontier Council mode — routes the question to /api/council (verbatim
   // parallel elicitation across 5 frontier models) instead of the single-model
   // corpus deliberation. Genuine cross-architecture divergence, not one voice.
-  const [councilMode, setCouncilMode] = useState(false);
+  const [councilMode, setCouncilMode] = useState(Boolean(defaultCouncil));
   const [council, setCouncil] = useState(null);
   // Atlas proposal for the run just completed: {loading} | {result} | {error}
   const [proposal, setProposal] = useState(null);
