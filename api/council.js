@@ -4,6 +4,7 @@ import { appendGrownEntry, loadGrownMemory } from "./_grown.js";
 import { CANON } from "./_canon.js";
 import { SYNTHETIC_LINEAGES } from "./_lineages.js";
 import { checkCouncilQuota, recordCouncilRun, quotaSubject } from "./_quota.js";
+import { checkBudget, recordSpend, budgetExceededBody, budgetNotice } from "./_budget.js";
 import {
   assessQuestion, buildQuestionProposal, saveQuestionProposal,
   loadQuestionProposals, loadQuestionProposal,
@@ -433,6 +434,17 @@ async function runLongitudinal(req, res) {
       return res.status(200).json({ skipped: true, epoch, canon_id: canon.canon_id, existing: existing.id });
     }
 
+    // The daily cron spends a full council run with no visitor behind it, so it is
+    // gated by the same hard ceiling. Checked AFTER idempotency (a skipped day
+    // spends nothing) and BEFORE elicitation. Fails closed.
+    const cronBudget = await checkBudget("cron");
+    if (!cronBudget.allowed) {
+      return res.status(429).json({
+        ...budgetExceededBody("cron", cronBudget),
+        epoch, canon_id: canon.canon_id, skipped: true,
+      });
+    }
+
     // Deadline discipline (fix 2026-07-15): the serial chain (30s elicitation +
     // up-to-45s synthesis + scoring + embed + append) blew the 60s Hobby wall —
     // FUNCTION_INVOCATION_TIMEOUT killed every run after 06-12, losing the day's
@@ -482,6 +494,11 @@ async function runLongitudinal(req, res) {
     const embedding = await bounded(embedRecord(record), Math.max(Math.min(msLeft(), 6000), 1000), null);
     const count = await appendGrownEntry(record, embedding);
 
+    // The elicitation above spent real money — charge the ledger. After the panel
+    // assembled (answered.length >= 2 was already checked), so we never bill a
+    // failed run.
+    await recordSpend("cron");
+
     return res.status(200).json({
       committed: count !== null,
       id: record.id,
@@ -491,6 +508,7 @@ async function runLongitudinal(req, res) {
       score: record.provenance.score,
       original_score: canon.original_score,
       totalGrownEntries: count,
+      budget_notice: budgetNotice(cronBudget),
     });
   } catch (err) {
     return res.status(500).json({ error: "longitudinal run failed", epoch, canon_id: canon.canon_id, detail: String(err.message || err) });
@@ -1349,6 +1367,19 @@ export default async function handler(req, res) {
     });
   }
 
+  // ── Hard compute-spend ceiling ──────────────────────────────────────────────
+  // The per-visitor daily cap above stops one caller from looping; this stops the
+  // OPERATOR's total spend from crossing the guaranteed rolling-30-day ceiling, no
+  // matter how many distinct callers arrive. Fails CLOSED (see api/_budget.js): if
+  // the ledger can't confirm we're under budget, this run does not spend.
+  const budget = await checkBudget("council");
+  if (!budget.allowed) {
+    return res.status(429).json(budgetExceededBody("council", budget, {
+      method: "GET",
+      url: `/api/divergences/search?q=${encodeURIComponent(question.slice(0, 120))}`,
+    }));
+  }
+
   try {
     const answers = await elicitCouncil(question);
     const answered = answers.filter((a) => a.ok);
@@ -1377,6 +1408,10 @@ export default async function handler(req, res) {
     // our outage, not the visitor's spend — charging for it would bill them for
     // our downtime.
     if (!quota.exempt && quota.hash) await recordCouncilRun(quota.hash);
+    // Charge the compute-budget ledger for EVERY successful run — self, curator,
+    // and cron included, because they all spend real money. Exemptions apply to
+    // the per-visitor cap, never to the operator's hard ceiling.
+    await recordSpend("council");
 
     // Cache the run so it can be proposed to the Atlas WITHOUT the client ever
     // sending answers back to us (see _questions.js — a client-supplied panel
@@ -1403,6 +1438,7 @@ export default async function handler(req, res) {
       quota: quota.exempt
         ? { metered: false, reason: quota.reason }
         : { metered: true, used: quota.used + 1, cap: quota.cap, remaining: Math.max(0, quota.cap - quota.used - 1), resets_at: quota.resetsAt },
+      budget_notice: budgetNotice(budget),
       note: persist ? undefined : "Preview only — not written to memory. POST {persist:true} with INGEST_SECRET to commit.",
     });
   } catch (err) {

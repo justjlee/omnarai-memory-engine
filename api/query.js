@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { checkBudget, recordSpend, budgetExceededBody } from "./_budget.js";
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -1329,6 +1330,25 @@ export default async function handler(req, res) {
       poll_url: `/api/query?job=${jobId}`,
       note: "Deliberation running (~25s). Poll poll_url every ~3s until status is 'done'; the answer lands in the 'result' field. Jobs expire ~1h after completion.",
     });
+  }
+
+  // ── Hard compute-spend ceiling ──────────────────────────────────────────────
+  // Everything past here that isn't the free retrieval layer (format=context /
+  // mode=retrieve) runs a paid Claude call — the trace path spends three. Gate it
+  // against the operator's guaranteed rolling-30-day ceiling. Placed AFTER the
+  // async-enqueue block so an async request charges once (in its inner execution),
+  // never twice. Charged here rather than after the call so concurrent runs see
+  // each other's spend — the conservative direction for a hard cap. Fails closed.
+  if (requestFormat !== "context") {
+    const spendKind = (req.body?.mode === "trace" || req.body?.trace === true) ? "trace" : "query";
+    const budget = await checkBudget(spendKind);
+    if (!budget.allowed) {
+      return res.status(429).json(budgetExceededBody(spendKind, budget, {
+        method: "GET",
+        url: `/api/query?q=${encodeURIComponent(trimmed.slice(0, 120))}&mode=retrieve`,
+      }));
+    }
+    await recordSpend(spendKind);
   }
 
   // Parse glyphs from the query

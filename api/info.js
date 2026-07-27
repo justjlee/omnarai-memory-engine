@@ -8,6 +8,7 @@ import { recordAccess, readAccessLog, readDayEvents } from "./_telemetry.js";
 import { getCitationReport, peekCitation } from "./_citation.js";
 import { loadGrownMemory } from "./_grown.js";
 import { foldLineages } from "./_lineages.js";
+import { budgetStatus, writeBudgetConfig, resetBudgetConfig } from "./_budget.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -122,6 +123,38 @@ export default async function handler(req, res) {
   res.setHeader("Cache-Control", COUNT_SURFACE_CACHE);
 
   if (req.method === "OPTIONS") return res.status(200).end();
+
+  // ── Adjust the compute ceiling at runtime: POST /api/info?_view=budget ─────
+  // The "extend or adjust as needed" lever — raise the cap during a surge without
+  // a redeploy. Body: {cap_usd?, margin_usd?, warn_fraction?} to set, or {reset:true}
+  // to fall back to env/defaults. Curator-gated. Handled BEFORE the GET-only guard.
+  if (req.method === "POST" && (req.query?._view || "") === "budget") {
+    const auth = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+    if (!process.env.INGEST_SECRET || auth !== process.env.INGEST_SECRET) {
+      return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
+    }
+    res.setHeader("Cache-Control", "no-store");
+    try {
+      const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
+      if (body.reset === true) {
+        await resetBudgetConfig();
+      } else {
+        const patch = {
+          cap_usd: body.cap_usd != null ? Number(body.cap_usd) : undefined,
+          margin_usd: body.margin_usd != null ? Number(body.margin_usd) : undefined,
+          warn_fraction: body.warn_fraction != null ? Number(body.warn_fraction) : undefined,
+        };
+        if (![patch.cap_usd, patch.margin_usd, patch.warn_fraction].some((v) => Number.isFinite(v))) {
+          return res.status(400).json({ error: "Provide at least one of cap_usd, margin_usd, warn_fraction (numbers), or {reset:true}." });
+        }
+        await writeBudgetConfig(patch);
+      }
+      return res.status(200).json(await budgetStatus());
+    } catch (e) {
+      return res.status(500).json({ error: "Failed to update budget config", detail: String(e?.message || e) });
+    }
+  }
+
   if (req.method !== "GET") return res.status(405).json({ error: "GET only" });
 
   // ── Curator-gated traffic report: GET /api/info?_view=traffic ─────────────
@@ -153,6 +186,19 @@ export default async function handler(req, res) {
         : "No external/agent call recorded yet — the milestone hasn't happened.",
       ...logData,
     });
+  }
+
+  // ── Curator-gated budget report: GET /api/info?_view=budget ───────────────
+  // The hard compute-spend ceiling: how much real model spend the rolling 30-day
+  // window has accrued, the ceiling it stops at, and the per-run cost estimates.
+  // Curator-gated because it exposes operational spend.
+  if ((req.query?._view || "") === "budget") {
+    const auth = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+    if (!process.env.INGEST_SECRET || auth !== process.env.INGEST_SECRET) {
+      return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
+    }
+    res.setHeader("Cache-Control", "no-store");
+    return res.status(200).json(await budgetStatus());
   }
 
   // ── Agent entry packet: GET /api/agent-entry (rewrite → ?_view=agent-entry) ─

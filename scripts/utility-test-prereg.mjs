@@ -292,6 +292,16 @@ if (PREFLIGHT) {
   process.exit(0);
 }
 
+// ── compute-budget gate ───────────────────────────────────────────────────────
+// A full run spends real frontier-model calls across every cell (~$40–90). It is
+// accountable to the same rolling-30-day ceiling as the live engine. Smoke runs
+// are tiny, so they pass a proportionally small estimate rather than being exempt.
+const { preflightSpend } = await import("./budget-preflight.mjs");
+await preflightSpend({
+  estUsd: SMOKE ? 2 : 90, // conservative upper end of the $40–90 range for a full run
+  label: `utility-test-prereg ${SMOKE ? `smoke ${SMOKE}` : "full run"}`,
+});
+
 // ── select stratified base questions across the divergence-score range ────────
 const grown = await loadGrownMemory();
 let recs = grown.entries.filter((e) => e.type === "divergence" && e.divergence?.answers?.length >= 4
