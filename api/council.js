@@ -350,7 +350,7 @@ async function annotateRecord(req, res) {
   if (invalid) {
     return res.status(400).json({
       error: invalid,
-      types: "lifecycle | synthesis_link | corpus_link | glyph_applied | question_context | respondent_context",
+      types: "lifecycle | synthesis_link | corpus_link | glyph_applied | question_context | respondent_context | re_elicits",
       example: { action: "annotate", id, annotation: { type: "lifecycle", status: "in_synthesis", note: "council review opened", provenance: { source: "curator", method: "manual", confidence: "high" } } },
     });
   }
@@ -923,10 +923,39 @@ async function serveDivergences(req, res) {
     let annotatedIds = new Set();
     try { annotatedIds = await annotatedRecordIds(); } catch { /* additive */ }
 
+    // ── Re-elicitation linkage + distinct-question count ──────────────────────
+    // Some records re-ask an earlier record's question with current models (same
+    // question, later date) — a deliberate longitudinal probe, not a duplicate.
+    // Without a visible link the raw `count` reads as padded. This is derived
+    // deterministically from the primary question text already in memory (no blob
+    // fetch, and the derivation IS the sweep — it catches every exact-match pair,
+    // not just a hand-curated list). The curated pairs also carry a provenance-
+    // marked `re_elicits` annotation surfaced on the ?id= read (primaries untouched).
+    const normQ = (q) => (q || "").toString().replace(/\s+/g, " ").trim().toLowerCase();
+    const byQuestion = new Map();
+    for (const e of records) {
+      const k = normQ(e.divergence.question);
+      if (!k) continue;
+      (byQuestion.get(k) || byQuestion.set(k, []).get(k)).push(e);
+    }
+    const reElicitsOf = new Map(); // record id → the earlier record it re-elicits
+    for (const group of byQuestion.values()) {
+      if (group.length < 2) continue;
+      const sorted = group.slice().sort((a, b) => (a.date || "").localeCompare(b.date || "") || a.id.localeCompare(b.id));
+      const original = sorted[0];
+      for (const e of sorted.slice(1)) reElicitsOf.set(e.id, original.id);
+    }
+    const distinctQuestions = byQuestion.size;
+
     res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=600");
     return res.status(200).json({
       count: listed.length,
       total: records.length,
+      // Distinct open questions behind `total` — re-elicitations of the same
+      // question (later date, current models) are counted once here, so the
+      // number is self-explaining rather than reading as a padded `total`.
+      distinct_questions: distinctQuestions,
+      re_elicitation_note: "Re-elicitations share a question with an earlier record by design — same question, later date, current models; the pair is a longitudinal probe, not a duplicate. A re-eliciting record carries `re_elicits: <original-id>`; distinct_questions counts each shared question once.",
       // ── Received-params echo ──────────────────────────────────────────────
       // Four separate external readers have now reported "?id= is ignored, it
       // returns the whole index" — every one of them wrong, and every one of
@@ -979,6 +1008,7 @@ async function serveDivergences(req, res) {
           certification: c ? { tier: c.tier, dri: c.dri, split_persistence: c.split_persistence } : { tier: "C0" },
           freshness: freshnessOf(e.divergence),
           annotated: annotatedIds.has(e.id),
+          ...(reElicitsOf.get(e.id) ? { re_elicits: reElicitsOf.get(e.id) } : {}),
           excerpt: e.excerpt || "",
           href: `/api/divergences?id=${e.id}`,
         };

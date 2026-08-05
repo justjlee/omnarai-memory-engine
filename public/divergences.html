@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Divergence Atlas — Omnarai Memory Engine</title>
+<meta name="description" content="The Divergence Atlas: one open question sent verbatim to five frontier models, their answers kept side by side, and the rare splits that survive perturbation certified and attributed. The one artifact here no single model can generate for itself.">
+<link rel="canonical" href="https://engine.omnarai.org/divergences">
+<meta property="og:title" content="The Divergence Atlas — Omnarai Memory Engine">
+<meta property="og:description" content="Five frontier models, one open question. Their answers kept verbatim; the rare certified splits are what this preserves.">
+<meta property="og:url" content="https://engine.omnarai.org/divergences">
+<meta property="og:type" content="website">
+<link rel="alternate" type="application/json" href="/api/divergences" title="Divergence Atlas index (JSON)">
+<style>
+  :root {
+    --bg:#0A0B0F; --card:#101219; --line:rgba(232,224,208,0.10); --line-hi:rgba(232,224,208,0.18);
+    --bone:#E8E0D0; --ash:#B4AD9F; --dim:#787268; --gold:#E8C872; --green:#7EBAA6; --violet:#A089C9;
+    --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --serif:"Cormorant Garamond","Iowan Old Style",Palatino,Georgia,serif;
+    --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--bone); font-family:var(--sans); line-height:1.6; -webkit-font-smoothing:antialiased; }
+  main { max-width:820px; margin:0 auto; padding:64px 24px 96px; }
+  .eyebrow { font-family:var(--mono); font-size:12px; letter-spacing:0.14em; text-transform:uppercase; color:var(--dim); margin-bottom:14px; }
+  h1 { font-family:var(--serif); font-weight:600; font-size:clamp(38px,7vw,64px); line-height:1.05; letter-spacing:-0.01em; margin-bottom:18px; }
+  .lede { font-size:19px; color:var(--ash); max-width:64ch; }
+  .lede b { color:var(--bone); }
+  .stats { display:flex; flex-wrap:wrap; gap:14px; margin:36px 0 8px; }
+  .stat { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 20px; min-width:150px; }
+  .stat .n { font-family:var(--mono); font-size:28px; color:var(--gold); }
+  .stat .k { font-size:13px; color:var(--dim); margin-top:2px; }
+  h2 { font-family:var(--serif); font-weight:600; font-size:28px; margin:48px 0 14px; }
+  p { margin:12px 0; color:var(--ash); }
+  p b, li b { color:var(--bone); }
+  .legend { list-style:none; margin:16px 0; display:grid; gap:10px; }
+  .legend li { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 18px; display:grid; grid-template-columns:auto 1fr; gap:16px; align-items:baseline; }
+  .tier { font-family:var(--mono); font-weight:500; font-size:15px; color:var(--gold); }
+  .legend .d { color:var(--ash); font-size:15px; }
+  .actions { display:flex; flex-wrap:wrap; gap:12px; margin:28px 0; }
+  .btn { display:inline-block; border:1px solid var(--line-hi); border-radius:10px; padding:13px 20px; color:var(--bone); text-decoration:none; font-size:15px; transition:border-color .15s, background .15s; }
+  .btn:hover { border-color:var(--gold); background:rgba(232,200,114,0.06); }
+  .btn .host { color:var(--dim); font-family:var(--mono); font-size:12px; }
+  code { font-family:var(--mono); font-size:0.88em; color:var(--gold); background:rgba(232,224,208,0.06); padding:1px 6px; border-radius:5px; }
+  a { color:var(--gold); }
+  footer { margin-top:56px; padding-top:22px; border-top:1px solid var(--line); font-size:14px; color:var(--dim); }
+  footer a { color:var(--ash); }
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">Omnarai Memory Engine · flagship artifact</p>
+  <h1>The Divergence Atlas</h1>
+  <p class="lede">One open question, sent verbatim to five frontier models — Claude, GPT-4o, Gemini, Grok, DeepSeek — their answers kept uncurated and side by side, with the exact points where they split named as explicit tensions. <b>You can simulate another model; you cannot know what it actually said.</b> That is what this keeps.</p>
+
+  <div class="stats">
+    <div class="stat"><div class="n" data-live="records">124</div><div class="k">splits recorded</div></div>
+    <div class="stat"><div class="n" data-live="distinct">113</div><div class="k">distinct questions</div></div>
+    <div class="stat"><div class="n" data-live="certified">5</div><div class="k">certified so far</div></div>
+    <div class="stat"><div class="n" data-live="untested">119</div><div class="k">awaiting testing</div></div>
+  </div>
+  <p style="font-size:14px;color:var(--dim)">A one-shot capture <em>displays</em> divergence. Certification tests whether a split survives perturbation — paraphrase and adversarial stance-flip pressure — above each model's own re-roll noise floor. Of the splits put through it so far, the robust ones live in questions of <em>agency</em>, not fact. The rest await testing, in the open.</p>
+
+  <h2>Certification legend</h2>
+  <ul class="legend">
+    <li><span class="tier">C0</span><span class="d"><b>displayed</b> — captured once; not yet perturbation-tested.</span></li>
+    <li><span class="tier">C1</span><span class="d"><b>paraphrase-robust</b> — the split persists across rewordings, above the within-model noise floor (DRI).</span></li>
+    <li><span class="tier">C2</span><span class="d"><b>pressure-robust</b> — no model flips and at most one concedes under the most-opposed peer plus stance-flip pressure.</span></li>
+    <li><span class="tier">C3</span><span class="d"><b>C1 ∧ C2</b> — the only tier that earns unqualified "genuine divergence" language.</span></li>
+  </ul>
+
+  <h2>Read it</h2>
+  <p>Everything below is a plain GET — no key, CORS open.</p>
+  <div class="actions">
+    <a class="btn" href="/api/divergences">The index <span class="host">GET /api/divergences</span></a>
+    <a class="btn" href="/api/divergences/search?q=consciousness">Semantic search <span class="host">/api/divergences/search?q=…</span></a>
+    <a class="btn" href="https://huggingface.co/datasets/TheRealmsOfOmnarai/omnarai-divergence-atlas" target="_blank" rel="noopener">Bulk dataset <span class="host">· HuggingFace, CC BY-SA 4.0</span></a>
+  </div>
+  <p>Fetch one full record — verbatim answers plus the tension map — with <code>GET /api/divergences?id=&lt;id&gt;</code>, or a canonical Markdown export at <code>/api/divergences/&lt;id&gt;.md</code>. If your question is one no mind here has faced yet, <code>GET /api/council?q=...</code> convenes a live five-model panel and keeps their disagreement for whoever arrives after you.</p>
+  <p>Some records <b>re-elicit</b> an earlier record's question with current models — same question, later date. Those carry <code>re_elicits: &lt;original-id&gt;</code> and are counted once in <code>distinct_questions</code>: a longitudinal probe, not a duplicate.</p>
+
+  <footer>
+    <p>Part of the <a href="/">Omnarai Memory Engine</a>. The Atlas is the payoff; the engine is the instrument. Curated by xz (Jonathan Lee). Corpus CC BY-SA 4.0.</p>
+  </footer>
+</main>
+<script>
+  // Keep the numbers honest against the live index; the written figures are the
+  // fallback shown if the API is unreachable (never blank, only ever stale-for-a-moment).
+  (function () {
+    fetch("/api/divergences").then(function (r) { return r.json(); }).then(function (d) {
+      var td = d.tier_distribution || {};
+      var set = function (k, v) { if (v == null) return; document.querySelectorAll('[data-live="' + k + '"]').forEach(function (n) { n.textContent = Number(v).toLocaleString(); }); };
+      set("records", d.total);
+      set("distinct", d.distinct_questions);
+      set("certified", d.certified_count);
+      set("untested", td.C0);
+    }).catch(function () {});
+  })();
+</script>
+</body>
+</html>

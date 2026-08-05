@@ -35,6 +35,7 @@ export const ANNOTATION_TYPES = [
   "glyph_applied",      // { glyph: Ξ|Ψ|∅|Ω|∞|Δ, context? }
   "question_context",   // OMN-P-045: { evaluated_category, situation_summary, implicates_respondents }
   "respondent_context", // OMN-P-045: { model, relationship_to_subject, personal_implication, epistemic_access, declared_stake }
+  "re_elicits",         // longitudinal linkage: { original_id, note? } — this record re-asks an earlier record's question with current models (same question, later date). Marks a deliberate longitudinal probe, not a duplicate. Primary untouched.
 ];
 export const LIFECYCLE_STATUSES = ["open", "in_synthesis", "resolved", "evolving"];
 
@@ -110,6 +111,7 @@ export function foldAnnotations(blob) {
   const latestOf = (type) => [...anns].reverse().find((a) => a.type === type) || null;
   const lifecycle = latestOf("lifecycle");
   const qc = latestOf("question_context");
+  const reElicits = latestOf("re_elicits");
   const respondents = {};
   for (const a of anns) {
     if (a.type === "respondent_context" && a.model) {
@@ -137,6 +139,7 @@ export function foldAnnotations(blob) {
       },
     } : {}),
     ...(Object.keys(respondents).length ? { respondent_contexts: respondents } : {}),
+    ...(reElicits?.original_id ? { re_elicits: reElicits.original_id, ...(reElicits.note ? { re_elicits_note: reElicits.note } : {}) } : {}),
     events: anns.length,
     note: "Append-only annotation layer — contextual descriptors with provenance, never quality rankings, never motive inference. Primary record untouched. See /api/divergences annotation_legend.",
   };
@@ -171,6 +174,9 @@ export function validateAnnotation(a) {
       break;
     case "question_context":
       if (typeof a.implicates_respondents !== "boolean" && a.implicates_respondents != null) return "question_context.implicates_respondents must be boolean (or omitted for unknown)";
+      break;
+    case "re_elicits":
+      if (!a.original_id || typeof a.original_id !== "string") return "re_elicits.original_id (the earlier record's id) is required";
       break;
     case "respondent_context":
       if (!a.model) return "respondent_context.model is required";

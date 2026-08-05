@@ -47,6 +47,8 @@ t("valid respondent_context passes", () =>
   assert.equal(validateAnnotation({ type: "respondent_context", model: "Claude", relationship_to_subject: "affected_party", epistemic_access: "firsthand", provenance: prov }), null));
 t("question_context boolean guard", () =>
   assert.match(validateAnnotation({ type: "question_context", implicates_respondents: "yes", provenance: prov }), /boolean/));
+t("re_elicits needs original_id", () => assert.match(validateAnnotation({ type: "re_elicits", provenance: prov }), /original_id/));
+t("valid re_elicits passes", () => assert.equal(validateAnnotation({ type: "re_elicits", original_id: "OMN-D1780752664946", provenance: prov }), null));
 
 console.log("== foldAnnotations ==");
 t("null/empty → null", () => { assert.equal(foldAnnotations(null), null); assert.equal(foldAnnotations({ record_id: "x", annotations: [] }), null); });
@@ -73,6 +75,14 @@ t("latest lifecycle wins; links/glyphs accumulate; respondent latest-wins per mo
   assert.equal(folded.question_context.involvement_class, "inside");
   assert.equal(folded.respondent_contexts.Claude.involvement_class, "inside");
   assert.equal(folded.events, 9);
+});
+t("re_elicits surfaces original_id (latest wins)", () => {
+  const folded = foldAnnotations({
+    record_id: "OMN-L1781275543413",
+    annotations: [{ type: "re_elicits", original_id: "OMN-D1780752664946", note: "longitudinal re-ask", provenance: prov }],
+  });
+  assert.equal(folded.re_elicits, "OMN-D1780752664946");
+  assert.equal(folded.re_elicits_note, "longitudinal re-ask");
 });
 t("no lifecycle event → status defaults to open", () => {
   const folded = foldAnnotations({ record_id: "OMN-D2", annotations: [{ type: "glyph_applied", glyph: "Δ", provenance: prov }] });

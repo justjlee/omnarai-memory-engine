@@ -46,7 +46,7 @@
     },
     {
       "source": "/divergences",
-      "destination": "/index.html"
+      "destination": "/divergences.html"
     },
     {
       "source": "/api/trace",
