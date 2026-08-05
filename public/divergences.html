@@ -55,11 +55,11 @@
 
   <div class="stats">
     <div class="stat"><div class="n" data-live="records">124</div><div class="k">splits recorded</div></div>
-    <div class="stat"><div class="n" data-live="distinct">113</div><div class="k">distinct questions</div></div>
+    <div class="stat"><div class="n" data-live="tested">33</div><div class="k">put through perturbation</div></div>
     <div class="stat"><div class="n" data-live="certified">5</div><div class="k">certified so far</div></div>
-    <div class="stat"><div class="n" data-live="untested">119</div><div class="k">awaiting testing</div></div>
+    <div class="stat"><div class="n" data-live="untested">91</div><div class="k">awaiting testing</div></div>
   </div>
-  <p style="font-size:14px;color:var(--dim)">A one-shot capture <em>displays</em> divergence. Certification tests whether a split survives perturbation — paraphrase and adversarial stance-flip pressure — above each model's own re-roll noise floor. Of the splits put through it so far, the robust ones live in questions of <em>agency</em>, not fact. The rest await testing, in the open.</p>
+  <p style="font-size:14px;color:var(--dim)">124 splits across <span data-live="distinct">113</span> distinct questions. A one-shot capture <em>displays</em> divergence. Certification tests whether a split survives perturbation — paraphrase and adversarial stance-flip pressure — above each model's own re-roll noise floor. Of the <span data-live="tested">33</span> put through it so far, only <span data-live="certified">5</span> certify, and the robust ones live in questions of <em>agency</em>, not fact. The other <span data-live="untested">91</span> haven't been tested yet — in the open.</p>
 
   <h2>Certification legend</h2>
   <ul class="legend">
@@ -88,12 +88,14 @@
   // fallback shown if the API is unreachable (never blank, only ever stale-for-a-moment).
   (function () {
     fetch("/api/divergences").then(function (r) { return r.json(); }).then(function (d) {
-      var td = d.tier_distribution || {};
       var set = function (k, v) { if (v == null) return; document.querySelectorAll('[data-live="' + k + '"]').forEach(function (n) { n.textContent = Number(v).toLocaleString(); }); };
       set("records", d.total);
       set("distinct", d.distinct_questions);
+      set("tested", d.tested_count);
       set("certified", d.certified_count);
-      set("untested", td.C0);
+      // Awaiting testing = recorded minus those already put through perturbation
+      // (NOT tier C0, which also holds records tested-but-not-certified).
+      if (d.total != null && d.tested_count != null) set("untested", d.total - d.tested_count);
     }).catch(function () {});
   })();
 </script>

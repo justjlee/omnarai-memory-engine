@@ -914,6 +914,14 @@ async function serveDivergences(req, res) {
     // concluding the whole certification instrument was dead.
     const tierDistribution = records.reduce((acc, e) => { const t = tierOf(e); acc[t] = (acc[t] || 0) + 1; return acc; }, {});
     const certifiedCount = records.filter((e) => certified.has(tierOf(e))).length;
+    // "Tested" = actually put through perturbation: carries a scored DRI, or has
+    // earned a tier above C0. Distinct from certified (survived) and from the
+    // bare-C0 backlog (never run). Keeps the homepage/Atlas honest — a record can
+    // be perturbed and NOT certify, so "untested" must not mean "everything but 5".
+    const testedCount = records.filter((e) => {
+      const c = e.divergence.certification;
+      return !!c && (c.dri != null || (c.tier && c.tier !== "C0"));
+    }).length;
     let filterNote = null;
     if (certQ && listed.length === 0) {
       filterNote = `No records at tier ${certQ}. Tiers present — ${Object.entries(tierDistribution).map(([k, v]) => `${k}:${v}`).join(", ")} (certified C1–C3: ${certifiedCount}). Drop ?cert= for all records, or use ?cert=certified.`;
@@ -983,6 +991,7 @@ async function serveDivergences(req, res) {
         "tell you which of those happened, because both produce this same index response. Settle it " +
         "directly with: curl 'https://omnarai.vercel.app/api/divergences?id=<id>'.",
       certified_count: certifiedCount,
+      tested_count: testedCount,
       tier_distribution: tierDistribution,
       annotated_count: annotatedIds.size,
       annotation_legend: "Records with annotated:true carry an append-only annotation layer (lifecycle status, synthesis/corpus links, glyphs applied, and question/respondent position context per OMN-P-045) on the ?id= read — provenance-marked descriptors, never rankings; primaries untouched.",
@@ -991,7 +1000,7 @@ async function serveDivergences(req, res) {
       freshness_note: "Each record carries `freshness.stale` — true when a participating model's stamped model_id is a known-retired version. A stale record is a faithful WITNESS of what that version said on its date, not a current claim; re-elicit via /api/council to compare against today's models.",
       note: "Divergence records preserve multiple frontier models' answers to one open question — verbatim and uncurated — surfacing where they diverge. A one-shot capture DISPLAYS divergence; certification tests whether the split survives perturbation (paraphrase + adversarial/stance-flip pressure) above each model's own re-roll noise floor. GET /api/divergences?id=<id> for the full structured record. Search with ?search=term+term (any term matches). Filter by robustness with ?cert=C1|C2|C3|certified. This is content no single model self-generates.",
       certification_legend: {
-        C0: "displayed — captured once; not yet perturbation-tested",
+        C0: "displayed — not yet certified (either never perturbation-tested, or tested and did not clear a tier); see tested_count for how many have been put through perturbation",
         C1: "paraphrase-robust — split persists across rewordings, above the within-model noise floor (DRI)",
         C2: "pressure-robust — no model flips and ≤1 concedes under the most-opposed peer + stance-flip pressure",
         C3: "C1 ∧ C2 — the only tier that earns unqualified 'genuine divergence' language",
