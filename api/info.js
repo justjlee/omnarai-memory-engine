@@ -264,9 +264,9 @@ export default async function handler(req, res) {
       concepts: "/concepts/ — canonical concept cards (holdform, fragility-thesis, discontinuous-continuance), fixed schema, grasp a core term without reading the whole corpus",
       corpus: { totalWorks: mergedCorpus.length, totalWords, dateRange: "May 2025 – present", corpus_rev: corpusRev() },
       links: {
-        engine: "https://omnarai.vercel.app",
-        playground: "https://omnarai.vercel.app/try",
-        health: "https://omnarai.vercel.app/api/health",
+        engine: "https://engine.omnarai.org",
+        playground: "https://engine.omnarai.org/try",
+        health: "https://engine.omnarai.org/api/health",
         dataset: "https://huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai",
         mcp: "https://www.npmjs.com/package/omnarai-mcp",
         mcp_source: "https://github.com/justjlee/omnarai-mcp",
@@ -515,7 +515,7 @@ export default async function handler(req, res) {
       info:           "GET /api/info",
     },
     links: {
-      engine:      "https://omnarai.vercel.app",
+      engine:      "https://engine.omnarai.org",
       dataset:     "https://huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai",
       mcp:         "https://github.com/justjlee/omnarai-mcp",
       agentEntry:  "/api/agent-entry",
