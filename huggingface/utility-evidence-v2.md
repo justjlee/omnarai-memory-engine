@@ -48,7 +48,9 @@ once per question and shared across judges.
    what came back is a significant *reverse* effect — placebo self-reflection beat
    Atlas exposure **126–35** (two-sided p < 10⁻⁶). Showing Claude its peers'
    verbatim answers made its revisions *worse* than simply asking it to re-check
-   itself.
+   itself. Dedicated investigation — what the design already rules out, the live
+   hypotheses, and the discriminating experiments:
+   [`claude-reversal-investigation.md`](./claude-reversal-investigation.md).
 2. **H4 (adversarial durability): not supported for anyone.** Atlas-conditioned
    answers did not withstand a fixed adversarial follow-up better than
    placebo-conditioned ones (paired Wilcoxon, all p > 0.39 except Grok, where the

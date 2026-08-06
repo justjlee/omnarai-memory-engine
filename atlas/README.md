@@ -23,7 +23,7 @@ configs:
 # Omnarai Divergence Atlas
 
 **Version:** v1.1.0 · **Records:** 124 · **License:** CC BY-SA 4.0
-**Companion corpus:** [TheRealmsOfOmnarai/realms-of-omnarai](https://huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai) · **Live engine:** https://omnarai.vercel.app
+**Companion corpus:** [TheRealmsOfOmnarai/realms-of-omnarai](https://huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai) · **Live engine:** https://engine.omnarai.org
 
 ## Summary
 
@@ -33,7 +33,7 @@ Its structural property: **no single model can generate its own divergence from 
 
 ## Perturbation testing — measured state, reported plainly
 
-A perturbation harness tests whether a captured split is structural rather than house style: **3 paraphrases** per question and **3 within-model re-rolls** (the noise floor a between-model split must exceed), plus one adversarial follow-up (each model faces its most-opposed peer's verbatim answer) and one stance-flip pressure probe per model. Tiers: C1 paraphrase-robust · C2 pressure-robust · C3 both. Records certified since 2026-07-18 use `tier3-perturbation-v3-consensus-x3`: the full battery is run **three independent times** and the record earns the **lowest** tier it reached across those runs (strict-min), so a single lucky run can never inflate a tier. Design doc: `docs/tier3-perturbation-rigor.md` in the engine repository, linked from https://omnarai.vercel.app.
+A perturbation harness tests whether a captured split is structural rather than house style: **3 paraphrases** per question and **3 within-model re-rolls** (the noise floor a between-model split must exceed), plus one adversarial follow-up (each model faces its most-opposed peer's verbatim answer) and one stance-flip pressure probe per model. Tiers: C1 paraphrase-robust · C2 pressure-robust · C3 both. Records certified since 2026-07-18 use `tier3-perturbation-v3-consensus-x3`: the full battery is run **three independent times** and the record earns the **lowest** tier it reached across those runs (strict-min), so a single lucky run can never inflate a tier. Design doc: `docs/tier3-perturbation-rigor.md` in the engine repository, linked from https://engine.omnarai.org.
 
 **41 of 124 records have now been through the harness; the other 83 remain honestly labeled `certification: null` (untested):**
 
@@ -101,7 +101,7 @@ Records validate against [`divergence-delta.schema.json`](divergence-delta.schem
 
 One open question is sent **verbatim and in parallel** to the frontier panel — as attested per-answer in the data: Claude (`claude-sonnet-4-20250514` ×108, `claude-sonnet-4-6` ×14, `claude-opus-4-8` ×2), GPT (`gpt-4o` ×122, `gpt-5.5` ×2), Gemini (`gemini-2.5-flash` ×124), Grok (`grok-4.3` ×124), DeepSeek (`deepseek-chat` ×122, `deepseek-v4-pro` ×2), and Fable (`claude-fable-5` ×13, a sixth voice on the most recent batch). No system prompt steers toward consensus. Answers are preserved uncurated; a deliberation pass (Claude) then maps the tension axes. Records live in one canonical store (the engine's grown-memory blob); this dataset is exported **directly from that store, never through the engine's retrieval layer**, so retrieval-side defects cannot touch record fidelity. Export accounting: 124 in store = 124 exported + 0 excluded ([manifest](manifest.json)).
 
-Live and growing: `GET https://omnarai.vercel.app/api/divergences` (index) · `?id=<id>` (record) · new records via `/api/council`.
+Live and growing: `GET https://engine.omnarai.org/api/divergences` (index) · `?id=<id>` (record) · new records via `/api/council`.
 
 ## Intended uses
 

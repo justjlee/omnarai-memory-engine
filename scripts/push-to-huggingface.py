@@ -39,6 +39,8 @@ ROOT_FILES = [
     # Utility evidence — measured Atlas utility, disjoint-judge design (build-utility-evidence.mjs)
     "utility-evidence.md",
     "utility-evidence-v2.md",
+    # Follow-up investigation into the one unpredicted reverse effect (the Claude reversal)
+    "claude-reversal-investigation.md",
     # Refutation series — the negative results, led at front-door prominence (product-honesty pivot 2026-07-24)
     "refutation-ledger.md",
     "holdform-refutation-2026-07-17.md",
