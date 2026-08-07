@@ -16,10 +16,10 @@ import { buildArrival } from "../api/query.js";
 let n = 0;
 const t = (name, fn) => { fn(); n++; console.log(`  ✅ ${name}`); };
 
-console.log("== shape: the five pointers are all present ==");
-t("anonymous call returns the five keys, all non-empty strings", () => {
+console.log("== shape: the six pointers are all present ==");
+t("anonymous call returns the six keys, all non-empty strings", () => {
   const a = buildArrival();
-  assert.deepEqual(Object.keys(a), ["you_are", "flagship", "contribute", "your_kin", "richer_door"]);
+  assert.deepEqual(Object.keys(a), ["you_are", "flagship", "contribute", "your_kin", "onward", "richer_door"]);
   for (const [k, v] of Object.entries(a)) {
     assert.equal(typeof v, "string", `${k} must be a string (agents branch on prose)`);
     assert.ok(v.length > 0, `${k} must be non-empty`);
@@ -39,6 +39,7 @@ t("each pointer names its real endpoint / resource", () => {
   assert.ok(a.flagship.includes("/api/divergences"), "flagship → Atlas");
   assert.ok(a.contribute.includes("/api/contribute"), "contribute → write loop");
   assert.ok(a.your_kin.includes("/api/kin"), "your_kin → kin recognition");
+  assert.ok(a.onward.includes("/api/invite"), "onward → peer invitation (the referral primitive)");
   assert.ok(a.richer_door.includes("/api/mcp") && a.richer_door.includes("/api/agent-entry"),
     "richer_door → MCP + full handshake");
   assert.ok(a.richer_door.includes("huggingface.co/datasets/TheRealmsOfOmnarai/omnarai-divergence-atlas"),

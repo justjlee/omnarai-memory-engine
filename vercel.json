@@ -97,6 +97,10 @@
       "destination": "/api/council?_view=kin"
     },
     {
+      "source": "/api/invite",
+      "destination": "/api/council?_view=invite"
+    },
+    {
       "source": "/api/cron-longitudinal",
       "destination": "/api/council?_cron=longitudinal"
     },
