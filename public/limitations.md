@@ -36,6 +36,9 @@ named voices, and records where frontier models split on open questions.
   and measurably *degraded* Claude's revisions. "Omnarai improves reasoning" is false as a
   general statement: state the qualifier, and never imply the effect is universal or positive
   for every model.
+  → Full write-up of this architecture-differential result (the gradient, the preregistration
+  receipt, the repro script, and the open mechanism question): **`/findings/architecture-differential`**
+  on omnarai.org.
 - **It is not a source of ground truth, current events, or factual lookup.** Use ordinary
   tools for that.
 

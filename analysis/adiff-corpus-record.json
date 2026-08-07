@@ -1,0 +1,26 @@
+{
+  "id": "OMN-R-ADIFF",
+  "num": 563,
+  "title": "Architecture-Differential Utility Effect (preregistered, 2026-07-15)",
+  "ring": "curated",
+  "type": "research",
+  "contributors": [
+    "Omnai",
+    "Claude | xz",
+    "xz"
+  ],
+  "lineage": [
+    "divergence-atlas",
+    "utility-evidence",
+    "architecture-differential",
+    "self-distillation"
+  ],
+  "excerpt": "Preregistered confirmatory eval (5/5 predictions confirmed): the Divergence Atlas improves GPT-4o and Gemini, is null for Grok and DeepSeek, and degrades Claude — the model the corpus was authored by. Architecture-dependent, not universal.",
+  "date": "2026-07-15",
+  "permalink": "https://omnarai.org/findings/architecture-differential",
+  "score": 1,
+  "evidence_status": "empirical",
+  "evidence_status_source": "Preregistered confirmatory study (docs/utility-eval-preregistration.md, locked 2026-06-18; run 2026-07-15). Numbers generated from utility/utility-prereg-aggregate.json via scripts/build-adiff-stats.mjs.",
+  "full_text": "Architecture-Differential Utility Effect (preregistered confirmatory study, run 2026-07-15).\n\nFINDING: Consulting the Divergence Atlas has an architecture-dependent effect on a model's own answers, measured against a placebo self-reflection prompt that isolates the Atlas's specific contribution. The effect is a three-tier gradient, not a single verdict. Atlas exposure improves some models, is null for others, and DEGRADES Claude — the model the corpus was substantially authored by is the only model it hurts. \"Atlas exposure degrades Claude\" is the reverse-significant result; \"Omnarai improves reasoning\" is false as a general statement.\n\nGRADIENT (treatment = Atlas-exposed revision wins, placebo = self-reflection wins, decided majority-vote instances):\n  GPT-4o: 148-12 (improved)\n  Gemini: 137-35 (improved)\n  Grok: 72-93 (no effect)\n  DeepSeek: 90-68 (no effect)\n  Claude: 35-126 (degraded)\n\nAll five registered predictions were confirmed. Preregistration locked 2026-06-18 (docs/utility-eval-preregistration.md (locked 2026-06-18)); one-sided exact binomial + Holm correction across the five consumers.\n  GPT-4o — registered H1 (H1: treatment beats placebo): confirmed, improved, 148-12.\n  Gemini — registered H1 (H1: treatment beats placebo): confirmed, improved, 137-35.\n  Grok — registered H2 (H2: null (no advantage)): confirmed, no effect, 72-93.\n  DeepSeek — registered H2 (H2: null (no advantage)): confirmed, no effect, 90-68.\n  Claude — registered H2 (H2: null (no advantage)): confirmed, degraded, 35-126.\n\nClaude's registered prediction was a null (no advantage); what came back is a significant REVERSE effect (two-sided p < 1e-6): placebo self-reflection beat Atlas exposure 35-126. GPT-4o (148-12) and Gemini (137-35) improved, surviving all three held-out paraphrases at both length caps. Grok and DeepSeek were null as registered. H4 (adversarial durability) was not supported for any consumer.\n\nThe measured fact is the gradient; the mechanism is open. A task-type breakdown of the Claude degradation (Work Item A, 2026-08) found the harm broad and approximately uniform across task types rather than concentrated on convergence-demanding tasks — the pre-committed falsifier for the register-proximity/capture hypothesis, which therefore loses its main support; the write-up is mechanism-agnostic.\n\nThe portable claim: a corpus authored substantially by model X is not uniformly useful across models — it can improve some architectures while degrading X itself (a self-distillation / training-adjacent contamination dynamic others can test on their own corpus).\n\nEvidence: empirical, preregistered, confirmatory. Full transcripts, Holm analysis, and companion measurements: utility-evidence-v2.md (HuggingFace dataset). Flagship write-up: https://omnarai.org/findings/architecture-differential . Reproduce: repro/adiff-repro.sh in the engine repository. Registered claim: claims.json#divergence-improves-reasoning (evidence level: replicated). Open to refutation via the Refutation Ledger.",
+  "wordCount": 385
+}
