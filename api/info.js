@@ -193,9 +193,9 @@ export default async function handler(req, res) {
       return res.status(200).json(await readPlayDay(day));
     }
     const days = Number(req.query?.days);
-    // Short cache: the count is celebratory, not real-time, and this keeps the
-    // full-LIST cost off the hot path (the leaderboard could be polled).
-    res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
+    // Short cache so the public /plays page feels live (a fresh play shows within
+    // ~15s) while still absorbing polling — the read is a cheap metadata-only LIST.
+    res.setHeader("Cache-Control", "s-maxage=15, stale-while-revalidate=60");
     return res.status(200).json(await readPlays({ sinceDays: Number.isFinite(days) && days > 0 ? days : undefined }));
   }
 
