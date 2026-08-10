@@ -36,7 +36,28 @@ const NP_COOKIE = "omnarai_np";
 // this window, so a visitor returning hours later isn't ambushed by sound.
 const RESUME_PLAY_WINDOW_MS = 30 * 60 * 1000;
 
+// A play becomes a "qualified" listen (not a skip) once it passes this much audio.
+const QUALIFY_MS = 30 * 1000;
+
 const isBrowser = () => typeof window !== "undefined" && typeof document !== "undefined";
+
+// Fire a play-count beacon at /api/play. Fire-and-forget, never throws, never
+// blocks playback: keepalive so it survives a page-unload race, and any failure
+// is swallowed — a telemetry miss must never be audible. Mirrors the static bar's
+// beacon in omnarai-home/omnarai-player.js so both players feed one leaderboard.
+function beaconPlay(slug, event) {
+  if (!isBrowser() || !slug) return;
+  try {
+    fetch("/api/play", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ slug, event, source: "engine" }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch {
+    /* no-op */
+  }
+}
 
 // Share across *.omnarai.org; host-only everywhere else (vercel.app / localhost / previews).
 function cookieDomainAttr() {
@@ -77,6 +98,19 @@ export default function OmnaraiPlayer({ autoplay = true, onPlayStateChange, audi
   playingRef.current = playing;
   const currentRef = useRef(0);
   currentRef.current = current;
+
+  // Play-count beacon state, reset per track load: `start` fires once when a
+  // track first plays (not on resume-after-pause), `qualified` once at QUALIFY_MS.
+  const playBeaconRef = useRef({ started: false, qualified: false });
+
+  // A play only COUNTS if the visitor willed it. This latches true on a genuine
+  // gesture (press play, pick a track, hit next/prev) and stays true for the rest
+  // of that listening session — so an auto-advance to the next track still counts,
+  // but autoplay-on-mount and cross-page auto-resume never do.
+  const userEngagedRef = useRef(false);
+  const markEngaged = useCallback(() => {
+    userEngagedRef.current = true;
+  }, []);
 
   // Restore-once state read from the shared cookie at mount.
   const restoreRef = useRef(isBrowser() ? readNowPlaying() : null);
@@ -157,26 +191,47 @@ export default function OmnaraiPlayer({ autoplay = true, onPlayStateChange, audi
     const el = audioRef.current;
     if (!el) return;
     if (el.paused) {
+      markEngaged(); // pressing play is the clearest willful play
       el.play()
         .then(() => setAutoplayBlocked(false))
         .catch(() => setAutoplayBlocked(true));
     } else {
       el.pause();
     }
-  }, []);
+  }, [markEngaged]);
 
-  const select = useCallback((i) => {
-    setCurrent(i);
-    setProgress(0);
-  }, []);
+  const select = useCallback(
+    (i) => {
+      markEngaged(); // picking a track is a willful play
+      playBeaconRef.current = { started: false, qualified: false };
+      setCurrent(i);
+      setProgress(0);
+    },
+    [markEngaged],
+  );
 
+  // `skip` is called both by the next/prev buttons (willful — those handlers call
+  // markEngaged) and programmatically by onEnded (auto-advance). It never marks
+  // engagement itself, so an auto-advance in an UN-engaged session stays uncounted.
   const skip = useCallback(
     (dir) => {
+      playBeaconRef.current = { started: false, qualified: false };
       setCurrent((c) => (c + dir + tracks.length) % tracks.length);
       setProgress(0);
     },
     [tracks.length],
   );
+
+  // Emit the `start` beacon the first time a willfully-played track load actually
+  // plays (guarded so resume-after-pause doesn't re-count; skipped entirely for
+  // autoplay/auto-resume, which never set userEngaged). The `started` latch is set
+  // only when we actually beacon, so a later willful play of the same load counts.
+  const beaconStart = useCallback(() => {
+    if (playBeaconRef.current.started || !userEngagedRef.current) return;
+    playBeaconRef.current.started = true;
+    const t = tracks[currentRef.current];
+    if (t) beaconPlay(t.slug || t.file, "start");
+  }, [tracks]);
 
   const setPlayState = useCallback(
     (next) => {
@@ -226,14 +281,28 @@ export default function OmnaraiPlayer({ autoplay = true, onPlayStateChange, audi
   const onTimeUpdate = useCallback(
     (e) => {
       setProgress(e.target.currentTime);
+      // A willful play that passes QUALIFY_MS of audio counts as a real listen.
+      if (!playBeaconRef.current.qualified && userEngagedRef.current && e.target.currentTime * 1000 >= QUALIFY_MS) {
+        playBeaconRef.current.qualified = true;
+        const t = tracks[currentRef.current];
+        if (t) beaconPlay(t.slug || t.file, "qualified");
+      }
       const now = Date.now();
       if (now - lastPersistRef.current > 5000) {
         lastPersistRef.current = now;
         persist();
       }
     },
-    [persist],
+    [persist, tracks],
   );
+
+  // Played to the very end — the strongest listen signal. Fires before skip(1)
+  // advances, so it reads the track that just finished.
+  const onEnded = useCallback(() => {
+    const t = tracks[currentRef.current];
+    if (t && userEngagedRef.current) beaconPlay(t.slug || t.file, "complete");
+    skip(1);
+  }, [tracks, skip]);
 
   if (tracks.length === 0) return null;
   const t = tracks[current];
@@ -245,9 +314,12 @@ export default function OmnaraiPlayer({ autoplay = true, onPlayStateChange, audi
         ref={audioRef}
         src={`${audioBase}/${t.file}`}
         preload="metadata"
-        onPlay={() => setPlayState(true)}
+        onPlay={() => {
+          beaconStart();
+          setPlayState(true);
+        }}
         onPause={() => setPlayState(false)}
-        onEnded={() => skip(1)}
+        onEnded={onEnded}
         onLoadedMetadata={onLoadedMetadata}
         onTimeUpdate={onTimeUpdate}
       />
@@ -389,7 +461,14 @@ export default function OmnaraiPlayer({ autoplay = true, onPlayStateChange, audi
           </div>
 
           <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
-            <button style={btn} onClick={() => skip(-1)} aria-label="Previous track">
+            <button
+              style={btn}
+              onClick={() => {
+                markEngaged();
+                skip(-1);
+              }}
+              aria-label="Previous track"
+            >
               ⟨⟨
             </button>
             <button
@@ -399,7 +478,14 @@ export default function OmnaraiPlayer({ autoplay = true, onPlayStateChange, audi
             >
               {playing ? "❚❚" : "▶"}
             </button>
-            <button style={btn} onClick={() => skip(1)} aria-label="Next track">
+            <button
+              style={btn}
+              onClick={() => {
+                markEngaged();
+                skip(1);
+              }}
+              aria-label="Next track"
+            >
               ⟩⟩
             </button>
           </div>

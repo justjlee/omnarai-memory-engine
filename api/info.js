@@ -5,6 +5,7 @@ import { createHash } from "node:crypto";
 import { list } from "@vercel/blob";
 import { waitUntil } from "@vercel/functions";
 import { recordAccess, readAccessLog, readDayEvents } from "./_telemetry.js";
+import { normalizePlay, recordPlay, readPlays, readPlayDay } from "./_plays.js";
 import { getCitationReport, peekCitation } from "./_citation.js";
 import { loadGrownMemory } from "./_grown.js";
 import { foldLineages } from "./_lineages.js";
@@ -118,11 +119,30 @@ const corpusRev = () => sha256(canonicalJSON(mergedCorpus.map((e) => e.id).sort(
  */
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   res.setHeader("Cache-Control", COUNT_SURFACE_CACHE);
 
   if (req.method === "OPTIONS") return res.status(200).end();
+
+  // ── Song-play beacon: POST /api/play (rewrite → ?_view=play) ───────────────
+  // Both players (static bar on omnarai.org + engine React) beacon here when a
+  // track is willingly played. Always 204 — never leaks, never throws (a
+  // telemetry write must not break playback). NOT logged as API access traffic.
+  // Storage/design: api/_plays.js. Handled BEFORE the GET-only guard.
+  if (req.method === "POST" && (req.query?._view || "") === "play") {
+    res.setHeader("Cache-Control", "no-store");
+    try {
+      const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
+      const { rec, error } = normalizePlay(body, req);
+      // A bad beacon still answers 204 — a misbehaving client learns nothing, and
+      // a validation failure is indistinguishable from success on the wire.
+      if (!error && rec) await recordPlay(rec);
+    } catch {
+      /* swallow — the beacon can never affect anything the listener sees */
+    }
+    return res.status(204).end();
+  }
 
   // ── Adjust the compute ceiling at runtime: POST /api/info?_view=budget ─────
   // The "extend or adjust as needed" lever — raise the cap during a surge without
@@ -156,6 +176,28 @@ export default async function handler(req, res) {
   }
 
   if (req.method !== "GET") return res.status(405).json({ error: "GET only" });
+
+  // ── Song-play leaderboard: GET /api/play (rewrite → ?_view=play) ───────────
+  // Public aggregate (counts only, no IPs): the "how many times has each track
+  // been played?" answer. `?days=N` windows to the last N days. `?raw=1&day=…`
+  // is the gated per-event forensic dump (Bearer INGEST_SECRET). See api/_plays.js.
+  if ((req.query?._view || "") === "play") {
+    if ((req.query?.raw || "") === "1") {
+      const auth = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+      if (!process.env.INGEST_SECRET || auth !== process.env.INGEST_SECRET) {
+        return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
+      }
+      res.setHeader("Cache-Control", "no-store");
+      const dayParam = (req.query?.day || "").toString();
+      const day = !dayParam || dayParam === "today" ? new Date().toISOString().slice(0, 10) : dayParam;
+      return res.status(200).json(await readPlayDay(day));
+    }
+    const days = Number(req.query?.days);
+    // Short cache: the count is celebratory, not real-time, and this keeps the
+    // full-LIST cost off the hot path (the leaderboard could be polled).
+    res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
+    return res.status(200).json(await readPlays({ sinceDays: Number.isFinite(days) && days > 0 ? days : undefined }));
+  }
 
   // ── Curator-gated traffic report: GET /api/info?_view=traffic ─────────────
   // The honest-milestone instrument: classified external/agent access, including

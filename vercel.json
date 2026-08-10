@@ -37,6 +37,10 @@
       "destination": "/api/info?_view=citation"
     },
     {
+      "source": "/api/play",
+      "destination": "/api/info?_view=play"
+    },
+    {
       "source": "/try",
       "destination": "/try.html"
     },
