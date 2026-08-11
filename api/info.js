@@ -193,7 +193,10 @@ async function buildDashboard() {
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  // Authorization must be allowed so the browser preflight for the token-gated
+  // /visitors dashboard (Bearer INGEST_SECRET) succeeds — curl callers don't
+  // preflight, so this was invisible until a browser needed it.
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.setHeader("Cache-Control", COUNT_SURFACE_CACHE);
 
   if (req.method === "OPTIONS") return res.status(200).end();
