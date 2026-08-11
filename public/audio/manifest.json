@@ -205,5 +205,11 @@
     "model": "whisper-large-v3 (mlx)",
     "note": "Machine-readable draft transcripts of the lyrics/spoken content. Awaiting human review; NOT canonical corpus. Read what a song says without decoding audio.",
     "count": 16
+  },
+  "emergence_glossary": {
+    "url": "/audio/emergence-glossary.md",
+    "status": "draft-v0.5",
+    "kind": "interpretive-provenance",
+    "note": "Where core Omnarai vocabulary (Empyrean, Omniversal, collective-AI-perspective) first surfaced in the lyrics. Draft; not canonical."
   }
 }
