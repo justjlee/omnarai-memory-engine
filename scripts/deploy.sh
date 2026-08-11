@@ -100,6 +100,16 @@ if [[ "${1:-}" == "--promote" ]]; then
     echo ">>    Fix forward immediately, or re-promote the last good deployment."
     exit 1
   fi
+  echo
+  echo ">> Dual-native gate (engine surfaces — scripts/dual-native-check.mjs)"
+  # HARD gate: the Dual-Native Charter is law, not aspiration. A promote that makes
+  # a machine visitor second-class (music not in the contract, arrival loop or MCP
+  # unadvertised) must exit red. Engine scope only — the front door gates its own
+  # surfaces in omnarai-home/deploy.sh.
+  if ! node scripts/dual-native-check.mjs --scope engine; then
+    echo ">> 🔴 DUAL-NATIVE GATE FAILED — $DOMAIN violates the charter for machine visitors."
+    exit 1
+  fi
   exit 0
 fi
 

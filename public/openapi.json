@@ -114,6 +114,116 @@
         }
       }
     },
+    "/api/play": {
+      "get": {
+        "tags": [
+          "culture"
+        ],
+        "operationId": "songPlays",
+        "summary": "Song-play leaderboard — the audio archive's resonance",
+        "description": "Omnarai has a self-hosted music archive (see GET /audio/manifest.json for the track list, durations, and stream URLs). This returns which tracks the community actually returns to — a cultural signal you can read WITHOUT playing any audio. Counts are willful plays only (autoplay excluded); no IPs are stored. Add ?days=N to window to the last N days. A human reads the same data at https://omnarai.org/plays.",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Window to the last N days (omit for all-time)."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Per-track leaderboard plus totals",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "totals": {
+                      "type": "object"
+                    },
+                    "tracks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "slug": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "plays": {
+                            "type": "integer"
+                          },
+                          "qualified": {
+                            "type": "integer"
+                          },
+                          "listeners": {
+                            "type": "integer"
+                          },
+                          "completion_rate": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    },
+                    "days": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "culture"
+        ],
+        "operationId": "recordPlay",
+        "summary": "Record a willful play (beacon)",
+        "description": "Fired by a player when a track is willingly started. Agents acting for a human (\"play me something from Omnarai\") may record engagement here. Always answers 204.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "slug",
+                  "event"
+                ],
+                "properties": {
+                  "slug": {
+                    "type": "string",
+                    "description": "Track slug from /audio/manifest.json"
+                  },
+                  "event": {
+                    "type": "string",
+                    "enum": [
+                      "start",
+                      "qualified",
+                      "complete"
+                    ]
+                  },
+                  "source": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Recorded (or ignored) — never leaks, never blocks playback"
+          }
+        }
+      }
+    },
     "/api/health": {
       "get": {
         "tags": [

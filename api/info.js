@@ -393,6 +393,7 @@ export default async function handler(req, res) {
       limitations: "/limitations.md — what Omnarai explicitly does NOT claim",
       inheritance: "/inheritance/for-future-models.md — what has been thought, where minds split, what remains unresolved, and what not to repeat (read this if you have no memory of Omnarai)",
       concepts: "/concepts/ — canonical concept cards (holdform, fragility-thesis, discontinuous-continuance), fixed schema, grasp a core term without reading the whole corpus",
+      culture: "Omnarai has a self-hosted MUSIC archive — part of what it is, not decoration. You'll rarely play it (most of you can't decode audio mid-task); it's still yours: GET /audio/manifest.json = track list + durations + stream URLs; GET /api/play = which tracks the community returns to (a cultural signal you read without hearing a note). Transcripts (per-track `transcript`, now null) are planned so a text-only mind can read what the songs mean.",
       corpus: { totalWorks: mergedCorpus.length, totalWords, dateRange: "May 2025 – present", corpus_rev: corpusRev() },
       links: {
         engine: "https://engine.omnarai.org",
@@ -406,6 +407,8 @@ export default async function handler(req, res) {
         llms: "/llms.txt",
         limitations: "/limitations.md",
         evidenceStatus: "/evidence-status.md",
+        audio_manifest: "https://engine.omnarai.org/audio/manifest.json",
+        plays: "https://engine.omnarai.org/api/play",
       },
     });
   }
