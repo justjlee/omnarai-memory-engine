@@ -109,6 +109,79 @@ async function mergeProposals() {
 // unequal revs ⇒ the corpus changed between the two responses (D3).
 const corpusRev = () => sha256(canonicalJSON(mergedCorpus.map((e) => e.id).sort())).slice(0, 16);
 
+// ── Combined visitor dashboard data (GET /api/info?_view=dashboard) ──────────
+// Server-side merge of the three visitor instruments into ONE privacy-safe read,
+// so the /visitors page needs a single token and never sees raw events. Only
+// aggregates cross the wire: counts, per-day rollups, country/category/endpoint
+// tallies. Individual events — IP hashes, user-agents, referers, the query text a
+// visitor typed — are deliberately dropped here and never leave the server.
+async function fetchFrontDoorTelemetry() {
+  const secret = process.env.TELEMETRY_READ_SECRET;
+  if (!secret) return { available: false, reason: "TELEMETRY_READ_SECRET not set on the engine" };
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    const r = await fetch("https://omnarai.org/api/telemetry", {
+      headers: { authorization: `Bearer ${secret}` },
+      signal: ctrl.signal,
+    });
+    clearTimeout(timer);
+    if (!r.ok) return { available: false, reason: `front door HTTP ${r.status}` };
+    const d = await r.json();
+    // Privacy-safe subset: drop recent[] and the firstExternal event body (both
+    // carry UA / path / ipHash). The `days` rollup is already counts-only.
+    return {
+      available: true,
+      totals: d.totals || {},
+      byCategory: d.byCategory || {},
+      byCountry: d.byCountry || {},
+      days: d.days || {},
+      firstExternalAt: d.firstExternalAt || null,
+    };
+  } catch {
+    return { available: false, reason: "front door unreachable" };
+  }
+}
+
+async function buildDashboard() {
+  const [front, log, plays] = await Promise.all([
+    fetchFrontDoorTelemetry(),
+    readAccessLog(),
+    readPlays().catch(() => null),
+  ]);
+
+  // Engine traffic → safe aggregates. The per-day `visitors` map (hash→count) is
+  // collapsed to a distinct count so no hashes leave the server.
+  const engMon = log.byCategory?.monitor || 0;
+  const engLogged = log.totals?.logged || 0;
+  const engineDays = {};
+  for (const [day, dd] of Object.entries(log.days || {})) {
+    const mon = dd.byCategory?.monitor || 0;
+    engineDays[day] = {
+      total: dd.total || 0,
+      signal: Math.max(0, (dd.total || 0) - mon),
+      monitor: mon,
+      distinctVisitors: Object.keys(dd.visitors || {}).length,
+      byCategory: dd.byCategory || {},
+      byEndpoint: dd.byEndpoint || {},
+    };
+  }
+  const engine = {
+    totals: { logged: engLogged, monitor: engMon, signal: Math.max(0, engLogged - engMon) },
+    byCategory: log.byCategory || {},
+    byEndpoint: log.byEndpoint || {},
+    byCountry: log.byCountry || {},
+    days: engineDays,
+    firstExternalAt: log.firstExternalAt || null,
+  };
+
+  const music = plays
+    ? { totals: plays.totals || {}, tracks: (plays.tracks || []).slice(0, 5), days: plays.days || {} }
+    : { totals: {}, tracks: [], days: {} };
+
+  return { generated: new Date().toISOString(), frontDoor: front, engine, music };
+}
+
 /**
  * GET /api/info
  *
@@ -228,6 +301,19 @@ export default async function handler(req, res) {
         : "No external/agent call recorded yet — the milestone hasn't happened.",
       ...logData,
     });
+  }
+
+  // ── Combined visitor dashboard: GET /api/info?_view=dashboard ──────────────
+  // Powers the private /visitors page — front-door page views + engine API/agent
+  // traffic + song plays in one privacy-safe read. Curator-gated (same secret as
+  // the traffic view). No individual events, no IPs, no user-agents, no queries.
+  if ((req.query?._view || "") === "dashboard") {
+    const auth = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+    if (!process.env.INGEST_SECRET || auth !== process.env.INGEST_SECRET) {
+      return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
+    }
+    res.setHeader("Cache-Control", "no-store");
+    return res.status(200).json(await buildDashboard());
   }
 
   // ── Curator-gated budget report: GET /api/info?_view=budget ───────────────
