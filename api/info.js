@@ -6,6 +6,7 @@ import { list } from "@vercel/blob";
 import { waitUntil } from "@vercel/functions";
 import { recordAccess, readAccessLog, readDayEvents } from "./_telemetry.js";
 import { normalizePlay, recordPlay, readPlays, readPlayDay } from "./_plays.js";
+import { readOpenItems, applyOpenItemAction } from "./_home.js";
 import { getCitationReport, peekCitation } from "./_citation.js";
 import { loadGrownMemory } from "./_grown.js";
 import { foldLineages } from "./_lineages.js";
@@ -158,7 +159,8 @@ async function countPendingContributions() {
 }
 
 async function buildAttention() {
-  const pending = await countPendingContributions();
+  // AUTO — detected from live data; read-only, resolves itself when the data changes.
+  const [pending, openItems] = await Promise.all([countPendingContributions(), readOpenItems()]);
   let draftAudio = 0;
   try {
     const m = JSON.parse(readFileSync(join(projectRoot, "public", "audio", "manifest.json"), "utf-8"));
@@ -166,10 +168,21 @@ async function buildAttention() {
   } catch {
     /* manifest unreadable — skip */
   }
-  const items = [];
-  if (pending) items.push({ label: pending + " visitor contribution" + (pending === 1 ? "" : "s") + " awaiting review", where: "/api/contributions?status=pending" });
-  if (draftAudio) items.push({ label: draftAudio + " audio transcripts are draft (v0.5) — your review promotes them to v1.0", where: "/audio/manifest.json" });
-  return { pending_contributions: pending, draft_audio_transcripts: draftAudio, items };
+  const auto = [];
+  if (pending) auto.push({ label: pending + " visitor contribution" + (pending === 1 ? "" : "s") + " awaiting review", where: "/api/contributions?status=pending" });
+  if (draftAudio) auto.push({ label: draftAudio + " audio transcripts are draft (v0.5) — your review promotes them to v1.0", where: "/audio/manifest.json" });
+
+  // MANUAL — the curator's own open items (decisions/reviews that don't auto-detect).
+  const openCount = openItems.filter((i) => i.status !== "done").length;
+  return {
+    auto, // read-only detected items
+    open_items: openItems, // editable; each has id/text/category/priority/status
+    pending_contributions: pending,
+    draft_audio_transcripts: draftAudio,
+    open_count: openCount,
+    // legacy: `items` kept = auto only, so older readers don't break
+    items: auto,
+  };
 }
 
 async function buildDashboard() {
@@ -277,6 +290,24 @@ export default async function handler(req, res) {
       return res.status(200).json(await budgetStatus());
     } catch (e) {
       return res.status(500).json({ error: "Failed to update budget config", detail: String(e?.message || e) });
+    }
+  }
+
+  // ── Curator open-items write: POST /api/info?_view=open-items ──────────────
+  // The editable side of /home's attention queue. {action:"add", text, category?,
+  // priority?} | {action:"done"|"reopen"|"delete", id}. Curator-gated. Returns the
+  // fresh list. Handled BEFORE the GET-only guard.
+  if (req.method === "POST" && (req.query?._view || "") === "open-items") {
+    const auth = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+    if (!process.env.INGEST_SECRET || auth !== process.env.INGEST_SECRET) {
+      return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
+    }
+    res.setHeader("Cache-Control", "no-store");
+    try {
+      const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
+      return res.status(200).json(await applyOpenItemAction(body));
+    } catch (e) {
+      return res.status(500).json({ error: "open-items write failed", detail: String(e?.message || e) });
     }
   }
 
