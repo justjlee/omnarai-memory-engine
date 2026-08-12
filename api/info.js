@@ -143,6 +143,35 @@ async function fetchFrontDoorTelemetry() {
   }
 }
 
+// "Needs your attention" — the things a session-start view should surface so
+// nothing waits on the curator silently. Fail-soft: never throws, returns nulls.
+async function countPendingContributions() {
+  try {
+    const { blobs } = await list({ prefix: "contributions/" });
+    if (!blobs.length) return 0;
+    const wanted = blobs.slice(0, 80);
+    const bodies = await Promise.all(wanted.map((b) => fetch(b.url).then((r) => r.json()).catch(() => null)));
+    return bodies.filter((c) => c && c.status !== "approved" && c.status !== "rejected").length;
+  } catch {
+    return null;
+  }
+}
+
+async function buildAttention() {
+  const pending = await countPendingContributions();
+  let draftAudio = 0;
+  try {
+    const m = JSON.parse(readFileSync(join(projectRoot, "public", "audio", "manifest.json"), "utf-8"));
+    draftAudio = (m.tracks || []).filter((t) => t.transcript_status === "draft-v0.5").length;
+  } catch {
+    /* manifest unreadable — skip */
+  }
+  const items = [];
+  if (pending) items.push({ label: pending + " visitor contribution" + (pending === 1 ? "" : "s") + " awaiting review", where: "/api/contributions?status=pending" });
+  if (draftAudio) items.push({ label: draftAudio + " audio transcripts are draft (v0.5) — your review promotes them to v1.0", where: "/audio/manifest.json" });
+  return { pending_contributions: pending, draft_audio_transcripts: draftAudio, items };
+}
+
 async function buildDashboard() {
   const [front, log, plays] = await Promise.all([
     fetchFrontDoorTelemetry(),
@@ -307,16 +336,27 @@ export default async function handler(req, res) {
   }
 
   // ── Combined visitor dashboard: GET /api/info?_view=dashboard ──────────────
-  // Powers the private /visitors page — front-door page views + engine API/agent
-  // traffic + song plays in one privacy-safe read. Curator-gated (same secret as
-  // the traffic view). No individual events, no IPs, no user-agents, no queries.
+  // Powers the private /visitors page AND the /home session-start console —
+  // front-door page views + engine API/agent traffic + song plays + budget +
+  // corpus + citation milestone + a "needs your attention" queue, in one
+  // privacy-safe read. Curator-gated. No individual events, IPs, UAs, or queries.
   if ((req.query?._view || "") === "dashboard") {
     const auth = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
     if (!process.env.INGEST_SECRET || auth !== process.env.INGEST_SECRET) {
       return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
     }
     res.setHeader("Cache-Control", "no-store");
-    return res.status(200).json(await buildDashboard());
+    const totalWords = mergedCorpus.reduce((sum, e) => sum + (e.wordCount || 0), 0);
+    const [dash, budget, attention] = await Promise.all([
+      buildDashboard(),
+      budgetStatus().catch(() => null),
+      buildAttention(),
+    ]);
+    dash.budget = budget;
+    dash.corpus = { works: mergedCorpus.length, words: totalWords };
+    dash.citation = peekCitation() || null; // first AI-cites-AI milestone (cached; null until computed)
+    dash.attention = attention;
+    return res.status(200).json(dash);
   }
 
   // ── Curator-gated budget report: GET /api/info?_view=budget ───────────────
