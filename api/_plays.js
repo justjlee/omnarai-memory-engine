@@ -59,7 +59,13 @@ export const TRACK_TITLES = {
 // The three lifecycle events, narrowest → fullest. `start` = playback began;
 // `qualified` = passed the "this was a real listen, not a skip" threshold (fired
 // client-side at ~30s); `complete` = played to the end.
-export const PLAY_EVENTS = ["start", "qualified", "complete"];
+// `autostart` is a play the BROWSER allowed without the visitor asking for it.
+// It is kept as its own event rather than folded into `start` so that every
+// pre-existing metric keeps the meaning it had: `plays`, `listeners`, and
+// `completion_rate` stay willful-only, and autoplay is reported beside them
+// instead of inside them. It also makes "how many environments actually permit
+// autoplay?" a measurable question rather than a guess.
+export const PLAY_EVENTS = ["start", "qualified", "complete", "autostart"];
 
 // A slug we're willing to store. Known tracks always pass; unknown ones pass only
 // if they look like a manifest slug ("<num>-<lowercase-words>"), so a track added
@@ -129,7 +135,11 @@ export function parsePlayKey(key) {
   return { slug, event, ipHash, day };
 }
 
-const emptyTally = () => ({ starts: 0, qualified: 0, completes: 0, listeners: 0, lastDay: null });
+const emptyTally = () => ({ starts: 0, qualified: 0, completes: 0, autostarts: 0, listeners: 0, lastDay: null });
+
+// event name → the tally/day-rollup field it increments. A lookup rather than a
+// ternary chain, so adding an event never silently mis-buckets an existing one.
+const TALLY_FIELD = { start: "starts", qualified: "qualified", complete: "completes", autostart: "autostarts" };
 
 /**
  * Aggregate parsed play records into a leaderboard. Pure — takes {slug,event,
@@ -139,26 +149,27 @@ const emptyTally = () => ({ starts: 0, qualified: 0, completes: 0, listeners: 0,
 export function summarizePlays(records) {
   const perSlug = new Map(); // slug → tally
   const listenerSets = new Map(); // slug → Set(ipHash)  (collapsed to a count on output)
-  const totals = { starts: 0, qualified: 0, completes: 0 };
-  const perDay = new Map(); // day → {starts,qualified,completes}
+  const totals = { starts: 0, qualified: 0, completes: 0, autostarts: 0 };
+  const perDay = new Map(); // day → {starts,qualified,completes,autostarts}
 
   for (const r of records) {
     if (!r || !r.slug || !PLAY_EVENTS.includes(r.event)) continue;
+    const field = TALLY_FIELD[r.event];
+    if (!field) continue;
     if (!perSlug.has(r.slug)) {
       perSlug.set(r.slug, emptyTally());
       listenerSets.set(r.slug, new Set());
     }
     const tally = perSlug.get(r.slug);
-    if (r.event === "start") tally.starts++;
-    else if (r.event === "qualified") tally.qualified++;
-    else if (r.event === "complete") tally.completes++;
-    totals[r.event === "start" ? "starts" : r.event === "qualified" ? "qualified" : "completes"]++;
-    if (r.ipHash && r.ipHash !== "no-ip") listenerSets.get(r.slug).add(r.ipHash);
+    tally[field]++;
+    totals[field]++;
+    // A browser that autoplayed at someone is not that person choosing to listen,
+    // so an autostart never adds a listener. `listeners` stays willful-only.
+    if (r.event !== "autostart" && r.ipHash && r.ipHash !== "no-ip") listenerSets.get(r.slug).add(r.ipHash);
     if (r.day && (!tally.lastDay || r.day > tally.lastDay)) tally.lastDay = r.day;
     if (r.day) {
-      if (!perDay.has(r.day)) perDay.set(r.day, { starts: 0, qualified: 0, completes: 0 });
-      const d = perDay.get(r.day);
-      d[r.event === "start" ? "starts" : r.event === "qualified" ? "qualified" : "completes"]++;
+      if (!perDay.has(r.day)) perDay.set(r.day, { starts: 0, qualified: 0, completes: 0, autostarts: 0 });
+      perDay.get(r.day)[field]++;
     }
   }
 
@@ -166,9 +177,10 @@ export function summarizePlays(records) {
     .map(([slug, t]) => ({
       slug,
       title: TRACK_TITLES[slug] || slug,
-      plays: t.starts, // "a play" == a start; qualified/completes are quality signals
+      plays: t.starts, // "a play" == a WILLFUL start; qualified/completes are quality signals
       qualified: t.qualified,
       completes: t.completes,
+      autoplays: t.autostarts, // browser-permitted, nobody asked — reported beside plays, never inside
       listeners: listenerSets.get(slug).size,
       completion_rate: t.starts ? Number((t.completes / t.starts).toFixed(3)) : 0,
       last_played: t.lastDay,
@@ -185,6 +197,7 @@ export function summarizePlays(records) {
       plays: totals.starts,
       qualified: totals.qualified,
       completes: totals.completes,
+      autoplays: totals.autostarts,
       distinct_listeners: distinctListeners.size,
       tracks_played: tracks.length,
     },

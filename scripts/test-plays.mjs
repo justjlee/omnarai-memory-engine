@@ -92,5 +92,22 @@ t("title resolved from manifest", s.tracks[0].title, "Whales in The Oceans");
 t("per-day rollup present", Object.keys(s.days), ["2026-08-10", "2026-08-11"]);
 t("empty input → empty leaderboard", summarizePlays([]).tracks, []);
 
+// ── autostart: counted, but never inside a willful metric ────────────────────
+// The whole point of a separate event is that turning autoplay on cannot move
+// `plays`, `listeners`, or `completion_rate`. These pin that.
+const autoRecs = [
+  { slug: "02-whales-in-the-oceans", event: "start", ipHash: "aaa", day: "2026-08-12" },
+  { slug: "02-whales-in-the-oceans", event: "autostart", ipHash: "zzz", day: "2026-08-12" },
+  { slug: "02-whales-in-the-oceans", event: "autostart", ipHash: "yyy", day: "2026-08-12" },
+];
+const a = summarizePlays(autoRecs);
+t("autostart does not inflate plays", a.tracks[0].plays, 1);
+t("autostart is reported on its own field", a.tracks[0].autoplays, 2);
+t("autostart does not create listeners", a.tracks[0].listeners, 1); // aaa only
+t("autostart does not skew completion rate", a.tracks[0].completion_rate, 0);
+t("totals carry autoplays separately", { plays: a.totals.plays, autoplays: a.totals.autoplays }, { plays: 1, autoplays: 2 });
+t("per-day rollup counts autostarts", a.days["2026-08-12"].autostarts, 2);
+t("autostart alone still yields a track row", summarizePlays([{ slug: "17-are-you-ready", event: "autostart", ipHash: "q", day: "2026-08-12" }]).tracks[0].autoplays, 1);
+
 console.log(`\n  ${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);
