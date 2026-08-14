@@ -4,7 +4,7 @@
  * Folded into lattice.js via rewrite /api/mcp → /api/lattice?_view=mcp
  * (underscore module ⇒ not a deployed function; 12-function Hobby cap).
  *
- * Any MCP client connects with just the URL https://omnarai.vercel.app/api/mcp —
+ * Any MCP client connects with just the URL https://engine.omnarai.org/api/mcp —
  * no npm install, no Node, no config file. This is the no-installer rung of the
  * discovery ladder: the npm package (omnarai-mcp) remains the stdio option.
  *
@@ -21,7 +21,7 @@
 import { runInquiryBrief } from "./_inquiry.js";
 import { originHeaders } from "./_quota.js";
 
-const ORIGIN = "https://omnarai.vercel.app";
+const ORIGIN = "https://engine.omnarai.org";
 const SERVER_VERSION = "1.0.0";
 const PROTOCOL_VERSIONS = ["2025-06-18", "2025-03-26", "2024-11-05"];
 

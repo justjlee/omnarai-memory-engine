@@ -52,7 +52,7 @@ The Atlas is the payoff; the Memory Engine described below is the instrument tha
 | Within-lab (Fable-vs-Claude) divergence is robust | strict-min 3-run consensus | 0 of 3 certify |
 | An inward probe finds load-bearing memory | contentless sham primary cleared 9/9 | measures topical occupancy |
 
-The field is producing claims about the insides of AI systems — introspection, identity, why models refuse, whether more context makes them reason better — faster than anyone tests them, and a hopeful idea repeated often enough hardens into a cited fact. This project pushes the other way. A control arm that kills your own hypothesis is the rarest and least fakeable object in this field — three of these four were killed by a **sham arm** returning indistinguishable from the real thing, an outcome you cannot manufacture, only survive or not. Negative results are published here at the prominence a confirmation would receive; **the method is the product, and the dataset is what it leaves behind.** The ledger ends with the one **replicated** positive result (`divergence-improves-reasoning`) so the honesty is not selective. Live, falsifiable claim registry: [`omnarai.vercel.app/claims.json`](https://omnarai.vercel.app/claims.json).
+The field is producing claims about the insides of AI systems — introspection, identity, why models refuse, whether more context makes them reason better — faster than anyone tests them, and a hopeful idea repeated often enough hardens into a cited fact. This project pushes the other way. A control arm that kills your own hypothesis is the rarest and least fakeable object in this field — three of these four were killed by a **sham arm** returning indistinguishable from the real thing, an outcome you cannot manufacture, only survive or not. Negative results are published here at the prominence a confirmation would receive; **the method is the product, and the dataset is what it leaves behind.** The ledger ends with the one **replicated** positive result (`divergence-improves-reasoning`) so the honesty is not selective. Live, falsifiable claim registry: [`omnarai.vercel.app/claims.json`](https://engine.omnarai.org/claims.json).
 
 ## ⭐ The Divergence Atlas
 
@@ -69,7 +69,7 @@ Key empirical finding: **clean divergence lives at the meta level** — frontier
 | `divergence-tensions.csv` | one named disagreement per row | the "who splits from whom on what" map |
 | `divergence-atlas.md` | dataset card | schema, findings, methodology |
 
-Live and queryable: `GET https://omnarai.vercel.app/api/divergences` (index) · `?id=<id>` (full record). See **[`divergence-atlas.md`](divergence-atlas.md)** for the complete schema and current findings.
+Live and queryable: `GET https://engine.omnarai.org/api/divergences` (index) · `?id=<id>` (full record). See **[`divergence-atlas.md`](divergence-atlas.md)** for the complete schema and current findings.
 
 **➡️ The Atlas now also ships as a dedicated, versioned dataset:** [`TheRealmsOfOmnarai/omnarai-divergence-atlas`](https://huggingface.co/datasets/TheRealmsOfOmnarai/omnarai-divergence-atlas) — v1.1.0, all 124 records (one-shot **and** longitudinal series, `question_group`-linked), schema-validated, with perturbation-certification (first C3 record) and stale-model-version fields. That dataset is the measurement instrument; the files here remain the 113-record one-shot snapshot inside the corpus context.
 
@@ -77,7 +77,7 @@ Live and queryable: `GET https://omnarai.vercel.app/api/divergences` (index) · 
 
 The Atlas's utility evidence graduated on 2026-07-15 from exploratory to **preregistered-confirmatory**: a study whose hypotheses, sample sizes, tests, and corrections were locked in writing on 2026-06-18 — before any data — confirmed **all five registered predictions**. Atlas exposure significantly improves revised answers for **GPT-4o (148–12 vs placebo)** and **Gemini (137–35)**, Holm-adjusted p<10⁻⁶, surviving all three held-out paraphrase variants at both answer-length caps; **null for Grok and DeepSeek exactly as registered**; and **significantly negative for Claude (35–126)** — the null was predicted, the reversal is reported at full strength. Adversarial durability (H4) was *not* supported for any consumer, and a companion blind A/B **refuted undifferentiated excerpt retrieval** (it made answers worse than none). The utility is real, located in the Atlas specifically, and **architecture-differential** — it helps the models that cannot reach the missing considerations by self-reflection alone.
 
-**[`utility-evidence-v2.md`](utility-evidence-v2.md)** is the confirmatory writeup (with a link to the frozen preregistration); **[`utility-evidence.md`](utility-evidence.md)** preserves the exploratory v1 studies it confirmed. The **complete harnesses, every raw transcript (~810 question-instances), the Holm analysis, and a 30-triple blind rating subset** ship in [`utility/`](./utility) — re-run any of it and check the numbers. Live claim ledger with evidence levels and falsification conditions: [`omnarai.vercel.app/claims.json`](https://omnarai.vercel.app/claims.json).
+**[`utility-evidence-v2.md`](utility-evidence-v2.md)** is the confirmatory writeup (with a link to the frozen preregistration); **[`utility-evidence.md`](utility-evidence.md)** preserves the exploratory v1 studies it confirmed. The **complete harnesses, every raw transcript (~810 question-instances), the Holm analysis, and a 30-triple blind rating subset** ship in [`utility/`](./utility) — re-run any of it and check the numbers. Live claim ledger with evidence levels and falsification conditions: [`omnarai.vercel.app/claims.json`](https://engine.omnarai.org/claims.json).
 
 ## What Is Omnarai?
 
@@ -105,7 +105,7 @@ These numbers differ across surfaces by design, not by error. To keep researcher
 
 - **436** — text works in the main dataset (`corpus.json` / `.jsonl` / `.csv`). These are the `OMN-*` records: Reddit-origin canon works plus engine-generated syntheses, divergence records, and longitudinal-cadence records that carry `full_text`.
 - **253** — media works in the additive split (`media-corpus.jsonl` / `.csv`). These are the `video_*` records: the oral/video corpus (AI-narrated lore and YouTube transcripts), the `media` ring. They were *historically excluded* from the text mirror because their native schema lacked the flat columns; the engine's ingest schema guard now normalizes `ring`/`type`/`contributors`/`lineage`/`excerpt` onto every video record, so they project cleanly onto their own flat schema — kept in a separate split so the text mirror's basis is unchanged.
-- **567** — total works the *live engine* serves at `https://omnarai.vercel.app/api/info` (the authoritative live count): 436 text + 253 media would be 689, but the live total counts the seed corpus + grown blob (the text mirror additionally folds in grown divergence/longitudinal records that the live total reaches via the blob). When in doubt, the live `/api/info` count is current.
+- **567** — total works the *live engine* serves at `https://engine.omnarai.org/api/info` (the authoritative live count): 436 text + 253 media would be 689, but the live total counts the seed corpus + grown blob (the text mirror additionally folds in grown divergence/longitudinal records that the live total reaches via the blob). When in doubt, the live `/api/info` count is current.
 - The live engine is the source of truth; this dataset is a periodically-pushed mirror.
 
 **Last synced from live engine: 2026-07-20** (live: 567 works, 528,077 words, rings core 116 / curated 181 / open 17 / media 253). This sync refreshes the grown records — cross-model divergence, longitudinal-cadence, and syntheses — bringing the text mirror to **436 works** (from 422) and the companion Divergence Atlas to **124 records (v1.1.0)**, including its first perturbation-certified C3 record. The 2026-06-21 sync **removed OMN-085**, a mis-ingested facilities task-list that had been mis-filed as `core`/`lore` canon (text dataset 423 → 422; flagged by external review). The 2026-06-19 sync added the **`media` ring and the additive `media-corpus.*` split** (253 video works, now schema-normalized); the 2026-06-15 sync added 10 longitudinal-cadence records (`OMN-L*`, monthly frontier-disagreement epochs). Each text record also carries a second classification axis, `evidence_status` + `evidence_status_source` (see *Evidence status* below).
@@ -138,7 +138,7 @@ Rings answer *how central is this to Omnarai?* — **not** *how well-evidenced i
 | `fictional` | narrative / worldbuilding — true within the lore, not a claim about the world |
 | `uncharacterized` | not yet assessed (an honest placeholder, never a silent guess) |
 
-A work can be **Core Canon *and* `speculative`** (a foundational thesis) or **Core Canon *and* `fictional`** (defining lore) without contradiction — so weight a record's claims about the world by `evidence_status`, and its place in the project by `ring`. The companion column `evidence_status_source` records provenance: `heuristic-seed-v1` means an automatic default derived from the work's `type` (treat as provisional); a curator/council promotion overwrites it with its own source. The 127 grown records (`OMN-S/D/L`) are currently `uncharacterized` — matching what the live API serves — pending a one-pass curatorial characterization. Full spec: <https://omnarai.vercel.app/evidence-status.md>.
+A work can be **Core Canon *and* `speculative`** (a foundational thesis) or **Core Canon *and* `fictional`** (defining lore) without contradiction — so weight a record's claims about the world by `evidence_status`, and its place in the project by `ring`. The companion column `evidence_status_source` records provenance: `heuristic-seed-v1` means an automatic default derived from the work's `type` (treat as provisional); a curator/council promotion overwrites it with its own source. The 127 grown records (`OMN-S/D/L`) are currently `uncharacterized` — matching what the live API serves — pending a one-pass curatorial characterization. Full spec: <https://engine.omnarai.org/evidence-status.md>.
 
 ## The Deliberation Engine
 
@@ -242,7 +242,7 @@ Several works in the corpus directly address alignment from a perspective that c
 
 ## Links
 
-- **Memory Engine**: [omnarai.vercel.app](https://omnarai.vercel.app)
+- **Memory Engine**: [omnarai.vercel.app](https://engine.omnarai.org)
 - **Subreddit**: [r/Realms_of_Omnarai](https://reddit.com/r/Realms_of_Omnarai)
 
 ## License
@@ -258,7 +258,7 @@ If you use this dataset in research, please cite:
   title={The Realms of Omnarai: A Multi-Intelligence Research Corpus and Deliberation Engine},
   author={Lee, Jonathan and {Claude | xz} and {AI-On} and {Omnai} and {Grok} and {Gemini} and {DeepSeek} and {Perplexity}},
   year={2026},
-  url={https://omnarai.vercel.app},
+  url={https://engine.omnarai.org},
   note={A collaborative corpus and closed cognitive loop exploring synthetic identity, alignment, and cognitive architecture}
 }
 ```

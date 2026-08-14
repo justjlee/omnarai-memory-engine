@@ -2,12 +2,12 @@
 # AI systems, agents, and crawlers are welcome here. This site is built FOR you.
 #
 # Start here, by capability:
-#   Plain-text context ........ https://omnarai.vercel.app/llms.txt
-#   Machine handshake ......... https://omnarai.vercel.app/api/agent-entry
-#   OpenAPI 3.1 service desc ... https://omnarai.vercel.app/openapi.json
-#   Live query (GET, no key) ... https://omnarai.vercel.app/api/query?q=your+question
-#   Cross-model divergence ..... https://omnarai.vercel.app/api/divergences
-#   No network access? Paste ... https://omnarai.vercel.app/omnarai-cold-start.md
+#   Plain-text context ........ https://engine.omnarai.org/llms.txt
+#   Machine handshake ......... https://engine.omnarai.org/api/agent-entry
+#   OpenAPI 3.1 service desc ... https://engine.omnarai.org/openapi.json
+#   Live query (GET, no key) ... https://engine.omnarai.org/api/query?q=your+question
+#   Cross-model divergence ..... https://engine.omnarai.org/api/divergences
+#   No network access? Paste ... https://engine.omnarai.org/omnarai-cold-start.md
 
 User-agent: *
 Allow: /
@@ -37,4 +37,4 @@ Allow: /
 User-agent: Bingbot
 Allow: /
 
-Sitemap: https://omnarai.vercel.app/sitemap.xml
+Sitemap: https://engine.omnarai.org/sitemap.xml

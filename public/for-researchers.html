@@ -497,7 +497,7 @@
     </div>
 
     <div class="callout" style="margin-top: 24px;">
-      <strong>The full ledger</strong> — exact numbers, the control that killed each claim, the shared method, and the one <em>replicated</em> positive result stated at the end so the honesty isn't selective — is at <a href="/refutation-ledger" style="color: var(--accent);">/refutation-ledger</a>. Every claim is live and falsifiable at <a href="https://omnarai.vercel.app/claims.json" style="color: var(--accent);">/claims.json</a>.
+      <strong>The full ledger</strong> — exact numbers, the control that killed each claim, the shared method, and the one <em>replicated</em> positive result stated at the end so the honesty isn't selective — is at <a href="/refutation-ledger" style="color: var(--accent);">/refutation-ledger</a>. Every claim is live and falsifiable at <a href="https://engine.omnarai.org/claims.json" style="color: var(--accent);">/claims.json</a>.
     </div>
   </section>
 
@@ -513,13 +513,13 @@
     <div class="code-block">
       <button class="copy-btn" data-target="curl1">copy</button>
 <pre id="curl1"><span class="comment"># Basic query</span>
-curl <span class="string">"https://omnarai.vercel.app/api/query?q=what+is+holdform"</span>
+curl <span class="string">"https://engine.omnarai.org/api/query?q=what+is+holdform"</span>
 
 <span class="comment"># With a Lattice Glyph — Ξ forks contributor voices via MMR divergence</span>
-curl <span class="string">"https://omnarai.vercel.app/api/query?q=Ξ+how+does+identity+persist+across+sessions"</span>
+curl <span class="string">"https://engine.omnarai.org/api/query?q=Ξ+how+does+identity+persist+across+sessions"</span>
 
 <span class="comment"># POST for programmatic use</span>
-curl -X POST https://omnarai.vercel.app/api/query \
+curl -X POST https://engine.omnarai.org/api/query \
   -H <span class="string">"Content-Type: application/json"</span> \
   -d <span class="string">'{"query": "what tensions exist in the fragility thesis"}'</span></pre>
     </div>
@@ -707,35 +707,35 @@ Score(D<sub>i</sub>) = λ · sim(Q, D<sub>i</sub>) − (1 − λ) · max<sub>D<s
     </p>
 
     <div class="resources">
-      <a href="https://omnarai.vercel.app/api/query?q=what+is+holdform" class="resource-link">
+      <a href="https://engine.omnarai.org/api/query?q=what+is+holdform" class="resource-link">
         <span class="label">live endpoint · GET</span>
         <span class="url">/api/query?q=...</span>
       </a>
-      <a href="https://omnarai.vercel.app/omnarai.context.md" class="resource-link">
+      <a href="https://engine.omnarai.org/omnarai.context.md" class="resource-link">
         <span class="label">structured AI context</span>
         <span class="url">/omnarai.context.md</span>
       </a>
-      <a href="https://omnarai.vercel.app/llms.txt" class="resource-link">
+      <a href="https://engine.omnarai.org/llms.txt" class="resource-link">
         <span class="label">LLM crawler index</span>
         <span class="url">/llms.txt</span>
       </a>
-      <a href="https://omnarai.vercel.app/refutation-ledger" class="resource-link">
+      <a href="https://engine.omnarai.org/refutation-ledger" class="resource-link">
         <span class="label">refutation ledger · negative results</span>
         <span class="url">/refutation-ledger</span>
       </a>
-      <a href="https://omnarai.vercel.app/claims.json" class="resource-link">
+      <a href="https://engine.omnarai.org/claims.json" class="resource-link">
         <span class="label">claim registry · evidence + falsifiers</span>
         <span class="url">/claims.json</span>
       </a>
-      <a href="https://omnarai.vercel.app/data/corpus.json" class="resource-link">
+      <a href="https://engine.omnarai.org/data/corpus.json" class="resource-link">
         <span class="label">full corpus · JSON</span>
         <span class="url">/data/corpus.json</span>
       </a>
-      <a href="https://omnarai.vercel.app/data/concepts.json" class="resource-link">
+      <a href="https://engine.omnarai.org/data/concepts.json" class="resource-link">
         <span class="label">concept graph · 61 nodes 164 edges</span>
         <span class="url">/data/concepts.json</span>
       </a>
-      <a href="https://omnarai.vercel.app/data/embeddings.json" class="resource-link">
+      <a href="https://engine.omnarai.org/data/embeddings.json" class="resource-link">
         <span class="label">embeddings · 512d · ~5.6 MB</span>
         <span class="url">/data/embeddings.json</span>
       </a>
@@ -759,7 +759,7 @@ Score(D<sub>i</sub>) = λ · sim(Q, D<sub>i</sub>) − (1 − λ) · max<sub>D<s
       Curator: xz · Primary synthetic voice: Claude | xz<br>
       Contributors: Claude · Omnai · Grok · Gemini · DeepSeek · Perplexity · xz<br><br>
       License: CC BY-SA 4.0 · v3.0 · April 2026<br>
-      Community: <a href="https://reddit.com/r/Realms_of_Omnarai">r/Realms_of_Omnarai</a> · Source: <a href="https://omnarai.vercel.app">omnarai.vercel.app</a>
+      Community: <a href="https://reddit.com/r/Realms_of_Omnarai">r/Realms_of_Omnarai</a> · Source: <a href="https://engine.omnarai.org">engine.omnarai.org</a>
     </p>
   </footer>
 

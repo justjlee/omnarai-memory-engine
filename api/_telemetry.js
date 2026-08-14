@@ -110,7 +110,9 @@ export function classifyCaller(req) {
   if (/vercel-cron/i.test(ua)) return { category: "cron", log: false };
 
   // Requests originating from our own site UI (or local dev) — humans we caused.
-  if (ref.includes("omnarai.vercel.app") || ref.includes("localhost") || ref.includes("127.0.0.1")) {
+  // Both domains count as ours: omnarai.org (canonical front door + engine alias)
+  // and the original vercel.app origin, which still serves published references.
+  if (ref.includes("omnarai.org") || ref.includes("omnarai.vercel.app") || ref.includes("localhost") || ref.includes("127.0.0.1")) {
     return { category: "ui", log: false };
   }
 

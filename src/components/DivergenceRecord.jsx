@@ -153,7 +153,7 @@ export default function DivergenceRecord({ record, loading, onBack, onOpenRecord
         canonical: canonical?.getAttribute("href") || null,
       };
     }
-    const pageUrl = `https://omnarai.vercel.app/divergences/${record.id}`;
+    const pageUrl = `https://engine.omnarai.org/divergences/${record.id}`;
     const pageTitle = `${record.question} — The Divergence Atlas`;
     document.title = pageTitle;
     const set = (sel, attr, val) => { const el = document.querySelector(sel); if (el) el.setAttribute(attr, val); };
@@ -376,7 +376,7 @@ function ProvenanceBlock({ record, onOpenRecord }) {
   const cert = record.certification || null;
   const fresh = record.freshness || null;
   const deltas = record.deltas || [];
-  const canonicalUrl = `https://omnarai.vercel.app/divergences/${record.id}`;
+  const canonicalUrl = `https://engine.omnarai.org/divergences/${record.id}`;
   const box = { background: "rgba(255,255,255,0.012)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "14px 16px", marginBottom: 14 };
   const label = { ...mono, fontSize: 8.5, color: "rgba(200,192,176,0.4)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 };
 
@@ -489,7 +489,7 @@ function ProvenanceBlock({ record, onOpenRecord }) {
       )}
 
       <p style={{ fontSize: 10, color: "rgba(200,192,176,0.3)", fontStyle: "italic" }}>
-        Licensed CC BY-SA 4.0. Limitations: <a href="/limitations.md" style={{ color: "rgba(200,192,176,0.4)" }}>omnarai.vercel.app/limitations.md</a>.
+        Licensed CC BY-SA 4.0. Limitations: <a href="/limitations.md" style={{ color: "rgba(200,192,176,0.4)" }}>engine.omnarai.org/limitations.md</a>.
       </p>
     </div>
   );

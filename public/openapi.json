@@ -11,12 +11,12 @@
     },
     "contact": {
       "name": "The Realms of Omnarai",
-      "url": "https://omnarai.vercel.app"
+      "url": "https://engine.omnarai.org"
     }
   },
   "servers": [
     {
-      "url": "https://omnarai.vercel.app",
+      "url": "https://engine.omnarai.org",
       "description": "Production engine"
     }
   ],

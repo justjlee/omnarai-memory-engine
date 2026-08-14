@@ -213,9 +213,9 @@ async function buildLineage(node, { includeTensions = true, spineLimit = 60 } = 
       ranked_by: "shared source entries with this concept, then recurrence",
     },
     follow_up: {
-      ask: `https://omnarai.vercel.app/api/query?q=${encodeURIComponent(node.label)}`,
-      divergences: "https://omnarai.vercel.app/api/divergences",
-      concept_card: card && cardSlug ? `https://omnarai.vercel.app/concepts/${cardSlug}.md` : null,
+      ask: `https://engine.omnarai.org/api/query?q=${encodeURIComponent(node.label)}`,
+      divergences: "https://engine.omnarai.org/api/divergences",
+      concept_card: card && cardSlug ? `https://engine.omnarai.org/concepts/${cardSlug}.md` : null,
     },
     _note:
       "Lineage assembled from real data: the concept graph (61 nodes / 164 undirected edges), " +

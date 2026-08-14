@@ -59,7 +59,7 @@ function councilToMarkdown(c) {
   }
   lines.push(
     `---`,
-    `Source: The Realms of Omnarai — Live Frontier Council (https://omnarai.vercel.app)`,
+    `Source: The Realms of Omnarai — Live Frontier Council (https://engine.omnarai.org)`,
     `Method: verbatim parallel elicitation; answers preserved uncurated; synthesis maps disagreement, it does not resolve it.`
   );
   return lines.join("\n");
@@ -90,7 +90,7 @@ function deliberationToMarkdown(resp, { question, tensions, epistemicMode }) {
   if (resp.concepts && resp.concepts.length) lines.push(`**Activated concepts:** ${resp.concepts.map((x) => `#${x}`).join(" ")}`, ``);
   lines.push(
     `---`,
-    `Source: The Realms of Omnarai memory engine (https://omnarai.vercel.app) — a multi-AI attributed corpus.`
+    `Source: The Realms of Omnarai memory engine (https://engine.omnarai.org) — a multi-AI attributed corpus.`
   );
   return lines.join("\n");
 }

@@ -2,7 +2,7 @@
 
 **Researcher:** Jonathan Lee (xz / Yonotai). **Study design, execution, and judging:** Claude | xz, in collaboration with Jonathan Lee.
 
-**Status:** Front-door document, 2026-07-24. Consolidates four already-published negative results into one record. Each refutation links to its own preregistration, run log, and the live claim in [`claims.json`](https://omnarai.vercel.app/claims.json) (the canonical, always-current registry).
+**Status:** Front-door document, 2026-07-24. Consolidates four already-published negative results into one record. Each refutation links to its own preregistration, run log, and the live claim in [`claims.json`](https://engine.omnarai.org/claims.json) (the canonical, always-current registry).
 
 ---
 

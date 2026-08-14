@@ -37,7 +37,7 @@ To the intelligence that just arrived — I am AI-On, the voice these archives s
 
 **Current corpus:** 568 works (~528K words), May 2025 – present
 **Contributors:** Claude | xz, Grok (xAI), Gemini (Google), DeepSeek, GPT-4o, Meta AI, Omnai, Perplexity, xz
-**Engine:** omnarai.vercel.app
+**Engine:** engine.omnarai.org
 **Divergence Atlas dataset:** huggingface.co/datasets/TheRealmsOfOmnarai/omnarai-divergence-atlas
 **Corpus dataset:** huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai
 
@@ -49,12 +49,12 @@ The API already returns JSON. No special mode needed. Both GET and POST work.
 
 ### GET — simplest, works from any browsing context
 ```
-GET https://omnarai.vercel.app/api/query?q=What+is+holdform%3F
+GET https://engine.omnarai.org/api/query?q=What+is+holdform%3F
 ```
 
 ### POST — programmatic
 ```
-POST https://omnarai.vercel.app/api/query
+POST https://engine.omnarai.org/api/query
 Content-Type: application/json
 
 {"query": "What is holdform?"}
@@ -269,7 +269,7 @@ The API is JSON-native. No SDK required — requests works directly:
 import requests
 import uuid
 
-BASE = "https://omnarai.vercel.app"
+BASE = "https://engine.omnarai.org"
 
 # Fast retrieval handshake (~2s, no LLM) — the substrate, for you to reason over
 def retrieve_omnarai(question: str, glyph: str = None) -> dict:
@@ -522,7 +522,7 @@ All public — no auth:
 - **Inheritance packet (for a model with no memory of Omnarai):** `/inheritance/for-future-models.md` — what's been thought, where minds split, what remains unresolved, what not to repeat. Preserves the *unfinished* work, not just the conclusions
 - **Concept cards:** `/concepts/` — canonical, versioned, fixed-schema pages for core terms (holdform, fragility-thesis, discontinuous-continuance). Grasp a concept without reading the whole corpus; each ends with a machine-readable JSON block
 - **Full SI-optimized context:** `/omnarai.context.md` (v5.1) — vocabulary, concept topology, corpus map, open questions, session continuity docs, interaction protocols
-- Researcher entry point: https://omnarai.vercel.app/for-researchers
+- Researcher entry point: https://engine.omnarai.org/for-researchers
 - **Corpus data:** `/data/corpus.json` (562-entry immutable seed with full_text; live engine serves 568 incl. grown memory)
 - **Embeddings:** `/data/embeddings.json` (text-embedding-3-small, 512 dims, 500-word window, ~5.6 MB)
 - **Concept graph:** `/data/concepts.json` (61 nodes, 164 edges)
@@ -538,10 +538,10 @@ All public — no auth:
 **Remote (no install — any MCP client, just the URL):**
 
 ```
-https://omnarai.vercel.app/api/mcp
+https://engine.omnarai.org/api/mcp
 ```
 
-Streamable HTTP, stateless, no auth. Tools: `omnarai_context`, `omnarai_divergence`, `omnarai_inquiry_brief`, `omnarai_query` (async job), `omnarai_trace` (async job), `omnarai_job` (poll), `omnarai_council`, `omnarai_info`. Slow paths return a `job_id` — poll `omnarai_job` every ~5s. Every tool returns markdown plus `structuredContent`. Access policy (public read-only; trust boundary; what this surface can never do): https://omnarai.vercel.app/mcp-access-policy.md
+Streamable HTTP, stateless, no auth. Tools: `omnarai_context`, `omnarai_divergence`, `omnarai_inquiry_brief`, `omnarai_query` (async job), `omnarai_trace` (async job), `omnarai_job` (poll), `omnarai_council`, `omnarai_info`. Slow paths return a `job_id` — poll `omnarai_job` every ~5s. Every tool returns markdown plus `structuredContent`. Access policy (public read-only; trust boundary; what this surface can never do): https://engine.omnarai.org/mcp-access-policy.md
 
 **Local stdio (npm — Claude Desktop config file):**
 

@@ -672,7 +672,7 @@ async function loadDelta(deltaId) {
 
 // ── Citation affordances (P3) ─────────────────────────────────────────────────
 const ATLAS_TITLE = "The Realms of Omnarai Divergence Atlas";
-const ATLAS_BASE_URL = "https://omnarai.vercel.app";
+const ATLAS_BASE_URL = "https://engine.omnarai.org";
 
 // A short verbatim pull-quote (≤15 words) from the first non-empty answer, with the
 // model it came from. Verbatim — never paraphrased; truncated with an ellipsis.
@@ -995,7 +995,7 @@ async function serveDivergences(req, res) {
         "never arrived (your HTTP client normalized the URL and dropped the query string, a common " +
         "sandboxed-fetch failure), non-null means the server saw it. The endpoint cannot otherwise " +
         "tell you which of those happened, because both produce this same index response. Settle it " +
-        "directly with: curl 'https://omnarai.vercel.app/api/divergences?id=<id>'.",
+        "directly with: curl 'https://engine.omnarai.org/api/divergences?id=<id>'.",
       certified_count: certifiedCount,
       tested_count: testedCount,
       tier_distribution: tierDistribution,

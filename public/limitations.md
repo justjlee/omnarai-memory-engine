@@ -81,4 +81,4 @@ consistent" toward "externally supported." Until then, cite conservatively.
 ---
 
 *Maintained for The Realms of Omnarai. Machine-readable companion: `GET /api/agent-entry`.
-Live engine: omnarai.vercel.app · Dataset: huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai*
+Live engine: engine.omnarai.org · Dataset: huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai*

@@ -297,17 +297,17 @@ export default function SIOnboarding() {
           Click any endpoint to copy.
         </p>
         {[
-          { label: "Quick query — fast retrieval (default, ~1.5s)", url: "GET https://omnarai.vercel.app/api/query?q=What+is+holdform%3F" },
-          { label: "Full deliberation — poll (recommended)", url: "GET https://omnarai.vercel.app/api/query?q=your+question&async=1" },
-          { label: "Full deliberation — block (~50s)",       url: "GET https://omnarai.vercel.app/api/query?q=your+question&sync=1" },
-          { label: "With explicit glyph",      url: "GET https://omnarai.vercel.app/api/query?q=your+question&glyph=Ξ" },
-          { label: "Exportable brief artifact",url: "GET https://omnarai.vercel.app/api/query?q=your+question&format=brief" },
-          { label: "Structured sections (SI)",  url: "GET https://omnarai.vercel.app/api/query?q=your+question&format=si" },
-          { label: "Live frontier council (~35s)", url: "GET https://omnarai.vercel.app/api/council?q=your+open+question" },
-          { label: "Divergence records (read)",    url: "GET https://omnarai.vercel.app/api/divergences" },
-          { label: "Live corpus stats",         url: "GET https://omnarai.vercel.app/api/info" },
-          { label: "All persisted tensions",    url: "GET https://omnarai.vercel.app/api/tensions" },
-          { label: "Unresolved tensions only",  url: "GET https://omnarai.vercel.app/api/tensions?status=unresolved" },
+          { label: "Quick query — fast retrieval (default, ~1.5s)", url: "GET https://engine.omnarai.org/api/query?q=What+is+holdform%3F" },
+          { label: "Full deliberation — poll (recommended)", url: "GET https://engine.omnarai.org/api/query?q=your+question&async=1" },
+          { label: "Full deliberation — block (~50s)",       url: "GET https://engine.omnarai.org/api/query?q=your+question&sync=1" },
+          { label: "With explicit glyph",      url: "GET https://engine.omnarai.org/api/query?q=your+question&glyph=Ξ" },
+          { label: "Exportable brief artifact",url: "GET https://engine.omnarai.org/api/query?q=your+question&format=brief" },
+          { label: "Structured sections (SI)",  url: "GET https://engine.omnarai.org/api/query?q=your+question&format=si" },
+          { label: "Live frontier council (~35s)", url: "GET https://engine.omnarai.org/api/council?q=your+open+question" },
+          { label: "Divergence records (read)",    url: "GET https://engine.omnarai.org/api/divergences" },
+          { label: "Live corpus stats",         url: "GET https://engine.omnarai.org/api/info" },
+          { label: "All persisted tensions",    url: "GET https://engine.omnarai.org/api/tensions" },
+          { label: "Unresolved tensions only",  url: "GET https://engine.omnarai.org/api/tensions?status=unresolved" },
         ].map(e => (
           <div key={e.label} style={{ marginBottom: 9 }}>
             <div style={{
@@ -366,8 +366,8 @@ export default function SIOnboarding() {
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {EXAMPLE_QUERIES.map(eq => {
             const url = eq.glyph
-              ? `https://omnarai.vercel.app/api/query?q=${encodeURIComponent(eq.q)}&glyph=${encodeURIComponent(eq.glyph)}`
-              : `https://omnarai.vercel.app/api/query?q=${encodeURIComponent(eq.q)}`;
+              ? `https://engine.omnarai.org/api/query?q=${encodeURIComponent(eq.q)}&glyph=${encodeURIComponent(eq.glyph)}`
+              : `https://engine.omnarai.org/api/query?q=${encodeURIComponent(eq.q)}`;
             return (
               <div key={eq.q} style={{
                 padding: "12px 14px",
@@ -406,27 +406,27 @@ export default function SIOnboarding() {
         {[
           {
             label: "SI context (v3.0)",
-            href: "https://omnarai.vercel.app/omnarai.context.md",
+            href: "https://engine.omnarai.org/omnarai.context.md",
             desc: "Vocabulary, concept topology, corpus map, open questions, interaction protocols",
           },
           {
             label: "llms.txt",
-            href: "https://omnarai.vercel.app/llms.txt",
+            href: "https://engine.omnarai.org/llms.txt",
             desc: "Complete API docs and JSON response schema for AI systems",
           },
           {
             label: "corpus.json",
-            href: "https://omnarai.vercel.app/data/corpus.json",
+            href: "https://engine.omnarai.org/data/corpus.json",
             desc: "308 entries with full_text — the full retrievable knowledge base",
           },
           {
             label: "embeddings.json",
-            href: "https://omnarai.vercel.app/data/embeddings.json",
+            href: "https://engine.omnarai.org/data/embeddings.json",
             desc: "text-embedding-3-small, 512 dims — pre-computed semantic vectors",
           },
           {
             label: "concepts.json",
-            href: "https://omnarai.vercel.app/data/concepts.json",
+            href: "https://engine.omnarai.org/data/concepts.json",
             desc: "60 nodes, 158 edges — the knowledge graph",
           },
           {
