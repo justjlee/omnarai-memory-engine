@@ -174,6 +174,10 @@ function render(front, engine, plays) {
   else if (plays?.data) {
     const t = plays.data.totals || {};
     L.push("    total plays " + C.cyan(n(t.plays)) + " · qualified " + n(t.qualified) + " · listeners " + n(t.distinct_listeners) + " · tracks " + n(t.tracks_played));
+    // Autoplay is reported on its own line, never folded into plays: it is audio a
+    // browser permitted, not a listener's choice. A high number here beside a low
+    // `plays` means the music is reaching ears that never asked for it.
+    if (t.autoplays != null) L.push("    " + C.dim("autoplays (browser-permitted, unasked) ") + n(t.autoplays));
     const top = (plays.data.tracks || []).slice(0, 5);
     if (top.length) {
       L.push("    " + C.dim("top tracks:"));

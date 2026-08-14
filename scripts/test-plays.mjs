@@ -109,5 +109,16 @@ t("totals carry autoplays separately", { plays: a.totals.plays, autoplays: a.tot
 t("per-day rollup counts autostarts", a.days["2026-08-12"].autostarts, 2);
 t("autostart alone still yields a track row", summarizePlays([{ slug: "17-are-you-ready", event: "autostart", ipHash: "q", day: "2026-08-12" }]).tracks[0].autoplays, 1);
 
+// An autostarted load must never emit qualified/complete, so a qualified listen
+// can never outnumber the plays it came from. The player freezes willfulness at
+// track load to guarantee this; if that ever regresses, the shape below is what
+// the leaderboard would start reporting, and it is nonsense.
+const invariant = summarizePlays([
+  { slug: "02-whales-in-the-oceans", event: "autostart", ipHash: "aaa", day: "2026-08-13" },
+  { slug: "02-whales-in-the-oceans", event: "start", ipHash: "aaa", day: "2026-08-13" },
+  { slug: "02-whales-in-the-oceans", event: "qualified", ipHash: "aaa", day: "2026-08-13" },
+]).tracks[0];
+t("qualified never exceeds plays", invariant.qualified <= invariant.plays, true);
+
 console.log(`\n  ${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);
