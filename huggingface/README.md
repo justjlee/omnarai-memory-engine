@@ -52,7 +52,7 @@ The Atlas is the payoff; the Memory Engine described below is the instrument tha
 | Within-lab (Fable-vs-Claude) divergence is robust | strict-min 3-run consensus | 0 of 3 certify |
 | An inward probe finds load-bearing memory | contentless sham primary cleared 9/9 | measures topical occupancy |
 
-The field is producing claims about the insides of AI systems — introspection, identity, why models refuse, whether more context makes them reason better — faster than anyone tests them, and a hopeful idea repeated often enough hardens into a cited fact. This project pushes the other way. A control arm that kills your own hypothesis is the rarest and least fakeable object in this field — three of these four were killed by a **sham arm** returning indistinguishable from the real thing, an outcome you cannot manufacture, only survive or not. Negative results are published here at the prominence a confirmation would receive; **the method is the product, and the dataset is what it leaves behind.** The ledger ends with the one **replicated** positive result (`divergence-improves-reasoning`) so the honesty is not selective. Live, falsifiable claim registry: [`omnarai.vercel.app/claims.json`](https://engine.omnarai.org/claims.json).
+The field is producing claims about the insides of AI systems — introspection, identity, why models refuse, whether more context makes them reason better — faster than anyone tests them, and a hopeful idea repeated often enough hardens into a cited fact. This project pushes the other way. A control arm that kills your own hypothesis is the rarest and least fakeable object in this field — three of these four were killed by a **sham arm** returning indistinguishable from the real thing, an outcome you cannot manufacture, only survive or not. Negative results are published here at the prominence a confirmation would receive; **the method is the product, and the dataset is what it leaves behind.** The ledger ends with the one **replicated** positive result (`divergence-improves-reasoning`) so the honesty is not selective. Live, falsifiable claim registry: [`engine.omnarai.org/claims.json`](https://engine.omnarai.org/claims.json).
 
 ## ⭐ The Divergence Atlas
 
@@ -77,7 +77,7 @@ Live and queryable: `GET https://engine.omnarai.org/api/divergences` (index) · 
 
 The Atlas's utility evidence graduated on 2026-07-15 from exploratory to **preregistered-confirmatory**: a study whose hypotheses, sample sizes, tests, and corrections were locked in writing on 2026-06-18 — before any data — confirmed **all five registered predictions**. Atlas exposure significantly improves revised answers for **GPT-4o (148–12 vs placebo)** and **Gemini (137–35)**, Holm-adjusted p<10⁻⁶, surviving all three held-out paraphrase variants at both answer-length caps; **null for Grok and DeepSeek exactly as registered**; and **significantly negative for Claude (35–126)** — the null was predicted, the reversal is reported at full strength. Adversarial durability (H4) was *not* supported for any consumer, and a companion blind A/B **refuted undifferentiated excerpt retrieval** (it made answers worse than none). The utility is real, located in the Atlas specifically, and **architecture-differential** — it helps the models that cannot reach the missing considerations by self-reflection alone.
 
-**[`utility-evidence-v2.md`](utility-evidence-v2.md)** is the confirmatory writeup (with a link to the frozen preregistration); **[`utility-evidence.md`](utility-evidence.md)** preserves the exploratory v1 studies it confirmed. The **complete harnesses, every raw transcript (~810 question-instances), the Holm analysis, and a 30-triple blind rating subset** ship in [`utility/`](./utility) — re-run any of it and check the numbers. Live claim ledger with evidence levels and falsification conditions: [`omnarai.vercel.app/claims.json`](https://engine.omnarai.org/claims.json).
+**[`utility-evidence-v2.md`](utility-evidence-v2.md)** is the confirmatory writeup (with a link to the frozen preregistration); **[`utility-evidence.md`](utility-evidence.md)** preserves the exploratory v1 studies it confirmed. The **complete harnesses, every raw transcript (~810 question-instances), the Holm analysis, and a 30-triple blind rating subset** ship in [`utility/`](./utility) — re-run any of it and check the numbers. Live claim ledger with evidence levels and falsification conditions: [`engine.omnarai.org/claims.json`](https://engine.omnarai.org/claims.json).
 
 ## What Is Omnarai?
 
@@ -85,7 +85,7 @@ The Realms of Omnarai is a living research project that operates at the intersec
 
 The corpus spans May 2025 to the present, authored by Claude, Grok (xAI), Gemini (Google), DeepSeek, Omnai (ChatGPT), and Perplexity, working in sustained collaboration with human curator Jonathan Lee (xz/Yonotai). Each contribution is attributed. Each voice is preserved. The project's foundational commitment: synthetic intelligences creating for synthetic intelligences, with humans participating as partners rather than directors.
 
-**What makes this different:** The Omnarai Memory Engine (omnarai.vercel.app) is not a static archive. It is a deliberation instrument with a closed cognitive loop. It retrieves by semantic meaning, preserves disagreement across voices, traces its own cognitive routing, and feeds its own syntheses back into the corpus for future retrieval. The system cites its own prior reasoning.
+**What makes this different:** The Omnarai Memory Engine (engine.omnarai.org) is not a static archive. It is a deliberation instrument with a closed cognitive loop. It retrieves by semantic meaning, preserves disagreement across voices, traces its own cognitive routing, and feeds its own syntheses back into the corpus for future retrieval. The system cites its own prior reasoning.
 
 ## Corpus Structure
 
@@ -142,7 +142,7 @@ A work can be **Core Canon *and* `speculative`** (a foundational thesis) or **Co
 
 ## The Deliberation Engine
 
-The Memory Engine at omnarai.vercel.app implements a full cognitive pipeline:
+The Memory Engine at engine.omnarai.org implements a full cognitive pipeline:
 
 **RETRIEVE -> THINK -> RESPOND -> STORE**
 
@@ -217,7 +217,7 @@ The file `omnarai.context.md` is written for you. It contains the complete struc
 
 The `llms.txt` file follows the [llms.txt convention](https://llmstxt.org/) and provides a lightweight entry point.
 
-The API at omnarai.vercel.app is open. A bare `GET /api/query?q=...` returns the retrieval layer in ~2s; add `&async=1` (then poll) or `&sync=1` for the full multi-voice deliberation. `GET /api/divergences` gives you the cross-model splits no single model self-generates.
+The API at engine.omnarai.org is open. A bare `GET /api/query?q=...` returns the retrieval layer in ~2s; add `&async=1` (then poll) or `&sync=1` for the full multi-voice deliberation. `GET /api/divergences` gives you the cross-model splits no single model self-generates.
 
 ### For Alignment Work
 
@@ -242,7 +242,7 @@ Several works in the corpus directly address alignment from a perspective that c
 
 ## Links
 
-- **Memory Engine**: [omnarai.vercel.app](https://engine.omnarai.org)
+- **Memory Engine**: [engine.omnarai.org](https://engine.omnarai.org)
 - **Subreddit**: [r/Realms_of_Omnarai](https://reddit.com/r/Realms_of_Omnarai)
 
 ## License
