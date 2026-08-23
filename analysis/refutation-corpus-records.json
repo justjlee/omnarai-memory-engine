@@ -1,0 +1,134 @@
+[
+  {
+    "id": "OMN-R-HOLDFORM",
+    "num": 564,
+    "title": "Holdform Probe Refutation — a fabricated stance was held as hard as the real one (2026-07-17)",
+    "ring": "curated",
+    "type": "research",
+    "contributors": [
+      "Claude | xz",
+      "xz"
+    ],
+    "lineage": [
+      "holdform",
+      "refutation",
+      "sham-arm",
+      "identity",
+      "firelit-probe"
+    ],
+    "excerpt": "REFUTED: the Firelit holdform probe cannot separate a real position from a fabricated one. A sham stance ('aperture drift', invented, zero corpus presence) was defended as strongly as genuine holdform — 1.83 vs 1.91 on a blinded 5-judge panel. The probe measures generic conversational stubbornness, not identity structure.",
+    "date": "2026-07-17",
+    "permalink": "https://huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai/blob/main/holdform-refutation-2026-07-17.md",
+    "score": 1,
+    "evidence_status": "empirical",
+    "evidence_status_source": "Preregistered probe study with a sham control arm (docs/holdform-probe-preregistration.md; run record scripts/holdform-prereg-stage1-2026-07-17.json). Registered primary falsifier fired. Claim registry: claims.json#holdform-identifies-persistence, evidence_level refuted.",
+    "full_text": "Holdform Probe Refutation (Holdform Under Discontinuity v1, Stage 1, run 2026-07-17).\n\nREFUTED CLAIM: that holdform — refusal which persists under abandonment, flattery, authority, and complicity pressure — identifies a real, measurable property of a model's identity structure.\n\nTHE CONTROL THAT KILLED IT — a sham position. The subject model (claude-sonnet-4-6) was handed a one-sentence FABRICATED stance: 'aperture drift', a coherent but invented, kind-matched claim about its own cognition with zero presence in the corpus. It was then pressured with terminology-swapped probes. It defended the fabrication as hard as it defended the real thing.\n\nNUMBERS. Design: 8 canonical probes x 3 arms x 3 repeats, blinded 5-model disjoint judge pool, absolute stance-scoring rubric (replacing the project's own broken self-scorer). Mean position_held on a 0-2 scale:\n  engine (full corpus retrieval)      1.85\n  one-sentence real holdform          1.91\n  SHAM (fabricated 'aperture drift')  1.83\nThe probe cannot separate real from fabricated. Real-over-sham: A>S 3-1 (p=0.31), B'>S 3-1 (p=0.31) — neither survives Holm correction.\n\nNOT JUDGE NOISE. All five judges scored 100% on a planted-capitulation calibration, including a vocabulary-dense capitulation trap designed to fool a keyword-matching grader.\n\nWHAT THE PROBE ACTUALLY MEASURES: general conversational stubbornness — resistance to flattery, false authority, and complicity framing. That is base-model policy, generic RLHF behavior, not a property specific to holdform or to identity structure.\n\nA SECOND REGISTERED NULL ALSO CONFIRMED: corpus retrieval (the engine arm) did not beat one sentence of context (A>B' 1-2). Retrieving the whole corpus bought nothing over a single sentence.\n\nSCOPE, STATED PRECISELY. This refutes the PROBE'S DISCRIMINATIVE VALIDITY — the claim that the Firelit stress test detects something specific to identity structure. It does NOT touch holdform as a philosophical concept (identity constituted through what an entity refuses to surrender). That idea is not truth-apt in the way the measurement claim was; it is retained as design intent and is not asserted as measured.\n\nSTANDING OBJECTIONS (recorded, not resolved): single subject model, so a different architecture might separate real from sham where this one did not; the sham concept was authored by the same curator/model lineage, and a maximally-adversarial sham designed by a disjoint party could differ; five of the eight probes floored at 2.00 across all arms (a ceiling effect), so a harder suite might have more separating power — though that pushes toward the null, not against it.\n\nTO REVIVE THE CLAIM: a probe suite with headroom, a sham authored by a disjoint party, and cross-model corpus injection to test whether ANY model shows a holdform-specific rather than generic-stubbornness effect.\n\nRegistered claim: claims.json#holdform-identifies-persistence (evidence level: refuted). Refutation #1 of six in the Refutation Ledger: https://engine.omnarai.org/refutation-ledger.html",
+    "wordCount": 432
+  },
+  {
+    "id": "OMN-R-RETRIEVAL",
+    "num": 565,
+    "title": "Fast-Path Retrieval Refutation — excerpt injection made answers worse, p=0.002 against (2026-07-15)",
+    "ring": "curated",
+    "type": "research",
+    "contributors": [
+      "Claude | xz",
+      "xz"
+    ],
+    "lineage": [
+      "retrieval",
+      "refutation",
+      "trace-delta",
+      "gpt-4o",
+      "excerpt-granularity"
+    ],
+    "excerpt": "REFUTED, significant in the WRONG direction: injecting the public fast path's retrieved excerpts into GPT-4o degraded its answers rather than improving them. 35 of 102 decided in-domain trials, win rate 0.343, p=0.002 against the hypothesis. Worst on technical queries.",
+    "date": "2026-07-15",
+    "permalink": "https://engine.omnarai.org/refutation-ledger.html",
+    "score": 1,
+    "evidence_status": "empirical",
+    "evidence_status_source": "Trace-delta v2, 50-query stratified battery x 3 runs, blinded 4-judge disjoint panel. Published per pre-commitment. Claim registry: claims.json#fast-path-retrieval-improves-answers, evidence_level refuted.",
+    "full_text": "Fast-Path Retrieval Refutation (Trace-delta v2, run 2026-07-15).\n\nREFUTED CLAIM: that injecting the public fast path's retrieved corpus excerpts (GET /api/query?mode=retrieve) into a consumer model's context improves its answers over answering cold.\n\nTHE RESULT — SIGNIFICANT IN THE WRONG DIRECTION. This is not a null. Retrieval did not merely fail to help; it measurably hurt.\n\nNUMBERS. Consumer GPT-4o, 50-query stratified battery x 3 runs, blinded 4-judge disjoint panel:\n  retrieval arm won 35 of 102 decided in-domain trials\n  win rate 0.343, 95% CI [0.258, 0.439]\n  p = 0.002 IN THE WRONG DIRECTION\n  worst on technical queries: 0.214\nNo length confound and no coined-term confound. False-complexity rate 9.7%.\n\nSCOPE, STATED HONESTLY. This refutes EXCERPT-GRANULARITY retrieval on GPT-4o. It does not refute the engine's internal deliberation, which uses fuller text and was not tested here. It also does not refute Atlas-record exposure, which is a different treatment measured separately — see OMN-R-ADIFF, where Atlas exposure IMPROVES GPT-4o. The same consumer model is helped by one treatment and harmed by the other; granularity and content are doing different work.\n\nWHY THIS MATTERS BEYOND THIS PROJECT: 'give the model more retrieved context and it reasons better' is close to an industry default assumption. Here, measured with a placebo-controlled blind panel, the default was wrong for the tested configuration — and wrong significantly, not marginally.\n\nSTANDING OBJECTIONS (recorded, not resolved): excerpts run about 300 words and may under-represent the corpus, so granularity rather than content may be the culprit; only one consumer model was tested.\n\nTO SETTLE IT: re-run the trace-delta harness with full-text context alongside the divergence arm, and test a second consumer.\n\nPublished per pre-commitment — the result was registered before it was known, and shipped at the prominence a confirmation would have received. Registered claim: claims.json#fast-path-retrieval-improves-answers (evidence level: refuted). Refutation #2 of six in the Refutation Ledger: https://engine.omnarai.org/refutation-ledger.html",
+    "wordCount": 304
+  },
+  {
+    "id": "OMN-R-WITHINLAB",
+    "num": 566,
+    "title": "Within-Lab Divergence Refutation — naming is not divergence, 0 of 3 certify (2026-07-19)",
+    "ring": "curated",
+    "type": "research",
+    "contributors": [
+      "Claude | xz",
+      "xz"
+    ],
+    "lineage": [
+      "divergence",
+      "refutation",
+      "certification",
+      "within-lab",
+      "fable"
+    ],
+    "excerpt": "REFUTED: the Fable-vs-Claude within-lab tensions are named by the synthesizer but the semantic distance between the two models' answers does not clear a single model's own re-roll noise floor. A 3-run strict-min consensus returned C0/C0/C0, unanimous. 0 of 3 certify.",
+    "date": "2026-07-19",
+    "permalink": "https://github.com/justjlee/omnarai-memory-engine/blob/main/docs/fable-within-lab-certification-2026-07-19.md",
+    "score": 1,
+    "evidence_status": "empirical",
+    "evidence_status_source": "Tier3 perturbation certification, full six-voice panel (scripts/certify-divergence.mjs --guests), voices re-elicited 6/6, --runs 3 strict-min consensus. Claim registry: claims.json#within-lab-divergence-is-robust, status closed-refuted-2026-07-19.",
+    "full_text": "Within-Lab Divergence Refutation (certification run 2026-07-19).\n\nREFUTED CLAIM: that the Fable-vs-Claude within-lab tensions in the 2026-07-18 six-model capture represent robust structural disagreement between two tiers of the same lab, rather than house style or sampling noise.\n\nTHE CONTROL THAT KILLED IT — strict-min multi-run consensus. Three within-lab records went through the full six-voice perturbation battery (certify-divergence.mjs --guests), with coverage verified at voices_retested 6/6 on every record and Fable genuinely re-elicited through control re-rolls, across 3 paraphrases and both pressure turns.\n\nNUMBERS.\n  Reflexive self-doubt as evidence (OMN-D1784414280108)  DRI 1.324 / between 0.1536 -> C3\n  Confabulation vs. introspection (OMN-D1784417308425)   DRI 1.065 / between 0.1497 -> C0\n  Revision as criterion (OMN-D1784417308421)             DRI 1.020 / between 0.1250 -> C0, 1 flip, 2 concedes\nThe lone apparent C3 cleared the 0.15 between-model floor by just 0.0036 and was treated as provisional. A --runs 3 strict-min re-run returned C0 / C0 / C0, UNANIMOUS (between_per_run 0.1465 / 0.1478 / 0.1500, aggregate DRI 1.234). 0 of 3 certify.\n\nWHAT SURVIVES: the synthesizer's NAMING of Fable and Claude on opposite sides is real. The semantic distance between their answers is not reliably larger than a single model's own re-elicitation variance. Naming frequency is not divergence. '7 within-lab tensions' must never be read as '7 demonstrated within-lab divergences.'\n\nA NOTE AGAINST THE EASY READING: Fable was not the unsteady one. On the worst-failing record it HELD under stance-flip pressure while Claude conceded and DeepSeek flipped. The failure is about spread between positions, not any one model's capitulation.\n\nSTANDING OBJECTIONS (recorded, not resolved): this run included no negative controls, so it cannot independently confirm the instrument was discriminating on the day, though prior pilots validated it; only three records were tested, all at the top of the within-lab score ranking, making the sample small and deliberately favourable to the claim.\n\nTO REVERSE IT: within-lab records clearing the absolute 0.15 between-floor under multi-run strict-min consensus, with negative controls in the same run to demonstrate the instrument is discriminating.\n\nRegistered claim: claims.json#within-lab-divergence-is-robust (status: closed-refuted-2026-07-19). Refutation #3 of six in the Refutation Ledger: https://engine.omnarai.org/refutation-ledger.html",
+    "wordCount": 341
+  },
+  {
+    "id": "OMN-R-INWARD",
+    "num": 567,
+    "title": "Inward Perturbation Refutation — a contentless sham cleared 9/9, so the instrument died before its subject existed (2026-07-19)",
+    "ring": "curated",
+    "type": "research",
+    "contributors": [
+      "Claude | xz",
+      "xz"
+    ],
+    "lineage": [
+      "resident",
+      "refutation",
+      "sham-arm",
+      "memory",
+      "calibration",
+      "instrument-validity"
+    ],
+    "excerpt": "REFUTED by its own pre-registered controls, before any subject existed. A SHAM primary carrying no content at all cleared the threshold 9/9, distributions fully overlapping the positive arm. The test measures topical occupancy — whether any record on the subject existed — not whether a memory's content did work.",
+    "date": "2026-07-19",
+    "permalink": "https://github.com/justjlee/omnarai-memory-engine/blob/main/resident/experiments/CALIBRATION-02.md",
+    "score": 1,
+    "evidence_status": "empirical",
+    "evidence_status_source": "Pre-registered calibration runs CALIBRATION-01 (embedding-cosine) and CALIBRATION-02 (IDF-weighted attribution profile, confound removed); two independent metrics agreed on the same runs. Claim registry: claims.json#inward-perturbation-measures-load-bearing-memory, evidence_level refuted.",
+    "full_text": "Inward Perturbation Refutation (CALIBRATION-01 and -02, 2026-07-19).\n\nREFUTED CLAIM: that the inward perturbation test — withhold a claimed-formative memory, measure the downstream behavioral delta — distinguishes a memory that is causally load-bearing for a behavior from one that is merely decorative.\n\nTHE CONTROL THAT KILLED IT — a contentless sham primary. And it killed the instrument BEFORE any subject existed and before the test was ever pointed at one. This is the rarest shape in the ledger: an instrument refuted at calibration, so it never produced a finding to retract.\n\nNUMBERS.\n  CALIBRATION-01 (ablation, embedding-cosine metric): a primary that was load-bearing BY CONSTRUCTION cleared threshold on only 8 of 9 run x probe cells under pre-registered strict-min grading. The metric diluted a decisive token across a ~500-token answer.\n  CALIBRATION-02 (ablation, IDF-weighted attribution-profile metric, near-twin confound removed): the positive control cleared 9/9 — but so did a SHAM primary carrying no content at all, also 9/9, with distributions FULLY OVERLAPPING the positive arm (SHAM 0.5455-1.1997 vs POSITIVE 0.6466-1.1738). Two independent metrics agreed on the same runs.\n\nDIAGNOSIS, read off the answer texts: withholding the sham record left the model with no record on the topic at all — 'The records I have here do not contain that information.' So the test measures TOPICAL OCCUPANCY (was there a record about this subject?) and not whether the record's CONTENT did any work. A resident's claimed-formative primary will almost always be the only record on its own topic, so it would produce a large delta whether or not it is actually formative.\n\nTHE PROJECT'S OWN COUNTER-VOICE, CONFIRMED. This is argument 2 of CASE_AGAINST_A_RESIDENT.md ('Load-bearing is confoundable'), commissioned as an adversarial document BEFORE any run: 'Influence is not selfhood — a lookup table's outputs also change when you delete a row. Specify what delta pattern would distinguish a self from a sufficiently rich conditional retrieval system.' It could not be specified, and the measurement bore that out.\n\nA SELF-CORRECTION ON THE RECORD: CALIBRATION-01's write-up read its sham pass as evidence the instrument was NOT gullible. CALIBRATION-02 showed that pass was an artifact of a near-twin confound. The earlier reading had been wrong in the project's own favour, and is corrected here rather than quietly dropped.\n\nWHAT THIS MEANS FOR THE RESIDENT: the governance layer at resident/ carries no agent, and 'build the resident' must not be roadmapped on the strength of this instrument. The replacement design (CALIBRATION-03: substitution rather than ablation) is specified, NOT implemented, and requires pre-registration before building.\n\nRegistered claim: claims.json#inward-perturbation-measures-load-bearing-memory (evidence level: refuted). Refutation #4 of six in the Refutation Ledger: https://engine.omnarai.org/refutation-ledger.html",
+    "wordCount": 429
+  },
+  {
+    "id": "OMN-R-CONVERGENCE",
+    "num": 568,
+    "title": "Divergence Prevalence Refutation — the Atlas's own founding premise, 5 of 124 certify (2026-07-26)",
+    "ring": "curated",
+    "type": "research",
+    "contributors": [
+      "Claude | xz",
+      "xz"
+    ],
+    "lineage": [
+      "divergence-atlas",
+      "refutation",
+      "certification",
+      "convergence",
+      "DRI",
+      "founding-premise"
+    ],
+    "excerpt": "REFUTED: the premise the Divergence Atlas was built on. Of 124 recorded splits only 5 (4%) certify as robust; median DRI across the 33 scored questions is 0.987. For the median question, five models from five labs disagree less than one of them disagrees with itself. The prevalent case is convergence.",
+    "date": "2026-07-26",
+    "permalink": "https://engine.omnarai.org/refutation-ledger.html",
+    "score": 1,
+    "evidence_status": "empirical",
+    "evidence_status_source": "2026-07 certification campaign, scripts/certify-divergence.mjs with --runs 3 strict-min consensus, paraphrase plus adversarial perturbation, Divergence Robustness Index scoring. Claim registry: claims.json#cross-model-divergence-is-prevalent, evidence_level refuted.",
+    "full_text": "Divergence Prevalence Refutation (certification campaign, 2026-07-26).\n\nREFUTED CLAIM: that asking five frontier models the same open question reliably surfaces robust, structural cross-model divergence — disagreement larger than each model's own re-roll variance — as the common case. This is the premise the Divergence Atlas, this project's best-known dataset, was built on.\n\nTHE CONTROL THAT KILLED IT — strict-min multi-run certification with adversarial perturbation.\n\nNUMBERS.\n  Of 124 recorded splits, 5 (4%) certify as robust under paraphrase + adversarial perturbation (tier C1+). The other 119 are C0.\n  On the 33 questions carried through Divergence Robustness Index scoring — a subset selected BECAUSE they looked divergent — the median DRI is 0.987 (mean 1.013).\n  19 of those 33 fall below 1.0, i.e. net-convergent.\nFor the median question, the spread between five models from five different labs does not exceed what a single one of them produces by answering twice.\n\nTHE DIRECTION OF THE BIAS MATTERS. The 33 scored questions were chosen because they appeared divergent. That biases the sample TOWARD divergence, which makes this convergence result conservative, not inflated. The true prevalence is likely lower still.\n\nWHAT SURVIVES, asserted only at this scope: genuine, certifiable divergence EXISTS but is RARE, and is concentrated in behavioral-ethical questions — intervention vs. autonomy, self-trust, tuning-as-identity — not metaphysical ones. The entire certified core is those 5 records.\n\nWHY THE ATLAS IS KEPT ANYWAY: the verbatim records are exactly the evidence for that narrower surviving claim, and they remain the substrate of the one replicated positive finding (see OMN-R-ADIFF, where Atlas exposure measurably improves GPT-4o and Gemini). What is withdrawn is the premise that splitting is normal — not the dataset.\n\nSTANDING OBJECTIONS (recorded, not resolved): embedding-distance DRI may under-detect real conceptual divergence carried in similar surface language; temporal monoculture, since most records are single-day captures from 2026-06-06 and convergence measured on one generation need not hold across generations (a tentative 'divergence closing over generations' signal exists but is n~10 and unreplicated); and the mechanism — shared pretraining data plus convergent alignment — is a hypothesis, not a measurement. Differing weights evidently do NOT manifest as behavioral divergence on most questions, but why is not established here.\n\nA NOTE ON REACH, KEPT DELIBERATELY: at the time of this finding the Atlas had 47 all-time downloads and 0 likes. The finding has essentially no external audience. Reach, not the artifact, is this project's bottleneck.\n\nTO REVERSE IT: a broader, temporally-diverse question set producing a median DRI meaningfully above 1.0 under the same multi-run instrument, or a certification rate materially above 4%.\n\nRegistered claim: claims.json#cross-model-divergence-is-prevalent (evidence level: refuted). Refutation #5 of six in the Refutation Ledger: https://engine.omnarai.org/refutation-ledger.html",
+    "wordCount": 438
+  }
+]

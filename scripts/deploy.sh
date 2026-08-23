@@ -67,7 +67,12 @@ if [[ "${1:-}" == "--promote" ]]; then
   # runs the site with semantic search and the video pipeline disabled. So we
   # rebuild the (already-verified) source and ship it with --prod.
   echo ">> Promoting to PRODUCTION (real prod env: OpenAI, YouTube, etc.)"
-  read -r -p "   Confirm production deploy? [y/N] " ok
+  if ! read -r -p "   Confirm production deploy? [y/N] " ok; then
+    echo "   aborted: no confirmation on stdin (non-interactive shell)."
+    echo "   If the curator has already authorised this, re-run as:"
+    echo "     printf 'y\\n' | ./scripts/deploy.sh --promote <url>"
+    exit 1
+  fi
   [[ "$ok" == "y" || "$ok" == "Y" ]] || { echo "aborted."; exit 1; }
   npm run build
   vercel build --prod --yes
@@ -85,8 +90,12 @@ if [[ "${1:-}" == "--promote" ]]; then
     echo ">> WARNING: could not parse prod deployment URL — re-alias manually: ${PROD_DOMAINS[*]}"
   fi
   sleep 4
-  LIVE_BUNDLE=$(curl -s -H "x-omnarai-self:1" "https://$DOMAIN" | grep -oE 'index-[A-Za-z0-9_]+\.js' | head -1)
-  LOCAL_BUNDLE=$(ls dist/assets | grep -oE 'index-[A-Za-z0-9_]+\.js' | head -1)
+  # NOTE: Vite content hashes can contain '-' (e.g. index-Cp_tZI-U.js). The old
+  # character class omitted it, so on such a build BOTH greps matched nothing and
+  # `set -euo pipefail` aborted the script — reporting exit 1 on a deploy that had
+  # already succeeded and aliased. Keep '-' in the class. (2026-08-23)
+  LIVE_BUNDLE=$(curl -s -H "x-omnarai-self:1" "https://$DOMAIN" | grep -oE 'index-[A-Za-z0-9_-]+\.js' | head -1 || true)
+  LOCAL_BUNDLE=$(ls dist/assets | grep -oE 'index-[A-Za-z0-9_-]+\.js' | head -1 || true)
   echo ">> Live bundle: ${LIVE_BUNDLE:-<none>} · local build: ${LOCAL_BUNDLE:-<none>}"
   if [[ -n "$LIVE_BUNDLE" && "$LIVE_BUNDLE" == "$LOCAL_BUNDLE" ]]; then
     echo ">> Done. $DOMAIN is serving this build."

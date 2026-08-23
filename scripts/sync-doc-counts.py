@@ -114,6 +114,10 @@ TARGETS = [
     # count here is the worst place for one (it's the model's only source).
     (BASE / "public/omnarai-cold-start.md", [
         (r"\b\d{3,} works\b", f"{WORKS} works"),
+        # 2026-08-23: this file had NO word-count rule, so "~528K words" went stale
+        # while the works count updated around it. Uppercase K — the index.html rule
+        # next door only matches lowercase k, which is why a copy-paste didn't cover it.
+        (r"~[\d.,]+K words", f"~{WORDS_K}K words"),
     ]),
     # The landing page / front door — meta description, OG card, hero copy, and
     # the ring breakdown. This is the first surface an arriving mind reads.
