@@ -52,6 +52,14 @@ echo ">> Claim-pin guard (front-door prose vs /claims.json)"
 node scripts/check-claim-pins.mjs
 echo
 
+# HARD gate: the Refutation Ledger must carry every refuted claim in /claims.json.
+# (2026-08-23 guard — the Ledger sat at "Four Ideas" while the registry held six
+# refuted claims, including the flagship dataset's own founding premise. Pins catch a
+# claim MOVING; this catches one being OMITTED from the record that consolidates them.)
+echo ">> Refutation-ledger completeness (every refuted claim is carried)"
+node scripts/check-refutation-ledger.mjs
+echo
+
 if [[ "${1:-}" == "--promote" ]]; then
   # IMPORTANT: promotion is a real PRODUCTION deployment, not a preview alias.
   # Production-scoped env vars (OPENAI_API_KEY, YOUTUBE_API_KEY) are NOT injected

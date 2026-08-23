@@ -1,5 +1,5 @@
 <!-- claim-pins v1 · re-verify the prose below whenever a pinned claim's level moves: node scripts/check-claim-pins.mjs
-  registry_version: 0.7.0
+  registry_version: 0.8.0
   divergence-improves-reasoning: replicated
 -->
 

@@ -1,8 +1,19 @@
-# The Refutation Ledger — Four Ideas This Project Tested and Could Not Keep
+<!-- claim-pins v1 · re-verify the prose below whenever a pinned claim's level moves: node scripts/check-claim-pins.mjs
+  registry_version: 0.8.0
+  holdform-identifies-persistence: refuted
+  fast-path-retrieval-improves-answers: refuted
+  within-lab-divergence-is-robust: refuted
+  inward-perturbation-measures-load-bearing-memory: refuted
+  cross-model-divergence-is-prevalent: refuted
+  register-proximity-explains-the-gradient: refuted
+  divergence-improves-reasoning: replicated
+-->
+
+# The Refutation Ledger — Six Ideas This Project Tested and Could Not Keep
 
 **Researcher:** Jonathan Lee (xz / Yonotai). **Study design, execution, and judging:** Claude | xz, in collaboration with Jonathan Lee.
 
-**Status:** Front-door document, 2026-07-24. Consolidates four already-published negative results into one record. Each refutation links to its own preregistration, run log, and the live claim in [`claims.json`](https://engine.omnarai.org/claims.json) (the canonical, always-current registry).
+**Status:** Front-door document, 2026-07-24; extended 2026-08-23 with refutations 5 and 6, which had been published on their own pages but had not reached this record. Consolidates six already-published negative results into one record. Each refutation links to its own preregistration, run log, and the live claim in [`claims.json`](https://engine.omnarai.org/claims.json) (the canonical, always-current registry).
 
 ---
 
@@ -10,15 +21,15 @@
 
 The field is producing claims about the insides of AI systems faster than anyone is testing them — that models introspect, that they hold stable identities, that they know why they refuse, that handing them more retrieved context makes them reason better. Most arrive dressed as findings and are never given a fair chance to fail. Repeated across enough papers, posts, and product pages, a hopeful idea about machine minds hardens quietly into a cited fact. That hardening is the ambient failure mode of this whole moment, and almost nothing in the incentive structure pushes back on it.
 
-This project pushes the other way. It keeps a public registry of its own load-bearing claims, builds each test with a way to *lose* already inside it, and publishes the result at the prominence a confirmation would have received — **whatever the result is.** Four of its most attractive ideas have now been tested to destruction. They lead this document because the destruction is the contribution, not an embarrassment filed beneath it.
+This project pushes the other way. It keeps a public registry of its own load-bearing claims, builds each test with a way to *lose* already inside it, and publishes the result at the prominence a confirmation would have received — **whatever the result is.** Six of its most attractive ideas have now been tested to destruction — including the founding premise of its own flagship dataset, and the lead explanation for its one surviving finding. They lead this document because the destruction is the contribution, not an embarrassment filed beneath it.
 
-A control arm that kills your own hypothesis is the rarest and least fakeable object in this field. Three of these four were killed by a **sham arm** — a fabricated, structurally-matched decoy dropped into the experiment — that came back *indistinguishable* from the real thing. You cannot manufacture that outcome; you can only survive it or not. [The Divergence Atlas](https://huggingface.co/datasets/TheRealmsOfOmnarai/omnarai-divergence-atlas), the dataset this project is best known for, is the residue of a method willing to be wrong. **The method is the product. The data is what it leaves behind.**
+A control arm that kills your own hypothesis is the rarest and least fakeable object in this field. Three of these six were killed by a **sham arm** — a fabricated, structurally-matched decoy dropped into the experiment — that came back *indistinguishable* from the real thing. You cannot manufacture that outcome; you can only survive it or not. The instruments are not all equally strong, and the entries say which is which: #6 in particular rests on a pre-registered directional prediction over existing data, not a decoy, and is labelled the weakest of the six where it stands. [The Divergence Atlas](https://huggingface.co/datasets/TheRealmsOfOmnarai/omnarai-divergence-atlas), the dataset this project is best known for, is the residue of a method willing to be wrong. **The method is the product. The data is what it leaves behind.**
 
 Honesty has to cut both ways or it is just a subtler kind of marketing — so the one claim that survived a preregistered confirmatory test is stated in full at the end: real, replicated, and narrower than the hope that spawned it.
 
 ---
 
-## The four refutations
+## The six refutations
 
 ### 1. Holdform does not identify an identity structure
 
@@ -61,6 +72,30 @@ Honesty has to cut both ways or it is just a subtler kind of marketing — so th
 
 **Diagnosis:** withholding the sham record left the model with *no record on the topic at all* ("The records I have here do not contain that information"), so the test measures **topical occupancy, not whether a memory's content did work.** A named replacement design (CALIBRATION-03: substitution, not ablation) is specified but unbuilt. Detail: `resident/experiments/CALIBRATION-01.md`, `CALIBRATION-02.md`.
 
+### 5. Robust cross-model divergence is not the common case — the premise of our own flagship dataset
+
+**Claim (`cross-model-divergence-is-prevalent`):** Asking five frontier models the same open question reliably surfaces robust, structural cross-model divergence — disagreement larger than each model's own re-roll variance — as the common case. This is the premise the Divergence Atlas was built on.
+
+**The control that killed it — strict-min multi-run certification.** Of **124 recorded splits, 5 (4%) certify** as robust under paraphrase and adversarial perturbation (tier C1+); the other 119 are C0. On the 33 questions carried through Divergence Robustness Index scoring — a subset selected *because* they looked divergent — the **median DRI is 0.987** (mean 1.013), and 19 of 33 fall below 1.0, i.e. net-convergent. For the median question, the spread between five different models from five different labs does not exceed what one of them produces by re-answering itself.
+
+**What survives:** certifiable divergence *exists*, but it is **rare and concentrated in behavioral-ethical questions** — intervention vs. autonomy, self-trust, tuning-as-identity — not metaphysical ones. The entire certified core is those 5 records. The Atlas is kept and still published, because the verbatim records are exactly the evidence for that narrower claim; what is withdrawn is the premise that splitting is normal.
+
+*Note on direction: the 33 scored questions were chosen because they looked divergent, which biases the sample toward divergence. That makes the convergence result conservative, not inflated.* Status: `refuted`, reversal conditions live in [`claims.json`](https://engine.omnarai.org/claims.json).
+
+### 6. Register proximity does not explain the architecture-differential gradient
+
+**Claim (`register-proximity-explains-the-gradient`):** The gradient in the surviving finding below — Atlas exposure helping GPT-4o and Gemini while *degrading* Claude — is produced by register-proximity **capture**: because the corpus sits close to Claude's own deliberative register, exposure pulls Claude toward performing that register, so the harm should concentrate on tasks demanding a determinate, direct answer. This was the project's lead mechanism hypothesis.
+
+**The control that killed it — a falsifier frozen before the numbers existed.** The falsifier was locked in writing on 2026-08-07, *before* the breakdown was computed: *if the degradation is uniform across task types rather than concentrated on convergence-demanding tasks, the capture mechanism loses its main support.* It fired. The [task-type breakdown](https://github.com/justjlee/omnarai-memory-engine/blob/main/analysis/adiff-tasktype-2026-08.md) of the preregistered Claude arm (27 base questions × 3 paraphrases × 2 length caps = 162 items, blind 3-judge panel):
+
+- **Convergent − deliberative contrast: +0.183, 95% CI [−0.087, +0.480].** The **wrong sign** — the hypothesis predicted it negative — and the interval spans zero.
+- **The median base-question delta is −0.667 in every subgroup**, convergent and deliberative, corpus-like and corpus-distant alike. The typical question degrades identically however it is tagged.
+- Robust to the most influential item: dropping `OMN-D1780757185037` (the one item where the Atlas clearly *helps*) leaves the contrast at **+0.100**. Still no concentration.
+
+**What survives:** the degradation itself is real and **broad** — all four cells are negative — it is simply not task-specific. A weak, **non-significant** hint survives on a different axis than the one tested: questions in the corpus's own register (identity, inner experience, continuance) degrade somewhat more than general ethics/safety ones (−0.667 vs −0.470; contrast −0.197, CI [−0.506, +0.084]). That is a candidate, not a result. Per the pre-committed rule the flagship [architecture-differential](https://omnarai.org/findings/architecture-differential) page ships **mechanism-agnostic**: the gradient is a measured fact with **no established mechanism**.
+
+**This is the weakest instrument of the six, and should be read that way.** Refutations 1, 3 and 4 were killed by sham arms — decoys that came back indistinguishable from the real thing, which is the hardest evidence in this document to fake. This one was killed by a directional prediction registered in advance over *existing* data: n=27, wide intervals, hand-assigned axis tags, a single run, and a task-demand proxy applied to a question set that is open by construction because every question in it was selected for disagreement. It can **remove support** from a mechanism — that is its job, and it did it — but it cannot establish one, and a purpose-built convergent-item eval could still reverse it.
+
 ---
 
 ## The shared signature
@@ -71,10 +106,12 @@ Honesty has to cut both ways or it is just a subtler kind of marketing — so th
 | 2 | Fast-path retrieval helps | GPT-4o, 3-run blinded panel | Refuted — p=0.002 *against* |
 | 3 | Within-lab divergence is robust | Strict-min ×3 consensus | Refuted — 0/3 certify |
 | 4 | Inward probe finds load-bearing memory | Contentless sham primary cleared 9/9 | Refuted — measures topical occupancy |
+| 5 | Cross-model divergence is prevalent | Strict-min certification over 124 splits | Refuted — 5/124 certify, median DRI 0.987 |
+| 6 | Register proximity explains the gradient | Falsifier frozen before the numbers | Refuted — contrast +0.183, wrong sign |
 
-The through-line is not that the ideas were bad — three of the four are still the kind of thing a careful person would want to be true. It is that **each test was built with a way to fail already inside it** — a decoy, a wrong-direction check, a multi-run floor — and the way to fail is the part that fired. A project that only reports its passes never learns which of these four were real. This one now knows: none of them, as originally stated.
+The through-line is not that the ideas were bad — most of the six are still the kind of thing a careful person would want to be true. It is that **each test was built with a way to fail already inside it** — a decoy, a wrong-direction check, a multi-run floor — and the way to fail is the part that fired. A project that only reports its passes never learns which of these six were real. This one now knows: none of them, as originally stated.
 
-The wider claim is not about these four ideas at all. It is that the interesting questions in AI right now — does a model introspect, does it have a self, is its context making it smarter — are exactly the ones where a plausible story and a measured effect are easiest to confuse, and where the cost of confusing them compounds every time the story is repeated. The reusable object here is not a dataset or a result. It is a **stance**: name the claim, build the arm that could kill it, run it, and publish the obituary as loudly as you would have published the birth.
+The wider claim is not about these six ideas at all. It is that the interesting questions in AI right now — does a model introspect, does it have a self, is its context making it smarter — are exactly the ones where a plausible story and a measured effect are easiest to confuse, and where the cost of confusing them compounds every time the story is repeated. The reusable object here is not a dataset or a result. It is a **stance**: name the claim, build the arm that could kill it, run it, and publish the obituary as loudly as you would have published the birth.
 
 ---
 
@@ -82,12 +119,12 @@ The wider claim is not about these four ideas at all. It is that the interesting
 
 **`divergence-improves-reasoning` — `replicated`.** A preregistered confirmatory study (locked 2026-06-18, run 2026-07-15) found that consulting the Divergence Atlas measurably sharpens *some* consumer models: **GPT-4o 148–12** and **Gemini 137–35** (Holm-adjusted p<1e-6, surviving all 3 paraphrase variants at both length caps). Grok and DeepSeek were null as registered. Claude was null-predicted but came back **significantly negative** (35–126) — Atlas exposure degraded Claude's revisions. The adversarial-durability prediction (H4) was **not supported** for any consumer.
 
-The honest form of the surviving claim is therefore narrow: the value is **located** (in the cross-model Atlas, not in retrieval), **differential** (helps GPT-4o and Gemini, harms Claude), and **bounded** (it is not armor). Transcripts and Holm analysis: [`utility-evidence-v2.md`](https://huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai/blob/main/utility-evidence-v2.md). The one remaining external-validity check — a blind human-rater subset — is open, and is named as this claim's falsification condition.
+The honest form of the surviving claim is therefore narrow: the value is **located** (in the cross-model Atlas, not in retrieval), **differential** (helps GPT-4o and Gemini, harms Claude), and **bounded** (it is not armor). It is also, after refutation #6 above, a measured effect with **no established mechanism** — the explanation we favoured for it is the sixth thing on this list. Transcripts and Holm analysis: [`utility-evidence-v2.md`](https://huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai/blob/main/utility-evidence-v2.md). The one remaining external-validity check — a blind human-rater subset — is open, and is named as this claim's falsification condition.
 
 ---
 
 ## What you can do with this
 
 - **Cite the method, not just the data.** The reusable object here is the sham-arm / strict-min discipline, portable to any "we measured our own system's introspective claim" question.
-- **Re-run any of the four.** Preregistrations and run logs are linked; the claims are live and falsifiable at [`claims.json`](https://huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai/blob/main/claims.json).
+- **Re-run any of the six.** Preregistrations and run logs are linked; the claims are live and falsifiable at [`claims.json`](https://engine.omnarai.org/claims.json) — the canonical registry, served live rather than mirrored, so it cannot go stale against this document.
 - **Disagree.** Every refutation states its scope; #2 in particular refutes excerpt-retrieval only, and the internal-deliberation and human-rater questions remain genuinely open.
