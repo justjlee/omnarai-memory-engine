@@ -1,6 +1,6 @@
 # Omnarai Memory Engine — Claude Code Context
 
-**Live at:** omnarai.vercel.app
+**Live at:** engine.omnarai.org (canonical; omnarai.vercel.app 301/308s here once ws1-canonical is deployed)
 **Last updated:** 2026-07-19
 **Status:** Fully operational and MEASURED. Cognitive loop closed; durable grown-memory substrate live (Vercel Blob). Preregistered utility study CONFIRMED 5/5 (utility-evidence-v2.md on HF); undifferentiated excerpt retrieval REFUTED → retrieval is now layered (`layers=`/`exclude=`/`evidence_threshold=`). Canonical counts + attestation: `/api/manifest` (hashes pinned to `attest-*` git tags). Claim registry: `/claims.json`. Longitudinal cron healed 2026-07-15 (60s-wall fix — primaries commit first). Within-lab divergence REFUTED 2026-07-19 (claims.json v0.4.0). **Resident v0 constitutional substrate landed 2026-07-19 at `resident/` — governance layer only, no agent, not deployed. HOLD #9 ANSWERED (the empty seat: deletion structurally unreachable until a resident arrives) + 12a adopted; the agent loop is now gated on MEASUREMENT, not governance (id-level exclusion in query.js, then the control arm). 42/42 checks.**
 

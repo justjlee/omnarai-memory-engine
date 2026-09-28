@@ -16,7 +16,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 set -a; source .env.local 2>/dev/null || { echo "ERROR: .env.local not found"; exit 1; }; set +a
-BASE="${OMNARAI_BASE:-https://omnarai.vercel.app}"
+BASE="${OMNARAI_BASE:-https://engine.omnarai.org}"
 
 if [[ "${1:-}" == "--reset" ]]; then
   # The milestone fired 2026-06-16 (first real external visitor) and firstExternalAt

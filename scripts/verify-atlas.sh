@@ -3,7 +3,7 @@
 # (docs/handoff-2026-07-14/). All eight checks fully wired to repo reality:
 #   store  = scripts/.grown-snapshot.json (dump-grown.mjs snapshot of the canonical blob)
 #   export = atlas/data/atlas-v1.0.0.jsonl (scripts/export_atlas.py)
-#   live   = https://omnarai.vercel.app (curled with the x-omnarai-self telemetry marker)
+#   live   = https://engine.omnarai.org (curled with the x-omnarai-self telemetry marker)
 # Exit nonzero on any failure. V5/V6 exercise LIVE retrieval/trace and can fail for
 # live-side reasons independent of the export — that distinction matters when reading results.
 set -uo pipefail
@@ -12,7 +12,7 @@ cd "$(dirname "$0")/.." || exit 1
 ATLAS_DIR="atlas"
 JSONL="$ATLAS_DIR/data/atlas-v1.0.0.jsonl"
 CARD="$ATLAS_DIR/README.md"
-API_BASE="${API_BASE:-https://omnarai.vercel.app}"
+API_BASE="${API_BASE:-https://engine.omnarai.org}"
 SELF_HEADER="x-omnarai-self: 1"
 FAIL=0
 
@@ -81,7 +81,7 @@ gold = json.load(open("scripts/eval-gold-set.json"))
 queries = [g["query"] for g in gold if g.get("type") == "conceptual"]
 bad = 0
 for q in queries:
-    url = ("https://omnarai.vercel.app/api/query?format=context&q="
+    url = ("https://engine.omnarai.org/api/query?format=context&q="
            + urllib.parse.quote(q))
     req = urllib.request.Request(url, headers={"x-omnarai-self": "1"})
     d = json.load(urllib.request.urlopen(req, timeout=45))
@@ -99,7 +99,7 @@ echo "== V6: trace completes end-to-end under threshold (D4 proof) =="
 # not that the ticket comes back fast. Submit, poll, time the whole thing.
 python3 <<'PY' && pass "trace jobs completed with measured receipts under 180s" || fail "trace timeout/error"
 import json, time, urllib.request, urllib.parse
-BASE = "https://omnarai.vercel.app"
+BASE = "https://engine.omnarai.org"
 def get(url):
     req = urllib.request.Request(url, headers={"x-omnarai-self": "1"})
     return json.load(urllib.request.urlopen(req, timeout=60))

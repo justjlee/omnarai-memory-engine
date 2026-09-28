@@ -78,7 +78,7 @@ check("SA-5 certification blocks verbatim from store (1 × C1 present)",
 # SA-6 — live-API cross-check on the certified record (view must agree with the export)
 try:
     req = urllib.request.Request(
-        "https://omnarai.vercel.app/api/divergences?id=OMN-D1780757185044",
+        "https://engine.omnarai.org/api/divergences?id=OMN-D1780757185044",
         headers={"x-omnarai-self": "1"})
     live = json.load(urllib.request.urlopen(req, timeout=30))
     exp = c1[0] if c1 else {}
