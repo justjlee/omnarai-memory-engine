@@ -13,6 +13,28 @@
   ],
   "redirects": [
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "omnarai.vercel.app"
+        }
+      ],
+      "destination": "https://engine.omnarai.org/",
+      "statusCode": 301
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "omnarai-memory-engine.vercel.app"
+        }
+      ],
+      "destination": "https://engine.omnarai.org/",
+      "statusCode": 301
+    },
+    {
       "source": "/api/:path*",
       "has": [
         {
