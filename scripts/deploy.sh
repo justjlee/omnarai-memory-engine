@@ -28,7 +28,9 @@ DOMAIN="engine.omnarai.org"   # canonical — used for the post-deploy bundle ve
 # manual alias), so any domain missing from this list silently serves a stale bundle.
 # engine.omnarai.org added 2026-07-26 (canonical migration to omnarai.org in progress) —
 # it was found parked on an old deployment precisely because it wasn't re-aliased here.
-PROD_DOMAINS=("omnarai.vercel.app" "engine.omnarai.org")
+# omnarai-memory-engine.vercel.app added 2026-09-28: left parked on an old build it
+# served 200 instead of the 301 its newer vercel.json carries.
+PROD_DOMAINS=("omnarai.vercel.app" "engine.omnarai.org" "omnarai-memory-engine.vercel.app")
 
 # ── Count self-maintenance — no babysitting ──────────────────────────────────
 # Every deploy (preview AND promote) first rewrites the corpus-count literals
