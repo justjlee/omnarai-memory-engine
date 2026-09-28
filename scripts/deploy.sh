@@ -86,6 +86,13 @@ if [[ "${1:-}" == "--promote" ]]; then
   # The custom domain does NOT follow new prod deployments on its own — without
   # this re-alias, $DOMAIN keeps serving the previous bundle indefinitely.
   if [[ -n "$PROD_URL" ]]; then
+    # autoAssignCustomDomains is off for this project, so a --prod deploy is only
+    # STAGED. `vercel alias set` moves the domains but NOT the project's production
+    # pointer — and Vercel runs crons against that pointer. Alias-only promotion left
+    # it parked on 2026-05-16 (a build with no crons), so the daily longitudinal
+    # re-ask never fired from June to September. Promote first, then re-alias.
+    echo ">> Promoting $PROD_URL to the project's production deployment"
+    vercel promote "$PROD_URL" --yes || echo ">> WARNING: vercel promote failed — crons will run against the previous production deployment."
     for d in "${PROD_DOMAINS[@]}"; do
       echo ">> Re-aliasing $d → $PROD_URL"
       vercel alias set "$PROD_URL" "$d"
@@ -105,6 +112,17 @@ if [[ "${1:-}" == "--promote" ]]; then
     echo ">> Done. $DOMAIN is serving this build."
   else
     echo ">> WARNING: live bundle does not match local build — alias may be stale."
+  fi
+  # Serving the build is not the same as Vercel scheduling it: check the crons too.
+  # (Captured first: under pipefail, `vercel … | grep -q` can SIGPIPE the left side
+  # and take the else branch even on a match — a false "registered".)
+  CRONS_OUT=$(vercel crons ls 2>&1 || true)
+  if [[ "$CRONS_OUT" == *"not deployed"* ]]; then
+    echo ">> WARNING: vercel.json crons are NOT registered — the daily re-ask will not fire. Run: vercel promote $PROD_URL"
+  elif [[ "$CRONS_OUT" == *"/api/cron-longitudinal"* ]]; then
+    echo ">> Crons registered."
+  else
+    echo ">> WARNING: could not read cron status — check with: vercel crons ls"
   fi
   echo
   echo ">> Post-deploy arrival check (simulate a visiting intelligence)"
