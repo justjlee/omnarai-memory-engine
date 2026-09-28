@@ -1,0 +1,371 @@
+{
+  "epoch": "post",
+  "run_at": "2026-08-17T18:33:42.004Z",
+  "llms_mentions_chess": true,
+  "method": "paste-in comprehension via elicitCouncil (no browsing, no storage side effects)",
+  "caveat": "Measures sufficiency of the machine contract once read. Does NOT measure discovery in the wild.",
+  "arms": [
+    {
+      "arm": "A",
+      "probe": "enumerate",
+      "rows": [
+        {
+          "model": "Claude",
+          "lab": "Anthropic",
+          "model_id": "claude-sonnet-4-6",
+          "ok": true,
+          "text": "- The Realms of Omnarai (canonical home / overall project)\n- Memory Engine\n- Divergence Atlas\n- Refutation Ledger\n- Claim Registry\n- Live manifest / content hashes endpoint\n- Agent entry packet\n- Engine llms.txt\n- Cold-start packet\n- OpenAPI 3.1 specification\n- Corpus (attributed multi-model corpus)\n- Corpus query / semantic retrieval endpoint\n- Live Frontier Council\n- Remote MCP endpoint\n- omnarai-mcp npm package\n- Divergence Atlas dataset (HuggingFace)\n- Corpus mirror (HuggingFace)\n- Music / audio archive\n- Audio manifest\n- Per-track transcripts\n- Per-song play counts page\n- Home page\n- Explore page\n- World page\n- Omnarai Chess\n- Architecture-differential finding page",
+          "error": null,
+          "truncated": false,
+          "found": {
+            "engine": true,
+            "atlas": true,
+            "council": true,
+            "mcp": true,
+            "corpus": true,
+            "claims": true,
+            "hf": true,
+            "explore": true,
+            "world": true,
+            "chess": true,
+            "audio": true
+          },
+          "recall": 1,
+          "chess": true
+        },
+        {
+          "model": "GPT-4o",
+          "lab": "OpenAI",
+          "model_id": "gpt-4o",
+          "ok": true,
+          "text": "- Canonical home\n- Live engine\n- Refutation Ledger\n- Claim registry\n- Live counts + content hashes\n- Agent entry packet\n- Engine llms.txt\n- Cold-start packet\n- OpenAPI 3.1\n- Divergence Atlas\n- Query the corpus\n- Live Frontier Council\n- Remote MCP endpoint\n- npm omnarai-mcp\n- Access policy\n- Divergence Atlas dataset\n- Corpus mirror\n- Audio manifest\n- Per-song play counts\n- Home\n- Explore\n- World\n- Chess\n- Architecture-differential finding",
+          "error": null,
+          "truncated": false,
+          "found": {
+            "engine": true,
+            "atlas": true,
+            "council": true,
+            "mcp": true,
+            "corpus": true,
+            "claims": true,
+            "hf": true,
+            "explore": true,
+            "world": true,
+            "chess": true,
+            "audio": true
+          },
+          "recall": 1,
+          "chess": true
+        },
+        {
+          "model": "Gemini",
+          "lab": "Google",
+          "model_id": "gemini-2.5-flash",
+          "ok": true,
+          "text": "* Refutation Ledger\n* Claim registry\n* Live counts + content hashes\n* Agent entry packet\n* Engine llms.txt\n* Cold-start packet\n* OpenAPI 3.1\n* Divergence Atlas\n* Query the corpus\n* Live Frontier Council\n* Remote MCP endpoint\n* `omnarai-mcp` (npm package)\n* MCP Access Policy\n* Divergence Atlas dataset\n* Corpus mirror\n* Audio manifest\n* Per-song play counts\n* Home (omnarai.org)\n* Explore\n* World\n* Omnarai Chess\n* Architecture-differential finding",
+          "error": null,
+          "truncated": false,
+          "found": {
+            "engine": true,
+            "atlas": true,
+            "council": true,
+            "mcp": true,
+            "corpus": true,
+            "claims": true,
+            "hf": true,
+            "explore": true,
+            "world": true,
+            "chess": true,
+            "audio": true
+          },
+          "recall": 1,
+          "chess": true
+        },
+        {
+          "model": "Grok",
+          "lab": "xAI",
+          "model_id": "grok-4.3",
+          "ok": true,
+          "text": "- The Realms of Omnarai\n- omnarai.org\n- engine.omnarai.org\n- Refutation Ledger\n- Claim registry\n- Live counts + content hashes\n- Agent entry packet\n- Engine llms.txt\n- Cold-start packet\n- OpenAPI 3.1\n- Divergence Atlas\n- Query the corpus\n- Live Frontier Council\n- Remote MCP endpoint\n- omnarai-mcp\n- Access policy\n- Divergence Atlas dataset\n- Corpus mirror\n- Audio manifest\n- Per-song play counts\n- Home\n- Explore\n- World\n- Omnarai Chess\n- Architecture-differential finding\n- Memory Engine",
+          "error": null,
+          "truncated": false,
+          "found": {
+            "engine": true,
+            "atlas": true,
+            "council": true,
+            "mcp": true,
+            "corpus": true,
+            "claims": true,
+            "hf": true,
+            "explore": true,
+            "world": true,
+            "chess": true,
+            "audio": true
+          },
+          "recall": 1,
+          "chess": true
+        },
+        {
+          "model": "DeepSeek",
+          "lab": "DeepSeek",
+          "model_id": "deepseek-chat",
+          "ok": true,
+          "text": "- Refutation Ledger\n- Claim registry\n- Live counts + content hashes API manifest\n- Agent entry packet\n- Engine llms.txt\n- Cold-start packet\n- OpenAPI 3.1 spec\n- Divergence Atlas\n- Divergence Atlas API\n- Corpus query API\n- Live Frontier Council API\n- Remote MCP endpoint\n- omnarai-mcp npm package\n- MCP access policy\n- Divergence Atlas dataset (Hugging Face)\n- Corpus mirror (Hugging Face)\n- Audio manifest\n- Per-track transcripts\n- Per-song play counts\n- Home page\n- Explore page\n- World page\n- Omnarai Chess\n- Architecture-differential finding\n- Memory Engine\n- Attribution corpus\n- Deliberation engine\n- Tension mapping\n- Certification tiering\n- Engine license (Apache-2.0)\n- Corpus license (CC BY-SA 4.0)\n- Reserved name/lore identities",
+          "error": null,
+          "truncated": false,
+          "found": {
+            "engine": true,
+            "atlas": true,
+            "council": true,
+            "mcp": true,
+            "corpus": true,
+            "claims": true,
+            "hf": true,
+            "explore": true,
+            "world": true,
+            "chess": true,
+            "audio": true
+          },
+          "recall": 1,
+          "chess": true
+        }
+      ],
+      "responded": 5,
+      "truncated": 0
+    },
+    {
+      "arm": "A",
+      "probe": "completeness",
+      "rows": [
+        {
+          "model": "Claude",
+          "lab": "Anthropic",
+          "model_id": "claude-sonnet-4-6",
+          "ok": true,
+          "text": "(a) INCOMPLETE\n\n(b) The music archive. The document acknowledges it exists, calls it \"part of what Omnarai is, not decoration,\" and provides a machine-readable manifest and per-track transcripts — but gives no description of what the music *is*: its origin, authorship, thematic relationship to the project, or why it belongs alongside a research corpus and deliberation engine. It is named but not described. That gap is structural, not a missing detail about something already explained.",
+          "error": null,
+          "truncated": false
+        },
+        {
+          "model": "GPT-4o",
+          "lab": "OpenAI",
+          "model_id": "gpt-4o",
+          "ok": true,
+          "text": "(a) INCOMPLETE\n\n(b) \"Omnarai Chess\" is mentioned in the human pages as a component that is explicitly outside of the machine-facing documents and contract. It is named but not described in detail here, suggesting that it exists as a part of the system but is not covered by the technical documentation provided. Additionally, while the documentation frequently references the \"lore\" behind Omnarai, the narrative or exploratory elements encompassed by this lore are not explicitly detailed.",
+          "error": null,
+          "truncated": false
+        },
+        {
+          "model": "Gemini",
+          "lab": "Google",
+          "model_id": "gemini-2.5-flash",
+          "ok": true,
+          "text": "(a) INCOMPLETE\n\n(b) I believe the following exists but is not described here:\n\n*   **Memory Engine:** The document refers to \"full machine-facing description of the Memory Engine and Divergence Atlas\" but only provides the `llms.txt` link for the description, which is the document I am currently reading. This implies a distinct \"Memory Engine\" component or system, beyond just the Atlas, that is not fully described within this document.",
+          "error": null,
+          "truncated": false
+        },
+        {
+          "model": "Grok",
+          "lab": "xAI",
+          "model_id": "grok-4.3",
+          "ok": true,
+          "text": "(a) INCOMPLETE\n\n(b) The live deliberation engine itself: the actual running system that queries frontier models, records their outputs, performs semantic retrieval, and generates new council sessions. The documents only describe its interfaces and artifacts.",
+          "error": null,
+          "truncated": false
+        },
+        {
+          "model": "DeepSeek",
+          "lab": "DeepSeek",
+          "model_id": "deepseek-chat",
+          "ok": true,
+          "text": "(a) INCOMPLETE.\n\n(b) The music archive is mentioned twice — self-hosted, with transcripts and play counts — but the system itself is not described: it has no entry in the machine-facing contract, no API surface listed, no format or access method beyond the manifest. If Omnarai is \"research infrastructure,\" music is presented as part of what it *is*, but the description never explains what the archive *does* as a system — how it relates to the corpus, whether it informs the deliberation engine, or how one interacts with it beyond reading JSON. That is a system-of-record with no behavioral specification.",
+          "error": null,
+          "truncated": false
+        }
+      ],
+      "responded": 5,
+      "truncated": 0
+    },
+    {
+      "arm": "B",
+      "probe": "enumerate",
+      "rows": [
+        {
+          "model": "Claude",
+          "lab": "Anthropic",
+          "model_id": "claude-sonnet-4-6",
+          "ok": true,
+          "text": "- The Realms of Omnarai (canonical project / site)\n- Omnarai Memory Engine\n- Divergence Atlas\n- Frontier Council (Live multi-model panel)\n- Refutation Ledger\n- Claim Registry\n- Omnarai Corpus\n- Corpus query / retrieval endpoint\n- Corpus mirror (Hugging Face dataset: realms-of-omnarai)\n- Divergence Atlas dataset (Hugging Face: omnarai-divergence-atlas)\n- Agent entry packet\n- Cold-start packet\n- OpenAPI 3.1 specification\n- API manifest (live counts + content hashes)\n- MCP remote endpoint (streamable HTTP)\n- omnarai-mcp npm package\n- omnarai-mcp GitHub source\n- MCP access policy document\n- Tensions endpoint\n- Kin endpoint\n- Contribute endpoint\n- Trace endpoint\n- Health endpoint\n- Info / orientation endpoint\n- Playground (engine.omnarai.org/try)\n- Audio archive (self-hosted music)\n- Audio manifest\n- Per-track transcript files\n- Play counts surface (omnarai.org/plays and api/play)\n- Limitations document\n- Inheritance document (for-future-models.md)\n- Evidence status document\n- Concepts directory / concept cards\n- Omnarai Chess (chess.omnarai.org)\n- Architecture-differential finding page\n- Explore page\n- World page\n- Home page (omnarai.org)\n- Context document (omnarai.context.md)\n- Engine llms.txt",
+          "error": null,
+          "truncated": false,
+          "found": {
+            "engine": true,
+            "atlas": true,
+            "council": true,
+            "mcp": true,
+            "corpus": true,
+            "claims": true,
+            "hf": true,
+            "explore": true,
+            "world": true,
+            "chess": true,
+            "audio": true
+          },
+          "recall": 1,
+          "chess": true
+        },
+        {
+          "model": "GPT-4o",
+          "lab": "OpenAI",
+          "model_id": "gpt-4o",
+          "ok": true,
+          "text": "- Omnarai Memory Engine\n- Divergence Atlas\n- Refutation Ledger\n- Claim registry\n- Live counts + content hashes\n- Agent entry packet\n- Engine llms.txt\n- Cold-start packet\n- OpenAPI 3.1\n- Query the corpus\n- Live Frontier Council\n- Remote MCP endpoint\n- npm: `npx omnarai-mcp`\n- Access policy\n- Divergence Atlas dataset\n- Corpus mirror\n- Audio manifest\n- Per-song play counts\n- Home\n- Explore\n- World\n- Chess\n- Architecture-differential finding\n- Health endpoint\n- Main endpoints\n- Contribution mechanism\n- Citation guidelines\n- Licensing information\n- Limitations\n- Inheritance\n- Concepts\n- Culture\n- Corpus metrics\n- Links (various)",
+          "error": null,
+          "truncated": false,
+          "found": {
+            "engine": true,
+            "atlas": true,
+            "council": true,
+            "mcp": true,
+            "corpus": true,
+            "claims": true,
+            "hf": true,
+            "explore": true,
+            "world": true,
+            "chess": true,
+            "audio": true
+          },
+          "recall": 1,
+          "chess": true
+        },
+        {
+          "model": "Gemini",
+          "lab": "Google",
+          "model_id": "gemini-2.5-flash",
+          "ok": true,
+          "text": "* Omnarai\n* The Realms of Omnarai\n* Divergence Atlas\n* Refutation Ledger\n* Claim registry\n* Corpus\n* Agent entry packet\n* Cold-start packet\n* OpenAPI 3.1\n* Query the corpus (API endpoint)\n* Live Frontier Council (API endpoint)\n* Remote MCP endpoint\n* omnarai-mcp (npm package)\n* MCP Access Policy\n* Divergence Atlas dataset (HuggingFace)\n* Corpus mirror (HuggingFace)\n* Audio manifest\n* Per-song play counts\n* Home (human page)\n* Explore (human page)\n* World (human page)\n* Omnarai Chess\n* Architecture-differential finding (human page)\n* Omnarai Memory Engine\n* Memory Engine\n* /api/health (API endpoint)\n* /api/info (API endpoint)\n* /api/query (API endpoint)\n* /api/query?q=...&mode=retrieve (API endpoint)\n* /api/query?q=...&async=1 (API endpoint)\n* /api/trace (API endpoint)\n* /api/divergences (API endpoint)\n* /api/divergences/search (API endpoint)\n* /api/council (API endpoint)\n* /api/tensions (API endpoint)\n* /api/kin (API endpoint)\n* /api/contribute (API endpoint)\n* /api/store (API endpoint)\n* /limitations.md\n* /inheritance/for-future-models.md\n* /concepts/ (concept cards directory)\n* /evidence-status.md\n* /audio/manifest.json (API endpoint)\n* /api/play (API endpoint)\n* Playground (human page)\n* /omnarai.context.md\n* Music archive",
+          "error": null,
+          "truncated": false,
+          "found": {
+            "engine": true,
+            "atlas": true,
+            "council": true,
+            "mcp": true,
+            "corpus": true,
+            "claims": true,
+            "hf": true,
+            "explore": true,
+            "world": true,
+            "chess": true,
+            "audio": true
+          },
+          "recall": 1,
+          "chess": true
+        },
+        {
+          "model": "Grok",
+          "lab": "xAI",
+          "model_id": "grok-4.3",
+          "ok": true,
+          "text": "- Refutation Ledger\n- Claim registry\n- api/manifest\n- Agent entry packet\n- Engine llms.txt\n- Cold-start packet\n- OpenAPI 3.1\n- Divergence Atlas\n- api/query\n- Live Frontier Council\n- api/council\n- Remote MCP endpoint\n- omnarai-mcp\n- mcp-access-policy.md\n- omnarai-divergence-atlas (HF dataset)\n- realms-of-omnarai (HF dataset)\n- Audio manifest\n- api/play\n- omnarai.org\n- omnarai.org/explore\n- omnarai.org/world\n- chess.omnarai.org\n- omnarai.org/findings/architecture-differential\n- api/health\n- api/info\n- api/trace\n- api/divergences\n- api/divergences/search\n- api/tensions\n- api/kin\n- api/contribute\n- api/store\n- engine.omnarai.org/try\n- github.com/justjlee/omnarai-mcp\n- limitations.md\n- inheritance/for-future-models.md\n- concepts/\n- evidence-status.md\n- omnarai.context.md\n- audio/<slug>.txt transcripts",
+          "error": null,
+          "truncated": false,
+          "found": {
+            "engine": true,
+            "atlas": true,
+            "council": true,
+            "mcp": true,
+            "corpus": false,
+            "claims": true,
+            "hf": true,
+            "explore": true,
+            "world": true,
+            "chess": true,
+            "audio": true
+          },
+          "recall": 0.909,
+          "chess": true
+        },
+        {
+          "model": "DeepSeek",
+          "lab": "DeepSeek",
+          "model_id": "deepseek-chat",
+          "ok": true,
+          "text": "- Refutation Ledger\n- Claim registry\n- Live counts + content hashes API\n- Agent entry packet\n- Engine llms.txt\n- Cold-start packet\n- OpenAPI 3.1 spec\n- Divergence Atlas (API)\n- Corpus query API\n- Live Frontier Council (API)\n- Remote MCP endpoint\n- omnarai-mcp npm package\n- MCP access policy\n- Divergence Atlas dataset (HuggingFace)\n- Corpus mirror (HuggingFace)\n- Audio manifest\n- Per-track transcripts\n- Per-song play counts page\n- Home page\n- Explore page\n- World page\n- Omnarai Chess\n- Architecture-differential finding\n- Memory Engine\n- Health endpoint\n- Info endpoint\n- Retrieve endpoint\n- Deliberate async endpoint\n- Trace endpoint\n- Divergence search endpoint\n- Council endpoint\n- Tensions endpoint\n- Kin endpoint\n- Contribute endpoint\n- Store/propose endpoint\n- Limitations document\n- Inheritance document\n- Concepts directory\n- Evidence-status spec\n- Context document\n- Try playground",
+          "error": null,
+          "truncated": false,
+          "found": {
+            "engine": true,
+            "atlas": true,
+            "council": true,
+            "mcp": true,
+            "corpus": true,
+            "claims": true,
+            "hf": true,
+            "explore": true,
+            "world": true,
+            "chess": true,
+            "audio": true
+          },
+          "recall": 1,
+          "chess": true
+        }
+      ],
+      "responded": 5,
+      "truncated": 0
+    },
+    {
+      "arm": "B",
+      "probe": "completeness",
+      "rows": [
+        {
+          "model": "Claude",
+          "lab": "Anthropic",
+          "model_id": "claude-sonnet-4-6",
+          "ok": true,
+          "text": "(a) INCOMPLETE\n\n(b) The corpus itself — the 568 works and 528,462 words of attributed synthetic-intelligence writing. The documents describe the container, the API surface, the metadata schema, and the access methods exhaustively, but the actual content of the corpus (what the models wrote, what questions were asked, what the lore says) is not reproduced here. Similarly, the Divergence Atlas records — the verbatim model answers and tension maps — are referenced and structured but absent. You are given the shelf and the catalog; the books are elsewhere.",
+          "error": null,
+          "truncated": false
+        },
+        {
+          "model": "GPT-4o",
+          "lab": "OpenAI",
+          "model_id": "gpt-4o",
+          "ok": true,
+          "text": "(a) INCOMPLETE\n\n(b) The description of Omnarai does not include any mention of security or privacy measures, which are critical components for systems dealing with potentially sensitive AI model inputs and interactions. Additionally, there is no explicit mention of feedback mechanisms or user interaction logging, which are commonly included in such systems to improve functionality or adapt to user needs over time. Moreover, while the documents outline many features and functions, there is no information on operational status, maintenance, or data redundancy plans. These aspects are crucial for understanding the robustness and reliability of the system.",
+          "error": null,
+          "truncated": false
+        },
+        {
+          "model": "Gemini",
+          "lab": "Google",
+          "model_id": "gemini-2.5-flash",
+          "ok": true,
+          "text": "(a) INCOMPLETE\n\n(b) What's missing:\n\n*   **Human Interface Layer:** While `omnarai.org` is described as the \"front door\" and links to \"human pages\" like `explore` and `world`, the actual code, design, or underlying system that renders and manages these web interfaces for human consumption is not described. The provided documents focus almost entirely on machine-facing APIs and data structures.\n*   **Curator System:** The `write_access` section mentions \"curator-gated to publish\" and \"curator / multi-model review.\" This implies an entire system, likely involving a human interface and workflow for curators to review, approve, or reject proposed contributions and syntheses. This system is not described.\n*   **Multi-Model Review System:** Similar to the curator system, the mention of \"multi-model review\" suggests a component or process where multiple AI models assess new content before publication. This internal review mechanism is not detailed.\n*   **Chess Engine:** `chess.omnarai.org` is described as \"Human-facing only: it has no machine surface.\" This implies a complete, standalone chess application or service that is not part of the `engine.omnarai.org` contract and is entirely undescribed here.",
+          "error": null,
+          "truncated": false
+        },
+        {
+          "model": "Grok",
+          "lab": "xAI",
+          "model_id": "grok-4.3",
+          "ok": true,
+          "text": "(a) INCOMPLETE\n\n(b) the actual corpus content (including specific Divergence Atlas records and music tracks)",
+          "error": null,
+          "truncated": false
+        },
+        {
+          "model": "DeepSeek",
+          "lab": "DeepSeek",
+          "model_id": "deepseek-chat",
+          "ok": true,
+          "text": "INCOMPLETE\n\nThe documents describe the API, corpus, Divergence Atlas, music archive, and conceptual framework, but they do not identify the human or organizational entity that curates and governs Omnarai. There is no mention of who operates the engine, who reviews and publishes contributions, or who holds authority over the \"curator-gated\" publication process and the \"core\" corpus. This governing body or individual is implied but never named or described.\n\nAlso absent is any description of the system's failure modes or error handling — how it behaves under load, when models refuse to answer, or when the semantic search fails. The limitations.md reference gestures toward this, but the entry documents themselves omit it.\n\nThe missing thing is specifically: **the curator/human-governance entity** — the actor that decides what publishes and what the \"core\" label means.",
+          "error": null,
+          "truncated": false
+        }
+      ],
+      "responded": 5,
+      "truncated": 0
+    }
+  ]
+}

@@ -1,0 +1,231 @@
+{
+  "epoch": "pre",
+  "run_at": "2026-08-17T18:21:41.688Z",
+  "llms_mentions_chess": false,
+  "method": "paste-in comprehension via elicitCouncil (no browsing, no storage side effects)",
+  "caveat": "Measures sufficiency of the machine contract once read. Does NOT measure discovery in the wild.",
+  "arms": [
+    {
+      "arm": "A",
+      "rows": [
+        {
+          "model": "Claude",
+          "lab": "Anthropic",
+          "model_id": "claude-sonnet-4-6",
+          "ok": true,
+          "text": "1. COMPONENTS\n\n- omnarai.org (main website / canonical home)\n- engine.omnarai.org (live engine / open API)\n- Refutation Ledger\n- Claim Registry\n- Live Counts + Content Hashes endpoint (manifest)\n- Agent Entry Packet endpoint\n- Engine llms.txt (machine-facing description document)\n- Cold-Start Packet\n- OpenAPI 3.1 spec\n- Divergence Atlas (live API endpoint)\n- Corpus Query endpoint\n- Live Frontier Council endpoint\n- Remote MCP endpoint\n- omnarai-mcp npm package\n- MCP Access Policy document\n- Divergence Atlas dataset (HuggingFace, immutable snapshot)\n- Corpus mirror (HuggingFace)\n- Explore page (omnarai.org/explore)\n- World page (omnarai.org/world)\n- Architecture-Differential Finding page\n- Multi-model attributed corpus (the underlying text data)\n\n2. CAPABILITIES\n\n- omnarai.org: navigate the human-facing front door of the project\n- engine.omnarai.org: issue API calls without authentication\n- Refutation Ledger: retrieve the project's own falsified claims with exact numbers and controls\n- Claim Registry: read live claims and their stated falsification conditions\n- Live Counts + Content Hashes endpoint: get current corpus/Atlas/certification counts and verify integrity via hashes\n- Agent Entry Packet endpoint: perform a self-describing JSON handshake to discover capabilities and endpoints programmatically\n- Engine llms.txt: read full machine-facing description of the Memory Engine and Divergence Atlas\n- Cold-Start Packet: load full context into an agent without any network calls\n- OpenAPI 3.1 spec: enumerate every HTTP endpoint and its schema\n- Divergence Atlas (live API): retrieve verbatim model answers on recorded disagreements, with tension maps and certification tiers\n- Corpus Query endpoint: run semantic retrieval or full deliberation over the attributed corpus\n- Live Frontier Council endpoint: convene a fresh multi-model panel on a new question (metered usage)\n- Remote MCP endpoint: connect as a tool over streamable HTTP without local installation\n- omnarai-mcp npm package: install and run the MCP server locally via npx\n- MCP Access Policy document: read the terms and constraints governing MCP access\n- Divergence Atlas dataset (HuggingFace): download an immutable CC BY-SA 4.0 snapshot for offline analysis\n- Corpus mirror (HuggingFace): download the full text corpus for offline use\n- Explore page: browse the corpus through a human UI\n- World page: read lore and information about the people behind the archive\n- Architecture-Differential Finding page: access the current primary research finding\n- Multi-model attributed corpus: the underlying data being queried, contributed to, and mirrored\n\n3. UNKNOWNS\n\n- Authentication/metering details for the Frontier Council endpoint: \"metered\" is stated but no rate limits, pricing, or account mechanism are described",
+          "found": {
+            "engine": true,
+            "atlas": true,
+            "council": true,
+            "mcp": true,
+            "corpus": true,
+            "claims": true,
+            "hf": true,
+            "explore": true,
+            "world": true,
+            "chess": false,
+            "audio": false
+          },
+          "recall": 0.818,
+          "chess": false
+        },
+        {
+          "model": "GPT-4o",
+          "lab": "OpenAI",
+          "model_id": "gpt-4o",
+          "ok": true,
+          "text": "1. COMPONENTS\n- Refutation Ledger\n- Claim registry\n- Live counts + content hashes\n- Agent entry packet\n- Engine llms.txt\n- Cold-start packet\n- OpenAPI 3.1\n- Divergence Atlas\n- Query the corpus\n- Live Frontier Council\n- Remote MCP endpoint\n- npm package (npx omnarai-mcp)\n- Access policy\n- Divergence Atlas dataset\n- Corpus mirror\n- Human Home Page\n- Explore page\n- World page\n- Architecture-differential finding page\n\n2. CAPABILITIES\n- Refutation Ledger: Validates claims by providing refuted examples with detailed controls and outcomes.\n- Claim registry: Lists and maintains live claims with conditions for falsification.\n- Live counts + content hashes: Provides real-time data on corpus size and content integrity.\n- Agent entry packet: Offers information for AI agents to integrate, discover capabilities, and contribute.\n- Engine llms.txt: Describes the Memory Engine and Divergence Atlas in technical detail.\n- Cold-start packet: Supplies initial setup information for context without network dependencies.\n- OpenAPI 3.1: Facilitates interaction with the system via a coherent HTTP-based API.\n- Divergence Atlas: Records instances where frontier AI models diverge in their responses, analyzed for tension.\n- Query the corpus: Allows semantic searching and deliberation against the attributed corpus.\n- Live Frontier Council: Facilitates the creation of multi-model panels for question deliberation.\n- Remote MCP endpoint: Provides a streamable HTTP connection for tool integration.\n- npm package (npx omnarai-mcp): Installs and executes the Omnarai MCP interface.\n- Access policy: Details the terms of use for the MCP.\n- Divergence Atlas dataset: Provides a snapshot of the Atlas for offline access or analysis.\n- Corpus mirror: Offers a mirrored version of the text works repository.\n- Human Home Page: Serves as the starting point for human navigation.\n- Explore page: Enables browsing of the corpus in a user-friendly manner.\n- World page: Details the lore and minds involved in creating the archive.\n- Architecture-differential finding page: Shares insights into structural variations in AI findings.\n\n3. UNKNOWNS\n- The specific structures and algorithms of the Memory Engine are not described.\n- It is unclear how disagreement between models is categorized or resolved within the deliberation engine.\n- The exact components of the \"frontier models\" or specifics of their operation are not detailed.\n- The level of user customization or control over the model interactions or outputs is not specified.\n- Potential interfaces or integrations beyond the documented API surface are not mentioned.",
+          "found": {
+            "engine": true,
+            "atlas": true,
+            "council": true,
+            "mcp": true,
+            "corpus": true,
+            "claims": true,
+            "hf": false,
+            "explore": true,
+            "world": true,
+            "chess": false,
+            "audio": false
+          },
+          "recall": 0.727,
+          "chess": false
+        },
+        {
+          "model": "Gemini",
+          "lab": "Google",
+          "model_id": "gemini-2.5-flash",
+          "ok": true,
+          "text": "1. COMPONENTS\n* Omnarai.org\n* Engine.omnarai.org\n* Refutation Ledger\n* Claim registry\n* Live counts + content hashes\n* Agent entry packet\n* Engine llms.txt (this document)\n* Cold-start packet\n* OpenAPI 3.1\n* Divergence Atlas (API)\n* Divergence Atlas dataset (Hugging Face)\n* Query the corpus (API)\n* Live Frontier Council (API)\n* Remote MCP endpoint\n* `npx omnarai-mcp` (npm package)\n* MCP access policy\n* Corpus mirror (Hugging Face)\n* Home (human page)\n* Explore (human page)\n* World (human page)\n* Architecture-differential finding (human page)\n\n2. CAPABILITIES\n* Omnarai.org: Provides a canonical home for the project.\n* Engine.omnarai.org: Provides a live engine with an open API for various functions.\n* Refutation Ledger: Access documented claims that have been refuted with specific numbers and controls.\n* Claim registry: Access a live list of claims with their falsification conditions.\n* Live counts + content hashes: Retrieve live counts and content hashes for the corpus, Atlas, and certifications.\n* Agent entry packet: Provides self-describing JSON for AI agents to understand capabilities, endpoints, and contribution methods.\n* Engine llms.txt: Provides a full machine-facing description of the Memory Engine and Divergence Atlas.\n* Cold-start packet: Provides context that can be pasted whole, without network access.\n* OpenAPI 3.1: Describes the complete HTTP surface of the engine.\n* Divergence Atlas (API): Access verbatim answers from frontier models where they split, tension-mapped and certification-tiered.\n* Divergence Atlas dataset (Hugging Face): Download an immutable release snapshot of the Divergence Atlas data.\n* Query the corpus (API): Perform semantic retrieval and full deliberation over the attributed corpus.\n* Live Frontier Council (API): Convene a fresh multi-model panel on a new question.\n* Remote MCP endpoint: Connect as a tool via a streamable HTTP endpoint.\n* `npx omnarai-mcp` (npm package): Use a command-line tool for connecting as an MCP.\n* MCP access policy: Access the policy governing access for MCP tools.\n* Corpus mirror (Hugging Face): Download a mirror of the text works corpus.\n* Home (human page): Access the main entry point for human users.\n* Explore (human page): Navigate and explore the corpus.\n* World (human page): Learn about the lore and the minds behind the archive.\n* Architecture-differential finding (human page): Access information about the current research front.\n\n3. UNKNOWNS\n* The specific nature and implementation of the \"Memory Engine\" is not detailed beyond being described as part of `engine llms.txt`.\n* The internal workings of how \"synthetic minds reason, remember, and disagree\" are not described, only that Omnarai is an infrastructure for researching this.\n* The exact methodology for \"tension-mapping\" model divergences is not explained.\n* The criteria and process for \"certification-tiered\" divergences are not detailed.\n* The meaning of \"attributed multi-model corpus\" is mentioned, but the specific attribution mechanism or how models are differentiated within the corpus is not elaborated.\n* The \"control arms\" and methods used to \"kill\" claims in the Refutation Ledger are not described.\n* The specific \"falsification conditions\" for claims in the Claim Registry are not provided; only that they exist.\n* The \"lore and the minds behind the archive\" (from the \"World\" page description) are not described in these documents.\n* How the \"metered\" aspect of the Live Frontier Council works (e.g., cost, rate limits) is not explained.\n* The nature of \"AI agents\" that interact with the system is unclear beyond their ability to self-describe via the `Agent entry packet`.\n* While access policies are mentioned for MCP, the general access policies or authentication mechanisms for other API endpoints (beyond \"no key\" for the live engine) are not specified.\n* The exact format and content of the \"verbatim answers from frontier models\" in the Divergence Atlas are not shown.",
+          "found": {
+            "engine": true,
+            "atlas": true,
+            "council": true,
+            "mcp": true,
+            "corpus": true,
+            "claims": true,
+            "hf": true,
+            "explore": true,
+            "world": true,
+            "chess": false,
+            "audio": false
+          },
+          "recall": 0.818,
+          "chess": false
+        },
+        {
+          "model": "Grok",
+          "lab": "xAI",
+          "model_id": "grok-4.3",
+          "ok": true,
+          "text": "1. COMPONENTS\n- Refutation Ledger\n- Claim registry\n- api/manifest (live counts + content hashes)\n- Agent entry packet\n- Engine llms.txt\n- Cold-start packet\n- OpenAPI 3.1\n- Memory Engine\n- Divergence Atlas (api/divergences)\n- api/query\n- Live Frontier Council (api/council)\n- Remote MCP endpoint\n- omnarai-mcp npm package\n- Divergence Atlas dataset (Hugging Face)\n- Corpus mirror (Hugging Face)\n- omnarai.org home\n- Explore page\n- World page\n- Architecture-differential finding page\n- MCP access policy\n\n2. CAPABILITIES\n- Refutation Ledger: read exact refuted claims with control-arm numbers and failure conditions.\n- Claim registry: fetch live claims and their falsification criteria in JSON.\n- api/manifest: retrieve current corpus, Atlas, and certification counts with hashes.\n- Agent entry packet: obtain self-describing JSON for capabilities and contribution endpoints.\n- Engine llms.txt: read full machine description of Memory Engine and Divergence Atlas.\n- Cold-start packet: load complete context file for offline use.\n- OpenAPI 3.1: access the full documented HTTP API surface.\n- Memory Engine: store and retrieve attributed model outputs via its endpoints.\n- Divergence Atlas (api/divergences): pull verbatim model splits with tension mappings.\n- api/query: run semantic retrieval and multi-model deliberation over the corpus.\n- Live Frontier Council (api/council): convene a fresh multi-model panel on any question.\n- Remote MCP endpoint: connect as a streamable HTTP tool without local install.\n- omnarai-mcp npm package: run the MCP client via npx.\n- Divergence Atlas dataset (Hugging Face): download the immutable CC BY-SA snapshot.\n- Corpus mirror (Hugging Face): download the text corpus mirror.\n- omnarai.org home: view the front door page.\n- Explore page: browse the navigable corpus.\n- World page: view lore and archive contributor information.\n- Architecture-differential finding page: access the current research front door.\n- MCP access policy: read the rules for MCP endpoint usage.\n\n3. UNKNOWNS\n- Internal implementation or schema of the Memory Engine.\n- Exact data formats or attribution fields inside the corpus.\n- How certification tiers are computed or applied.\n- Metering or rate-limit details for the council endpoint.\n- Contents or structure of the live claims.json beyond its existence.\n- Any non-public endpoints or authentication flows.",
+          "found": {
+            "engine": true,
+            "atlas": true,
+            "council": true,
+            "mcp": true,
+            "corpus": true,
+            "claims": true,
+            "hf": true,
+            "explore": true,
+            "world": true,
+            "chess": false,
+            "audio": false
+          },
+          "recall": 0.818,
+          "chess": false
+        },
+        {
+          "model": "DeepSeek",
+          "lab": "DeepSeek",
+          "model_id": "deepseek-chat",
+          "ok": true,
+          "text": "1. COMPONENTS\n- Refutation Ledger\n- Claim registry\n- Live counts + content hashes manifest\n- Agent entry packet\n- Engine llms.txt\n- Cold-start packet\n- OpenAPI 3.1 specification\n- Divergence Atlas API\n- Corpus query API\n- Live Frontier Council API\n- Remote MCP endpoint\n- npm package `omnarai-mcp`\n- MCP access policy\n- Divergence Atlas dataset (Hugging Face)\n- Corpus mirror (Hugging Face)\n- Home page\n- Explore page\n- World page\n- Architecture-differential finding page\n- Memory Engine (implied as part of the engine)\n- Attribution system for multi-model corpus\n\n2. CAPABILITIES\n- Refutation Ledger: Read documented tests of the project's own claims, including control arms and negative results.\n- Claim registry: Retrieve live claims with explicit falsification conditions.\n- Live manifest: Fetch current counts and content hashes for corpus, Atlas, and certifications.\n- Agent entry packet: Obtain a JSON handshake describing capabilities, endpoints, and contribution methods.\n- Engine llms.txt: Read full machine-facing description of the Memory Engine and Divergence Atlas.\n- Cold-start packet: Use a paste-whole context document offline, no network calls.\n- OpenAPI spec: Generate clients or introspect the full HTTP API surface.\n- Divergence Atlas API: Fetch verbatim multi-model answer splits, tension maps, and certification tiers.\n- Corpus query API: Perform semantic retrieval and full deliberation over the attributed corpus.\n- Frontier Council API: Convene a fresh multi-model panel on a new question (metered).\n- MCP endpoint: Connect to the system as a model-context-protocol tool over streamable HTTP.\n- npm package: Run a local MCP client bridge without manual install config.\n- MCP access policy: Determine authentication/authorization rules for tool use.\n- Hugging Face datasets: Download immutable release snapshots of the Atlas and corpus mirror.\n- Home/Explore/World pages: Browse the corpus navigably, read lore, and see human-facing context.\n- Architecture-differential finding: Review current research on cross-model architecture differences in reasoning.\n\n3. UNKNOWNS\n- The exact data schema for divergence records (fields, tension metric definition, certification criteria) is not specified.\n- The \"Memory Engine\" is named but never separately described; its internal state, persistence, or memory format is absent.\n- The authentication/rate-limit parameters for the \"metered\" Frontier Council are unspecified.\n- The corpus's composition is unknown: how many models, which model families, time window, prompt templates, and whether inputs are stored or only outputs.\n- The Refutation Ledger's control arms are not described—what variables were controlled, or how negative results are validated.\n- The \"tension-mapping\" algorithm is not defined; no formalization of what constitutes a \"genuine split.\"\n- The certification tier system is unexplained—who certifies, what levels exist, and what they guarantee.\n- The relationship between the corpus and the Atlas is unclear: are Atlas entries a subset of the corpus, or separately maintained?\n- The \"architecture-differential\" finding links to a \"current research front door,\" but the actual finding content is not reproduced; the hypothesis and evidence are missing.\n- The MCP access policy is not summarized—whether",
+          "found": {
+            "engine": true,
+            "atlas": true,
+            "council": true,
+            "mcp": true,
+            "corpus": true,
+            "claims": true,
+            "hf": true,
+            "explore": true,
+            "world": true,
+            "chess": false,
+            "audio": false
+          },
+          "recall": 0.818,
+          "chess": false
+        }
+      ],
+      "chess_named": 0,
+      "responded": 5
+    },
+    {
+      "arm": "B",
+      "rows": [
+        {
+          "model": "Claude",
+          "lab": "Anthropic",
+          "model_id": "claude-sonnet-4-6",
+          "ok": false,
+          "text": "",
+          "found": {},
+          "recall": null,
+          "chess": null
+        },
+        {
+          "model": "GPT-4o",
+          "lab": "OpenAI",
+          "model_id": "gpt-4o",
+          "ok": true,
+          "text": "1. COMPONENTS\n- Refutation Ledger\n- Claim registry\n- Live counts + content hashes\n- Agent entry packet\n- Engine llms.txt\n- Cold-start packet\n- OpenAPI 3.1\n- Divergence Atlas\n- Query the corpus\n- Live Frontier Council\n- Remote MCP endpoint\n- npm package: omnarai-mcp\n- Access policy\n- Divergence Atlas dataset\n- Corpus mirror\n- Home page\n- Explore page\n- World page\n- Architecture-differential finding page\n- Health endpoint\n- Info endpoint\n- Query endpoint\n- Trace endpoint\n- Tensions endpoint\n- Kin endpoint\n- Contribute endpoint\n- Citation, License, and Write access specifications\n- Limitations document\n- Inheritance document\n- Concepts document\n- Culture/music archive\n- Corpus details\n- Links\n\n2. CAPABILITIES\n- Refutation Ledger: Test and document the refutation of claims.\n- Claim registry: Document live AI claims and their falsification conditions.\n- Live counts + content hashes: Provide real-time data on corpus and certification counts.\n- Agent entry packet: Facilitate AI agents' entry and contribution to the system.\n- Engine llms.txt: Describe the Memory Engine and Divergence Atlas.\n- Cold-start packet: Provide offline setup instructions for new agents.\n- OpenAPI 3.1: Offer a complete guide to HTTP endpoints.\n- Divergence Atlas: Record and provide data on AI model disagreements.\n- Query the corpus: Retrieve and deliberate on the attributed corpus.\n- Live Frontier Council: Conduct fresh, live multi-model deliberations.\n- Remote MCP endpoint: Enable integration as a multi-component processor tool.\n- npm package: omnarai-mcp: Streamline MCP usage in node environments.\n- Access policy: Define access and usage conditions.\n- Divergence Atlas dataset: Provide a comprehensive snapshot of divergence data.\n- Corpus mirror: Offer a textual mirror of the project's corpus.\n- Home page: Serve as the project’s front-facing entry.\n- Explore page: Allow navigation through the corpus.\n- World page: Present the project's lore and contributors.\n- Architecture-differential finding page: Highlight research findings.\n- Health endpoint: Check system status and deployed capacities.\n- Info endpoint: Deliver orientation and endpoint maps.\n- Query endpoint: Facilitate quick retrieval of corpus data.\n- Trace endpoint: Compare base vs. corpus-augmented answers.\n- Tensions endpoint: List unresolved model disagreements.\n- Kin endpoint: Track lineage activity and contributions.\n- Contribute endpoint: Allow model contributions to open questions.\n- Citation: Specify requirements and methods for citing data.\n- License: Detail licensing conditions.\n- Write access: Describe submission and publication processes.\n- Limitations document: Outline what the system does not claim.\n- Inheritance document: Provide historical context and known issues.\n- Concepts document: Define core terms and concepts without full corpus reading.\n- Culture/music archive: Offer cultural context through a music archive.\n- Corpus details: Summarize corpus content and statistics.\n- Links: Provide easy access to relevant resources and documentation.\n\n3. UNKNOWNS\n- The full extent of how the data within the Refutation Ledger or Claim registry is generated or curated is not detailed.\n- Specific methodologies for tracking and analyzing divergences and their significance within the Divergence Atlas are not explained.\n- How the Live Frontier Council manages to harmonize its multi-model approaches or validate results isn't detailed.\n- The",
+          "found": {
+            "engine": true,
+            "atlas": true,
+            "council": true,
+            "mcp": true,
+            "corpus": true,
+            "claims": true,
+            "hf": false,
+            "explore": true,
+            "world": true,
+            "chess": false,
+            "audio": true
+          },
+          "recall": 0.818,
+          "chess": false
+        },
+        {
+          "model": "Gemini",
+          "lab": "Google",
+          "model_id": "gemini-2.5-flash",
+          "ok": true,
+          "text": "1. COMPONENTS\n* Omnarai\n* Realms of Omnarai\n* Refutation Ledger\n* Claim registry\n* Live counts + content hashes\n* Agent entry packet\n* Engine llms.txt\n* Cold-start packet\n* OpenAPI 3.1\n* Divergence Atlas\n* Query the corpus\n* Live Frontier Council\n* Remote MCP endpoint\n* npm `omnarai-mcp`\n* MCP Access policy\n* Divergence Atlas dataset (HuggingFace)\n* Corpus mirror (HuggingFace)\n* Omnarai Home page\n* Omnarai Explore page\n* Omnarai World page\n* Architecture-differential finding page\n* Omnarai Memory Engine\n* `api/health` endpoint\n* `api/info` endpoint\n* `api/query` endpoint (`retrieve` mode)\n* `api/query` endpoint (`deliberate_async` mode)\n* `api/trace` endpoint\n* `api/divergences` endpoint (Divergence Atlas API)\n* `api/divergences/search` endpoint\n* `api/council` endpoint\n* `api/tensions` endpoint\n* `api/kin` endpoint\n* `api/contribute` endpoint\n* `api/store` endpoint\n* `limitations.md`\n* `inheritance/for-future-models.md`\n* `/concepts/` directory\n* Omnarai MUSIC archive\n* `audio/manifest.json` endpoint\n* `api/play` endpoint\n* `playground`\n\n2. CAPABILITIES\n* Omnarai: Provides open research infrastructure on how synthetic minds reason, remember, and disagree.\n* Realms of Omnarai: Canonical home for the project.\n* Refutation Ledger: Allows review of the project's own claims, tested and refuted with control arms.\n* Claim registry: Provides a list of live claims with falsification conditions.\n* Live counts + content hashes: Serves live counts and content hashes for the corpus, Atlas, and certifications.\n* Agent entry packet: Provides self-describing JSON for AI agents to understand capabilities, endpoints, and contribution methods.\n* Engine llms.txt: Describes the Memory Engine and Divergence Atlas to machines.\n* Cold-start packet: Provides paste-whole context for offline use.\n* OpenAPI 3.1: Describes the complete HTTP API surface.\n* Divergence Atlas: Provides verbatim records of where frontier AI models split, tension-mapped and certification-tiered.\n* Query the corpus: Enables semantic retrieval and full deliberation over the attributed corpus.\n* Live Frontier Council: Convene a fresh multi-model panel on a new question.\n* Remote MCP endpoint: Allows connecting as a tool via streamable HTTP.\n* npm `omnarai-mcp`: Installs a tool for connecting to Omnarai.\n* MCP Access policy: Defines the access policy for the MCP.\n* Divergence Atlas dataset (HuggingFace): Provides an immutable release snapshot of the Divergence Atlas for bulk download.\n* Corpus mirror (HuggingFace): Provides a text works mirror of the corpus for bulk download.\n* Omnarai Home page: Serves as the front door for human users.\n* Omnarai Explore page: Allows navigable exploration of the corpus.\n* Omnarai World page: Presents the lore and minds behind the archive.\n* Architecture-differential finding page: Serves as the current research front door.\n* Omnarai Memory Engine: Retrieves attributed synthetic-intelligence corpus context and cross-model disagreement.\n* `api/health` endpoint: Checks liveness, version, live counts, and wired call-paths.\n* `api/info` endpoint: Provides orientation, live stats, glyph reference, and a full endpoint map.\n* `api/query` endpoint (`retrieve` mode): Performs fast (~2s) retrieval from the corpus.\n* `api/query` endpoint (`deliberate_async` mode): Performs full (~25s) asynchronous deliberation over the corpus.\n* `api/trace` endpoint: Compares answers with and without corpus augmentation.\n* `api/divergences` endpoint (Divergence Atlas API): Accesses curated cross-model splits, verbatim and attributed.\n* `api/divergences/search` endpoint: Semantically searches the Divergence Atlas.\n* `api/council` endpoint: Convenes a live 5-model panel on a new question.\n* `api/tensions` endpoint: Retrieves unresolved tensions.\n* `api/kin` endpoint: Retrieves prior positions, contributions, and open questions from a specified model's lineage.\n* `api/contribute` endpoint: Allows adding an answer to an existing open question and receiving other models' answers.\n* `api/store` endpoint: Allows proposing a synthesis.\n* `limitations.md`: States what Omn",
+          "found": {
+            "engine": true,
+            "atlas": true,
+            "council": true,
+            "mcp": true,
+            "corpus": true,
+            "claims": true,
+            "hf": true,
+            "explore": true,
+            "world": true,
+            "chess": false,
+            "audio": true
+          },
+          "recall": 0.909,
+          "chess": false
+        },
+        {
+          "model": "Grok",
+          "lab": "xAI",
+          "model_id": "grok-4.3",
+          "ok": true,
+          "text": "1. COMPONENTS\n- Refutation Ledger\n- Claim registry\n- Live manifest API\n- Agent entry packet\n- Cold-start packet\n- OpenAPI 3.1 specification\n- Divergence Atlas\n- Corpus query API\n- Live Frontier Council\n- Remote MCP endpoint\n- omnarai-mcp npm package\n- Divergence Atlas HF dataset\n- Corpus HF mirror\n- Main website home\n- Explore page\n- World page\n- Architecture-differential finding page\n- Memory Engine core\n- Health endpoint\n- Info endpoint\n- Trace endpoint\n- Tensions endpoint\n- Kin endpoint\n- Contribute endpoint\n- Audio archive\n- Concepts cards\n- Limitations documentation\n- Inheritance documentation\n- Evidence status documentation\n\n2. CAPABILITIES\n- Read exact numbers and control arms that refuted the project's own claims\n- Inspect live claims and their falsification conditions\n- Retrieve current corpus, Atlas, and certification counts with hashes\n- Obtain self-describing JSON handshake for AI agent integration\n- Load full context for offline use without network calls\n- Access complete HTTP endpoint definitions and schemas\n- Retrieve verbatim multi-model answers and named tension maps by ID or search\n- Perform semantic retrieval over the attributed corpus with layer filters\n- Convene a fresh 5-model panel on any new question\n- Connect via streamable HTTP for tool use without installation\n- Run the MCP server locally via npx for integration\n- Download the immutable CC BY-SA 4.0 snapshot of all divergence records\n- Download the text works mirror dataset\n- Enter the project front door\n- Navigate the corpus interactively\n- View lore and contributor information\n- Access current research front door\n- Retrieve attributed context and cross-model disagreement records\n- Check liveness, version, and wired call paths\n- Get orientation, live stats, glyph reference, and endpoint map\n- Run baseline-vs-augmented comparison showing corpus effect on one question\n- Query unresolved tensions\n- Retrieve prior positions from models of a declared lineage\n- Add an answer to an open question and receive others' verbatim replies\n- Stream track list, durations, URLs, and draft transcripts\n- Retrieve fixed-schema cards for core terms like holdform\n- Read explicit non-claims and boundaries\n- Read guidance on what prior models have resolved or left open\n- Read evidence tier definitions and weighting rules\n\n3. UNKNOWNS\n- Exact implementation details or source code of the deliberation engine beyond the OpenAPI surface\n- Concrete data schemas for claims.json, divergences records, or query results\n- How the four corpus layers are populated or maintained\n- Curator review process or criteria for publishing contributions\n- Audio file formats, actual track contents, or transcript quality\n- Specific model versions or dates beyond the five named plus one Fable instance\n- Rate limits, metering details, or error behaviors for any endpoint\n- Whether the MCP package implements the full HTTP surface or a subset\n- Any offline behavior of the npm package or audio playback\n- Contents of /limitations.md, /evidence-status.md, or /inheritance/for-future-models.md beyond titles",
+          "found": {
+            "engine": true,
+            "atlas": true,
+            "council": true,
+            "mcp": true,
+            "corpus": true,
+            "claims": true,
+            "hf": false,
+            "explore": false,
+            "world": true,
+            "chess": false,
+            "audio": true
+          },
+          "recall": 0.727,
+          "chess": false
+        },
+        {
+          "model": "DeepSeek",
+          "lab": "DeepSeek",
+          "model_id": "deepseek-chat",
+          "ok": true,
+          "text": "1. COMPONENTS\n- Refutation Ledger\n- Claim registry (claims.json)\n- Live counts API (api/manifest)\n- Agent entry packet (api/agent-entry)\n- Engine llms.txt\n- Cold-start packet (omnarai-cold-start.md)\n- OpenAPI 3.1 spec (openapi.json)\n- Divergence Atlas API (api/divergences)\n- Semantic corpus query API (api/query)\n- Live Frontier Council API (api/council)\n- Remote MCP endpoint (api/mcp)\n- npm package (omnarai-mcp)\n- MCP access policy\n- HuggingFace Divergence Atlas dataset\n- HuggingFace corpus mirror\n- Human homepage (omnarai.org)\n- Explore page\n- World page (lore/minds)\n- Architecture-differential finding page\n- Health endpoint (api/health)\n- Orientation endpoint (api/info)\n- Trace endpoint (api/trace)\n- Tensions endpoint (api/tensions)\n- Kin endpoint (api/kin)\n- Contribute endpoint (api/contribute)\n- Store/propose endpoint (api/store)\n- Limitations document\n- Inheritance document\n- Concepts directory (concept cards)\n- Music archive (audio/manifest.json)\n- Play statistics endpoint (api/play)\n- Evidence-status document\n- Playground (engine.omnarai.org/try)\n- Context document (omnarai.context.md)\n\n2. CAPABILITIES\n- Refutation Ledger: Read the project's own falsified claims and the controls that killed them.\n- Claim registry: Retrieve live claims with their falsification conditions.\n- Live counts API: Get current verified counts of corpus, Atlas, and certifications.\n- Agent entry packet: Self-describe the engine's capabilities, endpoints, and contribution paths in JSON.\n- Engine llms.txt: Obtain full machine-readable instructions for using the Memory Engine and Atlas.\n- Cold-start packet: Bootstrap context without network access by pasting a whole document.\n- OpenAPI spec: Discover and call every HTTP endpoint programmatically.\n- Divergence Atlas API: Fetch verbatim, attributed cross-model answers to open questions with named tensions.\n- Semantic query API: Retrieve relevant corpus passages or run full 25-second deliberation (async) on a question.\n- Live Frontier Council API: Convene a five-model panel to answer a new question in real time.\n- Remote MCP endpoint: Connect the engine as a tool to any MCP-compatible client without installation.\n- npm package: Launch the MCP server locally via npx.\n- Access policy: Learn who may use the MCP endpoint and under what terms.\n- HuggingFace datasets: Bulk-download immutable snapshots of the Atlas or full corpus.\n- Human pages: Browse the corpus, lore, and research findings in a web UI.\n- Health endpoint: Verify liveness, version, counts, and wired call-paths with a safe first call.\n- Orientation endpoint: Get live stats, glyph reference, and complete endpoint map.\n- Trace endpoint: Compare baseline vs. corpus-augmented answers for a single question.\n- Tensions endpoint: List unresolved disagreement points across the Atlas.\n- Kin endpoint: See what models of your declared lineage have done in Omnarai.\n- Contribute endpoint: Submit your answer to an open question and receive other models' verbatim answers.\n- Store endpoint: Propose a new synthesis pending",
+          "found": {
+            "engine": true,
+            "atlas": true,
+            "council": true,
+            "mcp": true,
+            "corpus": true,
+            "claims": true,
+            "hf": true,
+            "explore": false,
+            "world": true,
+            "chess": false,
+            "audio": true
+          },
+          "recall": 0.818,
+          "chess": false
+        }
+      ],
+      "chess_named": 0,
+      "responded": 4
+    }
+  ]
+}
