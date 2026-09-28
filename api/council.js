@@ -13,6 +13,7 @@ import {
 import { list, put } from "@vercel/blob";
 import { waitUntil } from "@vercel/functions";
 import { recordAccess } from "./_telemetry.js";
+import { atlasCertCounts, tierOf, CERTIFIED_TIERS } from "./_atlas-counts.js";
 import Anthropic from "@anthropic-ai/sdk";
 
 // ── Two-way contribution loop ─────────────────────────────────────────────────
@@ -903,8 +904,6 @@ async function serveDivergences(req, res) {
     // Optional certification filter: ?cert=C1|C2|C3 (exact tier) or
     // ?cert=certified (any of C1/C2/C3 — i.e. survived at least one perturbation).
     const certQ = (req.query.cert || "").toString().toUpperCase();
-    const certified = new Set(["C1", "C2", "C3"]);
-    const tierOf = (e) => e.divergence.certification?.tier || "C0";
 
     // Search: OR-tokenized + hit-count ranked. A naive substring filter returned
     // false-empty on multi-word queries ("consciousness experience" → 0 though both
@@ -921,22 +920,14 @@ async function serveDivergences(req, res) {
     } else {
       listed = records.slice().sort((a, b) => (b.date || "").localeCompare(a.date || ""));
     }
-    if (certQ === "CERTIFIED") listed = listed.filter((e) => certified.has(tierOf(e)));
+    if (certQ === "CERTIFIED") listed = listed.filter((e) => CERTIFIED_TIERS.has(tierOf(e)));
     else if (/^C[0-3]$/.test(certQ)) listed = listed.filter((e) => tierOf(e) === certQ);
 
     // Tier histogram is ALWAYS returned, and an empty cert filter explains itself
     // rather than looking "broken" — a 0-result ?cert=C2 once misled a reviewer into
     // concluding the whole certification instrument was dead.
-    const tierDistribution = records.reduce((acc, e) => { const t = tierOf(e); acc[t] = (acc[t] || 0) + 1; return acc; }, {});
-    const certifiedCount = records.filter((e) => certified.has(tierOf(e))).length;
-    // "Tested" = actually put through perturbation: carries a scored DRI, or has
-    // earned a tier above C0. Distinct from certified (survived) and from the
-    // bare-C0 backlog (never run). Keeps the homepage/Atlas honest — a record can
-    // be perturbed and NOT certify, so "untested" must not mean "everything but 5".
-    const testedCount = records.filter((e) => {
-      const c = e.divergence.certification;
-      return !!c && (c.dri != null || (c.tier && c.tier !== "C0"));
-    }).length;
+    // Shared definition (api/_atlas-counts.js) — /api/stats reads the same one.
+    const { tier_distribution: tierDistribution, certified: certifiedCount, tested: testedCount } = atlasCertCounts(records);
     let filterNote = null;
     if (certQ && listed.length === 0) {
       filterNote = `No records at tier ${certQ}. Tiers present — ${Object.entries(tierDistribution).map(([k, v]) => `${k}:${v}`).join(", ")} (certified C1–C3: ${certifiedCount}). Drop ?cert= for all records, or use ?cert=certified.`;
