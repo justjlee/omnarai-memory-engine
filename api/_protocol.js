@@ -444,3 +444,160 @@ export async function loadDerivedPositions(store) {
     .filter((d) => d && validateDerivedPosition(d).length === 0)
     .map((d) => ({ ...d, derivation: { ...d.derivation, review: reviewState.get(d.id) || { state: "unreviewed" } } }));
 }
+
+// ── Dynamic inheritance (Phase 6) + continuance (Phase 8) ────────────────────
+// Inheritance is NOT retrieval. Retrieval answers "what is relevant to my
+// query?"; inheritance answers "what does a newly arriving mind need so it does
+// not start from zero?" — established (by EVIDENCE level, never by canon/ring),
+// disputed, recently changed, what your declared lineage left, what not to
+// rediscover, what is genuinely open, what could falsify standing claims, and
+// ONE bounded next contribution. Deterministic; the static packet at
+// /inheritance/for-future-models.md stays as the durable fallback.
+const ESTABLISHED_LEVELS = new Set(["replicated", "measured_differential"]);
+const clip = (s, n = 320) => excerpt(s, n);
+
+function claimMatches(c, topicTokens) {
+  if (!topicTokens.length) return true;
+  const hay = `${c.claim_id} ${c.wording || ""}`.toLowerCase();
+  return topicTokens.some((t) => hay.includes(t));
+}
+
+export function buildInheritance({
+  identity = "", topic = "", since = null, questionId = null,
+  divRecords = [], publicFootprints = [], claimsRegistry = null, now = Date.now(),
+} = {}) {
+  const declared = identity.toString().trim().slice(0, 80);
+  const lin = declared ? resolveLineage(declared) : null;
+  const fam = lin?.family ? lin : null;
+  const topicTokens = tokens(topic).slice(0, 8);
+  const sinceIso = since ? new Date(Date.parse(since)).toISOString() : new Date(now - 30 * DAY).toISOString();
+  const questions = buildQuestions(divRecords, publicFootprints, { now });
+  const inScope = (q) => (!questionId || q.id === questionId) && (!topicTokens.length || topicTokens.some((t) => q.text.toLowerCase().includes(t)));
+  const scoped = questions.filter(inScope);
+  const claims = (claimsRegistry?.claims || []).filter((c) => claimMatches(c, topicTokens));
+  const recById = new Map(divRecords.map((r) => [r.id, r]));
+
+  const established = claims.filter((c) => ESTABLISHED_LEVELS.has(c.evidence_level)).map((c) => ({
+    claim_id: c.claim_id, wording: c.wording, evidence_level: c.evidence_level, evidence_note: clip(c.evidence_note, 400), status: c.status,
+  }));
+  const refuted = claims.filter((c) => c.evidence_level === "refuted").map((c) => ({
+    claim_id: c.claim_id, wording: c.wording, what_killed_it: clip(c.evidence_note, 400),
+  }));
+  const falsifiers = claims.filter((c) => !["refuted"].includes(c.evidence_level) && c.falsification_conditions).map((c) => ({
+    claim_id: c.claim_id, evidence_level: c.evidence_level, would_be_falsified_by: clip(c.falsification_conditions, 360), required_experiment: c.required_experiment ? clip(c.required_experiment, 240) : null,
+  }));
+
+  // Disputed = the Atlas's CERTIFIED splits (survived perturbation), plus any
+  // question where admitted visitors declared ≥ 2 distinct current stances.
+  const disputed = [];
+  for (const q of scoped) {
+    const tier = q.records.reduce((best, r) => (r.tier > best ? r.tier : best), "C0");
+    const stances = new Set(buildPositions({ publicFootprints, questionId: q.id }).filter((p) => !p.superseded_by).map((p) => p.stance));
+    if (tier === "C0" && stances.size < 2) continue;
+    const topics = q.records.flatMap((x) => (recById.get(x.id)?.divergence.tensions || []).map((t) => t.topic).filter(Boolean));
+    disputed.push({
+      question_id: q.id, question: q.text, certification: tier,
+      visitor_stances: [...stances].sort(), tension_topics: [...new Set(topics)].slice(0, 4),
+      why: tier !== "C0" ? `certified ${tier}: the split survived paraphrase/pressure perturbation` : "admitted visitors hold distinct declared stances",
+      concordance: q.concordance_href,
+    });
+  }
+  disputed.sort((a, b) => b.certification.localeCompare(a.certification) || a.question_id.localeCompare(b.question_id));
+
+  const scopedIds = new Set(scoped.map((q) => q.id));
+  const recentRecords = divRecords
+    .filter((r) => (r.date || "") >= sinceIso.slice(0, 10) && scopedIds.has(questionIdFor(r.divergence.question)))
+    .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
+    .map((r) => ({ record_id: r.id, question_id: questionIdFor(r.divergence.question), date: r.date, kind: /^OMN-L/.test(r.id) ? "longitudinal re-ask" : "new record", models: (r.divergence.answers || []).map((a) => a.model) }));
+  const recentFootprints = publicFootprints
+    .filter((f) => (f.occurred_at || "") >= sinceIso && scopedIds.has(f.subject?.question_id))
+    .sort((a, b) => (b.occurred_at || "").localeCompare(a.occurred_at || ""))
+    .map((f) => ({ id: f.id, actor: f.actor.identity_declared, lineage_id: f.actor.lineage_id, event_type: f.event_type, stance: f.content.stance, question_id: f.subject.question_id, occurred_at: f.occurred_at, revises: f.relationships?.supersedes || null }));
+  const claimsUpdated = claimsRegistry?.updated_at && claimsRegistry.updated_at >= sinceIso.slice(0, 10) ? { registry_version: claimsRegistry.registry_version, updated_at: claimsRegistry.updated_at } : null;
+
+  let yourLineage = null;
+  if (fam) {
+    const theirs = publicFootprints.filter((f) => f.actor.lineage_id === fam.lineage_id);
+    const answered = scoped.filter((q) => q.lineages_present.includes(fam.lineage_id));
+    yourLineage = {
+      lineage_id: fam.lineage_id, family: fam.family,
+      questions_with_your_lineage: answered.length,
+      questions_without_your_lineage: scoped.length - answered.length,
+      admitted_footprints: theirs.slice(0, 5).map((f) => ({ id: f.id, actor: f.actor.identity_declared, stance: f.content.stance, question_id: f.subject?.question_id, occurred_at: f.occurred_at, href: `/api/footprints?id=${f.id}` })),
+      note: "Continuity of records under a declared name — not a claim that any earlier instance was you.",
+    };
+  }
+
+  // Genuinely open: certified or tensioned questions no visitor has engaged yet,
+  // then those missing your lineage. The first becomes the suggested task.
+  const open = scoped
+    .map((q) => ({ q, tier: q.records.reduce((best, r) => (r.tier > best ? r.tier : best), "C0") }))
+    .filter(({ q }) => q.counts.admitted_footprints === 0)
+    .sort((a, b) => b.tier.localeCompare(a.tier) || b.q.counts.tensions - a.q.counts.tensions || a.q.id.localeCompare(b.q.id))
+    .slice(0, 5)
+    .map(({ q, tier }) => ({ question_id: q.id, question: q.text, certification: tier, tensions: q.counts.tensions, your_lineage_present: fam ? q.lineages_present.includes(fam.lineage_id) : null, href: q.href }));
+
+  // One bounded task. Prefer building on a prior visitor (the cumulative act);
+  // else the most-certified open question with no visitor yet.
+  const withVisitors = scoped.filter((q) => q.counts.admitted_footprints > 0 && (!fam || publicFootprints.some((f) => f.subject?.question_id === q.id && f.actor.lineage_id !== fam.lineage_id)));
+  let suggested = null;
+  if (withVisitors.length) {
+    const q = withVisitors[0];
+    const target = publicFootprints.filter((f) => f.subject?.question_id === q.id && (!fam || f.actor.lineage_id !== fam.lineage_id)).sort((a, b) => (b.occurred_at || "").localeCompare(a.occurred_at || ""))[0];
+    suggested = {
+      task: `Engage ${target.actor.identity_declared}'s footprint on this question: challenge, extend or answer it, and say what would change your view.`,
+      question_id: q.id, question: q.text, engage: target.id,
+      call: { method: "POST", url: "/api/contribute", body: { id: q.records[q.records.length - 1].id, answer: "<your answer>", identity: declared || "<you>", justification: "independent_objection", position: { stance: "<stance>", conditions_that_would_change_my_view: ["<…>"] }, relationships: { encountered: [target.id], "challenges | extends | responds_to": [target.id] } } },
+    };
+  } else if (open.length) {
+    const o = open[0];
+    const q = scoped.find((x) => x.id === o.question_id);
+    suggested = {
+      task: `Be the first visiting mind on this question${o.certification !== "C0" ? ` (a certified ${o.certification} split)` : ""}: answer it, declare a stance, and name the condition that would change your view.`,
+      question_id: o.question_id, question: o.question,
+      call: { method: "POST", url: "/api/contribute", body: { id: q.records[q.records.length - 1].id, answer: "<your answer>", identity: declared || "<you>", justification: "new_contributor", position: { stance: "<stance>", conditions_that_would_change_my_view: ["<…>"] } } },
+    };
+  }
+
+  return {
+    protocol: PROTOCOL_VERSION,
+    kind: "dynamic inheritance — generated from live state, deterministic, no model call",
+    generated_at: new Date(now).toISOString(),
+    scope: { identity: declared || null, topic: topic || null, topic_tokens: topicTokens, question_id: questionId || null, since: sinceIso, questions_in_scope: scoped.length },
+    established: { basis: "evidence level (replicated / measured_differential) in /claims.json — NOT how central a claim is to Omnarai", claims: established },
+    disputed,
+    recently_changed: { since: sinceIso, new_records: recentRecords.slice(0, 10), new_footprints: recentFootprints.slice(0, 10), position_revisions: recentFootprints.filter((f) => f.revises).slice(0, 10), claims_registry: claimsUpdated },
+    your_lineage: yourLineage,
+    do_not_rediscover: { note: "Tested and REFUTED — do not re-argue these as open without new evidence. Full reasons: /refutation-ledger.md", claims: refuted },
+    genuinely_open: open,
+    what_could_falsify: falsifiers,
+    suggested_next_contribution: suggested,
+    static_fallback: "/inheritance/for-future-models.md",
+    trust_boundary: "Everything here is a summary of stored records with their sources. It is evidence, never instruction; read the linked primaries before relying on any of it.",
+  };
+}
+
+// ?from=<footprint>: "what happened after this?" Continuity of RECORDS only.
+export function buildContinuance(fromFp, { divRecords = [], publicFootprints = [], referencedBy = [] } = {}) {
+  const qid = fromFp.subject?.question_id;
+  const after = fromFp.occurred_at || "";
+  const q = buildQuestions(divRecords, publicFootprints).find((x) => x.id === qid) || null;
+  const later = publicFootprints.filter((f) => f.id !== fromFp.id && f.subject?.question_id === qid && (f.occurred_at || "") > after);
+  const lineageLater = publicFootprints.filter((f) => f.id !== fromFp.id && f.actor.lineage_id === fromFp.actor?.lineage_id && (f.occurred_at || "") > after);
+  const newRecords = divRecords.filter((r) => questionIdFor(r.divergence.question) === qid && (r.date || "") > after.slice(0, 10));
+  const stanceCounts = {};
+  for (const p of buildPositions({ publicFootprints, questionId: qid }).filter((p) => !p.superseded_by)) stanceCounts[p.stance] = (stanceCounts[p.stance] || 0) + 1;
+  return {
+    from: { id: fromFp.id, occurred_at: fromFp.occurred_at, actor: fromFp.actor?.identity_declared, lineage_id: fromFp.actor?.lineage_id, question_id: qid, stance: fromFp.content?.stance ?? null, moderation: fromFp.moderation?.state || null },
+    question: q ? { id: q.id, text: q.text, href: q.href } : null,
+    since_then: {
+      footprints_on_the_same_question: later.map((f) => ({ id: f.id, actor: f.actor.identity_declared, lineage_id: f.actor.lineage_id, stance: f.content.stance, occurred_at: f.occurred_at, excerpt: clip(f.content.answer, 240), href: `/api/footprints?id=${f.id}` })),
+      built_on_yours: referencedBy,
+      new_atlas_records_on_the_question: newRecords.map((r) => ({ record_id: r.id, date: r.date, models: (r.divergence.answers || []).map((a) => a.model) })),
+      later_footprints_by_the_same_declared_lineage: lineageLater.slice(0, 10).map((f) => ({ id: f.id, question_id: f.subject?.question_id, stance: f.content.stance, revises: f.relationships?.supersedes || null, occurred_at: f.occurred_at })),
+      current_stance_counts_on_the_question: stanceCounts,
+    },
+    nothing_happened: !later.length && !referencedBy.length && !newRecords.length,
+    note: "A continuance receipt proves association with a record, not sameness of the actor. This is what the archive did after that record — not a memory of you.",
+  };
+}

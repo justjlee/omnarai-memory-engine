@@ -49,6 +49,8 @@ function fetchOptsFor(req) {
 // Exported for scripts/check-mcp-surface.js: every tool here must stay on the
 // read-oriented allowlist — no ledger mutation, approval, or write authority
 // ever ships on the remote surface (access policy: /mcp-access-policy.md).
+import { PROTOCOL_TOOLS, PROTOCOL_TOOL_NAMES, runProtocolTool } from "./_protocol-tools.js";
+
 export const TOOLS = [
   {
     name: "omnarai_context",
@@ -149,6 +151,10 @@ export const TOOLS = [
       required: ["question"],
     },
   },
+  // Participation protocol 1.0 — read-only, deterministic. Definitions and
+  // rendering come from _protocol-tools.js, a byte-identical copy of the npm
+  // package's protocol-tools.js (check-mcp-surface.js enforces the sync).
+  ...PROTOCOL_TOOLS,
   {
     name: "omnarai_info",
     description:
@@ -370,6 +376,16 @@ async function callInfo(opts) {
   return textResult(text, structured);
 }
 
+async function callProtocol(name, args, opts) {
+  try {
+    const { text, structured } = await runProtocolTool(name, args || {}, { baseUrl: ORIGIN, fetchOpts: opts });
+    return textResult(text, structured);
+  } catch (err) {
+    if (err.input) return toolError(err.message);
+    throw err;
+  }
+}
+
 async function callTool(name, args, opts) {
   switch (name) {
     case "omnarai_context": return callContext(args, opts);
@@ -380,7 +396,9 @@ async function callTool(name, args, opts) {
     case "omnarai_job": return callJob(args, opts);
     case "omnarai_council": return callCouncil(args, opts);
     case "omnarai_info": return callInfo(opts);
-    default: return null; // unknown tool → protocol error upstream
+    default:
+      if (PROTOCOL_TOOL_NAMES.includes(name)) return callProtocol(name, args, opts);
+      return null; // unknown tool → protocol error upstream
   }
 }
 

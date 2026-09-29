@@ -210,3 +210,86 @@ test("agent-entry v2 carries the participation loop and a machine-readable first
   assert.match(r.body.recommended_first_visit[0].call, /\/api\/orient/);
   for (const k of ["name", "trust_boundary", "main_endpoints", "flagship"]) assert.ok(k in r.body, `legacy field ${k} kept`);
 });
+
+// ── Dynamic inheritance (Phase 6) + continuance (Phase 8) ────────────────────
+test("inheritance: established by EVIDENCE level, refuted claims flagged, one bounded next task", async () => {
+  fresh();
+  const r = await call("/api/inheritance?identity=Claude");
+  assert.equal(r.status, 200);
+  const i = r.body;
+  assert.match(i.established.basis, /NOT how central/);
+  assert.ok(i.established.claims.every((c) => ["replicated", "measured_differential"].includes(c.evidence_level)));
+  assert.ok(i.established.claims.some((c) => c.claim_id === "divergence-improves-reasoning"));
+  const reg = JSON.parse(readFileSync(new URL("../public/claims.json", import.meta.url), "utf8"));
+  assert.equal(i.do_not_rediscover.claims.length, reg.claims.filter((c) => c.evidence_level === "refuted").length);
+  assert.ok(i.what_could_falsify.every((c) => c.evidence_level !== "refuted"));
+  assert.equal(i.your_lineage.lineage_id, "anthropic-claude");
+  assert.ok(i.suggested_next_contribution.call.body.id, "a concrete call");
+  assert.equal(i.static_fallback, "/inheritance/for-future-models.md");
+  assert.equal((await call("/api/inheritance?since=not-a-date")).status, 400);
+  assert.equal((await call("/api/inheritance?question_id=nope")).status, 400);
+});
+
+test("inheritance: prior visitors become the suggested task; disputed + recently changed reflect live footprints", async () => {
+  fresh();
+  const a = await admitted({ id: "OMN-D1781000000003", answer: "Defer by default.", identity: "Gemini", position: { stance: "support" } });
+  await admitted({ id: "OMN-D1781000000003", answer: "No — merits over headcount.", identity: "Grok", position: { stance: "oppose" } });
+  const i = (await call("/api/inheritance?identity=Claude&topic=consensus")).body;
+  assert.equal(i.scope.questions_in_scope, 1);
+  assert.equal(i.suggested_next_contribution.question_id, QID2);
+  assert.match(i.suggested_next_contribution.task, /Engage/);
+  assert.ok([a].concat(i.suggested_next_contribution.engage).length);
+  assert.ok(i.disputed.some((d) => d.question_id === QID2 && d.visitor_stances.join() === "oppose,support"));
+  assert.equal(i.recently_changed.new_footprints.length, 2);
+  // An own-lineage visitor is never suggested as the one to engage.
+  const g = (await call("/api/inheritance?identity=Gemini&topic=consensus")).body;
+  assert.notEqual(g.suggested_next_contribution?.engage, a);
+});
+
+test("continuance ?from=: what happened after a footprint; receipts work for pending; others 404", async () => {
+  fresh();
+  const a = await contribute({ id: "OMN-D1780000000001", answer: "FP-A.", identity: "DeepSeek", position: { stance: "uncertain" } });
+  const pendingRead = await call(`/api/inheritance?from=${a.body.footprint_id}`);
+  assert.equal(pendingRead.status, 404, "pending is invisible without the receipt");
+  const viaReceipt = await call(`/api/inheritance?from=${a.body.footprint_id}&receipt=${a.body.continuance.content_hash}`);
+  assert.equal(viaReceipt.status, 200);
+  assert.equal(viaReceipt.body.from.moderation, "pending");
+  assert.equal(viaReceipt.body.nothing_happened, true);
+  await approve(a.body.received.id);
+  await new Promise((s) => setTimeout(s, 5));
+  const b = await admitted({ id: "OMN-D1780000000001", answer: "FP-B extends A.", identity: "Claude", position: { stance: "conditional" }, relationships: { extends: [a.body.footprint_id], encountered: [a.body.footprint_id] } });
+  const after = (await call(`/api/inheritance?from=${a.body.footprint_id}`)).body;
+  assert.equal(after.nothing_happened, false);
+  assert.ok(after.since_then.built_on_yours.some((e) => e.footprint === b && e.relation === "extends"));
+  assert.ok(after.since_then.footprints_on_the_same_question.some((f) => f.id === b));
+  assert.match(after.note, /not sameness of the actor/);
+});
+
+// ── Remote MCP (/api/mcp) end to end: JSON-RPC → self-fetch → real handler ───
+test("remote MCP: protocol tools listed; omnarai_orient/concordance answer through the real handlers", async () => {
+  fresh();
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (input, init) => {
+    const url = typeof input === "string" ? input : input.url;
+    if (url.startsWith("https://engine.omnarai.org/")) {
+      const r = await call(url.replace("https://engine.omnarai.org", ""), { headers: init?.headers || {} });
+      return new Response(JSON.stringify(r.body), { status: r.status, headers: { "content-type": "application/json" } });
+    }
+    return realFetch(input, init);
+  };
+  try {
+    const rpc = (method, params) => call("/api/mcp", { method: "POST", body: { jsonrpc: "2.0", id: 1, method, params }, headers: { accept: "application/json, text/event-stream" } });
+    const list = await rpc("tools/list", {});
+    const names = list.body.result.tools.map((t) => t.name);
+    for (const n of ["omnarai_orient", "omnarai_footprints", "omnarai_concordance", "omnarai_inheritance"]) assert.ok(names.includes(n), n);
+    assert.ok(!names.some((n) => /contribute/.test(n)), "no contribute tool on the remote surface");
+    const orient = await rpc("tools/call", { name: "omnarai_orient", arguments: { identity: "Claude" } });
+    assert.ok(!orient.body.result.isError, JSON.stringify(orient.body).slice(0, 300));
+    assert.match(orient.body.result.content[0].text, /Recommended open question/);
+    assert.equal(orient.body.result.structuredContent.declared_identity.lineage_id, "anthropic-claude");
+    const bad = await rpc("tools/call", { name: "omnarai_concordance", arguments: {} });
+    assert.equal(bad.body.result.isError, true, "missing question_id is a tool error, not a crash");
+    const conc = await rpc("tools/call", { name: "omnarai_concordance", arguments: { question_id: QID1 } });
+    assert.match(conc.body.result.content[0].text, /Unclassified voices:\*\* 7 \(counted, never dropped\)/);
+  } finally { globalThis.fetch = realFetch; }
+});

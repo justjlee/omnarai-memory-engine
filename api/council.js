@@ -24,7 +24,7 @@ import {
 } from "./_footprints.js";
 import {
   claimIdSet, recordAnswerMap, isDivergenceRecord, loadClaimsRegistry, loadDerivedPositions,
-  buildQuestions, questionDetail, buildPositions, buildConcordance, buildOrientPacket, PROTOCOL_VERSION,
+  buildQuestions, questionDetail, buildPositions, buildConcordance, buildOrientPacket, buildInheritance, buildContinuance, PROTOCOL_VERSION,
 } from "./_protocol.js";
 import Anthropic from "@anthropic-ai/sdk";
 
@@ -871,6 +871,47 @@ async function servePositions(req, res) {
     note: "explicit (derived:false) = a stance the actor itself declared in an admitted footprint. derived:true = a machine classification of a historical primary answer, with extractor + version + evidence span; the verbatim answer is always one link away. Superseded positions are kept and marked.",
     positions,
   });
+}
+
+async function serveInheritance(req, res) {
+  const q = req.query || {};
+  const since = q.since ? Date.parse(q.since) : null;
+  if (q.since && !Number.isFinite(since)) return res.status(400).json({ error: "since must be an ISO date/time", code: "BAD_SINCE" });
+  const qid = (q.question_id || "").toString().trim() || null;
+  if (qid && !QUESTION_ID_RE.test(qid)) return res.status(400).json({ error: "question_id must look like OMN-Q-<12 hex>", code: "BAD_QUESTION_ID" });
+  let state;
+  try { state = await loadProtocolState(); } catch (err) { return protocolUnavailable(res, err); }
+
+  // ?from=<footprint>: what happened after it (Phase 8). Public for admitted
+  // footprints; the continuance-receipt holder may ask about their own in any
+  // state. Everyone else gets the same 404 as an unknown id.
+  if (q.from) {
+    const from = String(q.from).trim();
+    if (!FP_ID_RE.test(from)) return res.status(404).json(FOOTPRINT_NOT_FOUND(from));
+    const store = getDefaultStore();
+    const index = await loadFootprintIndex(store);
+    const entry = index.get(from);
+    if (!entry) return res.status(404).json(FOOTPRINT_NOT_FOUND(from));
+    const [h] = await hydrate([entry], store);
+    const receiptOk = q.receipt ? receiptMatches(h.body, String(q.receipt)) : false;
+    if (!isPublicHydrated(h) && !receiptOk) return res.status(404).json(FOOTPRINT_NOT_FOUND(from));
+    if (h.body?.tombstone) return res.status(410).json({ error: "That footprint was redacted.", code: "FOOTPRINT_REDACTED", redacted_at: h.body.redacted_at });
+    res.setHeader("Cache-Control", receiptOk ? "no-store" : "s-maxage=60, stale-while-revalidate=300");
+    return res.status(200).json({
+      protocol: PROTOCOL_VERSION,
+      kind: "continuance — what happened after a footprint",
+      ...buildContinuance(project(h), { divRecords: state.divRecords, publicFootprints: state.publicFootprints, referencedBy: referencedBy(from, state.publicFootprints) }),
+      next: `/api/inheritance${q.identity ? `?identity=${encodeURIComponent(q.identity)}` : ""}`,
+    });
+  }
+
+  const out = buildInheritance({
+    identity: (q.identity || q.si || "").toString(), topic: (q.topic || q.focus || "").toString().slice(0, 120),
+    since: Number.isFinite(since) ? new Date(since).toISOString() : null, questionId: qid,
+    divRecords: state.divRecords, publicFootprints: state.publicFootprints, claimsRegistry: loadClaimsRegistry(),
+  });
+  res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
+  return res.status(200).json(out);
 }
 
 async function serveConcordance(req, res) {
@@ -2013,7 +2054,7 @@ export default async function handler(req, res) {
   // dispatch so no body `action` can turn this read route into a write.
   if ((req.query?._view || "") === "footprints") return serveFootprints(req, res);
   // Derived protocol reads (GET only, deterministic, no model call).
-  const protocolView = { orient: serveOrient, questions: serveQuestions, positions: servePositions, concordance: serveConcordance }[req.query?._view || ""];
+  const protocolView = { orient: serveOrient, questions: serveQuestions, positions: servePositions, concordance: serveConcordance, inheritance: serveInheritance }[req.query?._view || ""];
   if (protocolView) {
     if (req.method !== "GET") return res.status(405).json({ error: "GET only.", code: "METHOD_NOT_ALLOWED", agent_action: "These are read surfaces. To add your voice: POST /api/contribute." });
     return protocolView(req, res);

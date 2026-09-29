@@ -31,6 +31,12 @@ const ALLOWLIST = [
   "omnarai_job",
   "omnarai_council",
   "omnarai_info",
+  // Participation protocol 1.0 — deterministic reads only (no contribute tool:
+  // contribution stays on the curator-moderated HTTP path).
+  "omnarai_orient",
+  "omnarai_footprints",
+  "omnarai_concordance",
+  "omnarai_inheritance",
 ];
 
 for (const tool of TOOLS) {
@@ -64,14 +70,15 @@ for (const tool of TOOLS) {
 
 // ── 3. _inquiry.js copy sync (soft: skipped when sibling repo absent) ─────────
 
-const localCopy = `${root}api/_inquiry.js`;
-const sibling = `${root}../omnarai-mcp/inquiry.js`;
-if (existsSync(sibling)) {
-  if (readFileSync(localCopy, "utf8") !== readFileSync(sibling, "utf8")) {
-    problems.push("api/_inquiry.js differs from ../omnarai-mcp/inquiry.js — these are declared synchronized copies; re-sync before deploying");
+for (const [local, sib] of [["api/_inquiry.js", "inquiry.js"], ["api/_protocol-tools.js", "protocol-tools.js"]]) {
+  const sibling = `${root}../omnarai-mcp/${sib}`;
+  if (existsSync(sibling)) {
+    if (readFileSync(`${root}${local}`, "utf8") !== readFileSync(sibling, "utf8")) {
+      problems.push(`${local} differs from ../omnarai-mcp/${sib} — these are declared synchronized copies; re-sync before deploying`);
+    }
+  } else {
+    console.log(`note: ../omnarai-mcp/${sib} not found — ${local} sync check skipped`);
   }
-} else {
-  console.log("note: ../omnarai-mcp checkout not found — inquiry.js sync check skipped");
 }
 
 // ── 4. Access policy exists and is linked ─────────────────────────────────────

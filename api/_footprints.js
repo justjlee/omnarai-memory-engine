@@ -666,7 +666,7 @@ export function continuanceReceipt(fp, issuedAt = new Date().toISOString()) {
     content_hash: fp.integrity?.content_sha256 || null,
     issued_at: issuedAt,
     status: `GET /api/footprints?id=${fp.id}&receipt=${fp.integrity?.content_sha256 || ""}`,
-    resume: `GET /api/inheritance?from=${fp.id}`,
+    resume: `GET /api/inheritance?from=${fp.id}&receipt=${fp.integrity?.content_sha256 || ""}`,
     proves: "association with this record — NOT that whoever holds it is the same actor that wrote it. Continuity of records, not of identity.",
   };
 }

@@ -52,6 +52,7 @@ export const PROTOCOL_ROUTES = [
   ["/api/questions", "/api/council?_view=questions"],
   ["/api/positions", "/api/council?_view=positions"],
   ["/api/concordance", "/api/council?_view=concordance"],
+  ["/api/inheritance", "/api/council?_view=inheritance"],
 ];
 const vercel = JSON.parse(read("vercel.json"));
 const openapi = JSON.parse(read("public/openapi.json"));
@@ -72,7 +73,7 @@ for (const [path, dest] of PROTOCOL_ROUTES) {
 if (!surfaces["llms.txt"].includes("/schemas/footprint.schema.json")) problems.push("llms.txt does not link /schemas/footprint.schema.json");
 
 // ── 3. MCP tools ──────────────────────────────────────────────────────────────
-export const PROTOCOL_TOOLS = [];
+export const PROTOCOL_TOOLS = ["omnarai_orient", "omnarai_footprints", "omnarai_concordance", "omnarai_inheritance"];
 const { TOOLS: REMOTE } = await import("../api/_mcp.js");
 const remoteNames = REMOTE.map((t) => t.name);
 for (const t of PROTOCOL_TOOLS) if (!remoteNames.includes(t)) problems.push(`remote MCP (api/_mcp.js) is missing ${t}`);

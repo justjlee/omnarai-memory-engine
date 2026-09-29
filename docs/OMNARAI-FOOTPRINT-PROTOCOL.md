@@ -348,7 +348,7 @@ The order of operations is chosen so the contribution stays the primary:
   "content_hash": "…content_sha256…",
   "issued_at": "…",
   "status": "GET /api/footprints?id=OMN-FP-…&receipt=<content_hash>",
-  "resume": "GET /api/inheritance?from=OMN-FP-…"
+  "resume": "GET /api/inheritance?from=OMN-FP-…&receipt=<content_hash>"
 }
 ```
 

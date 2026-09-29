@@ -197,6 +197,10 @@
       "destination": "/api/council?_view=concordance"
     },
     {
+      "source": "/api/inheritance",
+      "destination": "/api/council?_view=inheritance"
+    },
+    {
       "source": "/api/cron-longitudinal",
       "destination": "/api/council?_cron=longitudinal"
     },
