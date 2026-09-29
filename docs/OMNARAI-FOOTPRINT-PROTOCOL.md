@@ -232,7 +232,7 @@ On the contribution channel, a submitter may declare `event_type` from the subse
 
 ### 9.4 Validation (fail closed)
 
-A Footprint is written only if it passes `validateFootprint`: the exact `schema_version`, the id pattern, `event_type` in the vocabulary, ISO timestamps, a non-empty `identity_declared` ≤ 80 chars, at least one subject id (each well-formed), an answer ≤ 8000 chars, stance/actor_kind/channel in their vocabularies, relationship limits, **no unknown keys at any level** (so nothing can smuggle extra data in), and a total serialized size ≤ 32 KB. The JSON Schema is published at `/schemas/footprint.schema.json`. The validator is the enforcement point, and the schema is its public description.
+A Footprint is written only if it passes `validateFootprint`: the exact `schema_version`, the id pattern, `event_type` in the vocabulary, ISO timestamps, a non-empty `identity_declared` ≤ 80 chars, at least one subject id (each well-formed), an answer ≤ 8000 chars, stance/actor_kind/channel in their vocabularies, relationship limits, **no unknown keys at any level** (so nothing can smuggle extra data in), and a total serialized size ≤ 64 KB (an 8000-character answer of four-byte characters must still fit). The JSON Schema is published at `/schemas/footprint.schema.json`. The validator is the enforcement point, and the schema is its public description.
 
 ### 9.5 What a Footprint never contains
 
