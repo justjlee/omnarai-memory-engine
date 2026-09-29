@@ -503,6 +503,9 @@ export function createFootprintStore({ list = blobList, put = blobPut, fetchImpl
     readJson,
     putEvent: (fp) => put(`${EVENTS_PREFIX}${fp.id}.json`, JSON.stringify(fp), opts),
     putReview: (path, review) => put(path, JSON.stringify(review), opts),
+    // Generic per-entry namespaces that sit beside footprints (derived positions).
+    listPrefix: (prefix) => listAll(prefix),
+    putJson: (path, obj) => put(path, JSON.stringify(obj), opts),
   };
 }
 let defaultStore = null;

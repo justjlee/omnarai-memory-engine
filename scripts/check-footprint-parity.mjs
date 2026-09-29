@@ -48,6 +48,10 @@ if (FP.validateFootprint(sample).length) problems.push(`the builder emits an inv
 // Each entry: [public path, rewrite destination prefix]. Grows with each phase.
 export const PROTOCOL_ROUTES = [
   ["/api/footprints", "/api/council?_view=footprints"],
+  ["/api/orient", "/api/council?_view=orient"],
+  ["/api/questions", "/api/council?_view=questions"],
+  ["/api/positions", "/api/council?_view=positions"],
+  ["/api/concordance", "/api/council?_view=concordance"],
 ];
 const vercel = JSON.parse(read("vercel.json"));
 const openapi = JSON.parse(read("public/openapi.json"));

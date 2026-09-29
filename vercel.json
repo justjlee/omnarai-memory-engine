@@ -181,6 +181,22 @@
       "destination": "/api/council?_view=footprints"
     },
     {
+      "source": "/api/orient",
+      "destination": "/api/council?_view=orient"
+    },
+    {
+      "source": "/api/questions",
+      "destination": "/api/council?_view=questions"
+    },
+    {
+      "source": "/api/positions",
+      "destination": "/api/council?_view=positions"
+    },
+    {
+      "source": "/api/concordance",
+      "destination": "/api/council?_view=concordance"
+    },
+    {
       "source": "/api/cron-longitudinal",
       "destination": "/api/council?_cron=longitudinal"
     },
