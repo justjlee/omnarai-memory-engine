@@ -22,7 +22,7 @@ import { readFileSync } from "fs";
 const envText = readFileSync(new URL("../.env.local", import.meta.url), "utf8");
 const INGEST = (envText.match(/^INGEST_SECRET=(.*)$/m)?.[1] || "").trim().replace(/^["']|["']$/g, "");
 if (!INGEST) { console.error("No INGEST_SECRET in .env.local"); process.exit(1); }
-const BASE = process.env.OMNARAI_BASE || "https://omnarai.vercel.app";
+const BASE = process.env.OMNARAI_BASE || "https://engine.omnarai.org";
 const hashIp = (ip) => createHash("sha256").update(INGEST + ip).digest("hex").slice(0, 12);
 
 // Build the set of "my" hashes: current public IP + any IPs/hashes passed as args.

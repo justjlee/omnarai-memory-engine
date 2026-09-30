@@ -28,7 +28,7 @@ if (!OPENAI_API_KEY) {
   process.exit(1);
 }
 
-const STORE_API = "https://omnarai.vercel.app/api/store?action=list";
+const STORE_API = "https://engine.omnarai.org/api/store?action=list";
 const MODEL = "text-embedding-3-small";
 const DIMENSIONS = 512;
 

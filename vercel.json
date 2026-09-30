@@ -11,6 +11,52 @@
       "schedule": "0 6 * * *"
     }
   ],
+  "redirects": [
+    {
+      "source": "/api/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "omnarai.vercel.app"
+        }
+      ],
+      "destination": "https://engine.omnarai.org/api/:path*",
+      "statusCode": 308
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "omnarai.vercel.app"
+        }
+      ],
+      "destination": "https://engine.omnarai.org/:path*",
+      "statusCode": 301
+    },
+    {
+      "source": "/api/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "omnarai-memory-engine.vercel.app"
+        }
+      ],
+      "destination": "https://engine.omnarai.org/api/:path*",
+      "statusCode": 308
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "omnarai-memory-engine.vercel.app"
+        }
+      ],
+      "destination": "https://engine.omnarai.org/:path*",
+      "statusCode": 301
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/query",

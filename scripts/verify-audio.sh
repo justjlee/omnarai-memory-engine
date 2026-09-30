@@ -8,7 +8,7 @@
 # substitution (`< <(...)`) below keeps the loop in the current shell so
 # failures actually reach the gate.
 #
-# Usage: bash scripts/verify-audio.sh https://omnarai.vercel.app
+# Usage: bash scripts/verify-audio.sh https://engine.omnarai.org
 set -u
 BASE="${1:?Usage: bash scripts/verify-audio.sh <base_url>}"
 PASS=0; FAIL=0

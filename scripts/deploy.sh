@@ -20,7 +20,9 @@ cd "$(dirname "$0")/.."
 
 export PATH="/usr/local/bin:$HOME/.npm-global/bin:$PATH"
 
-DOMAIN="omnarai.vercel.app"   # primary — used for the post-deploy bundle verification below
+DOMAIN="engine.omnarai.org"   # canonical — used for the post-deploy bundle verification below.
+# omnarai.vercel.app stays in PROD_DOMAINS: it must keep pointing at the newest
+# build, because the 301/308 to this host lives in that build's vercel.json.
 # All production custom domains that must be re-aliased to each new prod deployment.
 # Vercel does NOT auto-follow new prod deploys here (this script uses --prebuilt + a
 # manual alias), so any domain missing from this list silently serves a stale bundle.

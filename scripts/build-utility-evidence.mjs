@@ -94,7 +94,7 @@ const date = new Date().toISOString().slice(0, 10);
 const card = `# Utility Evidence — does the Divergence Atlas measurably improve frontier-model reasoning?
 
 **Updated:** ${date} · **Design:** three-arm controlled comparison with a disjoint LLM judge panel
-**Verify it yourself:** the full harness and every raw judge verdict are in \`utility/\` — re-run it against the live Atlas (\`https://omnarai.vercel.app/api/divergences\`) and check these numbers.
+**Verify it yourself:** the full harness and every raw judge verdict are in \`utility/\` — re-run it against the live Atlas (\`https://engine.omnarai.org/api/divergences\`) and check these numbers.
 
 ## The claim
 

@@ -16,7 +16,7 @@
 #   OMNARAI_BASE=https://<deploy>.vercel.app ./scripts/omnarai-verify.sh
 # Requires: curl, jq
 set -u
-BASE="${OMNARAI_BASE:-https://omnarai.vercel.app}"
+BASE="${OMNARAI_BASE:-https://engine.omnarai.org}"
 # Self-marker so gate runs never pollute the access-telemetry milestone.
 SELF=(-H "x-omnarai-self:1")
 PASS=0; FAIL=0

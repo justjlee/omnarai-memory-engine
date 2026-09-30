@@ -20,7 +20,7 @@
 // Exit 1 = something a visitor would hit is broken or numbers disagree.
 
 const args = process.argv.slice(2);
-const BASE = (args.includes("--base") ? args[args.indexOf("--base") + 1] : "https://omnarai.vercel.app").replace(/\/$/, "");
+const BASE = (args.includes("--base") ? args[args.indexOf("--base") + 1] : "https://engine.omnarai.org").replace(/\/$/, "");
 const JSON_OUT = args.includes("--json");
 const H = { "x-omnarai-self": "1", "user-agent": "omnarai-arrival-check" };
 

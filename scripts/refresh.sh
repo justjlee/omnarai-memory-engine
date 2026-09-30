@@ -96,18 +96,18 @@ if [[ -n "$PROMOTE_URL" ]]; then
     | grep -oE 'https://omnarai-memory-engine-[a-z0-9]+-justjlee2-4420s-projects\.vercel\.app' \
     | tail -1)
   if [[ -n "$PROD_URL" ]]; then
-    echo "  Re-aliasing omnarai.vercel.app -> $PROD_URL  (deploy.sh does NOT do this)"
-    vercel alias set "$PROD_URL" omnarai.vercel.app
+    echo "  Re-aliasing engine.omnarai.org -> $PROD_URL  (deploy.sh does NOT do this)"
+    vercel alias set "$PROD_URL" engine.omnarai.org
   else
     echo "  WARN: could not capture prod URL from promote output."
-    echo "        Manually: vercel alias set <new-deployment-url> omnarai.vercel.app"
+    echo "        Manually: vercel alias set <new-deployment-url> engine.omnarai.org"
   fi
   sleep 4
-  BUNDLE=$(curl -s "https://omnarai.vercel.app" | grep -oE 'index-[A-Za-z0-9]+\.js' | head -1)
-  V=$(curl -s "https://omnarai.vercel.app/omnarai.context.md?cb=$RANDOM" | grep -m1 -oE 'Version:\*\* [0-9.]+')
-  AGE=$(curl -sI "https://omnarai.vercel.app/omnarai.context.md" | tr -d '\r' | awk 'BEGIN{IGNORECASE=1}/^age:/{print $2}')
+  BUNDLE=$(curl -s "https://engine.omnarai.org" | grep -oE 'index-[A-Za-z0-9]+\.js' | head -1)
+  V=$(curl -s "https://engine.omnarai.org/omnarai.context.md?cb=$RANDOM" | grep -m1 -oE 'Version:\*\* [0-9.]+')
+  AGE=$(curl -sI "https://engine.omnarai.org/omnarai.context.md" | tr -d '\r' | awk 'BEGIN{IGNORECASE=1}/^age:/{print $2}')
   echo "  Live: bundle=${BUNDLE:-?}  context.md ${V:-?}  age=${AGE:-0} (want low)"
-  curl -s -H "x-omnarai-self:1" "https://omnarai.vercel.app/api/info" | python3 -c "import sys,json;d=json.load(sys.stdin);print('  /api/info works:',d['corpus']['totalWorks'])"
+  curl -s -H "x-omnarai-self:1" "https://engine.omnarai.org/api/info" | python3 -c "import sys,json;d=json.load(sys.stdin);print('  /api/info works:',d['corpus']['totalWorks'])"
 else
   echo "  skipped (run: ./scripts/refresh.sh <verified-preview-url>)"
 fi

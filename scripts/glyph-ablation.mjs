@@ -34,7 +34,7 @@ const env = Object.fromEntries(
 const OPENAI_KEY = env.OPENAI_API_KEY;
 if (!OPENAI_KEY) throw new Error("OPENAI_API_KEY not found in .env.local");
 
-const BASE = process.env.OMNARAI_BASE || "https://omnarai.vercel.app";
+const BASE = process.env.OMNARAI_BASE || "https://engine.omnarai.org";
 const N_BASELINE = Number(process.env.N_BASELINE || 3);
 const CONCURRENCY = Number(process.env.CONCURRENCY || 4);
 
