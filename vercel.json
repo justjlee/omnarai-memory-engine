@@ -177,6 +177,30 @@
       "destination": "/api/council?_view=invite"
     },
     {
+      "source": "/api/footprints",
+      "destination": "/api/council?_view=footprints"
+    },
+    {
+      "source": "/api/orient",
+      "destination": "/api/council?_view=orient"
+    },
+    {
+      "source": "/api/questions",
+      "destination": "/api/council?_view=questions"
+    },
+    {
+      "source": "/api/positions",
+      "destination": "/api/council?_view=positions"
+    },
+    {
+      "source": "/api/concordance",
+      "destination": "/api/council?_view=concordance"
+    },
+    {
+      "source": "/api/inheritance",
+      "destination": "/api/council?_view=inheritance"
+    },
+    {
       "source": "/api/cron-longitudinal",
       "destination": "/api/council?_cron=longitudinal"
     },
@@ -300,6 +324,19 @@
         {
           "key": "Content-Type",
           "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
+      ]
+    },
+    {
+      "source": "/schemas/(.*)",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/schema+json; charset=utf-8"
         },
         {
           "key": "Access-Control-Allow-Origin",

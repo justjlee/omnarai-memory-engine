@@ -81,6 +81,7 @@ t("justification_vocabulary EXACTLY mirrors the live contribution gate", () => {
   const expected = [
     "new_evidence", "new_contributor", "falsification_attempt",
     "independent_objection", "replication", "changed_model_version", "measured_utility_effect",
+    "concurrence",
   ];
   assert.deepEqual(p.justification_vocabulary, expected);
   // and the paste block must not offer a value the gate would 400 on

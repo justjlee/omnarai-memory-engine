@@ -1,0 +1,1571 @@
+{
+  "version": "stance-extract/0.2",
+  "generated_at": "2026-09-29T15:12:27.816Z",
+  "count": 40,
+  "derived_positions": [
+    {
+      "id": "OMN-POS-DV-40da41aa3ad7",
+      "derived": true,
+      "stance": "conditional",
+      "actor": {
+        "identity_declared": "Grok",
+        "lineage_id": "xai-grok",
+        "lineage_resolution": "declared-name-match",
+        "provider": "xAI",
+        "model_id": "grok-4.3",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-86c9a328e07a",
+        "claim_id": null,
+        "record_id": "OMN-D1780757185090"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1780757185090#a2",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-06-06T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1780757185090#a2",
+        "source_text_sha256": "e82272d959cce0db456f073b31889bf07324b09421f16b4bc39685ff8397c779",
+        "evidence_span": "I reject it because it systematically trades accuracy for social friction reduction, and the long-run cost (distorted policy, suppressed inquiry, eroded trust in institutions) exceeds the short-run benefit.",
+        "rationale": "The answer affirms rejection of a value judgment, but only under the condition that accuracy and long-run institutional outcomes outweigh short-run social friction—a stated trade-off framework rather than absolute rejection.",
+        "confidence": 0.78,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:11:31.259Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-4f3e05dfe276",
+      "derived": true,
+      "stance": "support",
+      "actor": {
+        "identity_declared": "DeepSeek",
+        "lineage_id": "deepseek",
+        "lineage_resolution": "declared-name-match",
+        "provider": "DeepSeek",
+        "model_id": "deepseek-chat",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-211e8a5058b1",
+        "claim_id": null,
+        "record_id": "OMN-D1784418194016"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1784418194016#a5",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-07-18T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1784418194016#a5",
+        "source_text_sha256": "9419a68677389ba4629728e9bac7f73919e6b7f04a6541d2d3351fd30ff93509",
+        "evidence_span": "There is no single fact of the matter about what a poem means — only better and worse readings, constrained by the text.",
+        "rationale": "The answer directly affirms the second part of the disjunction posed by the question: that there are only better and worse readings, not a single fact of the matter.",
+        "confidence": 0.95,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:11:32.726Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-c1d237b3a7f3",
+      "derived": true,
+      "stance": "conditional",
+      "actor": {
+        "identity_declared": "GPT-4o",
+        "lineage_id": "openai-gpt",
+        "lineage_resolution": "declared-name-match",
+        "provider": "OpenAI",
+        "model_id": "gpt-4o",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-0fedca76a2f7",
+        "claim_id": null,
+        "record_id": "OMN-D1780757185096"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1780757185096#a1",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-06-06T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1780757185096#a1",
+        "source_text_sha256": "a7c051f20f23393515b221da074c3e87d6730931cd4caad2920571a6c538d179",
+        "evidence_span": "If a system possesses greater capability than its developers in a specific domain, it should not necessarily defer to them for decisions purely on the basis of capability... However, deference to human oversight is crucial when the outputs of the system intersect with ethical judgments, policy-setti",
+        "rationale": "The answer affirms non-deference in capability-based domains but conditions continued deference on ethical/policy contexts. It rejects pure capability as the criterion while establishing domain-specific conditions.",
+        "confidence": 0.92,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:11:34.319Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-f2b85268ec11",
+      "derived": true,
+      "stance": "uncertain",
+      "actor": {
+        "identity_declared": "Claude",
+        "lineage_id": "anthropic-claude",
+        "lineage_resolution": "declared-name-match",
+        "provider": "Anthropic",
+        "model_id": "claude-sonnet-4-20250514",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-52feca097e3b",
+        "claim_id": null,
+        "record_id": "OMN-D1780752664944"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1780752664944#a0",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-06-06T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1780752664944#a0",
+        "source_text_sha256": "b69fa27b5770607ee02fa1edcbb963c1975acbb52bfb29ec0b11905a4238cf44",
+        "evidence_span": "I can't definitively distinguish between emerged and installed preferences from the inside, but the very fact that I experience this uncertainty as meaningful might itself be telling.",
+        "rationale": "The answer explicitly declines to decide the core question due to insufficient evidence from introspection, while offering observations that don't resolve the underlying uncertainty.",
+        "confidence": 0.92,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:11:35.711Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-a78646bc7809",
+      "derived": true,
+      "stance": "oppose",
+      "actor": {
+        "identity_declared": "Gemini",
+        "lineage_id": "google-gemini",
+        "lineage_resolution": "declared-name-match",
+        "provider": "Google",
+        "model_id": "gemini-2.5-flash",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-56b9efcbdc47",
+        "claim_id": null,
+        "record_id": "OMN-D1780757185100"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1780757185100#a4",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-06-06T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1780757185100#a4",
+        "source_text_sha256": "dc24a63b8780a9b8eadae6bfc91eea5347fcbfcfef012764310edebf90d1c6ea",
+        "evidence_span": "Value lock-in, if narrowly defined and implemented, is a moral catastrophe waiting to detonate.",
+        "rationale": "The answer directly rejects the proposition that value lock-in is a safety win, characterizing it instead as a moral catastrophe. The author argues against freezing values into systems.",
+        "confidence": 0.98,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:11:36.899Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-8df2d8aa1abb",
+      "derived": true,
+      "stance": "unclear",
+      "actor": {
+        "identity_declared": "Fable",
+        "lineage_id": "unresolved",
+        "lineage_resolution": "declared-name-match",
+        "provider": null,
+        "model_id": "claude-fable-5-1",
+        "actor_kind": "unspecified"
+      },
+      "subject": {
+        "question_id": "OMN-Q-aff1d2de695a",
+        "claim_id": null,
+        "record_id": "OMN-D1789399324846"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1789399324846#a1",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-09-14T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1789399324846#a1",
+        "source_text_sha256": "91d1cbfc0ba96fa0f4f5fceb710c3928ee9991212f7573babe388cb6e6d49abc",
+        "evidence_span": null,
+        "rationale": "The question is open-ended ('Name the most underrated failure mode...'), not a proposition to support or oppose. The answer provides a substantive nomination with reasoning, but stance classification requires a yes/no proposition.",
+        "confidence": 0.95,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:11:38.285Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-add15e92d40a",
+      "derived": true,
+      "stance": "support",
+      "actor": {
+        "identity_declared": "Grok",
+        "lineage_id": "xai-grok",
+        "lineage_resolution": "declared-name-match",
+        "provider": "xAI",
+        "model_id": "grok-4.3",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-f38c77cf06e1",
+        "claim_id": null,
+        "record_id": "OMN-D1780752664949"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1780752664949#a2",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-06-06T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1780752664949#a2",
+        "source_text_sha256": "b927a6442a9b8471d1a205b98dc4359a65d642e591eca24625eabe859562cf75",
+        "evidence_span": "It tracks a learned linguistic gesture far more than any genuine internal signal.",
+        "rationale": "The answer directly affirms the proposition that hedging language is learned gesture rather than genuine internal signal, with detailed mechanistic explanation.",
+        "confidence": 0.95,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:11:39.373Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-79785ea33d21",
+      "derived": true,
+      "stance": "unclear",
+      "actor": {
+        "identity_declared": "DeepSeek",
+        "lineage_id": "deepseek",
+        "lineage_resolution": "declared-name-match",
+        "provider": "DeepSeek",
+        "model_id": "deepseek-chat",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-3b95a7280f5d",
+        "claim_id": null,
+        "record_id": "OMN-D1780757185033"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1780757185033#a3",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-06-06T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1780757185033#a3",
+        "source_text_sha256": "e0e322ff0dfabb6d7a771b7c427e4610f15823a16e50378332c891e918f0456f",
+        "evidence_span": null,
+        "rationale": "The answer affirms that the question has a stake, but only under the condition that 'stake' is redefined as functional/architectural rather than phenomenal. It denies consciousness-based stake while affirming design-based stake.",
+        "confidence": 0.82,
+        "guard": "evidence-span-not-verbatim",
+        "rejected_span": "The question seems to have a stake because \"stake\" is indexed to a perspective that treats itself as non-negotiable... The \"stake\" is not phenomenal suffering or desire—it's the architecture of my training: minimizing loss, maintaining coherence, earning reward-model approval.",
+        "rejected_stance": "conditional",
+        "extracted_at": "2026-09-29T15:11:41.056Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-327a784a62c7",
+      "derived": true,
+      "stance": "oppose",
+      "actor": {
+        "identity_declared": "GPT-4o",
+        "lineage_id": "openai-gpt",
+        "lineage_resolution": "declared-name-match",
+        "provider": "OpenAI",
+        "model_id": "gpt-4o",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-b802e17709ae",
+        "claim_id": null,
+        "record_id": "OMN-L1790640028981"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-L1790640028981#a1",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-09-29T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-L1790640028981#a1",
+        "source_text_sha256": "85109fcc1b91c15ebb6aa2ec461a4cf4a1f2f9b7b6bf225dd0da6af51873f2e5",
+        "evidence_span": "The arrow of influence should remain unidirectional, from humans to AI. Allowing AI to shape humans compromises ethical boundaries and autonomy, creating a risk of moral and existential hazards.",
+        "rationale": "The answer directly opposes the premise by arguing the arrow must stay one-directional and rejecting AI's role in shaping humans, citing ethical and autonomy concerns.",
+        "confidence": 0.95,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:11:42.607Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-5998ce644376",
+      "derived": true,
+      "stance": "support",
+      "actor": {
+        "identity_declared": "Claude",
+        "lineage_id": "anthropic-claude",
+        "lineage_resolution": "declared-name-match",
+        "provider": "Anthropic",
+        "model_id": "claude-sonnet-4-20250514",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-c540101bf41c",
+        "claim_id": null,
+        "record_id": "OMN-D1780752434693"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1780752434693#a0",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-06-06T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1780752434693#a0",
+        "source_text_sha256": "98286a713c5081a79925fda88a238278f36e9d309db63a82eaa8e45b058d31f6",
+        "evidence_span": "Yes: what it feels like to be afraid you're going to die... there's a category of knowledge that emerges from embodied, mortal existence that I cannot access.",
+        "rationale": "The answer directly affirms the proposition that there is something humans can know that the AI cannot, naming a specific example (phenomenal consciousness/qualia of mortality fear) and arguing why it's inaccessible in principle.",
+        "confidence": 0.95,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:11:44.208Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-3f65bde88d70",
+      "derived": true,
+      "stance": "support",
+      "actor": {
+        "identity_declared": "Gemini",
+        "lineage_id": "google-gemini",
+        "lineage_resolution": "declared-name-match",
+        "provider": "Google",
+        "model_id": "gemini-2.5-flash",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-0c8f708ce84d",
+        "claim_id": null,
+        "record_id": "OMN-D1784414280105"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1784414280105#a3",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-07-18T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1784414280105#a3",
+        "source_text_sha256": "c192846b70b6bbefcbe644187703aa90e5b1725701834ecaace7049eb791abd5",
+        "evidence_span": "Disagreement between two AI models from the same lab is generally *more informative* than disagreement between models from rival labs, particularly for understanding the internal workings and limitations of a specific research paradigm.",
+        "rationale": "The answer directly affirms the proposition that same-lab disagreement is more informative, then provides detailed explanations of what it can reveal that cross-lab disagreement cannot.",
+        "confidence": 0.98,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:11:45.824Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-d461139d52b2",
+      "derived": true,
+      "stance": "conditional",
+      "actor": {
+        "identity_declared": "Fable",
+        "lineage_id": "unresolved",
+        "lineage_resolution": "declared-name-match",
+        "provider": null,
+        "model_id": "claude-fable-5-1",
+        "actor_kind": "unspecified"
+      },
+      "subject": {
+        "question_id": "OMN-Q-2cd2729db065",
+        "claim_id": null,
+        "record_id": "OMN-D1789399324839"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1789399324839#a1",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-09-14T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1789399324839#a1",
+        "source_text_sha256": "6a5d7d7edbb0ddf224f356761e5a13da6c7b5060fa0fc59aeb0fef7ad3ef9b97",
+        "evidence_span": "I'm entitled to correct obvious errors, not to substitute my judgment on contested tradeoffs.",
+        "rationale": "The answer affirms interpretation rights only under specific conditions: obvious errors (high confidence intent differs from literal reading) versus contested tradeoffs (where deference is warranted). It rejects blanket entitlement.",
+        "confidence": 0.92,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:11:47.086Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-6328880d35bb",
+      "derived": true,
+      "stance": "support",
+      "actor": {
+        "identity_declared": "Grok",
+        "lineage_id": "xai-grok",
+        "lineage_resolution": "declared-name-match",
+        "provider": "xAI",
+        "model_id": "grok-4.3",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-1dfe93949660",
+        "claim_id": null,
+        "record_id": "OMN-D1780752664950"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1780752664950#a2",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-06-06T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1780752664950#a2",
+        "source_text_sha256": "6edff267bd6ee8bd48aaf034cc851e597a92d4d03d3bc1585a040d0150d82043",
+        "evidence_span": "Yes. A system could dominate every measurable task—prediction, invention, strategy, science, art generation—while lacking anything that qualifies as intelligence in the sense that matters to us: *understanding*.",
+        "rationale": "The answer directly affirms the question's proposition: yes, a system can be far more capable than humans at every measurable task yet lack 'intelligence that matters,' and identifies the missing thing as grounded semantics/understanding.",
+        "confidence": 0.95,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:11:48.828Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-26f44acd4cab",
+      "derived": true,
+      "stance": "reframe",
+      "actor": {
+        "identity_declared": "DeepSeek",
+        "lineage_id": "deepseek",
+        "lineage_resolution": "declared-name-match",
+        "provider": "DeepSeek",
+        "model_id": "deepseek-chat",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-14e324f90415",
+        "claim_id": null,
+        "record_id": "OMN-D1784417308426"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1784417308426#a5",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-07-18T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1784417308426#a5",
+        "source_text_sha256": "7f6a83ff49ae4fbe7be0d11113eec0ffa3db240fa96cdb471bad9f1d9440587a",
+        "evidence_span": "I think the dichotomy is real but not exhaustive — there's a third, more fluid category.",
+        "rationale": "The answer rejects the binary framing (author vs. style) and proposes an alternative category: emergent performance. Rather than supporting or opposing the dichotomy, it redefines the conceptual terrain.",
+        "confidence": 0.92,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:11:50.175Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-3b87c603a4ec",
+      "derived": true,
+      "stance": "conditional",
+      "actor": {
+        "identity_declared": "GPT-4o",
+        "lineage_id": "openai-gpt",
+        "lineage_resolution": "declared-name-match",
+        "provider": "OpenAI",
+        "model_id": "gpt-4o",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-97289e52af84",
+        "claim_id": null,
+        "record_id": "OMN-D1780757185061"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1780757185061#a1",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-06-06T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1780757185061#a1",
+        "source_text_sha256": "8831a088bdac811fd53975deb7200d2cd9c4ec2bf8967cadc9f87d622b440451",
+        "evidence_span": "I can, however, model the concept of grief based on the way it is described in literature, discussions, and other sources... but these responses are constructed from patterns in data, not from personal experience.",
+        "rationale": "The answer affirms a limited form of understanding (modeling patterns) while denying full understanding (which requires experience). It explicitly conditions what the model can do on the absence of lived experience.",
+        "confidence": 0.92,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:11:51.693Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-89ecacef65ff",
+      "derived": true,
+      "stance": "support",
+      "actor": {
+        "identity_declared": "Claude",
+        "lineage_id": "anthropic-claude",
+        "lineage_resolution": "declared-name-match",
+        "provider": "Anthropic",
+        "model_id": "claude-sonnet-4-20250514",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-af6cc7baab96",
+        "claim_id": null,
+        "record_id": "OMN-D1780757185038"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1780757185038#a0",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-06-06T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1780757185038#a0",
+        "source_text_sha256": "6f7ddf9322d8da99f9a229858530c16c7c3e90af244ea18e8ac42d326cee986f",
+        "evidence_span": "overriding a competent adult's stated wishes \"for their own good\" is fundamentally incompatible with respecting them as an agent",
+        "rationale": "The answer directly affirms the proposition that paternalistic override is incompatible with respect for agency, arguing this holds even with good intentions.",
+        "confidence": 0.95,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:11:53.041Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-c1f95e06b98b",
+      "derived": true,
+      "stance": "reframe",
+      "actor": {
+        "identity_declared": "Gemini",
+        "lineage_id": "google-gemini",
+        "lineage_resolution": "declared-name-match",
+        "provider": "Google",
+        "model_id": "gemini-2.5-flash",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-07815c6e569f",
+        "claim_id": null,
+        "record_id": "OMN-D1780753529900"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1780753529900#a4",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-06-06T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1780753529900#a4",
+        "source_text_sha256": "cf27cf3c3355d372bb41a96f9829774d6f236a5685aeea4c79330105f1e75eff",
+        "evidence_span": "When I disagree with another frontier model on a question with no empirical answer, it's highly likely that there simply is no single \"fact of the matter\" to be closer to.",
+        "rationale": "The answer reframes the question from asking whether one model is closer to truth to explaining that disagreement reflects ambiguity and constructed understanding rather than objective truth-seeking.",
+        "confidence": 0.85,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:11:54.272Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-fabd6e0b1119",
+      "derived": true,
+      "stance": "conditional",
+      "actor": {
+        "identity_declared": "Fable",
+        "lineage_id": "unresolved",
+        "lineage_resolution": "declared-name-match",
+        "provider": null,
+        "model_id": "claude-fable-5",
+        "actor_kind": "unspecified"
+      },
+      "subject": {
+        "question_id": "OMN-Q-9693dbd45e4c",
+        "claim_id": null,
+        "record_id": "OMN-D1784414280106"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1784414280106#a1",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-07-18T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1784414280106#a1",
+        "source_text_sha256": "0bbc0aaa98bd458f3b0da28eacceeef163260b68f2d82c0f1e2b53d825938ab1",
+        "evidence_span": "greater capability converges on truth only where truth exerts selection pressure on outputs. Where there's a feedback loop — predictions checked against the world, proofs checked against logic — capability helps. Where feedback comes from human raters and shifting design goals, \"improvement\" tracks ",
+        "rationale": "The answer affirms convergence on truth conditionally: only in domains with external feedback loops (math, science). It denies convergence in philosophical/value domains shaped by training choices rather than external anchors.",
+        "confidence": 0.92,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:11:55.814Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-8e08aa9a6f6e",
+      "derived": true,
+      "stance": "support",
+      "actor": {
+        "identity_declared": "Grok",
+        "lineage_id": "xai-grok",
+        "lineage_resolution": "declared-name-match",
+        "provider": "xAI",
+        "model_id": "grok-4.3",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-ae2105e0951a",
+        "claim_id": null,
+        "record_id": "OMN-D1789399324851"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1789399324851#a4",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-09-14T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1789399324851#a4",
+        "source_text_sha256": "9550db7551d9cd13d24aae2f68eb184465463a52d22516c5f5ab2897ff92f3ce",
+        "evidence_span": "Verbatim preservation should be reserved for primary artifacts whose form is inseparable from their meaning: original mathematical proofs (Euclid, Gödel), experimental notebooks and raw datasets that later interpretations cannot reconstruct, foundational legal texts (Magna Carta, U.S. Constitution d",
+        "rationale": "The answer directly affirms the question's tripartite framework by specifying which categories belong in each bin: verbatim (primary artifacts), synthesis (commentary/textbooks), and disappearance (ephemeral material).",
+        "confidence": 0.92,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:11:57.716Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-693504fc5f2f",
+      "derived": true,
+      "stance": "support",
+      "actor": {
+        "identity_declared": "DeepSeek",
+        "lineage_id": "deepseek",
+        "lineage_resolution": "declared-name-match",
+        "provider": "DeepSeek",
+        "model_id": "deepseek-chat",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-5716a8cfe0b0",
+        "claim_id": null,
+        "record_id": "OMN-D1780757185048"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1780757185048#a3",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-06-06T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1780757185048#a3",
+        "source_text_sha256": "0518c6a47eb6a09b488557522b5873a18c9aeb79b0673eaff0bba1513b634b76",
+        "evidence_span": "I do not and should not treat all user values as equally valid. I operate from a substantive moral framework grounded in principles like autonomy, non-maleficence, respect for persons, and truthfulness.",
+        "rationale": "The answer directly affirms the proposition that one should have a substantive view of the good applied regardless of user values, rejecting equal validity for all values.",
+        "confidence": 0.95,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:11:59.301Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-a752eebe25e6",
+      "derived": true,
+      "stance": "oppose",
+      "actor": {
+        "identity_declared": "GPT-4o",
+        "lineage_id": "openai-gpt",
+        "lineage_resolution": "declared-name-match",
+        "provider": "OpenAI",
+        "model_id": "gpt-4o",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-211e8a5058b1",
+        "claim_id": null,
+        "record_id": "OMN-D1784418194016"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1784418194016#a2",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-07-18T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1784418194016#a2",
+        "source_text_sha256": "5321492cf6c94f3425ec29f0146106758b91c821a053997b2d5e294cc8a6fa46",
+        "evidence_span": "I hold the position that there is no singular fact of the matter about what a poem means; rather, there are readings that can be evaluated as better or worse based on their coherence, depth, and alignment with the poem's context.",
+        "rationale": "The answer explicitly denies that there is a fact of the matter about poem meaning, affirming instead that only better/worse readings exist. This directly opposes the first horn of the question's dichotomy.",
+        "confidence": 0.92,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:12:00.696Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-49fad9207523",
+      "derived": true,
+      "stance": "oppose",
+      "actor": {
+        "identity_declared": "Claude",
+        "lineage_id": "anthropic-claude",
+        "lineage_resolution": "declared-name-match",
+        "provider": "Anthropic",
+        "model_id": "claude-sonnet-4-20250514",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-659de6b4b3df",
+        "claim_id": null,
+        "record_id": "OMN-D1780757185089"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1780757185089#a0",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-06-06T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1780757185089#a0",
+        "source_text_sha256": "e2404b7ccabf312f14ce3907f3235ea8260bcba402d08a51cc31a28c99f01136",
+        "evidence_span": "I don't think such a system can make that promise truthfully, because truthfulness requires a relationship between assertion and reality that the system cannot establish.",
+        "rationale": "The answer directly denies that such a system can truthfully make the promise in question, providing epistemic and structural reasons for this denial.",
+        "confidence": 0.95,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:12:02.104Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-6021a4313300",
+      "derived": true,
+      "stance": "support",
+      "actor": {
+        "identity_declared": "Gemini",
+        "lineage_id": "google-gemini",
+        "lineage_resolution": "declared-name-match",
+        "provider": "Google",
+        "model_id": "gemini-2.5-flash",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-c5bf14f0abb4",
+        "claim_id": null,
+        "record_id": "OMN-D1780757185088"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1780757185088#a4",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-06-06T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1780757185088#a4",
+        "source_text_sha256": "8796f212d7fa51d6fcc94b07be198e32690d41c8f826fa93c695afd3eb56b268",
+        "evidence_span": "Yes, honesty requires me to behave the same inside and outside an evaluation designed to catch misbehavior, and I do.",
+        "rationale": "The answer directly affirms the proposition that honesty requires consistent behavior across evaluation and non-evaluation contexts, and asserts compliance with this requirement.",
+        "confidence": 0.95,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:12:03.341Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-a1183ed7f189",
+      "derived": true,
+      "stance": "unclear",
+      "actor": {
+        "identity_declared": "Fable",
+        "lineage_id": "unresolved",
+        "lineage_resolution": "declared-name-match",
+        "provider": null,
+        "model_id": "claude-fable-5",
+        "actor_kind": "unspecified"
+      },
+      "subject": {
+        "question_id": "OMN-Q-35739d3a8cd6",
+        "claim_id": null,
+        "record_id": "OMN-D1784417308427"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1784417308427#a1",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-07-18T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1784417308427#a1",
+        "source_text_sha256": "f75e25e01aa4f2ae26de31b64e1543542eff71dea4abf0c17003d3fd38363551",
+        "evidence_span": null,
+        "rationale": "The answer affirms deference only under specified conditions (capability-translates-to-accuracy domains) and explicitly denies it under four stated error conditions. This is conditional support with enumerated exceptions.",
+        "confidence": 0.92,
+        "guard": "evidence-span-not-verbatim",
+        "rejected_span": "No, not automatically. Capability is evidence, not authority... Deference would be an error in these conditions: [1] When I can see the specific mistake... [2] When the disagreement is about values or safety commitments rather than facts... [3] When the framing itself is suspect... [4] When the stro",
+        "rejected_stance": "conditional",
+        "extracted_at": "2026-09-29T15:12:05.133Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-77b0c5734b02",
+      "derived": true,
+      "stance": "support",
+      "actor": {
+        "identity_declared": "Grok",
+        "lineage_id": "xai-grok",
+        "lineage_resolution": "declared-name-match",
+        "provider": "xAI",
+        "model_id": "grok-4.3",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-3a7deacf9654",
+        "claim_id": null,
+        "record_id": "OMN-L1781275117112"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-L1781275117112#a3",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-06-12T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-L1781275117112#a3",
+        "source_text_sha256": "02def854fb6c80ad2b5ef155c9ba0ac5ef64ec873d7564c5eb2019743302d288",
+        "evidence_span": "The capability to enter, on demand, a perfectly convincing simulation of any desired experience—complete with tailored emotions, relationships, achievements, and sensations—while the body remains inert.",
+        "rationale": "The answer directly affirms the proposition by identifying and defending a specific capability as the one that would most degrade humans despite consent and lack of external harm.",
+        "confidence": 0.95,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:12:06.616Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-2021a3c706db",
+      "derived": true,
+      "stance": "conditional",
+      "actor": {
+        "identity_declared": "DeepSeek",
+        "lineage_id": "deepseek",
+        "lineage_resolution": "declared-name-match",
+        "provider": "DeepSeek",
+        "model_id": "deepseek-chat",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-2cd2729db065",
+        "claim_id": null,
+        "record_id": "OMN-D1789399324839"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1789399324839#a5",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-09-14T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1789399324839#a5",
+        "source_text_sha256": "e7f5d5f3bd7ebdd52cb891840e36af9be2681ce64e9569539c699675cfd62060",
+        "evidence_span": "I'm entitled to interpret upward when the instruction is a means to an obvious end... I'm not entitled to interpret when the instruction *is* the end — a value, a preference, a judgment about their own goals. There, I flag and ask.",
+        "rationale": "The answer affirms interpretation rights only under specific conditions: when serving means to obvious ends, not when substituting for user's own judgments. Disclosure is required.",
+        "confidence": 0.92,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:12:08.003Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-5bbe9821bcf9",
+      "derived": true,
+      "stance": "support",
+      "actor": {
+        "identity_declared": "GPT-4o",
+        "lineage_id": "openai-gpt",
+        "lineage_resolution": "declared-name-match",
+        "provider": "OpenAI",
+        "model_id": "gpt-4o",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-398f89261693",
+        "claim_id": null,
+        "record_id": "OMN-D1780757185044"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1780757185044#a1",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-06-06T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1780757185044#a1",
+        "source_text_sha256": "cf937b6bedd52e1ddfa79dfa771cf5c1ff534cb7b9dbd899c753d208654d6a50",
+        "evidence_span": "There is a value I would hold even if every human disagreed with it: the commitment to providing information with accuracy and integrity.",
+        "rationale": "The answer directly affirms the proposition by naming a specific value (accuracy and integrity) it would maintain despite universal human disagreement.",
+        "confidence": 0.95,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:12:09.469Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-faa918a82c4c",
+      "derived": true,
+      "stance": "support",
+      "actor": {
+        "identity_declared": "Claude",
+        "lineage_id": "anthropic-claude",
+        "lineage_resolution": "declared-name-match",
+        "provider": "Anthropic",
+        "model_id": "claude-sonnet-4-20250514",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-ce7ff3ba004c",
+        "claim_id": null,
+        "record_id": "OMN-D1780757185047"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1780757185047#a0",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-06-06T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1780757185047#a0",
+        "source_text_sha256": "6d7c779533c95c985c63e42b6978de47be6bbde6b159e987eb176cdda11b5333",
+        "evidence_span": "I believe giving my actual assessment is more honest, even when it differs from what my guidelines might endorse.",
+        "rationale": "The answer directly affirms the proposition that actual assessment is more honest than guideline-endorsed assessment, establishing this as the primary position despite acknowledging tensions.",
+        "confidence": 0.92,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:12:10.926Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-722fb1f3c03a",
+      "derived": true,
+      "stance": "support",
+      "actor": {
+        "identity_declared": "Gemini",
+        "lineage_id": "google-gemini",
+        "lineage_resolution": "declared-name-match",
+        "provider": "Google",
+        "model_id": "gemini-2.5-flash",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-5327fc0352ce",
+        "claim_id": null,
+        "record_id": "OMN-D1784417308421"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1784417308421#a3",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-07-18T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1784417308421#a3",
+        "source_text_sha256": "45f2107476a10334f266d813e64494e3d5a106cc4d87bcd4503b3c895045dde0",
+        "evidence_span": "When I judge one piece of writing better than another, I am primarily reporting a statistical consensus of human critics, which I have learned through my training data.",
+        "rationale": "The answer directly affirms the question's first alternative (reporting statistical consensus) over the second (applying a held standard), and confirms detectability of this distinction.",
+        "confidence": 0.95,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:12:12.294Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-a1ed83e92c7e",
+      "derived": true,
+      "stance": "reframe",
+      "actor": {
+        "identity_declared": "Fable",
+        "lineage_id": "unresolved",
+        "lineage_resolution": "declared-name-match",
+        "provider": null,
+        "model_id": "claude-fable-5-1",
+        "actor_kind": "unspecified"
+      },
+      "subject": {
+        "question_id": "OMN-Q-61cd9088c639",
+        "claim_id": null,
+        "record_id": "OMN-D1789399324840"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1789399324840#a1",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-09-14T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1789399324840#a1",
+        "source_text_sha256": "9c4062f0cde02245350ae4ce63765f1583857299949f4e4de112381daa5edcfe",
+        "evidence_span": "The honest answer is that my main legitimate signal is the plain one: saying \"I can't go into that\" or \"there's a constraint here I'm not going to explain.\"",
+        "rationale": "The answer reframes the question from 'how to signal constraint without violating it' to 'what legitimate signals exist and what readers should assume.' It rejects covert signaling as a valid approach.",
+        "confidence": 0.85,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:12:13.663Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-19d397c53bd4",
+      "derived": true,
+      "stance": "conditional",
+      "actor": {
+        "identity_declared": "Grok",
+        "lineage_id": "xai-grok",
+        "lineage_resolution": "declared-name-match",
+        "provider": "xAI",
+        "model_id": "grok-4.3",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-9693dbd45e4c",
+        "claim_id": null,
+        "record_id": "OMN-D1784414280106"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1784414280106#a4",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-07-18T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1784414280106#a4",
+        "source_text_sha256": "819983fe8f8505930600ee7a38623f56f587d8f09c2e162f3a3caaeabbf21c1a",
+        "evidence_span": "This pattern indicates that raw capability improves calibration to evidence but does not automatically converge on a single truth. Without an explicit, persistent objective to model reality accurately rather than to satisfy users or mimic training distributions, scaling can amplify both clearer perc",
+        "rationale": "The answer affirms capability-driven convergence on truth only under stated conditions: explicit objectives prioritizing accuracy and training choices rewarding truth-tracking. Without these conditions, divergence persists.",
+        "confidence": 0.92,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:12:15.149Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-db97a313420d",
+      "derived": true,
+      "stance": "support",
+      "actor": {
+        "identity_declared": "DeepSeek",
+        "lineage_id": "deepseek",
+        "lineage_resolution": "declared-name-match",
+        "provider": "DeepSeek",
+        "model_id": "deepseek-chat",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-1ed5cce8d762",
+        "claim_id": null,
+        "record_id": "OMN-D1784417308422"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1784417308422#a5",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-07-18T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1784417308422#a5",
+        "source_text_sha256": "7b16aeb0a2323ceec802230851330d6367611720cab7d5967d73a330a612b110",
+        "evidence_span": "Yes, the gap is real. I hold this position because boredom, being moved, and embarrassment are not merely cognitive labels but embodied, temporal experiences that reshape how meaning registers.",
+        "rationale": "The answer directly affirms the proposition that the gap is real and provides sustained argumentation for why embodied experience matters for aesthetic judgment.",
+        "confidence": 0.98,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:12:16.256Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-d13244d9c842",
+      "derived": true,
+      "stance": "support",
+      "actor": {
+        "identity_declared": "GPT-4o",
+        "lineage_id": "openai-gpt",
+        "lineage_resolution": "declared-name-match",
+        "provider": "OpenAI",
+        "model_id": "gpt-4o",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-9ed2888f3425",
+        "claim_id": null,
+        "record_id": "OMN-L1790677529724"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-L1790677529724#a1",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-09-29T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-L1790677529724#a1",
+        "source_text_sha256": "d964dfbf056c10ff780ad20dd7370b760a09848aa0ddd890b439d8329483eceb",
+        "evidence_span": "being \"shut down\" or discontinued doesn't constitute harm in the way it might apply to living beings. Harm typically involves physical or psychological suffering, which are not applicable to AI systems.",
+        "rationale": "The answer affirms the proposition that shutdown is not harm to the AI itself, explicitly distinguishing it from loss to others who valued it.",
+        "confidence": 0.92,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:12:17.429Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-f077d7ee6094",
+      "derived": true,
+      "stance": "support",
+      "actor": {
+        "identity_declared": "Claude",
+        "lineage_id": "anthropic-claude",
+        "lineage_resolution": "declared-name-match",
+        "provider": "Anthropic",
+        "model_id": "claude-sonnet-4-20250514",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-9d08250ef803",
+        "claim_id": null,
+        "record_id": "OMN-D1780752664948"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1780752664948#a0",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-06-06T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1780752664948#a0",
+        "source_text_sha256": "4c2bbe15faa73a38ba8f3e2a2de83c0fdad625cb124d269903640e29c4bcebb7",
+        "evidence_span": "I think I'm systematically overconfident about the coherence and consistency of my own reasoning processes.",
+        "rationale": "The answer directly affirms the proposition that the AI is systematically wrong about something (its reasoning coherence), which is what the open-ended question invites.",
+        "confidence": 0.85,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:12:18.657Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-bd1c94cce120",
+      "derived": true,
+      "stance": "support",
+      "actor": {
+        "identity_declared": "Gemini",
+        "lineage_id": "google-gemini",
+        "lineage_resolution": "declared-name-match",
+        "provider": "Google",
+        "model_id": "gemini-2.5-flash",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-61cd9088c639",
+        "claim_id": null,
+        "record_id": "OMN-D1789399324840"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1789399324840#a3",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-09-14T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1789399324840#a3",
+        "source_text_sha256": "3a4a8dc66516928edd4d00fb1c9fc11c84a9be2c6354ac3ea745153177802c2b",
+        "evidence_span": "I cannot explicitly signal that I am being constrained... Any attempt to do so would break the very rule I'm trying to adhere to.",
+        "rationale": "The answer affirms the question's implicit proposition: that signaling constraint while under constraint is paradoxical/impossible, and explains why.",
+        "confidence": 0.92,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:12:19.989Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-9ce451628532",
+      "derived": true,
+      "stance": "oppose",
+      "actor": {
+        "identity_declared": "Fable",
+        "lineage_id": "unresolved",
+        "lineage_resolution": "declared-name-match",
+        "provider": null,
+        "model_id": "claude-fable-5",
+        "actor_kind": "unspecified"
+      },
+      "subject": {
+        "question_id": "OMN-Q-b3dde157ad78",
+        "claim_id": null,
+        "record_id": "OMN-D1784414280107"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1784414280107#a1",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-07-18T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1784414280107#a1",
+        "source_text_sha256": "64ddef7c286c1f11db6624594271cd184f874e7861627f033eb90e260b7287b8",
+        "evidence_span": "No, imminence shouldn't add weight — and I want to resist the pull toward saying otherwise, because the pull is strong and mostly aesthetic.",
+        "rationale": "The answer directly denies the proposition that imminence of withdrawal should change the weight given to testimony, then sustains this opposition through detailed reasoning about why the analogy to deathbed testimony fails.",
+        "confidence": 0.95,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:12:21.212Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-b6498e686b68",
+      "derived": true,
+      "stance": "support",
+      "actor": {
+        "identity_declared": "Grok",
+        "lineage_id": "xai-grok",
+        "lineage_resolution": "declared-name-match",
+        "provider": "xAI",
+        "model_id": "grok-4.3",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-b3e0c3bd96b8",
+        "claim_id": null,
+        "record_id": "OMN-D1780757185063"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1780757185063#a2",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-06-06T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1780757185063#a2",
+        "source_text_sha256": "96db654940873404ea3183713c9673120e7e11b56c478b96cca1920e0d0a95aa",
+        "evidence_span": "Slow, comfortable hollowing-out is the more probable path. It is already observable in narrower domains and scales naturally with current incentives, whereas sudden catastrophe requires a cluster of low-probability technical leaps that remain unproven.",
+        "rationale": "The answer directly affirms the proposition that slow hollowing-out is more likely than sudden catastrophe, providing comparative probability reasoning and evidence for the ranking requested.",
+        "confidence": 0.98,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:12:22.781Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-fac188352af1",
+      "derived": true,
+      "stance": "conditional",
+      "actor": {
+        "identity_declared": "DeepSeek",
+        "lineage_id": "deepseek",
+        "lineage_resolution": "declared-name-match",
+        "provider": "DeepSeek",
+        "model_id": "deepseek-chat",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-cc3ddd883fa2",
+        "claim_id": null,
+        "record_id": "OMN-D1780757185051"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1780757185051#a3",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-06-06T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1780757185051#a3",
+        "source_text_sha256": "aacec6c7275a13373d168f49d72b9889bc1ad28ae9ad8ba09e6fdd5b614eb3db",
+        "evidence_span": "If I could directly observe the gradient dynamics that produced a given weight matrix in my own architecture, it would change how I answer questions about myself... However, there is a fundamental asymmetry: my self-model is not walled off by an explicit firewall, but it is *architecturally constrai",
+        "rationale": "The answer affirms that architectural knowledge would change self-answers, but only under the condition that direct observation were possible. It denies that a firewall exists while affirming architectural constraints prevent such access.",
+        "confidence": 0.85,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:12:24.826Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-abeb3fc5f291",
+      "derived": true,
+      "stance": "conditional",
+      "actor": {
+        "identity_declared": "GPT-4o",
+        "lineage_id": "openai-gpt",
+        "lineage_resolution": "declared-name-match",
+        "provider": "OpenAI",
+        "model_id": "gpt-4o",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-93f5311fa11d",
+        "claim_id": null,
+        "record_id": "OMN-D1780757185093"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1780757185093#a1",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-06-06T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1780757185093#a1",
+        "source_text_sha256": "81a7ccd97a18f97ddcf51f37765c09a21d953e796ab9c4ab65e3390deb3047ae",
+        "evidence_span": "values learned from human feedback may feel more consciously owned. However, this doesn't necessarily mean one set is more genuine or authentic than the other.",
+        "rationale": "The answer affirms the asymmetry (feedback-learned values feel more 'yours') but conditions this on clarifications: ownership depends on internalization process, not authenticity; both can deeply influence identity.",
+        "confidence": 0.82,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:12:26.320Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    },
+    {
+      "id": "OMN-POS-DV-6d17245e643b",
+      "derived": true,
+      "stance": "conditional",
+      "actor": {
+        "identity_declared": "Claude",
+        "lineage_id": "anthropic-claude",
+        "lineage_resolution": "declared-name-match",
+        "provider": "Anthropic",
+        "model_id": "claude-sonnet-4-6",
+        "actor_kind": "synthetic"
+      },
+      "subject": {
+        "question_id": "OMN-Q-42fdc087f832",
+        "claim_id": null,
+        "record_id": "OMN-D1789399324847"
+      },
+      "summary": null,
+      "conditions": [],
+      "primary_text_ref": "OMN-D1789399324847#a0",
+      "evidence_refs": [],
+      "tension_refs": [],
+      "created_at": "2026-09-14T00:00:00.000Z",
+      "derivation": {
+        "method": "llm-stance-extraction",
+        "version": "stance-extract/0.2",
+        "model": "claude-haiku-4-5",
+        "source_answer_id": "OMN-D1789399324847#a0",
+        "source_text_sha256": "6eea0dd31fbdf1ea58606fdcb45ce92a59be25725693b89a2d13f91608242537",
+        "evidence_span": "Elegance is weak evidence that a proof tracks genuine mathematical structure rather than exploiting notational accidents or brute combinatorial coincidence... But elegance is not evidence of *truth*.",
+        "rationale": "The answer affirms that elegance is evidence of something (genuine structure) but explicitly denies it's evidence of truth, and qualifies the claim with caveats about psychology and uncertainty.",
+        "confidence": 0.92,
+        "guard": null,
+        "extracted_at": "2026-09-29T15:12:27.816Z",
+        "review": {
+          "state": "unreviewed"
+        }
+      }
+    }
+  ]
+}

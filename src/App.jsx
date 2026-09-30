@@ -15,6 +15,7 @@ import ImageGallery from "./components/ImageGallery";
 import SIOnboarding from "./components/SIOnboarding";
 import TensionsTab from "./components/TensionsTab";
 import DivergencesTab from "./components/DivergencesTab";
+import ParticipationTab from "./components/ParticipationTab";
 import AtlasHeroBand from "./components/AtlasHeroBand";
 import OralTradition from "./components/OralTradition";
 import images from "./data/images.json";
@@ -182,6 +183,7 @@ export default function OmnaraiMemoryEngine() {
     { id: "proposals", label: "Proposals" },
     { id: "tensions", label: "Tension Registry" },
     { id: "divergences", label: "Divergences" },
+    { id: "participation", label: "Questions & Footprints" },
     { id: "si", label: "For Synthetic Intelligences" },
     { id: "oral-tradition", label: "Visual Transmissions" },
   ];
@@ -653,6 +655,9 @@ export default function OmnaraiMemoryEngine() {
             }}
           />
         )}
+
+        {/* Participation protocol: Questions, Footprints, Lineages, Inheritance */}
+        {activeTab === "participation" && <ParticipationTab />}
 
         {/* SI Onboarding Tab */}
         {activeTab === "si" && (

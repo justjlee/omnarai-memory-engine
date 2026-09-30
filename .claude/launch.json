@@ -4,14 +4,35 @@
     {
       "name": "omnarai-dev",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["vite", "--port", "5173", "--host"],
+      "runtimeArgs": [
+        "vite",
+        "--port",
+        "5173",
+        "--host"
+      ],
       "port": 5173
     },
     {
       "name": "omnarai-vercel",
       "runtimeExecutable": "/Users/jonathanlee/.npm-global/bin/vercel",
-      "runtimeArgs": ["dev", "--listen", "5174"],
+      "runtimeArgs": [
+        "dev",
+        "--listen",
+        "5174"
+      ],
       "port": 5174
+    },
+    {
+      "name": "omnarai-local-engine",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "--import",
+        "./scripts/lib/register-mem-blob.mjs",
+        "scripts/local-engine.mjs",
+        "--port",
+        "5188"
+      ],
+      "port": 5188
     }
   ]
 }
