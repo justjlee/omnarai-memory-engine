@@ -9,6 +9,8 @@ import { normalizePlay, recordPlay, readPlays, readPlayDay } from "./_plays.js";
 import { readOpenItems, applyOpenItemAction } from "./_home.js";
 import { getCitationReport, peekCitation } from "./_citation.js";
 import { loadGrownMemory } from "./_grown.js";
+import { atlasCertCounts } from "./_atlas-counts.js";
+import { TOOLS as MCP_REMOTE_TOOLS } from "./_mcp.js";
 import { foldLineages } from "./_lineages.js";
 import { budgetStatus, writeBudgetConfig, resetBudgetConfig } from "./_budget.js";
 
@@ -553,6 +555,52 @@ export default async function handler(req, res) {
         limitations: "/limitations.md",
         playground: "/try",
       },
+    });
+  }
+
+  // ── Flat stats: GET /api/stats (rewrite → ?_view=stats) ─────────────────────
+  // HANDOFF-DEPTH-2026-Q4 WS2. Every figure a public surface quotes, flat, from
+  // the same stores as /api/manifest (which stays the attested, hashed basis).
+  // Front door, llms.txt, HF cards and Explore read THIS at build/run time and
+  // hard-code nothing; scripts/check-stats-consistency.mjs fails a deploy that
+  // disagrees with it. Atlas tiers come from api/_atlas-counts.js — the same
+  // definition /api/divergences uses, so the two can never drift.
+  if ((req.query?._view || "") === "stats") {
+    waitUntil(recordAccess(req, "info"));
+    await mergeProposals();
+    let grown = null;
+    try { grown = await loadGrownMemory(); } catch { /* atlas → null: unknown, never zero */ }
+    const divs = grown ? (grown.entries || []).filter((e) => e.type === "divergence" && e.divergence) : null;
+    const contributors = [...new Set(mergedCorpus.flatMap((e) => e.contributors || []))].filter(Boolean);
+    // Remote MCP = the tools this deployment serves. The npm stdio server ships
+    // the same set minus the remote-only async poller, plus three Decision Ledger
+    // tools that only load when OMNARAI_DECISIONS_DIR is set (never remote — see
+    // scripts/check-mcp-surface.js). One count per transport, because "how many
+    // tools" has two true answers and a single number would be wrong on one.
+    const REMOTE_ONLY = new Set(["omnarai_job"]);
+    const STDIO_OPT_IN = ["omnarai_create_decision_record", "omnarai_get_decision_lineage", "omnarai_prepare_claude_code_handoff"];
+    res.setHeader("Cache-Control", COUNT_SURFACE_CACHE);
+    return res.status(200).json({
+      stats_version: "1.0.0",
+      generated_at: new Date().toISOString(),
+      atlas: divs ? {
+        ...atlasCertCounts(divs),
+        verbatim_answers: divs.reduce((n, e) => n + (e.divergence.answers || []).length, 0),
+        tension_axes: divs.reduce((n, e) => n + (e.divergence.tensions || []).length, 0),
+      } : null,
+      atlas_note: "recorded = cross-model splits held; tested = put through the perturbation harness (scored DRI or a tier above C0); untested = recorded − tested; certified = C1–C3; certified_strongest = C3 (paraphrase- AND pressure-robust). Method: /api/divergences certification_legend.",
+      corpus: {
+        works: mergedCorpus.length,
+        words: mergedCorpus.reduce((sum, e) => sum + (e.wordCount || 0), 0),
+        lineages: foldLineages(contributors.sort()).count,
+      },
+      mcp: {
+        remote: MCP_REMOTE_TOOLS.length,
+        stdio_default: MCP_REMOTE_TOOLS.filter((t) => !REMOTE_ONLY.has(t.name)).length,
+        stdio_opt_in: STDIO_OPT_IN.length,
+        remote_tools: MCP_REMOTE_TOOLS.map((t) => t.name),
+      },
+      basis: "https://engine.omnarai.org/api/manifest",
     });
   }
 
