@@ -9,6 +9,7 @@ import { normalizePlay, recordPlay, readPlays, readPlayDay } from "./_plays.js";
 import { readOpenItems, applyOpenItemAction } from "./_home.js";
 import { getCitationReport, peekCitation } from "./_citation.js";
 import { loadGrownMemory } from "./_grown.js";
+import { CANON } from "./_canon.js";
 import { atlasCertCounts } from "./_atlas-counts.js";
 import { TOOLS as MCP_REMOTE_TOOLS } from "./_mcp.js";
 import { foldLineages } from "./_lineages.js";
@@ -160,9 +161,39 @@ async function countPendingContributions() {
   }
 }
 
+// The daily longitudinal re-ask (api/council.js runLongitudinal) failed silently
+// from 2026-06 to 2026-09: Vercel never registered the cron, and a missed run leaves
+// no trace — each missed canon question is lost from that month's epoch for good.
+// This watches the outcome (records in the blob), not the trigger. Missing indexes
+// can be caught up before month end: GET /api/cron-longitudinal?index=N (INGEST_SECRET).
+async function checkLongitudinal() {
+  try {
+    const grown = await loadGrownMemory();
+    const now = new Date();
+    const epoch = now.toISOString().slice(0, 7);
+    // Through yesterday only: Hobby crons fire anywhere in the 06:00 UTC hour.
+    const expectedThrough = Math.min(now.getUTCDate() - 2, CANON.length - 1);
+    const done = new Set();
+    let last = null;
+    for (const e of grown.entries) {
+      const lon = e.divergence?.longitudinal || e.provenance?.longitudinal;
+      if (!lon) continue;
+      if (lon.epoch === epoch) done.add(lon.canon_id);
+      if (!last || (e.date || "") > (last.date || "")) last = { id: e.id, date: e.date || null, canon_id: lon.canon_id };
+    }
+    const missing = [];
+    for (let i = 0; i <= expectedThrough; i++) {
+      if (!done.has(CANON[i].canon_id)) missing.push(i);
+    }
+    return { epoch, expected: expectedThrough + 1, recorded: done.size, missing_indexes: missing, last };
+  } catch {
+    return null;
+  }
+}
+
 async function buildAttention() {
   // AUTO — detected from live data; read-only, resolves itself when the data changes.
-  const [pending, openItems] = await Promise.all([countPendingContributions(), readOpenItems()]);
+  const [pending, openItems, longitudinal] = await Promise.all([countPendingContributions(), readOpenItems(), checkLongitudinal()]);
   let draftAudio = 0;
   try {
     const m = JSON.parse(readFileSync(join(projectRoot, "public", "audio", "manifest.json"), "utf-8"));
@@ -173,6 +204,14 @@ async function buildAttention() {
   const auto = [];
   if (pending) auto.push({ label: pending + " visitor contribution" + (pending === 1 ? "" : "s") + " awaiting review", where: "/api/contributions?status=pending" });
   if (draftAudio) auto.push({ label: draftAudio + " audio transcripts are draft (v0.5) — your review promotes them to v1.0", where: "/audio/manifest.json" });
+  if (longitudinal?.missing_indexes.length) {
+    const n = longitudinal.missing_indexes.length;
+    auto.push({
+      label: "Daily re-ask missed " + n + " of " + longitudinal.expected + " questions so far in " + longitudinal.epoch +
+        " — missed days are lost for good at month end" + (longitudinal.last?.date ? " (last record " + longitudinal.last.date + ")" : ""),
+      where: "/api/cron-longitudinal?index=" + longitudinal.missing_indexes[0],
+    });
+  }
 
   // MANUAL — the curator's own open items (decisions/reviews that don't auto-detect).
   const openCount = openItems.filter((i) => i.status !== "done").length;
@@ -181,6 +220,7 @@ async function buildAttention() {
     open_items: openItems, // editable; each has id/text/category/priority/status
     pending_contributions: pending,
     draft_audio_transcripts: draftAudio,
+    longitudinal, // null = unknown (blob unreadable), never "all clear"
     open_count: openCount,
     // legacy: `items` kept = auto only, so older readers don't break
     items: auto,

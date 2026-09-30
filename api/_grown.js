@@ -45,20 +45,38 @@ export function normalizeRing(ring) {
   return RING_LABELS[lower] || "open";
 }
 
-// Load the consolidated grown-memory blob. Never throws — returns an empty
-// structure if the blob is absent or the store is unreachable.
-export async function loadGrownMemory() {
+// Load the consolidated grown-memory blob.
+//
+// Readers (default): never throws — returns an empty structure if the blob is
+// absent or the store is unreachable, so the live site degrades to the seed.
+//
+// Writers MUST pass { strict: true }: every write is load-modify-write of the
+// WHOLE file, so a failed read that silently returned "empty" would be written
+// back as the entire grown memory — one new entry, every other record erased.
+// Strict throws instead, and the writer aborts without calling put(). A missing
+// blob is also an error in strict mode: the store was seeded 2026-06, so "no
+// grown.json" now means a failed or inconsistent LIST, not a fresh store.
+export async function loadGrownMemory({ strict = false } = {}) {
   try {
     const { blobs } = await list({ prefix: GROWN_KEY });
-    if (!blobs.length) return emptyGrown();
+    if (!blobs.length) {
+      if (strict) throw new Error("grown.json not listed — refusing to treat the store as empty");
+      return emptyGrown();
+    }
     // Cache-bust: the public Blob URL is served via CDN, which can return a STALE
     // copy for a short window after a put(). A unique query string forces a CDN
     // miss → origin read → the just-written content. Without this, even SERIAL
     // read-modify-write sequences silently lose updates (observed: 13/14 records
-    // dropped in a rapid batch). Origin (Blob storage) is consistent post-put.
+    // dropped in a rapid batch). NB 2026-09-28: this is no longer sufficient —
+    // serial writes ~43s apart still lost 4 of 8 records, and one 90s gap still
+    // read stale. Space rapid writes out; a real fix is still open.
     const res = await fetch(`${blobs[0].url}?ts=${Date.now()}`, { cache: "no-store" });
-    if (!res.ok) return emptyGrown();
+    if (!res.ok) {
+      if (strict) throw new Error(`grown.json read failed: HTTP ${res.status}`);
+      return emptyGrown();
+    }
     const data = await res.json();
+    if (strict && !Array.isArray(data.entries)) throw new Error("grown.json has no entries array");
     const entries = Array.isArray(data.entries) ? data.entries : [];
     for (const e of entries) e.ring = normalizeRing(e.ring);
     return {
@@ -67,7 +85,8 @@ export async function loadGrownMemory() {
       entries,
       vectors: data.vectors && typeof data.vectors === "object" ? data.vectors : {},
     };
-  } catch {
+  } catch (err) {
+    if (strict) throw err;
     return emptyGrown();
   }
 }
@@ -145,7 +164,12 @@ function normalizeEntry(entry) {
 export async function appendGrownEntries(items) {
   const list_ = Array.isArray(items) ? items.filter((it) => it?.entry?.id) : [];
   if (!list_.length) return null;
-  const grown = await loadGrownMemory();
+  let grown;
+  try {
+    grown = await loadGrownMemory({ strict: true });
+  } catch {
+    return null; // unreadable store: write nothing rather than write back "empty"
+  }
   const have = new Set(grown.entries.map((e) => e.id));
   for (const { entry, embedding } of list_) {
     if (!have.has(entry.id)) {
@@ -186,7 +210,12 @@ export async function appendGrownEntry(entry, embedding) {
 export async function patchGrownCertifications(certs) {
   const ids = certs && typeof certs === "object" ? Object.keys(certs) : [];
   if (!ids.length) return null;
-  const grown = await loadGrownMemory();
+  let grown;
+  try {
+    grown = await loadGrownMemory({ strict: true });
+  } catch {
+    return null;
+  }
   let updated = 0;
   for (const e of grown.entries) {
     if (e.type === "divergence" && e.divergence && certs[e.id]) {

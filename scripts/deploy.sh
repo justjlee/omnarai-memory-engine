@@ -86,6 +86,17 @@ if [[ "${1:-}" == "--promote" ]]; then
   # The custom domain does NOT follow new prod deployments on its own — without
   # this re-alias, $DOMAIN keeps serving the previous bundle indefinitely.
   if [[ -n "$PROD_URL" ]]; then
+    # autoAssignCustomDomains is off for this project, so a --prod deploy is only
+    # STAGED. `vercel alias set` moves the domains but NOT the project's production
+    # pointer — and Vercel runs crons against that pointer. Alias-only promotion left
+    # it parked on 2026-05-16 (a build with no crons), so the daily longitudinal
+    # re-ask never fired from June to September. Promote first, then re-alias.
+    # Once the pointer is unstuck, --prod deploys usually move it themselves and
+    # promote answers 409 "already the current production deployment" — success.
+    # The cron-host check below is the real verdict either way.
+    echo ">> Promoting $PROD_URL to the project's production deployment"
+    PROMOTE_OUT=$(vercel promote "$PROD_URL" --yes 2>&1 || true)
+    echo "$PROMOTE_OUT" | grep -E "Success|already the current production|Error" || true
     for d in "${PROD_DOMAINS[@]}"; do
       echo ">> Re-aliasing $d → $PROD_URL"
       vercel alias set "$PROD_URL" "$d"
@@ -105,6 +116,19 @@ if [[ "${1:-}" == "--promote" ]]; then
     echo ">> Done. $DOMAIN is serving this build."
   else
     echo ">> WARNING: live bundle does not match local build — alias may be stale."
+  fi
+  # Serving the build is not the same as Vercel scheduling it. Crons run against
+  # the host in the project's cron definitions — it must be THIS build, or the
+  # daily re-ask keeps running the previous code. (`vercel crons ls` alone can't
+  # tell: with unchanged vercel.json crons it looks registered either way.)
+  PROJECT_ID=$(node -p 'require("./.vercel/project.json").projectId')
+  CRON_HOSTS=$(vercel api "/v9/projects/$PROJECT_ID" 2>/dev/null | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log((JSON.parse(s).crons?.definitions||[]).map(d=>d.host).join(" "))}catch{console.log("")}})' || true)
+  if [[ -n "$PROD_URL" && " $CRON_HOSTS " == *" ${PROD_URL#https://} "* ]]; then
+    echo ">> Crons registered on this build."
+  elif [[ -z "$CRON_HOSTS" ]]; then
+    echo ">> WARNING: no crons registered (or unreadable) — the daily re-ask will not fire. Run: vercel promote $PROD_URL, then: vercel crons ls"
+  else
+    echo ">> WARNING: crons are registered on a DIFFERENT build ($CRON_HOSTS) — they will run old code. Run: vercel promote $PROD_URL"
   fi
   echo
   echo ">> Post-deploy arrival check (simulate a visiting intelligence)"

@@ -35,7 +35,7 @@
       "statusCode": 301
     },
     {
-      "source": "/api/:path*",
+      "source": "/api/:path((?!cron-longitudinal$).*)?",
       "has": [
         {
           "type": "host",
@@ -46,7 +46,7 @@
       "statusCode": 308
     },
     {
-      "source": "/:path*",
+      "source": "/:path((?!api/cron-longitudinal$).*)",
       "has": [
         {
           "type": "host",
@@ -57,7 +57,7 @@
       "statusCode": 301
     },
     {
-      "source": "/api/:path*",
+      "source": "/api/:path((?!cron-longitudinal$).*)?",
       "has": [
         {
           "type": "host",
@@ -68,7 +68,7 @@
       "statusCode": 308
     },
     {
-      "source": "/:path*",
+      "source": "/:path((?!api/cron-longitudinal$).*)",
       "has": [
         {
           "type": "host",
