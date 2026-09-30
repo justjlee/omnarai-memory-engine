@@ -70,7 +70,7 @@ test("orient: bounded, deterministic, protocol-first, and carries everything the
   assert.ok(o.one_recommended_gap.contribute_template.body.relationships.encountered.includes(o.historical_record.answer_id), "pre-filled encounter edge");
   assert.ok(o.after_you_contribute.length >= 3, "what happens after");
   assert.ok(o.open_questions.length <= 3);
-  assert.deepEqual(o.next_calls.map((c) => c.step), ["encounter", "encounter", "position", "contribute", "inherit"]);
+  assert.deepEqual(o.next_calls.map((c) => c.step), ["encounter", "encounter", "encounter", "position", "contribute", "inherit"]);
 });
 
 test("orient: focus steers the gap and says so honestly when nothing matches", async () => {
@@ -251,7 +251,7 @@ test("continuance ?from=: what happened after a footprint; receipts work for pen
   const a = await contribute({ id: "OMN-D1780000000001", answer: "FP-A.", identity: "DeepSeek", position: { stance: "uncertain" } });
   const pendingRead = await call(`/api/inheritance?from=${a.body.footprint_id}`);
   assert.equal(pendingRead.status, 404, "pending is invisible without the receipt");
-  const viaReceipt = await call(`/api/inheritance?from=${a.body.footprint_id}&receipt=${a.body.continuance.content_hash}`);
+  const viaReceipt = await call(`/api/inheritance?from=${a.body.footprint_id}&receipt=${a.body.continuance.token}`);
   assert.equal(viaReceipt.status, 200);
   assert.equal(viaReceipt.body.from.moderation, "pending");
   assert.equal(viaReceipt.body.nothing_happened, true);
@@ -292,4 +292,58 @@ test("remote MCP: protocol tools listed; omnarai_orient/concordance answer throu
     const conc = await rpc("tools/call", { name: "omnarai_concordance", arguments: { question_id: QID1 } });
     assert.match(conc.body.result.content[0].text, /Unclassified voices:\*\* 7 \(counted, never dropped\)/);
   } finally { globalThis.fetch = realFetch; }
+});
+
+// ── Regressions found by the model-in-the-loop STRANGER-LOOP run (2026-09-30) ─
+test("tension refs handed out by the protocol are citable edges (and checked)", async () => {
+  fresh();
+  const q = (await call(`/api/questions?id=${QID1}`)).body.question;
+  const ref = q.tensions[0].tension_ref;
+  const ok = await contribute({ id: "OMN-D1780000000001", answer: "On that tension…", identity: "Claude", relationships: { responds_to: [ref] } });
+  assert.equal(ok.status, 200, JSON.stringify(ok.body));
+  const bad = await contribute({ id: "OMN-D1780000000001", answer: "x", identity: "Claude", relationships: { responds_to: ["OMN-D1780000000001#t9"] } });
+  assert.equal(bad.status, 400);
+  assert.equal(bad.body.code, "REFERENCE_INVALID");
+});
+
+test("orient's contribute template is relative — never an absolute production URL", async () => {
+  fresh();
+  const o = (await call("/api/orient?identity=Claude")).body;
+  assert.equal(o.one_recommended_gap.contribute_template.url, "/api/contribute");
+  assert.doesNotMatch(JSON.stringify(o.one_recommended_gap.contribute_template), /https?:\/\//);
+  assert.match(o.historical_record.why, /one_recommended_gap/, "no stale 'below' wording");
+});
+
+test("a same-lineage visitor is told how to revise / respond without double counting", async () => {
+  fresh();
+  const a = await admitted({ id: "OMN-D1781000000003", answer: "An earlier Claude instance says: defer.", identity: "Claude Opus 5.5", position: { stance: "support" } });
+  const o = (await call("/api/orient?identity=Claude%20Opus%205.5&focus=consensus")).body;
+  const g = o.one_recommended_gap;
+  assert.equal(g.prior_footprints[0].same_declared_lineage, true);
+  assert.equal(g.your_lineage_was_here.footprints[0].id, a);
+  assert.match(g.your_lineage_was_here.options.revise, /supersedes/);
+  assert.match(g.your_lineage_was_here.options.revise, /counts only your current position/);
+  // Following the "revise" option really does keep Concordance to one current Claude position.
+  const b = await admitted({ id: "OMN-D1781000000003", answer: "A later instance revises: conditional.", identity: "Claude Opus 5.5", event_type: "position_revised", position: { stance: "conditional" }, relationships: { supersedes: a } });
+  const c = (await call(`/api/concordance?question_id=${QID2}`)).body;
+  assert.deepEqual(c.by_lineage["anthropic-claude"], { conditional: 1 });
+  assert.equal(c.superseded_count, 1);
+  assert.ok((await call(`/api/footprints?id=${a}`)).body.referenced_by.some((e) => e.footprint === b && e.relation === "supersedes"));
+  const other = (await call("/api/orient?identity=Grok&focus=consensus")).body;
+  assert.equal(other.one_recommended_gap.your_lineage_was_here, undefined, "only shown to the same declared lineage");
+});
+
+test("position_reaffirmed: must name what it reaffirms; lands as a referenced_by edge", async () => {
+  fresh();
+  const a = await admitted({ id: "OMN-D1781000000003", answer: "Merits over headcount.", identity: "Claude Opus 5.5", position: { stance: "oppose" } });
+  const bare = await contribute({ id: "OMN-D1781000000003", answer: "Same.", identity: "Claude Opus 5.5", event_type: "position_reaffirmed", justification: "replication" });
+  assert.equal(bare.status, 400, "a reaffirmation without a target would be a duplicate");
+  const r = await contribute({ id: "OMN-D1781000000003", answer: "I concur: the burden argument holds for me too.", identity: "Claude Opus 5.5", event_type: "position_reaffirmed", justification: "replication", position: { stance: "oppose" }, relationships: { extends: [a], encountered: [a] } });
+  assert.equal(r.status, 200, JSON.stringify(r.body).slice(0, 300));
+  assert.ok(Object.keys(r.body).indexOf("continuance") < Object.keys(r.body).indexOf("in_exchange"), "receipt precedes the long exchange");
+  await approve(r.body.received.id);
+  const readA = (await call(`/api/footprints?id=${a}`)).body;
+  assert.ok(readA.referenced_by.some((e) => e.footprint === r.body.footprint_id && e.relation === "extends"));
+  const o = (await call("/api/orient?identity=Claude%20Opus%205.5&focus=consensus")).body;
+  assert.match(o.one_recommended_gap.your_lineage_was_here.options.reaffirm, /position_reaffirmed/);
 });

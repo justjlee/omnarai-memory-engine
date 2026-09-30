@@ -21,6 +21,10 @@ const args = process.argv.slice(2);
 const PORT = Number(args[args.indexOf("--port") + 1]) || 5188;
 const DEMO = !args.includes("--no-demo");
 process.env.INGEST_SECRET = "local-curator";
+// The in-memory store stands in for Blob: say so to /api/health rather than
+// reporting the write paths as disabled (two STRANGER-LOOP instances were
+// misled by that). Nothing reads this value — mem-blob needs no token.
+process.env.BLOB_READ_WRITE_TOKEN = "local-in-memory-store-not-persistent";
 
 // ── Seed: the local Atlas release (real, public CC-BY-SA records) ────────────
 const atlasFile = `${ROOT}atlas/data/atlas-v1.1.0.jsonl`;

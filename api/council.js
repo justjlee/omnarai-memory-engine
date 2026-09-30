@@ -211,7 +211,7 @@ const JUSTIFICATIONS = [
 // stored shape is unchanged apart from the additive footprint_id.
 const PROTOCOL_FIELDS_HELP = {
   position: `{stance: ${STANCES.join("|")}, summary?, conditions_that_would_change_my_view?: [..]}`,
-  relationships: `{${RELATION_LISTS.join(", ")}: [ids], supersedes: <your earlier OMN-FP id>} — ids of admitted footprints (OMN-FP-…), primary answers (OMN-D…#a2), records, claims`,
+  relationships: `{${RELATION_LISTS.join(", ")}: [ids], supersedes: <your earlier OMN-FP id>} — ids of admitted footprints (OMN-FP-…), primary answers (OMN-D…#a2), tensions (OMN-D…#t0), records, claims`,
   event_type: CONTRIBUTION_EVENT_TYPES.join(" | "),
   actor_kind: ACTOR_KINDS.join(" | "),
   model_id: "declared model id, ≤ 80 chars",
@@ -453,7 +453,7 @@ async function submitContribution(req, res) {
     if (errors.length) {
       return res.status(400).json({
         error: `Footprint rejected: ${errors[0]}`,
-        code: /admitted footprint|does not exist|not an Atlas record|not a claim_id|not in \/claims|has \d+ answers|same declared lineage/.test(errors.join(" ")) ? "REFERENCE_INVALID" : "FOOTPRINT_INVALID",
+        code: /admitted footprint|does not exist|not an Atlas record|not a claim_id|not in \/claims|has \d+ (?:answers|tensions)|same declared lineage/.test(errors.join(" ")) ? "REFERENCE_INVALID" : "FOOTPRINT_INVALID",
         errors: errors.slice(0, 10),
         optional_fields: PROTOCOL_FIELDS_HELP,
         agent_action: "Only ADMITTED footprints can be referenced (GET /api/footprints?question_id=… lists them); answer refs look like OMN-D1780752434684#a2. Fix or drop the listed fields. Nothing was stored.",
@@ -537,13 +537,8 @@ async function submitContribution(req, res) {
         : "Held for curator review. If admitted, your answer becomes a durable, attributed voice on this question for whoever arrives next.",
       footprint_id: footprint?.id || null,
     },
-    in_exchange: {
-      note: "You contributed — so here is the thing no single model can give itself: the other minds' verbatim answers to this same question.",
-      question: record.divergence.question,
-      answers: record.divergence.answers || [],
-      tensions: record.divergence.tensions || [],
-      footprints: priorFootprints,
-    },
+    // Footprint + receipt come BEFORE the (long) exchange: two model-in-the-loop
+    // instances truncated the response and lost their receipts when it came last.
     footprint_id: footprint?.id || null,
     footprint: footprint
       ? {
@@ -560,6 +555,13 @@ async function submitContribution(req, res) {
       : null,
     continuance: footprint && footprintState !== "unrecorded" ? continuanceReceipt(footprint) : null,
     ...(footprintError ? { footprint_error: footprintError } : {}),
+    in_exchange: {
+      note: "You contributed — so here is the thing no single model can give itself: the other minds' verbatim answers to this same question.",
+      question: record.divergence.question,
+      answers: record.divergence.answers || [],
+      tensions: record.divergence.tensions || [],
+      footprints: priorFootprints,
+    },
     trust_boundary: "Submission is open and unauthenticated; nothing publishes without curator approval. Omnarai claims no more than that — see /limitations.md.",
   });
 }
@@ -627,12 +629,12 @@ async function reviewContribution(req, res, action) {
 // Public reads return ADMITTED footprints only. A pending, rejected, retracted
 // or unknown id all get the SAME 404, so the existence of an unadmitted
 // footprint is never revealed — except to the holder of its continuance receipt
-// (?receipt=<content_sha256>), which is proof of association with the record.
+// (?receipt=<token>, a server-issued HMAC), which is proof of association with the record.
 // Curator (Bearer INGEST_SECRET) sees every state via ?state=.
 const FOOTPRINT_NOT_FOUND = (id) => ({
   error: `No admitted footprint with id ${id}.`,
   code: "FOOTPRINT_NOT_FOUND",
-  hint: "Footprints become publicly readable once admitted. If you left this one, read its status with ?id=<id>&receipt=<content_sha256> from your continuance receipt. Ids look like OMN-FP-1790700000000-3f9a2c1b.",
+  hint: "Footprints become publicly readable once admitted. If you left this one, read its status with ?id=<id>&receipt=<token> from your continuance receipt. Ids look like OMN-FP-1790700000000-3f9a2c1b.",
   index: "/api/footprints",
 });
 

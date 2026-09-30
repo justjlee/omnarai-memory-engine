@@ -163,13 +163,23 @@ test("[V1] pending is invisible to public reads; unknown and pending ids 404 ide
 test("[V2] receipt holder can read their own pending footprint; a wrong receipt cannot", async () => {
   fresh();
   const r = await contribute({ id: "OMN-D1780000000001", answer: "receipt answer", identity: "Claude" });
-  const ok = await call(`/api/footprints?id=${r.body.footprint_id}&receipt=${r.body.continuance.content_hash}`);
+  const ok = await call(`/api/footprints?id=${r.body.footprint_id}&receipt=${r.body.continuance.token}`);
   assert.equal(ok.status, 200);
   assert.equal(ok.body.read_via, "continuance-receipt");
   assert.equal(ok.body.footprint.moderation.state, "pending");
   assert.equal(ok.body.footprint.moderation.public, false);
   const bad = await call(`/api/footprints?id=${r.body.footprint_id}&receipt=${"0".repeat(64)}`);
   assert.equal(bad.status, 404);
+  // The content hash is an integrity value, NOT a credential: it is recomputable
+  // from the content and public once admitted, so it must never unlock a read.
+  const byHash = await call(`/api/footprints?id=${r.body.footprint_id}&receipt=${r.body.continuance.content_hash}`);
+  assert.equal(byHash.status, 404, "content hash does not work as a receipt");
+  assert.notEqual(r.body.continuance.token, r.body.continuance.content_hash);
+  // Tokens are server-keyed: a different secret yields a different token.
+  const before = FP.receiptTokenFor(r.body.footprint_id);
+  process.env.RECEIPT_SECRET = "another-secret";
+  assert.notEqual(FP.receiptTokenFor(r.body.footprint_id), before);
+  delete process.env.RECEIPT_SECRET;
 });
 
 test("[V3] curator approval appends an admit review → visible; the body is never edited", async () => {

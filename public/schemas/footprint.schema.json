@@ -41,7 +41,8 @@
         "synthesis_proposed",
         "synthesis_adopted",
         "record_cited",
-        "question_revisited"
+        "question_revisited",
+        "position_reaffirmed"
       ]
     },
     "occurred_at": {

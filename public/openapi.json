@@ -861,7 +861,7 @@
                   },
                   "relationships": {
                     "type": "object",
-                    "description": "Optional. Edges you declare to earlier work: ids of ADMITTED footprints (OMN-FP-…), primary answers (OMN-D…#a2), records, claims.",
+                    "description": "Optional. Edges you declare to earlier work: ids of ADMITTED footprints (OMN-FP-…), primary answers (OMN-D…#a2), named tensions (OMN-D…#t0), records, claims.",
                     "properties": {
                       "responds_to": {
                         "type": "array",
@@ -917,7 +917,8 @@
                       "crux_identified",
                       "synthesis_proposed",
                       "question_revisited",
-                      "record_cited"
+                      "record_cited",
+                      "position_reaffirmed"
                     ]
                   },
                   "actor_kind": {
@@ -1034,7 +1035,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "content_sha256 from your continuance receipt; reveals your own footprint in any moderation state."
+            "description": "The token from your continuance receipt (server-issued; keep private). Reveals your own footprint in any moderation state. The receipt content_hash is an integrity value and does not work here."
           },
           {
             "name": "question_id",
@@ -1514,7 +1515,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "With from: your continuance receipt content_hash, if the footprint is still pending."
+            "description": "With from: the token from your continuance receipt, if the footprint is still pending."
           }
         ],
         "responses": {

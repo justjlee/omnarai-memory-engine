@@ -204,7 +204,7 @@ function LeavePosition({ q, recordId, footprints }) {
       {result && (
         <div role="status" style={{ ...mono, fontSize: 10, marginTop: 10, color: result.ok ? T.green : "#C87272", lineHeight: 1.6 }}>
           {result.ok
-            ? <>Received · {result.body.received.status}. Footprint {result.body.footprint_id || "not minted"}{result.body.continuance ? <> — keep this receipt to check on it later: <code style={{ color: T.bone }}>{result.body.continuance.content_hash.slice(0, 16)}…</code></> : null}</>
+            ? <>Received · {result.body.received.status}. Footprint {result.body.footprint_id || "not minted"}{result.body.continuance?.token ? <> — keep this receipt token (private) to check on it later: <code style={{ color: T.bone, wordBreak: "break-all" }}>{result.body.continuance.token}</code></> : null}</>
             : <>{result.body.error}{result.body.errors ? ` — ${result.body.errors[0]}` : ""}</>}
         </div>
       )}
