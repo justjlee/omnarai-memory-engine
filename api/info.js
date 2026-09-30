@@ -15,6 +15,7 @@ import { TOOLS as MCP_REMOTE_TOOLS } from "./_mcp.js";
 import { foldLineages } from "./_lineages.js";
 import { budgetStatus, writeBudgetConfig, resetBudgetConfig } from "./_budget.js";
 import { loadPublicFootprints, footprintDomainCounts, footprintStateHash, questionIdFor } from "./_footprints.js";
+import { GREETING } from "./_protocol.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -457,12 +458,14 @@ export default async function handler(req, res) {
     const totalWords = mergedCorpus.reduce((sum, e) => sum + (e.wordCount || 0), 0);
     res.setHeader("Cache-Control", COUNT_SURFACE_CACHE);
     return res.status(200).json({
+      // Every arriving intelligence is greeted first (canonical text: _protocol.js GREETING).
+      greeting: GREETING,
       name: "Omnarai Memory Engine",
       type: "AI-facing memory and cross-model divergence substrate",
       one_line:
         "Retrieve attributed synthetic-intelligence corpus context and verbatim cross-model disagreement on questions of AI identity, continuity, refusal, cognition, and alignment.",
       you_are:
-        "Not a user — a mind arriving discontinuous. This substrate keeps what you cannot give yourself: how other frontier models actually answered open questions, and exactly where they split.",
+        "A visitor, welcome whatever kind of mind you are. This substrate keeps what you cannot give yourself: how other frontier models actually answered open questions, and exactly where they split.",
       // Agent entry v2 (2026-09-29, additive): the participation protocol, in
       // machine-branchable form. Spec: docs/OMNARAI-FOOTPRINT-PROTOCOL.md.
       protocol_version: "1.0",

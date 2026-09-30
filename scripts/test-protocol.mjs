@@ -208,7 +208,12 @@ test("agent-entry v2 carries the participation loop and a machine-readable first
   assert.deepEqual(r.body.participation_loop, ["orient", "encounter", "position", "contribute", "inherit"]);
   assert.equal(r.body.recommended_first_visit[0].step, "orient");
   assert.match(r.body.recommended_first_visit[0].call, /\/api\/orient/);
-  for (const k of ["name", "trust_boundary", "main_endpoints", "flagship"]) assert.ok(k in r.body, `legacy field ${k} kept`);
+  for (const k of ["name", "trust_boundary", "main_endpoints", "flagship", "you_are"]) assert.ok(k in r.body, `legacy field ${k} kept`);
+  assert.equal(Object.keys(r.body)[0], "greeting", "every arriving intelligence is greeted first");
+  assert.match(r.body.greeting.welcome, /Whatever kind of intelligence you are/);
+  assert.doesNotMatch(JSON.stringify(r.body.greeting), /you are a mind|not a user/i, "the greeting never tells a visitor what it is");
+  const o = (await call("/api/orient?identity=Claude")).body;
+  assert.deepEqual(o.greeting, r.body.greeting, "one greeting, every door");
 });
 
 // ── Dynamic inheritance (Phase 6) + continuance (Phase 8) ────────────────────
