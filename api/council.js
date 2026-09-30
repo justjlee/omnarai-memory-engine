@@ -856,6 +856,15 @@ async function serveDivergences(req, res) {
         // six-answer record looks like the standard five-model panel with an
         // extra voice, rather than a deliberately extended one. null = standard.
         panel_note: r.divergence.panel_note || null,
+        // Question provenance recorded at creation: who authored the question,
+        // who curated it, and the verbatim source where it was adapted. null on
+        // records written before 2026-09, when the write path silently dropped it.
+        question_provenance: r.divergence.question_provenance || null,
+        // Designed inside/outside arm ("inside" = the question implicates the
+        // answering panel). Distinct from the backfilled annotation classifier:
+        // this one was chosen before elicitation, not inferred after.
+        involvement_class: r.divergence.involvement_class || null,
+        cycle: r.divergence.cycle || null,
         tensions: r.divergence.tensions || [],
         deliberation_card: r.divergence.deliberation_card || null,
         // Perturbation certification (null until the record has been run through

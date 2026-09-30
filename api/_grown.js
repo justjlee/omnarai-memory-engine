@@ -116,6 +116,21 @@ function normalizeEntry(entry) {
       // one-time batch). Load-bearing for honest reading: without it a 6-answer
       // record is indistinguishable from the standard 5-model panel.
       ...(entry.provenance.panel_note ? { panel_note: entry.provenance.panel_note } : {}),
+      // Question provenance recorded AT CREATION (doctrine: never retrofitted,
+      // never defaulted to "unrecorded"). Who authored the question, who curated
+      // it, and — where the question was adapted from a source — the verbatim
+      // original, so the transformation is auditable rather than silent.
+      // Before 2026-09 this key was absent from the allowlist, which is why the
+      // first 124 records carry no question provenance: it was being dropped on
+      // write, not omitted by the batches.
+      ...(entry.provenance.question_provenance ? { question_provenance: entry.provenance.question_provenance } : {}),
+      // Inside/outside position recorded at creation rather than backfilled by a
+      // later classifier. "inside" = the question implicates the answering panel;
+      // "outside" = it does not. The registry's required_experiment for the
+      // refuted lead claim needs this as a designed arm, not an inferred label.
+      ...(entry.provenance.involvement_class ? { involvement_class: entry.provenance.involvement_class } : {}),
+      // Cycle tag, so a designed batch can be read back as one unit.
+      ...(entry.provenance.cycle ? { cycle: entry.provenance.cycle } : {}),
     };
   }
   return e;

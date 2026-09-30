@@ -445,6 +445,20 @@ if (idsArg) {
     ...recs.slice(-3),                                     // lowest-score → expected NEGATIVE controls
   ];
 }
+// Budget gate. Certification is the expensive half of a cycle: roughly
+// (models x T_REROLLS) + K_PARA paraphrase answers + adversarial + stance-flip,
+// each judged by a disjoint 3-model panel, all of it repeated RUNS times. Like
+// the Atlas batches, this runs against the provider APIs straight from this
+// machine and so bypasses the serverless gate unless it is wired in here.
+{
+  const { preflightSpend } = await import("./budget-preflight.mjs");
+  const perRecordPerRun = 0.9;   // measured order-of-magnitude, deliberately high
+  await preflightSpend({
+    estUsd: Math.ceil(pick.length * RUNS * perRecordPerRun),
+    label: `certify ${pick.length} records x ${RUNS} run(s)${WRITE ? " (--write)" : " (dry)"}`,
+  });
+}
+
 console.log(`Phase 0 pilot: ${pick.length} records (${pick.map((r) => (r.divergence.score ?? 0).toFixed(2)).join(", ")})`);
 console.log(`Council: ${PANEL.filter((m) => process.env[m.env]).map((m) => m.model).join(", ")}${USE_GUESTS ? " (--guests: guest voices included)" : ""} · paraphraser/judges disjoint`);
 
