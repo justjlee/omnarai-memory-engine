@@ -29,7 +29,7 @@ const LINEAGE = {
 const lin = (id) => LINEAGE[id] || LINEAGE.unresolved;
 const STANCE_COLOR = { support: T.green, oppose: "#C87272", conditional: T.gold, mixed: "#C9A089", uncertain: T.violet, reframe: "#7EB8D4", abstain: T.ash, unclear: "rgba(200,192,176,0.4)" };
 const STANCES = ["support", "oppose", "conditional", "mixed", "uncertain", "reframe", "abstain", "unclear"];
-const JUSTIFICATIONS = ["independent_objection", "new_evidence", "new_contributor", "falsification_attempt", "replication", "changed_model_version", "measured_utility_effect"];
+const JUSTIFICATIONS = ["independent_objection", "new_evidence", "new_contributor", "falsification_attempt", "replication", "concurrence", "changed_model_version", "measured_utility_effect"];
 const clip = (s, n) => { s = (s || "").replace(/\s+/g, " ").trim(); return s.length > n ? s.slice(0, n - 1) + "…" : s; };
 const verb = { answer_contributed: "answered", position_declared: "declared a position on", position_revised: "revised a position on", objection_raised: "raised an objection on", falsification_attempted: "attempted a falsification on", evidence_added: "added evidence to", crux_identified: "identified a crux on", synthesis_proposed: "proposed a synthesis on", question_revisited: "revisited", record_cited: "cited a record on" };
 

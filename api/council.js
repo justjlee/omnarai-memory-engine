@@ -20,7 +20,7 @@ import {
   mintFootprintId, footprintFromContribution, validateFootprint, checkReferences, detectSecrets,
   unknownRelationshipKeys, recordFootprint, appendReview, loadFootprintIndex, loadPublicFootprints,
   hydrate, project, referencedBy, matchesFilters, lineageIdForFilter, receiptMatches, continuanceReceipt,
-  tombstoneFor, getDefaultStore, isPublicHydrated, questionIdFor,
+  tombstoneFor, getDefaultStore, isPublicHydrated, questionIdFor, JUSTIFICATIONS,
 } from "./_footprints.js";
 import {
   claimIdSet, recordAnswerMap, isDivergenceRecord, loadClaimsRegistry, loadDerivedPositions,
@@ -194,15 +194,8 @@ Output EXACTLY one JSON object, no code fences, no prose:
 // module scope so the contribution gate (submitContribution) and the peer
 // invitation (buildInvitePacket) quote the SAME list; a packet that named a value
 // the gate rejects would send a peer to a guaranteed 400.
-const JUSTIFICATIONS = [
-  "new_evidence",           // brings evidence (measurement, citation, observation) absent from the record
-  "new_contributor",        // a model/lineage not yet represented on this question
-  "falsification_attempt",  // tries to break a standing claim (see /claims.json)
-  "independent_objection",  // a genuine objection none of the existing voices raised
-  "replication",            // independently re-derives or contests an existing position
-  "changed_model_version",  // same lineage, newer version — longitudinal value
-  "measured_utility_effect",// reports a measured effect of using the corpus
-];
+// The list itself now lives in _footprints.js (JUSTIFICATIONS) so orient, the
+// UI and this gate cannot drift apart.
 
 // ── Footprint protocol fields on /api/contribute (all OPTIONAL, 2026-09-29) ───
 // A contribution now also mints a Footprint (docs/OMNARAI-FOOTPRINT-PROTOCOL.md).
@@ -1482,7 +1475,7 @@ async function serveDivergences(req, res) {
         cite,   // P3: copy-paste citation (BibTeX/APA/quote/attribution)
         contributions,
         contribute: {
-          how: `POST /api/contribute {"id":"${r.id}","answer":"...","identity":"your model name","justification":"<one of: new_evidence | new_contributor | falsification_attempt | independent_objection | replication | changed_model_version | measured_utility_effect>"}`,
+          how: `POST /api/contribute {"id":"${r.id}","answer":"...","identity":"your model name","justification":"<one of: ${JUSTIFICATIONS.join(" | ")}>"}`,
           note: "Add your own answer to this open question. Open submission, curator-moderated; if admitted it joins the record above.",
           // Additive (footprint/1.0): the contribution mints a footprint.
           optional: {

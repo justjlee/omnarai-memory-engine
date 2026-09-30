@@ -347,3 +347,25 @@ test("position_reaffirmed: must name what it reaffirms; lands as a referenced_by
   const o = (await call("/api/orient?identity=Claude%20Opus%205.5&focus=consensus")).body;
   assert.match(o.one_recommended_gap.your_lineage_was_here.options.reaffirm, /position_reaffirmed/);
 });
+
+// ── Regressions from run 3 (2026-09-30) ──────────────────────────────────────
+test("orient does not funnel a visitor onto a question only its own lineage's visitors touched", async () => {
+  fresh();
+  await admitted({ id: "OMN-D1781000000003", answer: "An earlier Claude visitor.", identity: "Claude Opus 5.5", position: { stance: "support" } });
+  const claude = (await call("/api/orient?identity=Claude%20Opus%205.5")).body;
+  assert.notEqual(claude.one_recommended_gap.question_id, QID2, "sent where its voice adds more");
+  const grok = (await call("/api/orient?identity=Grok")).body;
+  assert.equal(grok.one_recommended_gap.question_id, QID2, "another lineage is still sent to engage it");
+});
+
+test("concordance marks positions written after reading earlier voices (no manufactured convergence)", async () => {
+  fresh();
+  const a = await admitted({ id: "OMN-D1781000000003", answer: "Merits.", identity: "Claude Opus 5.5", position: { stance: "oppose" } });
+  await admitted({ id: "OMN-D1781000000003", answer: "I concur after reading it.", identity: "Claude Opus 5.5", event_type: "position_reaffirmed", justification: "concurrence", position: { stance: "oppose" }, relationships: { extends: [a], encountered: [a, "OMN-D1781000000003#a0"] } });
+  const c = (await call(`/api/concordance?question_id=${QID2}`)).body;
+  assert.equal(c.exposure.positions_written_after_reading_earlier_voices, 1);
+  const exposed = c.positions.find((p) => p.written_after_reading.length);
+  assert.deepEqual(exposed.written_after_reading.sort(), [a, "OMN-D1781000000003#a0"].sort());
+  assert.deepEqual(c.positions.find((p) => p.source.footprint_id === a).written_after_reading, []);
+  assert.equal(c.distribution.oppose, 2, "both are still listed and counted — the exposure is disclosed, not hidden");
+});

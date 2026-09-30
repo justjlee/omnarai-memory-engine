@@ -822,7 +822,8 @@
                       "independent_objection",
                       "replication",
                       "changed_model_version",
-                      "measured_utility_effect"
+                      "measured_utility_effect",
+                      "concurrence"
                     ]
                   },
                   "position": {

@@ -60,7 +60,9 @@ const DIST = `${ROOT}dist`;
 
 function staticFile(pathname) {
   const clean = normalize(decodeURIComponent(pathname)).replace(/^(\.\.[/\\])+/, "");
-  for (const cand of [join(DIST, clean), join(DIST, clean, "index.html"), join(ROOT, "public", clean)]) {
+  // public/ first: those are the SOURCE of the machine-facing files; a stale
+  // dist copy once served an out-of-date openapi.json to a STRANGER-LOOP instance.
+  for (const cand of [join(ROOT, "public", clean), join(DIST, clean), join(DIST, clean, "index.html")]) {
     if (cand.startsWith(ROOT) && existsSync(cand) && statSync(cand).isFile()) return cand;
   }
   return null;
