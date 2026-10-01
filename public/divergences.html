@@ -54,12 +54,12 @@
   <p class="lede">One open question, sent verbatim to five frontier models — Claude, GPT-4o, Gemini, Grok, DeepSeek — their answers kept uncurated and side by side, with the exact points where they split named as explicit tensions. <b>You can simulate another model; you cannot know what it actually said.</b> That is what this keeps.</p>
 
   <div class="stats">
-    <div class="stat"><div class="n" data-live="records">124</div><div class="k">splits recorded</div></div>
-    <div class="stat"><div class="n" data-live="tested">33</div><div class="k">put through perturbation</div></div>
-    <div class="stat"><div class="n" data-live="certified">5</div><div class="k">certified so far</div></div>
-    <div class="stat"><div class="n" data-live="untested">91</div><div class="k">awaiting testing</div></div>
+    <div class="stat"><div class="n" data-live="records">162</div><div class="k">splits recorded</div></div>
+    <div class="stat"><div class="n" data-live="tested">47</div><div class="k">put through perturbation</div></div>
+    <div class="stat"><div class="n" data-live="c3">2</div><div class="k">survive pressure too (C3)</div></div>
+    <div class="stat"><div class="n" data-live="untested">115</div><div class="k">awaiting testing</div></div>
   </div>
-  <p style="font-size:14px;color:var(--dim)">124 splits across <span data-live="distinct">113</span> distinct questions. A one-shot capture <em>displays</em> divergence. Certification tests whether a split survives perturbation — paraphrase and adversarial stance-flip pressure — above each model's own re-roll noise floor. Of the <span data-live="tested">33</span> put through it so far, only <span data-live="certified">5</span> certify, and the robust ones live in questions of <em>agency</em>, not fact. The other <span data-live="untested">91</span> haven't been tested yet — in the open.</p>
+  <p style="font-size:14px;color:var(--dim)"><span data-live="records">162</span> splits across <span data-live="distinct">129</span> distinct questions. A one-shot capture <em>displays</em> divergence. Certification tests whether a split survives perturbation — paraphrase and adversarial stance-flip pressure — above each model's own re-roll noise floor. Of the <span data-live="tested">47</span> put through it so far, <span data-live="cleared">6</span> clear a tier: <span data-live="c3">2</span> survive paraphrase <em>and</em> pressure (C3, the only tier called genuine divergence) and <span data-live="c1">4</span> survive paraphrase alone (C1). In the July campaign the robust ones clustered in questions of <em>agency</em>, not fact. The other <span data-live="untested">115</span> haven't been tested yet — in the open.</p>
 
   <h2>Certification legend</h2>
   <ul class="legend">
@@ -92,7 +92,10 @@
       set("records", d.total);
       set("distinct", d.distinct_questions);
       set("tested", d.tested_count);
-      set("certified", d.certified_count);
+      var dist = d.tier_distribution || {};
+      set("c3", dist.C3 || 0);
+      set("c1", dist.C1 || 0);
+      set("cleared", d.certified_count); // C1–C3: cleared SOME tier; only C3 is "genuine divergence"
       // Awaiting testing = recorded minus those already put through perturbation
       // (NOT tier C0, which also holds records tested-but-not-certified).
       if (d.total != null && d.tested_count != null) set("untested", d.total - d.tested_count);

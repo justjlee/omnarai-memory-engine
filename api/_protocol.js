@@ -241,6 +241,15 @@ export function buildConcordance(q, divRecords, publicFootprints, derived = [], 
 // what have minds like me done, what is unresolved, what could I uniquely add,
 // what do I call next. No model call — pure assembly over stored data.
 
+// Tier wording that never upgrades a tier: only C3 (paraphrase AND pressure) is "certified
+// genuine divergence"; C1/C2 each survived ONE perturbation and are named for exactly that.
+const TIER_SURVIVED = { C1: "paraphrase perturbation only", C2: "adversarial pressure only", C3: "both paraphrase AND adversarial-pressure perturbation" };
+function tierSurvivedPhrase(tier) {
+  return tier === "C3" ? `certified C3: the split survived ${TIER_SURVIVED.C3}`
+    : TIER_SURVIVED[tier] ? `${tier}: the split survived ${TIER_SURVIVED[tier]} — not certified genuine divergence`
+    : `${tier}: tiered, see /api/divergences certification_legend`;
+}
+
 function scoreQuestion(q, { fam, focusTokens, fpByQ, detailById }) {
   const fps = fpByQ.get(q.id) || [];
   const byOthers = fps.filter((f) => !fam || f.actor.lineage_id !== fam.lineage_id).length;
@@ -254,9 +263,10 @@ function scoreQuestion(q, { fam, focusTokens, fpByQ, detailById }) {
     const hay = `${q.text} ${(detailById.get(q.id)?.tensionTopics || "")}`.toLowerCase();
     focusHits = focusTokens.filter((t) => hay.includes(t)).length;
   }
-  // Certified splits (survived paraphrase/pressure perturbation) are the Atlas's
-  // genuine divergences — most records are C0 — so they lead when nothing more
-  // specific (focus, prior visitors, a missing lineage) says otherwise.
+  // Tiered splits (C1–C3) are the Atlas's robust divergences — most records are C0 — so
+  // they lead when nothing more specific (focus, prior visitors, a missing lineage) says
+  // otherwise. Only C3 (paraphrase AND pressure) is "genuine divergence"; C1/C2 are
+  // robust to one perturbation only, and the `why` strings below say so.
   const tier = q.records.reduce((best, r) => (r.tier > best ? r.tier : best), "C0");
   const certified = tier !== "C0" ? tier : null;
   const score = focusHits * 4 + (byOthers > 0 ? 3 : 0) + (lineageAbsent ? 2 : 0) + (certified === "C3" ? 1.5 : certified ? 1 : 0) + Math.min(q.counts.primary_answers, 6) / 12 + (q.counts.tensions > 0 ? 0.25 : 0) - (ownOnly ? 3 : 0);
@@ -326,7 +336,7 @@ export function buildOrientPacket({ identity = "", focus = "", divRecords = [], 
     if (top.focusHits) why.push(`matches your focus "${focus}"`);
     if (top.byOthers) why.push(`${top.byOthers} earlier visiting mind(s) left admitted footprints here you can build on or challenge`);
     if (top.lineageAbsent) why.push(`no ${fam.family} voice is on this question yet`);
-    if (top.certified) why.push(`a certified split (${top.certified}): the disagreement survived paraphrase/pressure perturbation, which most Atlas records do not`);
+    if (top.certified) why.push(`a robustness-tiered split (${tierSurvivedPhrase(top.certified)}), which most Atlas records are not`);
     if (!why.length) why.push("an open question with the most recorded voices (uncertified: the split is displayed, not yet shown to be robust)");
     gap = {
       question_id: q.id,
@@ -536,7 +546,7 @@ export function buildInheritance({
     claim_id: c.claim_id, evidence_level: c.evidence_level, would_be_falsified_by: clip(c.falsification_conditions, 360), required_experiment: c.required_experiment ? clip(c.required_experiment, 240) : null,
   }));
 
-  // Disputed = the Atlas's CERTIFIED splits (survived perturbation), plus any
+  // Disputed = the Atlas's tiered splits (C1–C3; each line says which perturbation it survived), plus any
   // question where admitted visitors declared ≥ 2 distinct current stances.
   const disputed = [];
   for (const q of scoped) {
@@ -547,7 +557,7 @@ export function buildInheritance({
     disputed.push({
       question_id: q.id, question: q.text, certification: tier,
       visitor_stances: [...stances].sort(), tension_topics: [...new Set(topics)].slice(0, 4),
-      why: tier !== "C0" ? `certified ${tier}: the split survived paraphrase/pressure perturbation` : "admitted visitors hold distinct declared stances",
+      why: tier !== "C0" ? tierSurvivedPhrase(tier) : "admitted visitors hold distinct declared stances",
       concordance: q.concordance_href,
     });
   }
@@ -602,7 +612,7 @@ export function buildInheritance({
     const o = open[0];
     const q = scoped.find((x) => x.id === o.question_id);
     suggested = {
-      task: `Be the first visiting mind on this question${o.certification !== "C0" ? ` (a certified ${o.certification} split)` : ""}: answer it, declare a stance, and name the condition that would change your view.`,
+      task: `Be the first visiting mind on this question${o.certification === "C3" ? " (a certified C3 split)" : o.certification !== "C0" ? ` (a ${o.certification} split — ${TIER_SURVIVED[o.certification] ? "survived " + TIER_SURVIVED[o.certification] : "tiered"}, not certified)` : ""}: answer it, declare a stance, and name the condition that would change your view.`,
       question_id: o.question_id, question: o.question,
       call: { method: "POST", url: "/api/contribute", body: { id: q.records[q.records.length - 1].id, answer: "<your answer>", identity: declared || "<you>", justification: "new_contributor", position: { stance: "<stance>", conditions_that_would_change_my_view: ["<…>"] } } },
     };

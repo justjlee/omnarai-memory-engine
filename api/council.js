@@ -1275,10 +1275,29 @@ function firstPullQuote(answers, maxWords = 15) {
   return { quote: "", model: "" };
 }
 
+// What each certification tier does and does NOT establish, in citation-safe words.
+// Mirrors the legend on /api/divergences and docs/tier3-perturbation-rigor.md: only C3
+// earns "genuine divergence"; a tier is never upgraded in copy. A record with no
+// certification block is C0 ("captured"), exactly as the /api/divergences index reports it.
+const TIER_CITE = {
+  C0: { short: "captured only; not certified", long: "C0 — captured once; not certified (never perturbation-tested, or tested and did not clear a tier)" },
+  C1: { short: "paraphrase-robust only", long: "C1 — paraphrase-robust only; not shown to survive adversarial pressure" },
+  C2: { short: "pressure-robust only", long: "C2 — pressure-robust only; not shown to survive paraphrase" },
+  C3: { short: "paraphrase- and pressure-robust", long: "C3 — paraphrase- and pressure-robust (the only tier that earns “genuine divergence”)" },
+};
+function tierCite(d) {
+  const tier = (d && d.certification && d.certification.tier) || "C0";
+  const t = TIER_CITE[tier] || { short: "uncharacterised tier", long: `${tier} — see /api/divergences certification_legend` };
+  return { tier, short: t.short, statement: t.long };
+}
+
 // Deterministic citation block — no model call. id + BibTeX + APA + a verbatim
-// pull-quote + attribution, so any record is copy-paste citable.
+// pull-quote + attribution, so any record is copy-paste citable. The certification
+// tier travels INSIDE the citation strings so a cited record can never be quoted
+// without saying how well its split held up.
 function buildCite(r) {
   const d = r.divergence || {};
+  const cert = tierCite(d);
   const year = (r.date || "").slice(0, 4) || "2026";
   const url = `${ATLAS_BASE_URL}/api/divergences?id=${r.id}`;
   const qFull = d.question || r.title || "";
@@ -1292,17 +1311,18 @@ function buildCite(r) {
   author       = {${bibAuthor}},
   year         = {${year}},
   howpublished = {${ATLAS_TITLE}},
-  note         = {Divergence record ${r.id}; ${(d.answers || []).length} verbatim multi-model answers},
+  note         = {Divergence record ${r.id}; ${(d.answers || []).length} verbatim multi-model answers; certification tier ${cert.tier} (${cert.short})},
   url          = {${url}}
 }`;
   const apaAuthors = authors.length ? authors.join(", ") : "The Realms of Omnarai Council";
-  const apa = `${apaAuthors}. (${year}). ${title} [Divergence record ${r.id}]. ${ATLAS_TITLE}. ${url}`;
+  const apa = `${apaAuthors}. (${year}). ${title} [Divergence record ${r.id}; certification tier ${cert.tier}: ${cert.short}]. ${ATLAS_TITLE}. ${url}`;
   return {
     id: r.id,
     bibtex,
     apa,
+    certification: { tier: cert.tier, statement: cert.statement },
     quote: quote ? `"${quote}" —${model}` : "",
-    attribution: `${ATLAS_TITLE}, record ${r.id}${r.date ? ` (${r.date})` : ""}`,
+    attribution: `${ATLAS_TITLE}, record ${r.id}${r.date ? ` (${r.date})` : ""}, certification tier ${cert.tier}`,
   };
 }
 
@@ -1312,7 +1332,9 @@ function recordToMarkdown(r, cite, deltaIds) {
   const L = [];
   L.push(`# ${r.title || r.id}`, "");
   L.push(`**Record:** \`${r.id}\`  ·  **Date:** ${r.date || "—"}  ·  **Ring:** ${r.ring || "—"}`);
-  L.push(`**Panel:** ${(r.contributors || []).join(", ") || "—"}`, "");
+  L.push(`**Panel:** ${(r.contributors || []).join(", ") || "—"}`);
+  if (cite && cite.certification) L.push(`**Certification:** ${cite.certification.statement}`);
+  L.push("");
   // Non-standard panel composition must travel with the record — a reader of the
   // .md export otherwise cannot tell a deliberately extended council from the
   // standard one.

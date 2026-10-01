@@ -415,12 +415,15 @@ function ProvenanceBlock({ record, onOpenRecord }) {
           <div>
             <span style={{ ...mono, fontSize: 10, color: cert.tier === "C3" ? T.green : cert.tier === "C1" ? T.gold : "rgba(200,192,176,0.5)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 6, padding: "3px 9px" }}>{cert.tier}</span>
             <p style={{ fontSize: 11, color: "rgba(200,192,176,0.5)", lineHeight: 1.6, marginTop: 8 }}>
-              {cert.tier === "C0" && "Displayed only — no perturbation robustness test has been run against this split yet."}
-              {cert.tier === "C1" && "Paraphrase-robust: the split held across reworded restatements of the question."}
+              {cert.tier === "C0" && (typeof cert.dri === "number"
+                ? "Perturbation-tested, but the split did not clear a tier — displayed, not certified."
+                : "Displayed only — no perturbation robustness test has been run against this split yet.")}
+              {cert.tier === "C1" && "Paraphrase-robust only: the split held across reworded restatements of the question. It is not shown to survive adversarial pressure, so it is not certified genuine divergence."}
+              {cert.tier === "C2" && "Pressure-robust only: the split held under adversarial pressure. It is not shown to survive paraphrase, so it is not certified genuine divergence."}
               {cert.tier === "C3" && "Paraphrase- and pressure-robust: the split held across reworded restatements and adversarial pressure."}
               {typeof cert.dri === "number" && ` DRI ${cert.dri.toFixed(2)}`}
               {typeof cert.split_persistence === "number" && ` · persistence ${cert.split_persistence.toFixed(2)}`}
-              {cert.certified_at && ` · certified ${cert.certified_at.slice(0, 10)}`}
+              {cert.certified_at && ` · ${cert.tier === "C3" ? "certified" : "tested"} ${cert.certified_at.slice(0, 10)}`}
             </p>
             {cert.reproducibility && (
               <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
