@@ -122,6 +122,11 @@ const npm = {
 // ── manual inputs: Reddit stats, pinned milestones ──────────────────────────
 const manualPath = new URL("../analysis/scorecard-manual.json", import.meta.url);
 const manual = existsSync(manualPath) ? JSON.parse(readFileSync(manualPath, "utf8")) : { posts: [], milestones: {} };
+// Optional PRIVATE milestones live OUTSIDE this (public) repo, next to it:
+// ../omnarai-private/milestones.json. Missing file = none. They are published only to the
+// key-gated scorecard blob that /home reads — never into this repo or any public surface.
+const privatePath = new URL("../../omnarai-private/milestones.json", import.meta.url);
+const privateMs = existsSync(privatePath) ? JSON.parse(readFileSync(privatePath, "utf8")) : { internal: [] };
 const posts = (manual.posts || []).map((p) => {
   const hoursElapsed = Math.max(0, Math.round((Date.now() - Date.parse(p.posted_at)) / 3600000));
   const hours = Math.min(24, hoursElapsed);
@@ -163,7 +168,13 @@ const scorecard = {
   endorsements: { github, huggingface: hf },
   downloads: { npm },
   posts,
-  milestones: manual.milestones || {},
+  milestones: {
+    ...(manual.milestones || {}),
+    internal: privateMs.internal || [],
+    // admitted or pending footprint present = someone (or a curator test) left one; reject curator
+    // tests so this stays honest. "not yet" is the true state until a stranger does.
+    outside_footprint: (goal.footprints_admitted || 0) + (goal.footprints_pending || 0) > 0 ? "arrived — review it" : "not yet",
+  },
   data_quality: {
     front_door_days_missing: missing(frontRes),
     engine_days_missing: missing(engRes),
@@ -188,6 +199,7 @@ L(`     from clients that don't identify as crawlers: ${scorecard.engine.tool_ca
 L(`\n  4. ENDORSEMENTS (human signals)`);
 L(`     GitHub ${github.repos.map((r) => `${r.name} ★${r.stars} ⑂${r.forks}`).join("  ")}`);
 L(`     Hugging Face likes ${hf.datasets.map((d) => `${d.name} ${d.likes}`).join("  ")}`);
+L(`\n  MILESTONES (private): outside footprint → ${scorecard.milestones.outside_footprint}` + (scorecard.milestones.internal.length ? `   ·   ${scorecard.milestones.internal.map((m) => m.label + " (" + m.date + ")").join("; ")}` : ""));
 L(`\n  5. FOUND VIA GOOGLE/BING (last 7 days): ${scorecard.front_door.search_referrals_7d} visitors`);
 L(`\n  6. DOWNLOADS (trend only)`);
 L(`     npm last 7d ${npm.last_7d} (prior ${npm.prior_7d})   HF ${hf.datasets.map((d) => `${d.name} ${d.downloads_30d}/30d`).join("  ")}`);

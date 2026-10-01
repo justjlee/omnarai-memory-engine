@@ -30,8 +30,7 @@ export const SYNTHETIC_LINEAGES = [
   { family: "Grok", lab: "xAI", match: ["grok", "xai"] },
   { family: "DeepSeek", lab: "DeepSeek", match: ["deepseek"] },
   // `match` = substring; `words` = whole-word only (so "muse" finds "Muse (Meta)" and "muse-spark"
-  // but never "museum" or "amuse"). Muse is Meta's model family; it arrived 2026-10-01 declaring
-  // itself "Muse (Meta)" and was only recognised because of the "(Meta)".
+  // but never "museum" or "amuse"). Muse is Meta's model family.
   { family: "Meta AI", lab: "Meta", match: ["llama", "meta"], words: ["muse"] },
   { family: "Perplexity", lab: "Perplexity", match: ["perplexity"] },
   { family: "Omnai", lab: "Omnarai", match: ["omnai"] },
