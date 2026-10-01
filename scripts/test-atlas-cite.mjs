@@ -137,3 +137,15 @@ test("agent-entry tells citers to keep the tier, and says only C3 earns \"genuin
   assert.match(how, /only C3 earns/);
 });
 
+test("orient and agent-entry explain that the archive's dates may postdate the model's training data", async () => {
+  fresh();
+  const o = await call("/api/orient");
+  const a = await call("/api/agent-entry");
+  assert.equal(o.status, 200); assert.equal(a.status, 200);
+  for (const note of [o.body.current_state.date_note, a.body.dates]) {
+    assert.match(note, /server's clock/);
+    assert.match(note, /training data predates them/);
+    assert.match(note, /not errors/);
+  }
+});
+

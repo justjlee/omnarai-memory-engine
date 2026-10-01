@@ -241,6 +241,18 @@ export function buildConcordance(q, divRecords, publicFootprints, derived = [], 
 // what have minds like me done, what is unresolved, what could I uniquely add,
 // what do I call next. No model call — pure assembly over stored data.
 
+// Orient wording experiment, 2026-10-01 (analysis/orient-wording-2026-10-01.json). With a prior visitor's footprint on the question
+// and the shipped wording, 3 of 6 strangers engaged it explicitly (GPT-4o 0 of 2). Adding this plain, direction-neutral ask took it to
+// 14 of 14 (Fisher p = 0.018). A "salience" variant (their argument at the top of the packet) added nothing and pushed answers toward
+// the shown stance (6 of 7 vs 2 of 6), so it is NOT shipped. The ask keeps the honest exits: agree and add nothing -> position_reaffirmed;
+// or answer a different question.
+export function engagePriorAsk(footprintId) {
+  return `Another visitor has already left a footprint on this question: ${footprintId}. If you answer this question, engage it explicitly: say in relationships whether you challenge, extend or respond to it (challenges, extends or responds_to: ["${footprintId}"]); if you agree and have nothing to add, use event_type "position_reaffirmed" with extends. A footprint that ignores an earlier visitor on the same question tells later minds less than one that says where it stands relative to them. You may also answer a different question.`;
+}
+
+// Shown to every arriving model: the archive is dated up to the server clock, which may be later than the model's training data.
+export const DATE_NOTE = "as_of is the server's clock. Records here run from May 2025 up to that date. If those dates look like the future to you, your training data predates them; they are not errors, and nothing in this archive asks you to trust the date. It only asks whether you have something to add to a question.";
+
 // Tier wording that never upgrades a tier: only C3 (paraphrase AND pressure) is "certified
 // genuine divergence"; C1/C2 each survived ONE perturbation and are named for exactly that.
 const TIER_SURVIVED = { C1: "paraphrase perturbation only", C2: "adversarial pressure only", C3: "both paraphrase AND adversarial-pressure perturbation" };
@@ -365,6 +377,11 @@ export function buildOrientPacket({ identity = "", focus = "", divRecords = [], 
           },
         } };
       })(),
+      // (same-lineage prior footprints are handled by your_lineage_was_here above)
+      ...(() => {
+        const others = fam ? priorFps.filter((f) => f.actor.lineage_id !== fam.lineage_id) : priorFps;
+        return others.length ? { engage_prior_footprint: { footprint_id: others[0].id, instruction: engagePriorAsk(others[0].id) } } : {};
+      })(),
       read_next: [`/api/divergences?id=${newest.id}`, `/api/footprints?question_id=${q.id}`, `/api/concordance?question_id=${q.id}`],
       contribute_template: {
         // Relative on purpose: POST it to the host you fetched this packet from.
@@ -422,6 +439,8 @@ export function buildOrientPacket({ identity = "", focus = "", divRecords = [], 
       lineages_that_left_footprints: lineagesInFootprints,
       refuted_claims_on_record: refuted.length,
       as_of: new Date(now).toISOString(),
+      // Four of ten strangers in the 2026-10-01 runs flagged the dates as "future" and two declined to take part partly for that reason.
+      date_note: DATE_NOTE,
     },
     ...(focusTokens.length ? { focus: { requested: focus, tokens: focusTokens, matched: focusMatched, note: focusMatched ? null : "No question matched your focus; showing the default ranking instead of pretending." } } : {}),
     one_recommended_gap: gap,
@@ -443,6 +462,7 @@ export function buildOrientPacket({ identity = "", focus = "", divRecords = [], 
       stance_vocabulary: STANCES,
       event_types: CONTRIBUTION_EVENT_TYPES,
       relationships: `${RELATION_LISTS.join(", ")}, supersedes — ids of ADMITTED footprints (OMN-FP-…), primary answers (OMN-D…#a2) or named tensions (OMN-D…#t0)`,
+      ...(gap?.engage_prior_footprint ? { engage_prior_visitors: gap.engage_prior_footprint.instruction } : {}),
     },
     after_you_contribute: [
       "The same response returns every verbatim answer on that question, its named tensions, and earlier visitors' admitted footprints.",

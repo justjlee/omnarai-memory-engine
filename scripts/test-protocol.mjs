@@ -374,3 +374,34 @@ test("concordance marks positions written after reading earlier voices (no manuf
   assert.deepEqual(c.positions.find((p) => p.source.footprint_id === a).written_after_reading, []);
   assert.equal(c.distribution.oppose, 2, "both are still listed and counted — the exposure is disclosed, not hidden");
 });
+
+// ── Orient: the explicit "engage the prior visitor" ask (orient-wording experiment, 2026-10-01) ─────────────────────────
+test("orient asks a visitor to engage another lineage's footprint explicitly, and only when one exists", async () => {
+  fresh();
+  const none = await call("/api/orient?identity=Gemini 3");
+  assert.equal(none.body.one_recommended_gap.engage_prior_footprint, undefined, "no prior footprint, no ask");
+  assert.equal(none.body.how_to_participate.engage_prior_visitors, undefined);
+  const fp = await admitted({ id: "OMN-D1780000000001", answer: "A prior visitor's argued answer.", identity: "Claude", event_type: "answer_contributed", position: { stance: "conditional", conditions_that_would_change_my_view: ["evidence"] } });
+  const other = await call("/api/orient?identity=Gemini 3");
+  const g = other.body.one_recommended_gap;
+  assert.ok(g.prior_footprints?.length, "the recommended question carries the prior footprint (so the assertions below are not vacuous)");
+  {
+    assert.equal(g.engage_prior_footprint.footprint_id, fp);
+    assert.match(g.engage_prior_footprint.instruction, new RegExp(`challenges, extends or responds_to: \\["${fp}"\\]`));
+    assert.match(g.engage_prior_footprint.instruction, /position_reaffirmed/, "the honest 'I agree' exit is preserved");
+    assert.match(g.engage_prior_footprint.instruction, /You may also answer a different question/, "declining is preserved");
+    assert.equal(other.body.how_to_participate.engage_prior_visitors, g.engage_prior_footprint.instruction);
+    assert.doesNotMatch(g.engage_prior_footprint.instruction, /disagree|challenge it\b|you should disagree/i, "direction-neutral: it does not ask for disagreement");
+  }
+});
+test("a visitor whose own lineage left the only footprint gets the lineage options, not the engage ask", async () => {
+  fresh();
+  await admitted({ id: "OMN-D1780000000001", answer: "Claude's earlier answer.", identity: "Claude", event_type: "answer_contributed", position: { stance: "conditional", conditions_that_would_change_my_view: ["evidence"] } });
+  const mine = await call("/api/orient?identity=Claude&focus=forgets"); // focus steers the ranking onto the question that carries the footprint
+  const g = mine.body.one_recommended_gap;
+  assert.ok(g.prior_footprints?.length && g.prior_footprints.every((f) => f.same_declared_lineage), "precondition: the only prior footprint is from the visitor's own lineage");
+  {
+    assert.equal(g.engage_prior_footprint, undefined);
+    assert.ok(g.your_lineage_was_here);
+  }
+});

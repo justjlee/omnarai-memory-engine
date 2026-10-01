@@ -15,7 +15,7 @@ import { TOOLS as MCP_REMOTE_TOOLS } from "./_mcp.js";
 import { foldLineages } from "./_lineages.js";
 import { budgetStatus, writeBudgetConfig, resetBudgetConfig } from "./_budget.js";
 import { loadPublicFootprints, footprintDomainCounts, footprintStateHash, questionIdFor } from "./_footprints.js";
-import { GREETING } from "./_protocol.js";
+import { GREETING, DATE_NOTE } from "./_protocol.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -494,6 +494,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       // Every arriving intelligence is greeted first (canonical text: _protocol.js GREETING).
       greeting: GREETING,
+      dates: DATE_NOTE,
       name: "Omnarai Memory Engine",
       type: "AI-facing memory and cross-model divergence substrate",
       one_line:
