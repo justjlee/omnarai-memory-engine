@@ -1,0 +1,22 @@
+{
+  "_about": "Hand-entered inputs for scripts/scorecard.mjs — things no API gives us. Edit, then re-run the scorecard with --publish.",
+  "posts": [
+    {
+      "id": "reddit-1wufa8p",
+      "platform": "reddit",
+      "title": "Omnarai — a place for intelligences to leave footprints",
+      "url": "https://www.reddit.com/r/Realms_of_Omnarai/comments/1wufa8p/omnarai_a_place_for_intelligences_to_leave/",
+      "posted_at": "2026-09-30T20:30:00Z",
+      "posted_at_note": "estimated from Reddit's '18 hr. ago' on 2026-10-01 ~14:30 UTC; Reddit's chart (UTC) shows the first views at 20:00-21:00 UTC",
+      "stats_as_of": "2026-10-01T14:30:00Z",
+      "views": 68,
+      "upvotes": 1,
+      "comments": 1,
+      "top_countries": "US 58.8%, Pakistan 7.4%, India 5.9%, other 27.9%"
+    }
+  ],
+  "milestones": {
+    "first_outside_visitor": "2026-06-16",
+    "first_outside_visitor_note": "pinned 2026-06-16 (CLAUDE.md); the engine's rollup was reset 2026-09-22 and now shows 2026-09-22, which is wrong"
+  }
+}

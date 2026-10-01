@@ -6,7 +6,7 @@ import { list } from "@vercel/blob";
 import { waitUntil } from "@vercel/functions";
 import { recordAccess, readAccessLog, readDayEvents } from "./_telemetry.js";
 import { normalizePlay, recordPlay, readPlays, readPlayDay } from "./_plays.js";
-import { readOpenItems, applyOpenItemAction } from "./_home.js";
+import { readOpenItems, applyOpenItemAction, readScorecard, writeScorecard } from "./_home.js";
 import { getCitationReport, peekCitation } from "./_citation.js";
 import { loadGrownMemory } from "./_grown.js";
 import { CANON } from "./_canon.js";
@@ -126,7 +126,10 @@ async function fetchFrontDoorTelemetry() {
   if (!secret) return { available: false, reason: "TELEMETRY_READ_SECRET not set on the engine" };
   try {
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 8000);
+    // 25s, not 8s: the front-door summary reads every logged event and took ~8.6s by
+    // 2026-09-23, so the old 8s abort made /home show "front door unreachable" for
+    // everything. This function allows 60s.
+    const timer = setTimeout(() => ctrl.abort(), 25000);
     const r = await fetch("https://omnarai.org/api/telemetry", {
       headers: { authorization: `Bearer ${secret}` },
       signal: ctrl.signal,
@@ -230,10 +233,11 @@ async function buildAttention() {
 }
 
 async function buildDashboard() {
-  const [front, log, plays] = await Promise.all([
+  const [front, log, plays, scorecard] = await Promise.all([
     fetchFrontDoorTelemetry(),
     readAccessLog(),
     readPlays().catch(() => null),
+    readScorecard(),
   ]);
 
   // Engine traffic → safe aggregates. The per-day `visitors` map (hash→count) is
@@ -265,7 +269,9 @@ async function buildDashboard() {
     ? { totals: plays.totals || {}, tracks: (plays.tracks || []).slice(0, 5), days: plays.days || {} }
     : { totals: {}, tracks: [], days: {} };
 
-  return { generated: new Date().toISOString(), frontDoor: front, engine, music };
+  // `scorecard` = crawler-filtered, authoritative numbers (scripts/scorecard.mjs). When
+  // present, /home prefers it over the rollups above; null = never published / unreadable.
+  return { generated: new Date().toISOString(), frontDoor: front, engine, music, scorecard };
 }
 
 /**
@@ -355,7 +361,35 @@ export default async function handler(req, res) {
     }
   }
 
+  // ── Scorecard write: POST /api/info?_view=scorecard ────────────────────────
+  // scripts/scorecard.mjs --publish. Curator-gated; validated (scorecard/1, ≤200KB).
+  if (req.method === "POST" && (req.query?._view || "") === "scorecard") {
+    const auth = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+    if (!process.env.INGEST_SECRET || auth !== process.env.INGEST_SECRET) {
+      return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
+    }
+    res.setHeader("Cache-Control", "no-store");
+    try {
+      const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
+      const out = await writeScorecard(body);
+      return res.status(out.error ? 400 : 200).json(out);
+    } catch (e) {
+      return res.status(500).json({ error: "scorecard write failed", detail: String(e?.message || e) });
+    }
+  }
+
   if (req.method !== "GET") return res.status(405).json({ error: "GET only" });
+
+  // ── Scorecard read: GET /api/info?_view=scorecard ───────────────────────────
+  if ((req.query?._view || "") === "scorecard") {
+    const auth = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+    if (!process.env.INGEST_SECRET || auth !== process.env.INGEST_SECRET) {
+      return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
+    }
+    res.setHeader("Cache-Control", "no-store");
+    const sc = await readScorecard();
+    return res.status(sc ? 200 : 404).json(sc || { error: "no scorecard published yet — run: node scripts/scorecard.mjs --publish" });
+  }
 
   // ── Song-play leaderboard: GET /api/play (rewrite → ?_view=play) ───────────
   // Public aggregate (counts only, no IPs): the "how many times has each track

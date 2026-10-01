@@ -98,3 +98,36 @@ export async function applyOpenItemAction(body = {}) {
   else return { error: "unknown action (add|done|reopen|delete)", items: await readOpenItems() };
   return { ok: true, items: await readOpenItems() };
 }
+
+// ── Weekly scorecard ──────────────────────────────────────────────────────────
+// The honest "is anyone real doing anything?" numbers, computed OFF the serverless
+// clock by scripts/scorecard.mjs (it reads the raw per-event telemetry, removes
+// crawler sweeps, and adds footprints / GitHub / Hugging Face / npm / Reddit) and
+// stored here as ONE small JSON so /home loads it instantly. The dashboard rollups
+// it replaces undercount and count crawlers as people; this is the fix, not a
+// second opinion. A latest pointer plus a dated copy (history for week-over-week).
+const SC_LATEST = "home/scorecard/latest.json";
+const SC_MAX_BYTES = 200 * 1024;
+
+export async function readScorecard() {
+  try {
+    const { blobs } = await list({ prefix: SC_LATEST });
+    if (!blobs.length) return null;
+    const sc = await fetch(bust(blobs[0].url)).then((r) => r.json());
+    return sc && sc.schema === "scorecard/1" ? sc : null;
+  } catch {
+    return null; // unreadable ≠ empty: callers show "scorecard unavailable", never zeros
+  }
+}
+
+export async function writeScorecard(sc) {
+  if (!sc || typeof sc !== "object" || sc.schema !== "scorecard/1" || typeof sc.generated !== "string" || Number.isNaN(Date.parse(sc.generated))) {
+    return { error: "body must be a scorecard/1 object with an ISO `generated`" };
+  }
+  const body = JSON.stringify(sc);
+  if (Buffer.byteLength(body) > SC_MAX_BYTES) return { error: "scorecard too large (>200KB)" };
+  const opts = { access: "public", addRandomSuffix: false, contentType: "application/json" };
+  await put(SC_LATEST, body, opts);
+  await put(`home/scorecard/${sc.generated.slice(0, 10)}.json`, body, opts);
+  return { ok: true, generated: sc.generated, bytes: Buffer.byteLength(body) };
+}
