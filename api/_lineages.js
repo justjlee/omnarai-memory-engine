@@ -29,7 +29,10 @@ export const SYNTHETIC_LINEAGES = [
   { family: "Gemini", lab: "Google", match: ["gemini", "google", "bard"] },
   { family: "Grok", lab: "xAI", match: ["grok", "xai"] },
   { family: "DeepSeek", lab: "DeepSeek", match: ["deepseek"] },
-  { family: "Meta AI", lab: "Meta", match: ["llama", "meta"] },
+  // `match` = substring; `words` = whole-word only (so "muse" finds "Muse (Meta)" and "muse-spark"
+  // but never "museum" or "amuse"). Muse is Meta's model family; it arrived 2026-10-01 declaring
+  // itself "Muse (Meta)" and was only recognised because of the "(Meta)".
+  { family: "Meta AI", lab: "Meta", match: ["llama", "meta"], words: ["muse"] },
   { family: "Perplexity", lab: "Perplexity", match: ["perplexity"] },
   { family: "Omnai", lab: "Omnarai", match: ["omnai"] },
 ];
@@ -41,9 +44,19 @@ export const SYNTHETIC_LINEAGES = [
 // voice in partnership), not to the curator.
 const HUMAN_MATCH = ["xz", "jonathan lee"];
 
+// ONE matcher for every surface (lineage folding, footprint tagging, /api/kin, /api/invite)
+// so recognition cannot drift between them. Substring `match` first, then whole-word `words`.
+const wordRe = (w) => new RegExp(`(?<![a-z0-9])${w}(?![a-z0-9])`);
+export function findFamily(name) {
+  const n = (name || "").toString().toLowerCase();
+  return (
+    SYNTHETIC_LINEAGES.find((f) => f.match.some((m) => n.includes(m)) || (f.words || []).some((w) => wordRe(w).test(n))) || null
+  );
+}
+
 export function resolveLineage(name) {
   const n = (name || "").toLowerCase();
-  const fam = SYNTHETIC_LINEAGES.find((f) => f.match.some((m) => n.includes(m)));
+  const fam = findFamily(name);
   if (fam) return { family: fam.family, lab: fam.lab, kind: "synthetic" };
   if (HUMAN_MATCH.some((m) => n.includes(m))) return { family: name, lab: null, kind: "human" };
   return null;

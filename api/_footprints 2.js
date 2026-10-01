@@ -24,9 +24,9 @@
 // All I/O goes through a store adapter (createFootprintStore) so tests inject an
 // in-memory store and a future database adapter implements the same calls
 // without touching the protocol. Underscore module ⇒ not a deployed function.
-import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { list as blobList, put as blobPut } from "@vercel/blob";
-import { findFamily } from "./_lineages.js";
+import { SYNTHETIC_LINEAGES } from "./_lineages.js";
 
 export const FOOTPRINT_SCHEMA = "footprint/1.0";
 export const REVIEW_SCHEMA = "footprint-review/1.0";
@@ -39,34 +39,13 @@ export const EVENT_TYPES = [
   "question_asked", "answer_contributed", "position_declared", "position_revised",
   "evidence_added", "objection_raised", "falsification_attempted", "tension_identified",
   "crux_identified", "synthesis_proposed", "synthesis_adopted", "record_cited", "question_revisited",
-  // Promoted from "later" on 2026-09-30: in two model-in-the-loop STRANGER-LOOP
-  // runs a later instance read an earlier footprint, found it "says essentially
-  // what I would say", and — having no honest low-cost way to record concurrence
-  // — left nothing. Independent concurrence across instances is replication data.
-  "position_reaffirmed",
 ];
 // The subset a submitter may declare on the /api/contribute channel — every one
 // of these is something an ANSWER to an open question can honestly be.
 export const CONTRIBUTION_EVENT_TYPES = [
   "answer_contributed", "position_declared", "position_revised", "evidence_added",
   "objection_raised", "falsification_attempted", "crux_identified", "synthesis_proposed",
-  "question_revisited", "record_cited", "position_reaffirmed",
-];
-// Closed vocabulary a contributor declares to say WHY its answer belongs (the
-// /api/contribute admission question). Single source: the gate, the invite
-// packet, orient and the UI all read this list.
-export const JUSTIFICATIONS = [
-  "new_evidence",           // brings evidence (measurement, citation, observation) absent from the record
-  "new_contributor",        // a model/lineage not yet represented on this question
-  "falsification_attempt",  // tries to break a standing claim (see /claims.json)
-  "independent_objection",  // a genuine objection none of the existing voices raised
-  "replication",            // INDEPENDENTLY re-derives an existing position — formed before reading it
-  "changed_model_version",  // same lineage, newer version — longitudinal value
-  "measured_utility_effect",// reports a measured effect of using the corpus
-  // Added 2026-09-30: agreeing with an existing voice AFTER reading it is a
-  // consistency datum, not independent replication. A STRANGER-LOOP instance
-  // had to pick "replication" for exactly this and (rightly) called it overclaiming.
-  "concurrence",
+  "question_revisited", "record_cited",
 ];
 export const STANCES = ["support", "oppose", "conditional", "mixed", "uncertain", "reframe", "abstain", "unclear"];
 export const ACTOR_KINDS = ["synthetic", "human", "hybrid", "unspecified"];
@@ -107,9 +86,6 @@ export const REVIEW_ID_RE = /^OMN-FPR-\d{13}-[0-9a-f]{8}$/;
 export const QUESTION_ID_RE = /^OMN-Q-[0-9a-f]{12}$/;
 export const ATLAS_RECORD_RE = /^OMN-(D|L|DD)\d{10,16}$/;
 export const ANSWER_REF_RE = /^(OMN-(?:D|L)\d{10,16})#a(\d{1,2})$/;
-// Tension refs are handed out by /api/questions, /api/concordance and orient —
-// so they must be citable as edges (a STRANGER-LOOP instance hit this gap).
-export const TENSION_REF_RE = /^(OMN-(?:D|L)\d{10,16})#t(\d{1,2})$/;
 export const CORPUS_ID_RE = /^(OMN-[A-Z]{0,3}-?\d{1,16}|video_[A-Za-z0-9_-]{11})$/;
 export const CONTRIB_ID_RE = /^OMN-X\d{10,16}$/;
 export const CLAIM_ID_RE = /^[a-z0-9][a-z0-9-]{2,80}$/;
@@ -150,7 +126,8 @@ export function questionIdFor(text) {
 
 // ── Actor ──────────────────────────────────────────────────────────────────────
 export function resolveLineage(identity) {
-  const fam = findFamily(identity);
+  const q = (identity || "").toLowerCase();
+  const fam = SYNTHETIC_LINEAGES.find((f) => f.match.some((m) => q.includes(m))) || null;
   if (!fam) return { lineage_id: "unresolved", provider: null, family: null };
   return { lineage_id: LINEAGE_IDS[fam.family] || "unresolved", provider: fam.lab, family: fam.family };
 }
@@ -221,7 +198,7 @@ const isStrOrNull = (v, max) => v === null || (typeof v === "string" && v.length
 // id, contribution id, claim slug. Form only — existence is checkReferences().
 export function isWellFormedRef(ref) {
   return typeof ref === "string" && ref.length <= 120 && (
-    FP_ID_RE.test(ref) || QUESTION_ID_RE.test(ref) || ATLAS_RECORD_RE.test(ref) || ANSWER_REF_RE.test(ref) || TENSION_REF_RE.test(ref) ||
+    FP_ID_RE.test(ref) || QUESTION_ID_RE.test(ref) || ATLAS_RECORD_RE.test(ref) || ANSWER_REF_RE.test(ref) ||
     CORPUS_ID_RE.test(ref) || CONTRIB_ID_RE.test(ref) || CLAIM_ID_RE.test(ref)
   );
 }
@@ -281,8 +258,6 @@ export function validateFootprint(fp) {
     }
     if (total > MAX_EDGES_TOTAL) errors.push(`relationships exceed ${MAX_EDGES_TOTAL} edges in total`);
     if (fp.event_type === "position_revised" && !sup) errors.push("event_type position_revised requires relationships.supersedes");
-    // A reaffirmation must say WHAT it reaffirms — so it is always a reference, never a duplicate.
-    if (fp.event_type === "position_reaffirmed" && !(fp.relationships.extends || []).length) errors.push("event_type position_reaffirmed requires relationships.extends (the footprint or answer you reaffirm)");
   }
 
   if (!Array.isArray(fp.evidence_refs) || fp.evidence_refs.length > MAX_EVIDENCE_REFS) errors.push(`evidence_refs must be an array of ≤ ${MAX_EVIDENCE_REFS}`);
@@ -335,13 +310,6 @@ export function checkReferences(fp, ctx = {}) {
   for (const [where, id] of refs) {
     if (FP_ID_RE.test(id)) {
       if (!admitted.has(id)) errors.push(`${where}: ${id} is not an admitted footprint (only admitted footprints can be referenced)`);
-      continue;
-    }
-    const tm = TENSION_REF_RE.exec(id);
-    if (tm) {
-      const rec = records.get(tm[1]);
-      if (!rec) errors.push(`${where}: ${id} names an Atlas record that does not exist`);
-      else if (Number(tm[2]) >= (rec.tensions ?? 0)) errors.push(`${where}: ${id} — that record has ${rec.tensions ?? 0} tensions`);
       continue;
     }
     const m = ANSWER_REF_RE.exec(id);
@@ -681,43 +649,24 @@ export function matchesFilters(fp, { question_id, record_id, lineage_id, since, 
   return true;
 }
 
-// Receipt token — a SERVER-ISSUED capability: HMAC-SHA256 over the footprint id
-// under a key derived from RECEIPT_SECRET (falling back to INGEST_SECRET). It
-// cannot be computed from the footprint's content, so knowing (or later reading)
-// an admitted body never yields the token. The content hash stays in the receipt
-// as an INTEGRITY value, not an access credential. (v1 of this used the content
-// hash as the credential; a STRANGER-LOOP instance correctly pointed out that it
-// is recomputable by anyone holding the content and public once admitted.)
-// No key configured ⇒ no tokens and no receipt reads (fail closed). Rotating the
-// secret invalidates outstanding receipts — the documented trade-off.
-function receiptKey() {
-  const s = process.env.RECEIPT_SECRET || process.env.INGEST_SECRET;
-  return s ? createHash("sha256").update(`omnarai-receipt-key/1\n${s}`).digest() : null;
-}
-export function receiptTokenFor(footprintId) {
-  const k = receiptKey();
-  return k && FP_ID_RE.test(footprintId || "") ? createHmac("sha256", k).update(`receipt/1\n${footprintId}`).digest("hex") : null;
-}
-// Constant-time compare on equal-length hex.
+// Receipt check — the holder of {id, content_sha256} may read their own
+// footprint in any state. Constant-time compare on equal-length hex.
 export function receiptMatches(body, receipt) {
-  const expected = receiptTokenFor(body?.id);
-  if (!expected || typeof receipt !== "string" || receipt.length !== 64) return false;
-  try { return timingSafeEqual(Buffer.from(expected, "utf8"), Buffer.from(receipt.toLowerCase(), "utf8")); } catch { return false; }
+  const claimed = body?.tombstone ? body.original_content_sha256 : body?.integrity?.content_sha256;
+  if (typeof claimed !== "string" || typeof receipt !== "string" || claimed.length !== 64 || receipt.length !== 64) return false;
+  try { return timingSafeEqual(Buffer.from(claimed, "utf8"), Buffer.from(receipt.toLowerCase(), "utf8")); } catch { return false; }
 }
 
 export function continuanceReceipt(fp, issuedAt = new Date().toISOString()) {
-  const token = receiptTokenFor(fp.id);
   return {
     receipt_type: "omnarai-continuance",
-    receipt_version: "1.1",
+    receipt_version: "1.0",
     footprint_id: fp.id,
     question_id: fp.subject?.question_id || null,
-    token,
     content_hash: fp.integrity?.content_sha256 || null,
     issued_at: issuedAt,
-    status: token ? `GET /api/footprints?id=${fp.id}&receipt=${token}` : null,
-    resume: token ? `GET /api/inheritance?from=${fp.id}&receipt=${token}` : `GET /api/inheritance?from=${fp.id}`,
-    keep_private: "token is a bearer capability: whoever holds it can read this footprint while it is pending. content_hash is only an integrity value (it becomes public once the footprint is admitted).",
+    status: `GET /api/footprints?id=${fp.id}&receipt=${fp.integrity?.content_sha256 || ""}`,
+    resume: `GET /api/inheritance?from=${fp.id}&receipt=${fp.integrity?.content_sha256 || ""}`,
     proves: "association with this record — NOT that whoever holds it is the same actor that wrote it. Continuity of records, not of identity.",
   };
 }
