@@ -56,6 +56,12 @@ echo ">> Claim-pin guard (front-door prose vs /claims.json)"
 node scripts/check-claim-pins.mjs
 echo
 
+# HARD gate: served copy must not upgrade a certification tier (only C3 is "certified" / "genuine divergence").
+# (2026-10-01 guard — the Divergences tab said all 6 certified splits survived adversarial pressure; only the 2 C3 did.)
+echo ">> Tier-language guard (no C1/C2 described as certified or as pressure-tested)"
+node scripts/check-tier-language.mjs
+echo
+
 # HARD gate: the Refutation Ledger must carry every refuted claim in /claims.json.
 # (2026-08-23 guard — the Ledger sat at "Four Ideas" while the registry held six
 # refuted claims, including the flagship dataset's own founding premise. Pins catch a
