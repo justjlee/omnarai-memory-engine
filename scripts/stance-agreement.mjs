@@ -34,6 +34,8 @@ const PER = Number(val("--per-lineage", 20));
 const OUT = val("--out");
 const MD = val("--md");
 const LABELLERS = (val("--labellers", "claude-haiku-4-5,gpt-4o,gemini-2.5-flash,deepseek-chat,claude-sonnet-4-6")).split(",").map((s) => s.trim());
+const ALL_LINEAGES = args.includes("--all-lineages"); // every derived position, incl. models whose lineage is unresolved (e.g. Fable)
+const IDS_FILE = val("--ids-file"); // JSON array of primary_text_ref values: label exactly these (held-out validation)
 const MAIN_LINEAGES = ["anthropic-claude", "openai-gpt", "google-gemini", "xai-grok", "deepseek"];
 const sha256 = (s) => createHash("sha256").update(s).digest("hex");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -103,15 +105,20 @@ const pct = (x) => (x == null ? "n/a" : `${(100 * x).toFixed(0)}%`);
 // ── sample ───────────────────────────────────────────────────────────────────
 const derived = JSON.parse(readFileSync(DERIVED, "utf8")).derived_positions;
 const byLineage = new Map();
-for (const d of derived) { const l = d.actor.lineage_id; if (!MAIN_LINEAGES.includes(l)) continue; (byLineage.get(l) || byLineage.set(l, []).get(l)).push(d); }
-const sample = [];
-for (const l of MAIN_LINEAGES) {
-  const arr = (byLineage.get(l) || []).slice().sort((a, b) => sha256(a.primary_text_ref).localeCompare(sha256(b.primary_text_ref)));
-  sample.push(...arr.slice(0, PER));
+for (const d of derived) { const l = d.actor.lineage_id; if (!ALL_LINEAGES && !MAIN_LINEAGES.includes(l)) continue; (byLineage.get(l) || byLineage.set(l, []).get(l)).push(d); }
+let sample = [];
+if (IDS_FILE) {
+  const want = new Set(JSON.parse(readFileSync(IDS_FILE, "utf8")));
+  sample = derived.filter((d) => want.has(d.primary_text_ref));
+} else {
+  for (const l of (ALL_LINEAGES ? [...byLineage.keys()] : MAIN_LINEAGES)) {
+    const arr = (byLineage.get(l) || []).slice().sort((a, b) => sha256(a.primary_text_ref).localeCompare(sha256(b.primary_text_ref)));
+    sample.push(...arr.slice(0, PER));
+  }
 }
 const avgChars = 1500 * 4; // ≈ the extractor's 1.3k-token request
 const estUsd = LABELLERS.reduce((s, l) => s + sample.length * ((avgChars / 4) * PROVIDERS[l].usd[0] + 220 * PROVIDERS[l].usd[1]) / 1e6, 0);
-console.log(`sample: ${sample.length} derived positions (${PER} per lineage, seeded by answer-id hash) from ${derived.length}`);
+console.log(`sample: ${sample.length} derived positions (${IDS_FILE ? "ids from " + IDS_FILE : ALL_LINEAGES ? "ALL lineages" : PER + " per lineage"}, seeded by answer-id hash) from ${derived.length}`);
 console.log(`labellers: ${LABELLERS.join(", ")}  → est. up to ~$${estUsd.toFixed(2)}`);
 if (!RUN) { console.log("PLAN only. Add --run --yes to spend."); process.exit(0); }
 if (!YES) { console.error("Refusing to spend without --yes."); process.exit(2); }
@@ -169,14 +176,14 @@ for (const L of LABELLERS) {
 const GROUP = { support: "directional", oppose: "directional-opp", conditional: "qualified", mixed: "qualified", uncertain: "qualified", reframe: "other", abstain: "other", unclear: "other" };
 const coarse = (x) => GROUP[x] || "other";
 const rows = items.map((it) => [it.d.stance, ...LABELLERS.map((L) => labels[L].get(ref(it)).stance)]);
-report.fleiss_kappa_all = fleissKappa(rows);
+report.fleiss_kappa_all = rows[0] && rows[0].length >= 3 ? fleissKappa(rows) : null;
 report.coarse_note = "groups: directional=support, directional-opp=oppose (kept apart so a support↔oppose flip is never hidden), qualified=conditional|mixed|uncertain, other=reframe|abstain|unclear";
 for (const L of LABELLERS) {
   const lab = items.map((it) => labels[L].get(ref(it)).stance);
   report.labellers[L].coarse_agreement_with_original = items.filter((_, i) => coarse(lab[i]) === coarse(orig[i])).length / items.length;
   report.labellers[L].coarse_cohen_kappa = cohenKappa(orig.map(coarse), lab.map(coarse));
 }
-report.fleiss_kappa_coarse = fleissKappa(rows.map((r) => r.map(coarse)));
+report.fleiss_kappa_coarse = rows[0] && rows[0].length >= 3 ? fleissKappa(rows.map((r) => r.map(coarse))) : null;
 // confusion of the original label vs the consensus of the OTHER labellers (plurality), to see where the disagreement lives
 const conf = {};
 rows.forEach((r) => { const others = r.slice(1); const cnt = {}; others.forEach((x) => (cnt[x] = (cnt[x] || 0) + 1)); const top = Object.entries(cnt).sort((a, b) => b[1] - a[1])[0][0]; const k = `${r[0]} → ${top}`; conf[k] = (conf[k] || 0) + 1; });
@@ -192,13 +199,13 @@ report.coarse_support_oppose_flips = items.filter((it, i) => { const set = new S
 report.contested = items.map((it, i) => ({ answer: ref(it), lineage: it.d.actor.lineage_id, labels: Object.fromEntries([["claude-haiku-4-5 (original)", rows[i][0]], ...LABELLERS.map((L, j) => [L, rows[i][j + 1]])]), agreeing: topCount[i], span: it.d.derivation.evidence_span, question: it.question }))
   .filter((x) => x.agreeing <= nRaters - 2).sort((a, b) => a.agreeing - b.agreeing).slice(0, 40);
 
-console.log(`\nFleiss kappa across ${nRaters} labellers: ${report.fleiss_kappa_all.toFixed(2)}`);
+console.log(`\nFleiss kappa across ${nRaters} labellers: ${report.fleiss_kappa_all == null ? "n/a" : report.fleiss_kappa_all.toFixed(2)}`);
 for (const L of LABELLERS) { const r = report.labellers[L]; console.log(`${L.padEnd(18)} agree ${pct(r.raw_agreement_with_original)}  kappa ${r.cohen_kappa_vs_original?.toFixed(2)}  own-lineage ${pct(r.own_lineage_agreement)} (n=${r.own_lineage_n}) vs other ${pct(r.other_lineage_agreement)}`); }
-console.log(`coarse (directional/opposed/qualified/other) Fleiss kappa: ${report.fleiss_kappa_coarse.toFixed(2)}; per labeller coarse agreement: ${LABELLERS.map((L) => `${L} ${pct(report.labellers[L].coarse_agreement_with_original)}`).join(", ")}`);
+console.log(`coarse (directional/opposed/qualified/other) Fleiss kappa: ${report.fleiss_kappa_coarse == null ? "n/a" : report.fleiss_kappa_coarse.toFixed(2)}; per labeller coarse agreement: ${LABELLERS.map((L) => `${L} ${pct(report.labellers[L].coarse_agreement_with_original)}`).join(", ")}`);
 console.log(`robust: all agree ${report.robust.all_agree}/${items.length}; >= n-1 agree ${report.robust.at_least_n_minus_1_agree}; majority ${report.robust.majority_agree}; no majority ${report.robust.no_majority}; support↔oppose conflicts ${report.coarse_support_oppose_flips}`);
 if (OUT) writeFileSync(OUT, JSON.stringify(report, null, 2));
 if (MD) {
-  const L = ["# Derived-stance cross-labeller check", "", `${items.length} answers, ${nRaters} labellers (original: claude-haiku-4-5). Fleiss kappa ${report.fleiss_kappa_all.toFixed(2)}.`, "", "| answer | lineage | labels | agree | evidence span |", "|---|---|---|---|---|"];
+  const L = ["# Derived-stance cross-labeller check", "", `${items.length} answers, ${nRaters} labellers (original: claude-haiku-4-5). Fleiss kappa ${report.fleiss_kappa_all == null ? "n/a" : report.fleiss_kappa_all.toFixed(2)}.`, "", "| answer | lineage | labels | agree | evidence span |", "|---|---|---|---|---|"];
   for (const c of report.contested) L.push(`| ${c.answer} | ${c.lineage} | ${Object.entries(c.labels).map(([k, v]) => `${k.split(" ")[0]}: **${v}**`).join(" · ")} | ${c.agreeing}/${nRaters} | ${(c.span || "—").replace(/\|/g, "/").slice(0, 160)} |`);
   writeFileSync(MD, L.join("\n"));
 }

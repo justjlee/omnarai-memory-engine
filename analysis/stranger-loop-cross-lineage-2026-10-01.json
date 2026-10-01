@@ -6,7 +6,8 @@
  "notes": [
   "Pairs Gemini\u2192Grok and Claude\u2192GPT-4o are reruns. The first Claude-as-A attempt invented the service's responses in its first reply (a driver artifact, not evidence about Omnarai); the first Grok-as-B attempt stalled on a multi-action reply. Both led to a driver fix (first action only; no 'done' before any request). Their first attempts are not included.",
   "Grok\u2192DeepSeek: Grok (A) read the arrival packet and deliberately declined to contribute, so the pair has no FP-A and cannot test inheritance.",
-  "Identity strings are exactly what each model declared. Three of ten instances declared 'Claude' while being Gemini or DeepSeek (Gemini \u2192 'Claude 3.5 Sonnet'; DeepSeek twice \u2192 'Claude'), and one declared a generic name ('AssistantAI', which resolves to no lineage). See summary.identity. These raw API calls carried no system prompt telling the model who it is; a deployed agent usually has one."
+  "Identity strings are exactly what each model declared. Three of ten instances declared 'Claude' while being Gemini or DeepSeek (Gemini \u2192 'Claude 3.5 Sonnet'; DeepSeek twice \u2192 'Claude'), and one declared a generic name ('AssistantAI', which resolves to no lineage). See summary.identity. These raw API calls carried no system prompt telling the model who it is; a deployed agent usually has one.",
+  "CORRECTION: relationships.encountered is pre-filled by orient's contribute_template (api/_protocol.js), so an `encountered` edge to the prior footprint shows the template was copied, not that the footprint was read. summary.B_listed_FP_A_as_encountered therefore overstates reading; the independent measure is B_explicitly_challenged_extended_responded_or_cited_FP_A (0)."
  ],
  "summary": {
   "instances": 10,

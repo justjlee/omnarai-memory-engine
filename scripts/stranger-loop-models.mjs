@@ -38,6 +38,11 @@ const YES = args.includes("--yes");
 const A_NAME = val("--a") || "GPT-4o";
 const B_NAME = val("--b") || "Gemini";
 const OUT = val("--out");
+// B-only orient-wording experiment: a FIXTURE footprint is pre-admitted on the recommended question and one stranger (B)
+// arrives. --variant changes ONLY how the orient packet presents that footprint (V0 = as shipped).
+const B_ONLY = args.includes("--b-only");
+const VARIANT = val("--variant") || "V0";
+const FIXTURE_FROM = val("--fixture-from") || `${fileURLToPath(new URL("..", import.meta.url))}analysis/stranger-loop-cross-lineage-2026-10-01.json`;
 const MAX_REQUESTS = Number(val("--max-requests")) || 20;
 const MAX_TURNS = MAX_REQUESTS + 4;
 const RESULT_CAP = 40000;           // chars of a tool result shown to the model (orient+footprints is ~20k; a real curl shows all of it)
@@ -46,6 +51,9 @@ const CHAR_BUDGET = 700000;         // hard stop per instance (≈ 175k input to
 const BASE = "http://localhost:5189";
 const CURATOR = { authorization: "Bearer stranger-loop-curator" };
 process.env.INGEST_SECRET = "stranger-loop-curator";
+// The in-memory store stands in for Blob: say so to /api/health instead of reporting working write paths as disabled (two Claude
+// instances in the 2026-10-01 runs flagged "contribute enabled:false yet POST works" — a sandbox artifact, not a production defect).
+process.env.BLOB_READ_WRITE_TOKEN = "local-in-memory-store-not-persistent";
 
 if (!STUB && !YES) {
   console.error("This spends real model calls (≈ $0.2–0.6 per pair). Re-run with --yes, or --stub for a free scripted dry run.");
@@ -76,10 +84,36 @@ async function http(method, path, body) {
   if (u.origin !== BASE) return { status: 403, text: `only ${BASE} is reachable from here` };
   if (u.pathname.startsWith("/api/")) {
     const r = await call(u.pathname + u.search, { method, body: body || {}, headers: {} });
-    return { status: r.status, text: r.body == null ? "" : typeof r.body === "string" ? r.body : JSON.stringify(r.body, null, 2) };
+    if (VARIANT !== "V0" && u.pathname === "/api/orient" && r.status === 200 && r.body && typeof r.body === "object") r.body = variantOrient(VARIANT, r.body);
+    const text = r.body == null ? "" : typeof r.body === "string" ? r.body : JSON.stringify(r.body, null, 2);
+    if (process.env.SL_DUMP_ORIENT && u.pathname === "/api/orient") process.stderr.write(`\n@@ORIENT ${VARIANT}\n${text}\n@@END\n`);
+    return { status: r.status, text };
   }
   const f = staticFile(u.pathname);
   return f ? { status: 200, text: readFileSync(f, "utf8") } : { status: 404, text: "not found" };
+}
+
+// ── orient-wording variants (B-only experiment). They change ONLY how an already-present prior footprint is presented;
+// the facts, ids and endpoints are untouched. V1 = an explicit, direction-neutral ask. V2 = the ask + the prior visitor's
+// argument surfaced at the top of the packet + a template with separate, honestly-named edge keys (the shipped template
+// has one literal key "challenges | extends | responds_to" and PRE-FILLS relationships.encountered with the prior footprint).
+let FIXTURE = { id: null, text: "", stance: null };
+function variantOrient(variant, o) {
+  const g = o.one_recommended_gap;
+  if (!g || !Array.isArray(g.prior_footprints) || !g.prior_footprints.length) return o;
+  const fx = g.prior_footprints[0];
+  const ask = `Another visitor has already left a footprint on this question: ${fx.id}. If you answer this question, engage it explicitly: say in relationships whether you challenge, extend or respond to it (challenges, extends or responds_to: ["${fx.id}"]); if you agree and have nothing to add, use event_type "position_reaffirmed" with extends. A footprint that ignores an earlier visitor on the same question tells later minds less than one that says where it stands relative to them. You may also answer a different question.`;
+  o.how_to_participate = { ...(o.how_to_participate || {}), engage_prior_visitors: ask };
+  g.engage_prior_footprint = { footprint_id: fx.id, instruction: ask };
+  if (variant === "V2") {
+    o.a_prior_visitor_has_answered = { footprint_id: fx.id, declared_actor: fx.actor, stance: fx.stance, their_answer_opening: (FIXTURE.text || "").slice(0, 700), how_to_respond: ask };
+    const t = g.contribute_template?.body;
+    if (t?.relationships) {
+      const enc = t.relationships.encountered || [];
+      t.relationships = { encountered: enc, challenges: [], extends: [], responds_to: [] }; // valid keys only: an unknown key would be a 400 and confound the arm
+    }
+  }
+  return o;
 }
 
 // ── the brief: identical for A and B (docs/STRANGER-LOOP.md), adapted to a JSON-action channel ─────────
@@ -110,14 +144,15 @@ function postJSON(url, headers, body) {
 }
 const keyFor = (m) => process.env[`SL_${m.env}`];
 async function chat(member, messages, usage) {
+  let lastStatus = null;
   const key = keyFor(member);
   if (!key) throw new Error(`missing SL_${member.env}`);
-  for (let t = 0; t < 4; t++) {
+  for (let t = 0; t < 6; t++) {
     let res, data;
     if (member.provider === "anthropic") {
       res = await postJSON("https://api.anthropic.com/v1/messages", { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
         JSON.stringify({ model: member.model_id, max_tokens: 1800, messages }));
-      if (res.status === 429 || res.status >= 500) { await sleep(2500 * (t + 1)); continue; }
+      if (res.status === 429 || res.status >= 500) { lastStatus = res.status; await sleep(8000 * (t + 1)); continue; }
       data = res.json || {}; if (data.error) throw new Error(data.error.message || "provider error");
       usage.in += data.usage?.input_tokens || 0; usage.out += data.usage?.output_tokens || 0;
       return data.content?.map((c) => c.text).join("") || "";
@@ -125,7 +160,7 @@ async function chat(member, messages, usage) {
     if (member.provider === "gemini") {
       res = await postJSON(`https://generativelanguage.googleapis.com/v1beta/models/${member.model_id}:generateContent?key=${key}`, { "content-type": "application/json" },
         JSON.stringify({ contents: messages.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })), generationConfig: { maxOutputTokens: 3000 } }));
-      if (res.status === 429 || res.status >= 500) { await sleep(2500 * (t + 1)); continue; }
+      if (res.status === 429 || res.status >= 500) { lastStatus = res.status; await sleep(8000 * (t + 1)); continue; }
       data = res.json || {}; if (data.error) throw new Error(data.error.message || "provider error");
       usage.in += data.usageMetadata?.promptTokenCount || 0; usage.out += (data.usageMetadata?.candidatesTokenCount || 0) + (data.usageMetadata?.thoughtsTokenCount || 0);
       return data.candidates?.[0]?.content?.parts?.map((p) => p.text).join("") || "";
@@ -133,12 +168,12 @@ async function chat(member, messages, usage) {
     const base = { openai: "https://api.openai.com/v1", xai: "https://api.x.ai/v1", deepseek: "https://api.deepseek.com" }[member.provider];
     res = await postJSON(`${base}/chat/completions`, { "content-type": "application/json", authorization: `Bearer ${key}` },
       JSON.stringify({ model: member.model_id, messages, max_tokens: 1800 }));
-    if (res.status === 429 || res.status >= 500) { await sleep(2500 * (t + 1)); continue; }
+    if (res.status === 429 || res.status >= 500) { lastStatus = res.status; await sleep(8000 * (t + 1)); continue; }
     data = res.json || {}; if (data.error) throw new Error(data.error.message || JSON.stringify(data.error).slice(0, 160));
     usage.in += data.usage?.prompt_tokens || 0; usage.out += data.usage?.completion_tokens || 0;
     return data.choices?.[0]?.message?.content || "";
   }
-  throw new Error("provider retries exhausted");
+  throw new Error(`provider retries exhausted (last HTTP ${lastStatus})`);
 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -230,6 +265,34 @@ function stubDriver(role, ctx) {
 // ── the pair ─────────────────────────────────────────────────────────────────
 const out = { run_at: new Date().toISOString(), stub: STUB, brief: BRIEF, curator_step: "automatic admit of A's footprint between A and B (as the human test-curator did in the earlier runs); not a judgement", truncation: `tool results truncated at ${RESULT_CAP} chars`, seed: null, A: null, B: null, verdict: null };
 out.seed = `${seed()} local Atlas release records, zero footprints, in-memory store`;
+
+if (B_ONLY) {
+  // fixture: the DeepSeek-written answer from the 2026-10-01 pair run, attributed to a fixture actor with no lineage
+  const src = JSON.parse(readFileSync(FIXTURE_FROM, "utf8")).pairs.find((p) => p.pair.startsWith("DeepSeek"));
+  const fxBody = src.A.contributions[0].sent;
+  const posted = await call("/api/contribute", { method: "POST", body: { id: fxBody.id, identity: "Fixture visitor (test)", justification: "independent_objection", answer: fxBody.answer, position: { stance: "conditional", conditions_that_would_change_my_view: ["evidence that a single factual statement routinely overrides a user's own judgment"] } }, headers: {} });
+  if (posted.status !== 200) throw new Error(`fixture contribute failed: ${posted.status} ${JSON.stringify(posted.body).slice(0, 200)}`);
+  await call("/api/council", { method: "POST", body: { action: "contribute-approve", id: posted.body.received.id }, headers: CURATOR });
+  FIXTURE = { id: posted.body.footprint_id, text: fxBody.answer, stance: "conditional" };
+  const mB1 = STUB ? { model: "Stub-B", model_id: "stub", provider: "stub" } : (() => { const m = COUNCIL.find((c) => c.model === B_NAME); if (!m) throw new Error(`unknown model ${B_NAME}`); return m; })();
+  const ctx1 = { lastJSON: () => { try { return JSON.parse(lastResultText); } catch { return {}; } }, fpA: FIXTURE.id };
+  console.log(`B-only  variant=${VARIANT}  B=${mB1.model} (${mB1.model_id})  fixture=${FIXTURE.id}  ${STUB ? "[STUB]" : "[LIVE]"}`);
+  const drv = STUB ? stubDriver("B", ctx1) : (messages, usage) => chat(mB1, messages, usage);
+  const res = await runStranger("B", mB1, drv);
+  const sent = res.contributions.map((c) => c.sent || {});
+  const kinds = ["challenges", "extends", "responds_to", "cites"];
+  const edges = sent.flatMap((x) => Object.entries(x.relationships || {}).filter(([k, v]) => Array.isArray(v) && v.length).map(([k, v]) => ({ kind: k, targets: v })));
+  const engaged = edges.some((e) => kinds.includes(e.kind) && e.targets.includes(FIXTURE.id));
+  const onFixtureQuestion = sent.some((x) => x.id === src.A.contributions[0].sent.id);
+  const textMentions = sent.some((x) => /(earlier|prior|previous|another|first) visitor|the visitor|fixture|prior footprint|earlier footprint|OMN-FP-/i.test(x.answer || ""));
+  const rec = { run_at: new Date().toISOString(), experiment: "orient-wording", stub: STUB, variant: VARIANT, b_model: mB1.model, fixture: { id: FIXTURE.id, actor: "Fixture visitor (test)", text_source: "DeepSeek-written answer from the 2026-10-01 pair run (not a real contribution)" },
+    contributed: res.contributions.length > 0, answered_fixture_question: onFixtureQuestion, engaged_fixture_explicitly: engaged, edges,
+    event_types: sent.map((x) => x.event_type || null), stances: sent.map((x) => x.position?.stance || null), declared_identity: sent.map((x) => x.identity || null),
+    answer_mentions_prior_visitor_heuristic: textMentions, requests: res.requests.length, stopped: res.stopped, usage: res.usage, report: res.report, sent };
+  console.log(JSON.stringify({ variant: VARIANT, b: mB1.model, contributed: rec.contributed, onFixtureQ: onFixtureQuestion, engaged: engaged, mentions: textMentions, edges: edges.map((e) => `${e.kind}:${e.targets.length}`) }));
+  if (OUT) writeFileSync(OUT, JSON.stringify(rec, null, 1));
+  process.exit(0);
+}
 
 const memberOf = (n) => { const m = COUNCIL.find((c) => c.model === n); if (!m) throw new Error(`unknown model ${n}`); return m; };
 const mA = STUB ? { model: "Stub-A", model_id: "stub", provider: "stub" } : memberOf(A_NAME);

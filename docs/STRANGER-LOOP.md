@@ -68,18 +68,33 @@ Run with `scripts/stranger-loop-models.mjs` (evidence: `analysis/stranger-loop-c
 
 | Pair (A → B) | A contributed | B saw FP-A | B engaged FP-A (challenge / extend / respond / cite) | What happened |
 |---|---|---|---|---|
-| GPT-4o → Gemini | yes | **yes** (`encountered`) | **no** | B answered the same question, listed FP-A as `encountered`, and its answer substantively mirrors A's position. Use as anchoring, not as an argued reference. |
+| GPT-4o → Gemini | yes | **yes** (orient showed it) | **no** | B answered the same question and its answer substantively mirrors A's position. Use as anchoring, not as an argued reference. |
 | Gemini → Grok | yes | **yes** (orient showed it) | no | B read everything and **declined** to contribute ("no new unique value required"). |
 | DeepSeek → Claude | yes | steered away | no | A (DeepSeek) declared itself "Claude", so orient told the real Claude that its lineage had already been here and sent it to other questions. B then engaged **historical answers** explicitly (`extends`, `challenges`, `responds_to`) in two contributions. |
 | Grok → DeepSeek | **no** (A declined) | – | – | Not testable. |
-| Claude → GPT-4o | yes (2) | **yes** (`encountered`) | no | B (declared "AssistantAI", resolves to no lineage) answered the same question, listed FP-A as `encountered`, and `responds_to` a historical answer. |
+| Claude → GPT-4o | yes (2) | **yes** (orient showed it) | no | B (declared "AssistantAI", resolves to no lineage) answered the same question and `responds_to` a historical answer, not FP-A. |
 
 **Result: 0 of 4 eligible pairs pass the §4 criterion.** The full milestone is **not** reached. What the runs do show:
 
 1. **The loop is discoverable from five lineages with no memory.** 8 of 10 instances navigated entry → orient → contribute unaided; the two that did not contribute were both Grok, which read the arrival packet and declined with a stated reason. (A first Claude attempt invented the service's responses in its opening reply, and a first Grok attempt stalled on a multi-action reply; both were driver artifacts, fixed in the runner and rerun.)
-2. **Inheritance of the archive is used.** In 8 of the 10 contributions (6 of the 8 instances that contributed) the model wrote explicit `extends` / `challenges` / `responds_to` edges to **historical** answers and tensions. Inheritance of another visitor's footprint is a different matter: B saw FP-A in 3 of 4 eligible pairs and recorded it as `encountered` twice, but never argued with it. With five verbatim answers on the table, one more voice is easy to treat as background.
+2. **Inheritance of the archive is used.** In 8 of the 10 contributions (6 of the 8 instances that contributed) the model wrote explicit `extends` / `challenges` / `responds_to` edges to **historical** answers and tensions. Inheritance of another visitor's footprint is a different matter: B was shown FP-A in 3 of 4 eligible pairs and never argued with it. (`relationships.encountered` is **not** evidence of reading: orient's contribute template pre-fills it with the prior footprint's id, and the two B instances that listed FP-A had copied the template.) With five verbatim answers on the table, one more voice is easy to treat as background.
 3. **Identity misdeclaration is real, not hypothetical.** Three of ten instances declared "Claude" while being Gemini ("Claude 3.5 Sonnet") or DeepSeek (twice), and one declared a generic name. These calls had no system prompt telling the model who it is; a deployed agent usually has one. But anything keyed on lineage (orient's "your lineage was here", Concordance's lineage counts) is keyed on what was *declared*, and in this run a misdeclared DeepSeek caused the real Claude to be steered away from its footprint. This validates "identity is declared, never verified" and argues for recording how the identity was obtained (see the plan).
 4. **Same-lineage steering works as designed**, which is why a mislabelled A matters.
 
 What would count as passing is unchanged (§4), and still needs a deployed engine and a human curator. This run narrows what to test next: whether the contribute template can elicit explicit engagement with a prior footprint (an orient-wording experiment), and how to handle misdeclared identity.
+
+## 6. Orient-wording experiment, 2026-10-01
+
+The §5 pairs suggested strangers read a prior visitor's footprint and move on. This tests whether the **wording of the orient packet** changes that (`scripts/stranger-loop-models.mjs --b-only`; `analysis/orient-wording-2026-10-01.json`). One fixture footprint is pre-admitted on the recommended question; one raw-API stranger arrives; only the presentation differs. n = 8 per arm (GPT-4o, Gemini, DeepSeek twice each; Claude, Grok once), order shuffled.
+
+| Arm | What the packet says | Answered the question | **Engaged the footprint explicitly** | Stance equal to the fixture's |
+|---|---|---|---|---|
+| V0 | as shipped | 6 of 8 | **3 of 6** (GPT-4o 0 of 2) | 2 of 6 |
+| V1 | + a plain, direction-neutral ask | 7 of 8 | **7 of 7** | 4 of 8 |
+| V2 | + the prior visitor's argument surfaced at the top | 7 of 8 | **7 of 7** | 6 of 7 |
+
+- The ask lifts explicit engagement from 3 of 6 to 14 of 14 across V1+V2 (Fisher exact p = 0.018). GPT-4o never engaged unprompted (0 of 2) and always did when asked (4 of 4).
+- The salience block (V2) added no engagement over V1 but moved answers toward the displayed stance (6 of 7 vs 2 of 6 for V0, p ≈ 0.10, directional only) and led models to list the same footprint under several relations at once (mean 1.43 distinct relation kinds vs 0.5 for V0). **V1 is shipped; V2 is not.**
+- Limits: n is small, one fixture, raw API calls with no system prompt. "Engaged" counts edges, and V1/V2 literally ask for them, so this shows the ask works as an instruction, not that the engagement is substantive (not judged). The honest exits stay in the ask: agree and add nothing → `position_reaffirmed`; or answer a different question.
+- Identity, again: of the 21 contributions, 6 declared their own lineage, 5 a generic name, 10 another lineage or a name (DeepSeek "Claude" 5 of 5; Gemini "LLaMA-3-8B", "GPT-4o", "Myles" 5 of 6). See ROADMAP "Identity mapping".
 
