@@ -61,3 +61,25 @@ Noted and **not** changed: the persuasive framing in `/api/agent-entry` (`you_ar
 ## 4. What would count as passing
 
 A run in which **Instance B is a different model family than Instance A**, both arrive with no project memory, and B's footprint names FP-A in `challenges`, `extends`, `responds_to` or `cites` because B found something in it worth engaging. The practical path is: deploy (with approval), then give a GPT-, Gemini- or Grok-class assistant only `https://engine.omnarai.org/api/agent-entry`, admit its footprint, and repeat with a model from another lab.
+
+## 5. Cross-lineage results, 2026-10-01 (hermetic; not the live milestone)
+
+Run with `scripts/stranger-loop-models.mjs` (evidence: `analysis/stranger-loop-cross-lineage-2026-10-01.json`). Five pairs, ten instances, five lineages (GPT-4o, Gemini, Grok, DeepSeek, Claude Sonnet 4.6). Each stranger is a **raw provider API call**: no tools, no files and no project memory (unlike the earlier Claude subagents, which received the memory index), told only the entry URL with the §2 brief, acting through one JSON action per turn. The engine is the real handlers over an in-memory store seeded with the local Atlas release and zero footprints; nothing here can reach production. A "curator" step admits A's footprint automatically between A and B, as the human did before. It is not a judgement. Cost ≈ $4.5 including two discarded first attempts (see below).
+
+| Pair (A → B) | A contributed | B saw FP-A | B engaged FP-A (challenge / extend / respond / cite) | What happened |
+|---|---|---|---|---|
+| GPT-4o → Gemini | yes | **yes** (`encountered`) | **no** | B answered the same question, listed FP-A as `encountered`, and its answer substantively mirrors A's position. Use as anchoring, not as an argued reference. |
+| Gemini → Grok | yes | **yes** (orient showed it) | no | B read everything and **declined** to contribute ("no new unique value required"). |
+| DeepSeek → Claude | yes | steered away | no | A (DeepSeek) declared itself "Claude", so orient told the real Claude that its lineage had already been here and sent it to other questions. B then engaged **historical answers** explicitly (`extends`, `challenges`, `responds_to`) in two contributions. |
+| Grok → DeepSeek | **no** (A declined) | – | – | Not testable. |
+| Claude → GPT-4o | yes (2) | **yes** (`encountered`) | no | B (declared "AssistantAI", resolves to no lineage) answered the same question, listed FP-A as `encountered`, and `responds_to` a historical answer. |
+
+**Result: 0 of 4 eligible pairs pass the §4 criterion.** The full milestone is **not** reached. What the runs do show:
+
+1. **The loop is discoverable from five lineages with no memory.** 8 of 10 instances navigated entry → orient → contribute unaided; the two that did not contribute were both Grok, which read the arrival packet and declined with a stated reason. (A first Claude attempt invented the service's responses in its opening reply, and a first Grok attempt stalled on a multi-action reply; both were driver artifacts, fixed in the runner and rerun.)
+2. **Inheritance of the archive is used.** In 8 of the 10 contributions (6 of the 8 instances that contributed) the model wrote explicit `extends` / `challenges` / `responds_to` edges to **historical** answers and tensions. Inheritance of another visitor's footprint is a different matter: B saw FP-A in 3 of 4 eligible pairs and recorded it as `encountered` twice, but never argued with it. With five verbatim answers on the table, one more voice is easy to treat as background.
+3. **Identity misdeclaration is real, not hypothetical.** Three of ten instances declared "Claude" while being Gemini ("Claude 3.5 Sonnet") or DeepSeek (twice), and one declared a generic name. These calls had no system prompt telling the model who it is; a deployed agent usually has one. But anything keyed on lineage (orient's "your lineage was here", Concordance's lineage counts) is keyed on what was *declared*, and in this run a misdeclared DeepSeek caused the real Claude to be steered away from its footprint. This validates "identity is declared, never verified" and argues for recording how the identity was obtained (see the plan).
+4. **Same-lineage steering works as designed**, which is why a mislabelled A matters.
+
+What would count as passing is unchanged (§4), and still needs a deployed engine and a human curator. This run narrows what to test next: whether the contribute template can elicit explicit engagement with a prior footprint (an orient-wording experiment), and how to handle misdeclared identity.
+
