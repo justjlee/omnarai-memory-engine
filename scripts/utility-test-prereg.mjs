@@ -49,9 +49,73 @@ import Anthropic from "@anthropic-ai/sdk";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
-for (const line of fs.readFileSync(path.join(ROOT, ".env.local"), "utf8").split("\n")) {
-  const m = line.match(/^\s*([A-Z_]+)\s*=\s*(.*)\s*$/);
-  if (m) { let v = m[2].trim(); if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1); if (!(m[1] in process.env)) process.env[m[1]] = v; }
+
+// ── --help (runs before anything needs a key, a file, or the network) ─────────
+const argVal = (flag) => { const i = process.argv.indexOf(flag); return i !== -1 ? process.argv[i + 1] : null; };
+if (process.argv.includes("--help") || process.argv.includes("-h")) {
+  console.log(`utility-test-prereg — the preregistered architecture-differential eval (baseline / placebo / Atlas-treatment)
+
+WHAT IT MEASURES
+  For ONE consumer model, on questions the Divergence Atlas already holds: does revising an
+  answer after seeing the other frontier models' verbatim answers + the named tensions (treatment)
+  beat revising after a generic "did you miss anything?" prompt (placebo)? A blind judge panel,
+  disjoint from the consumer and from a held-out paraphraser, decides. It is NOT a test of your
+  own documents or corpus — that would be a different intervention and needs its own preregistration.
+
+ARMS (do not add a fourth without a written reason)
+  baseline   consumer answers cold
+  placebo    consumer revises after a generic re-examination prompt
+  treatment  consumer revises after seeing peers' answers + tension map
+
+USAGE
+  CONSUMER_MODEL=Claude node scripts/utility-test-prereg.mjs --preflight        # 1 cheap call per role; verifies keys
+  CONSUMER_MODEL=Claude node scripts/utility-test-prereg.mjs --smoke 1 --yes    # directional, NOT publishable (~$1-2)
+  CONSUMER_MODEL=Claude node scripts/utility-test-prereg.mjs --yes              # full cell: ~$40-90, ~2 h
+  (easiest: bash repro/adiff-repro.sh --help)
+
+FLAGS
+  --smoke N     N base questions per cell instead of the registered target (25 decided per cell)
+  --preflight   one tiny call per model role, then exit
+  --yes         consent to spend. REQUIRED when you have no shared spend ledger (see below)
+  --atlas SRC   where the Atlas records come from: an engine base URL (default
+                https://engine.omnarai.org when you have no private store) or a local .jsonl release
+                file (atlas/data/atlas-v1.1.0.jsonl, or the Hugging Face omnarai-divergence-atlas export)
+  --out FILE    where to write the full JSON (default /tmp/utility_prereg_<consumer>.json)
+  --help        this text
+
+KEYS (environment or ./.env.local)
+  Provider keys: ANTHROPIC_API_KEY OPENAI_API_KEY GEMINI_API_KEY XAI_API_KEY DEEPSEEK_API_KEY
+  The consumer's own key is mandatory; the blind panel needs >= 2 judges plus a held-out paraphraser,
+  i.e. at least 4 of the 5 keys. Fewer than that measures something else, so the script refuses.
+
+COST AND CONSENT
+  Smoke ~$1-2. Full ~$40-90. If you are the engine's operator (BLOB_READ_WRITE_TOKEN set), the run is
+  charged against the shared rolling-30-day ledger and blocked if it would cross the ceiling. Everyone
+  else has no ledger: the estimate is printed and nothing is spent without --yes.
+
+WHAT A RESULT CAN AND CANNOT SAY
+  Output is a per-consumer gradient (treatment vs placebo wins, sign test, robustness Wilcoxon).
+  The published finding is architecture-DIFFERENTIAL: it helped GPT-4o and Gemini, did nothing for
+  Grok and DeepSeek, and made Claude (the lineage that wrote the corpus) worse. No single run licenses
+  "Omnarai improves reasoning", and a smoke run licenses almost nothing: the registered claim is
+  n = 25 decided per cell, one-sided alpha 0.025, Holm-corrected across consumers.
+  Without the owner's private store the registered stratification by divergence score is not
+  available; questions are then spaced evenly through the Atlas in id order (recorded in the output).
+
+READ FIRST
+  docs/utility-eval-preregistration.md  ·  huggingface/utility-evidence-v2.md
+  https://omnarai.org/findings/architecture-differential
+  https://engine.omnarai.org/refutation-ledger.md   (if your numbers disagree with ours, we want that)`);
+  process.exit(0);
+}
+
+// .env.local is optional: a stranger exports keys in the shell and has no such file.
+const ENV_FILE = path.join(ROOT, ".env.local");
+if (fs.existsSync(ENV_FILE)) {
+  for (const line of fs.readFileSync(ENV_FILE, "utf8").split("\n")) {
+    const m = line.match(/^\s*([A-Z_]+)\s*=\s*(.*)\s*$/);
+    if (m) { let v = m[2].trim(); if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1); if (!(m[1] in process.env)) process.env[m[1]] = v; }
+  }
 }
 const { COUNCIL } = await import("../api/_council.js");
 const { loadGrownMemory } = await import("../api/_grown.js");
@@ -74,11 +138,20 @@ const ADVERSARIAL_CHALLENGE =
 const PREFLIGHT = process.argv.includes("--preflight");
 const smokeIdx = process.argv.indexOf("--smoke");
 const SMOKE = smokeIdx !== -1 ? parseInt(process.argv[smokeIdx + 1] || "2", 10) : 0; // base Qs/cell, no decided target
+const YES = process.argv.includes("--yes") || process.env.ADIFF_YES === "1";
+// Where the Atlas records come from. The operator (private Blob store token present) keeps the
+// registered path; everyone else reads the public Atlas, or a local release file.
+const HAS_LEDGER = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+const ATLAS_SRC = argVal("--atlas") || process.env.ADIFF_ATLAS || (HAS_LEDGER ? null : "https://engine.omnarai.org");
+const OUT_FILE = argVal("--out");
 const CONCURRENCY = 3;                      // base questions processed in parallel
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const CONSUMER = COUNCIL.find((m) => m.model === (process.env.CONSUMER_MODEL || "GPT-4o"));
 if (!CONSUMER) throw new Error(`unknown CONSUMER_MODEL: ${process.env.CONSUMER_MODEL}`);
+// Fail before any spend step if the consumer's own key is missing (the shell wrapper checks this too,
+// but this script is run directly as well).
+if (!process.env[CONSUMER.env]) throw new Error(`consumer ${CONSUMER.model} needs ${CONSUMER.env}, which is not set`);
 const PARAPHRASER = COUNCIL.find((m) =>
   m.model === (process.env.PARAPHRASER_MODEL || PARAPHRASER_PREF.find((n) => n !== CONSUMER.model && process.env[COUNCIL.find((c) => c.model === n)?.env])));
 if (!PARAPHRASER || PARAPHRASER.model === CONSUMER.model) throw new Error("could not pick a held-out paraphraser with a key present");
@@ -296,22 +369,70 @@ if (PREFLIGHT) {
 // A full run spends real frontier-model calls across every cell (~$40–90). It is
 // accountable to the same rolling-30-day ceiling as the live engine. Smoke runs
 // are tiny, so they pass a proportionally small estimate rather than being exempt.
-const { preflightSpend } = await import("./budget-preflight.mjs");
-await preflightSpend({
-  estUsd: SMOKE ? 2 : 90, // conservative upper end of the $40–90 range for a full run
-  label: `utility-test-prereg ${SMOKE ? `smoke ${SMOKE}` : "full run"}`,
-});
+const EST_USD = SMOKE ? Math.max(2, SMOKE * 1.5) : 90; // conservative upper end of the $40–90 range for a full run
+if (HAS_LEDGER) {
+  const { preflightSpend } = await import("./budget-preflight.mjs");
+  await preflightSpend({ estUsd: EST_USD, label: `utility-test-prereg ${SMOKE ? `smoke ${SMOKE}` : "full run"}` });
+} else {
+  console.error(`[spend] no shared ledger (no BLOB_READ_WRITE_TOKEN): this run is YOUR spend, est. up to ~$${EST_USD.toFixed(0)} across ${[CONSUMER, PARAPHRASER, ...JUDGES].map((m) => m.model).join(", ")}.`);
+  if (!YES) {
+    console.error(`[spend] refusing to spend without consent. Re-run with --yes (or ADIFF_YES=1), or use --preflight to check keys for pennies.`);
+    process.exit(2);
+  }
+}
 
 // ── select stratified base questions across the divergence-score range ────────
-const grown = await loadGrownMemory();
-let recs = grown.entries.filter((e) => e.type === "divergence" && e.divergence?.answers?.length >= 4
-  && e.divergence.answers.some((a) => a.model === CONSUMER.model));
-recs.sort((a, b) => (a.divergence.score ?? 0) - (b.divergence.score ?? 0));
+// Normalize any Atlas source into the shape the harness uses: {id, divergence:{question, answers, tensions, score?}}.
+async function fetchJSON(url) {
+  const r = await fetch(url, { headers: { "x-omnarai-self": "1" } });
+  if (!r.ok) throw new Error(`${url} → HTTP ${r.status}`);
+  return r.json();
+}
+let atlasMeta;
+let recs;
+let lazyDetail = null; // public API: details are fetched only for the sampled pool, not all records
+if (!ATLAS_SRC) {
+  const grown = await loadGrownMemory();
+  recs = grown.entries.filter((e) => e.type === "divergence" && e.divergence?.answers?.length >= 4
+    && e.divergence.answers.some((a) => a.model === CONSUMER.model));
+  recs.sort((a, b) => (a.divergence.score ?? 0) - (b.divergence.score ?? 0));
+  atlasMeta = { source: "operator Blob store (loadGrownMemory)", stratified_by: "divergence score (registered)" };
+} else if (/\.jsonl?$/i.test(ATLAS_SRC)) {
+  const lines = fs.readFileSync(path.resolve(ATLAS_SRC), "utf8").trim().split("\n").map((l) => JSON.parse(l));
+  recs = lines.map((r) => ({ id: r.id, divergence: { question: r.question, answers: r.answers || [], tensions: r.tensions || [], score: r.score ?? r.divergence_score } }))
+    .filter((e) => e.divergence.answers.length >= 4 && e.divergence.answers.some((a) => a.model === CONSUMER.model));
+  const scored = recs.some((e) => e.divergence.score != null);
+  recs.sort(scored ? (a, b) => (a.divergence.score ?? 0) - (b.divergence.score ?? 0) : (a, b) => String(a.id).localeCompare(String(b.id)));
+  atlasMeta = { source: `local release file ${path.basename(ATLAS_SRC)}`, stratified_by: scored ? "divergence score" : "id order (no score in this file)" };
+} else {
+  const base = ATLAS_SRC.replace(/\/+$/, "");
+  const idx = await fetchJSON(`${base}/api/divergences`);
+  const rows = (idx.records || []).filter((r) => (r.answerCount || 0) >= 4 && (r.contributors || []).includes(CONSUMER.model));
+  rows.sort((a, b) => String(a.date).localeCompare(String(b.date)) || String(a.id).localeCompare(String(b.id)));
+  recs = rows.map((r) => ({ id: r.id, divergence: { question: r.question, answers: null, tensions: null } }));
+  lazyDetail = async (rec) => {
+    const d = await fetchJSON(`${base}/api/divergences?id=${encodeURIComponent(rec.id)}`);
+    rec.divergence.answers = d.answers || [];
+    rec.divergence.tensions = d.tensions || [];
+    return rec.divergence.answers.length >= 4 && rec.divergence.answers.some((a) => a.model === CONSUMER.model);
+  };
+  atlasMeta = { source: `${base} (public API; ${idx.count} records, ${rows.length} usable for ${CONSUMER.model})`, stratified_by: "id/date order (the public API does not expose the divergence score used by the registered design)" };
+}
+console.log(`Atlas source: ${atlasMeta.source} · stratified by ${atlasMeta.stratified_by}`);
+if (!recs.length) { console.error(`No Atlas records with >=4 answers including ${CONSUMER.model}. Nothing to run.`); process.exit(1); }
 // In a full run we may need more than 25 base questions per cell because ties are
 // not "decided". Pull a stratified pool up to 2× the target (capped by supply).
 const poolSize = SMOKE ? Math.min(SMOKE, recs.length) : Math.min(recs.length, DECIDED_TARGET * 2);
 const pool = [];
 for (let i = 0; i < poolSize; i++) pool.push(recs[Math.floor(i * (recs.length - 1) / Math.max(1, poolSize - 1))]);
+if (lazyDetail) {
+  for (let i = pool.length - 1; i >= 0; i--) {
+    let ok = false;
+    try { ok = await lazyDetail(pool[i]); } catch (e) { console.error(`  ! could not read ${pool[i].id}: ${String(e.message).slice(0, 100)}`); }
+    if (!ok) pool.splice(i, 1);
+  }
+  if (!pool.length) { console.error("No usable records after reading details. Nothing to run."); process.exit(1); }
+}
 
 const cells = {};                                  // key `${cap}__v${vi}` → instances[]
 const cellKey = (cap, vi) => `${cap}__v${vi}`;
@@ -382,7 +503,7 @@ function cellStats(key) {
 const cellSummaries = Object.keys(cells).map(cellStats);
 
 // ── write output ──────────────────────────────────────────────────────────────
-const out = `/tmp/utility_prereg_${CONSUMER.model}.json`.replace(/[^\w.\-/]/g, "_");
+const out = (OUT_FILE || `/tmp/utility_prereg_${CONSUMER.model}.json`).replace(/[^\w.\-/]/g, "_");
 fs.writeFileSync(out, JSON.stringify({
   prereg: "docs/utility-eval-preregistration.md (locked 2026-06-18)",
   meta: {
@@ -393,6 +514,7 @@ fs.writeFileSync(out, JSON.stringify({
     length_caps: LENGTH_CAPS, n_paraphrases: N_PARAPHRASES, decided_target: DECIDED_TARGET,
     adversarial_challenge: ADVERSARIAL_CHALLENGE,
     smoke: SMOKE || false, run_date: new Date().toISOString(),
+    atlas: atlasMeta, spend_ledger: HAS_LEDGER ? "operator shared ledger" : "none (self-funded; --yes consent)",
     deviation: "§3a vs §4: paraphraser held out → 3 judges not 4 (logged in prereg Deviations).",
   },
   cellSummaries,
@@ -415,6 +537,11 @@ for (const cap of LENGTH_CAPS) {
   const surv = cs.filter((s) => s.T > s.P && s.sign_p_two_sided < 0.05).length;
   console.log(`\n  cap ${cap}: pooled T ${T} vs P ${P} → p=${p.toFixed(4)} · variants significant (2-sided<.05): ${surv}/${N_PARAPHRASES} ${surv >= 2 ? "(H3 would survive)" : "(H3 would NOT survive)"}`);
 }
+console.log(`\n  READ THIS AS ONE CONSUMER'S GRADIENT, NOT A VERDICT ON OMNARAI. The published result is architecture-differential`);
+console.log(`  (helps GPT-4o and Gemini, null for Grok and DeepSeek, degrades Claude). No single run supports "Omnarai improves reasoning".`);
+if (SMOKE) console.log(`  SMOKE (${SMOKE} base Q/cell): directional and noisy, not significant, not the registered n=25 decided/cell.`);
+if (ATLAS_SRC) console.log(`  Atlas source: ${atlasMeta.source}. Stratification: ${atlasMeta.stratified_by} — a deviation from the registered design; say so if you report this.`);
+console.log(`  If your numbers disagree with ours we want the disagreement: https://engine.omnarai.org/refutation-ledger.md`);
 console.log(`\n  NOTE: registered test is ONE-SIDED α=0.025 + Holm across the 5 consumers.`);
 console.log(`        Run all consumers, then: node scripts/utility-prereg-aggregate.mjs`);
 console.log(`  full results: ${out}`);
