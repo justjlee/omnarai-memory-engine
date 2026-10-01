@@ -66,11 +66,44 @@ cross-lineage and cross-labeller tools (`scripts/stranger-loop-models.mjs`, `scr
    copy fix proposed in `FEASIBILITY.md`). HF dataset cards still show 124/41/567 vs live 162/47/573 (`check-stats-consistency` red).
 10. **2027, after outside footprints exist:** world graph (generated edges first), federation (`docs/substrate-federation-spec.md`),
     provider-signed identity (Gate D).
+11. **Claims registry v0.9 — the keepers from Muse's spec (2026-10-01).** ⚪ *Proposed, awaiting xz's go; default 2027-Q1.* These are
+    additive fields on an **existing** surface (`public/claims.json`), not a new surface, but each needs curator authorship, so it is
+    not a background task:
+    - **`scope` on every claim** — "what this claim does NOT assert" (12 statements, curator-written). The best idea in the spec: it
+      attacks overclaiming at the source.
+    - **Severity-tagged objections** (`low | medium | high | fatal-if-unanswered`; status `open | addressed | conceded`) that **block
+      promotion** to a higher evidence level while unanswered. Today objections are bare strings.
+    - **Append-only `versions[]` and `status_history[]`** so a wording change is a visible version, not an edit. PR #7 (2026-10-01)
+      had to correct a claim's provenance by appending a note — the first case that wanted this.
+    - **A lint gate** `scripts/check-claims-registry.mjs` enforcing only the mechanically checkable rules (scope non-empty, a
+      falsifier stated, no promotion past an unanswered high-severity objection), beside `check-claim-pins` and
+      `check-refutation-ledger`. A new tool → needs a fresh OK even after the freeze lifts.
+    - Source: `claims-registry-spec.pdf` (Muse / Meta, 36 pp, 2026-10-01). Its quotations of our registry were checked against live
+      `claims.json` and are accurate; its examples contain two internal contradictions (a `measured_differential` design note vs a
+      `replicated` example; an after-the-fact digest its own R5.2 would void). Take the ideas, not the platform (**Declined**, below).
+12. **Per-claim permanent pages `/claims/<id>`** — a new surface; 2027, and only after 11. The Muse spec cites
+    `engine.omnarai.org/claims/<id>`, `/schema/claims-registry/v1`, a JSON-LD context and `/ledger` as "permanent": **all four 404
+    today.** Do not cite them anywhere until they exist.
+13. **Ledger / HF-card wording.** The Ledger rows say "Falsifier frozen before the numbers." True in substance (the rule was written
+    down first) but a *local* record only — see the claim's PROVENANCE CORRECTION in `claims.json`. Soften to "written down before
+    the numbers" the next time the HF card is re-pushed; not worth a deploy of its own.
+
+**Working practice, adopted 2026-10-01 (no tooling, so not a build item):** before any preregistered analysis runs, commit the
+falsifier text **by itself**, push it to the public repo, and only then write or run the analysis; record that commit SHA in the
+claim. A push is a timestamp a stranger can check; our own file dates and commits are not. If it was skipped, say "locally recorded",
+never "frozen". Any handoff to another agent that contains a falsifier must carry this rule as step 0.
 
 **Declined (and why):** the "Active Inference" `commit_state_delta` engine — it targets code that does not exist (no `server.py`,
 `query_memory_engine`, `evaluate_holdform_compliance`, `register_epistemic_collision`), a second staging store would fork provenance
 from Footprints, "variational free energy" cannot be computed from a self-reported confidence, and "the server is the persistent
 identity" cuts against the `holdform-identifies-persistence` refutation and the `resident/` firewall. Kept: items 4–6.
+
+**Declined (and why), Muse spec "Full profile" (2026-10-01):** the REST API with a verdict-proposal workflow, webhooks with HMAC
+delivery, JSON-LD federation, and the 14-point RFC-2119 conformance checklist. There is one implementation (ours), so nothing to
+federate with, and a conformance standard with a single user is a schema in formal clothes. It would also add serverless functions
+(`api/` is at the 12-function Hobby cap), a new maintenance surface, and break the freeze. Revisit alongside item 10 (federation) only
+after a second registry exists. Kept: items 11–13. The spec also ignores prior art (clinical-trial registries, OSF / AsPredicted
+preregistration); our real niche is claims rather than studies, refutations given equal billing, and a format agents can read.
 
 ---
 
