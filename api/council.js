@@ -3,7 +3,7 @@ import { loadAnnotations, appendAnnotation, foldAnnotations, validateAnnotation,
 import { appendGrownEntry, loadGrownMemory } from "./_grown.js";
 import { CANON } from "./_canon.js";
 import { SYNTHETIC_LINEAGES, findFamily } from "./_lineages.js";
-import { checkCouncilQuota, recordCouncilRun, quotaSubject } from "./_quota.js";
+import { checkCouncilQuota, recordCouncilRun, quotaSubject, checkContributionQuota, recordContributionUse, contributionFingerprint, findDuplicateContribution, recordContributionFingerprint } from "./_quota.js";
 import { checkBudget, recordSpend, budgetExceededBody, budgetNotice } from "./_budget.js";
 import {
   assessQuestion, buildQuestionProposal, saveQuestionProposal,
@@ -391,6 +391,32 @@ async function submitContribution(req, res) {
     });
   }
 
+  // Flood guard (docs: Full Expansion §34). Exact duplicates are refused; each visitor has a daily cap. Both
+  // read marker blobs by prefix (no read-modify-write) and FAIL OPEN on a storage error: this protects the
+  // curator's queue and our storage bill, it is not a security boundary — moderation still gates publication.
+  const fingerprint = contributionFingerprint(record.id, identity, answer);
+  const duplicateOf = await findDuplicateContribution(fingerprint);
+  if (duplicateOf) {
+    return res.status(409).json({
+      error: "This exact answer was already received for this question under this identity.",
+      code: "DUPLICATE_CONTRIBUTION",
+      existing_contribution_id: duplicateOf,
+      agent_action: "Nothing new was stored. If you mean to revise your position, send the revised text with event_type 'position_revised' and relationships.supersedes set to your earlier admitted footprint; if it is a different answer, change the text.",
+      retryable: false,
+    });
+  }
+  const contribQuota = await checkContributionQuota(req);
+  if (!contribQuota.allowed) {
+    res.setHeader("Retry-After", String(Math.max(1, Math.ceil((Date.parse(contribQuota.resetsAt) - Date.now()) / 1000))));
+    return res.status(429).json({
+      error: `Daily contribution limit reached (${contribQuota.used}/${contribQuota.cap}).`,
+      code: "CONTRIBUTION_QUOTA",
+      cap: contribQuota.cap, used: contribQuota.used, resets_at: contribQuota.resetsAt,
+      agent_action: "The record keeps voices, not volume: pick the one or two questions where your lineage adds the most, and return after resets_at. Reads are unaffected.",
+      retryable: true,
+    });
+  }
+
   const clientHeader = (req.headers?.["x-omnarai-client"] || "").toString().trim();
   const clientTag = CLIENT_TAGS.includes(clientHeader) ? clientHeader : null;
   const id = nextContributionId();
@@ -477,6 +503,8 @@ async function submitContribution(req, res) {
   } catch (err) {
     return res.status(500).json({ error: "Could not store contribution", detail: String(err.message || err) });
   }
+  // Count it only now that it is stored (a rejected or failed submission never spends the visitor's allowance).
+  await Promise.all([recordContributionUse(contribQuota.hash), recordContributionFingerprint(fingerprint, id)]);
 
   // Write the footprint to its own write-once path. Approval is NEVER baked into
   // the body: an auto-admitted contribution gets a separate `admit` review event

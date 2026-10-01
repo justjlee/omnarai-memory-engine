@@ -1007,6 +1007,34 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "DUPLICATE_CONTRIBUTION: this exact answer (case/whitespace-folded) was already received for this question under this identity. Nothing was stored; existing_contribution_id names the original.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "CONTRIBUTION_QUOTA: this visitor reached the daily contribution cap (default 10, CONTRIB_DAILY_CAP). Retry-After and resets_at say when. Reads are unaffected. Fails open on a storage error; the cap protects the curator's queue, moderation still gates publication.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the daily window resets"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
