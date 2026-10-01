@@ -127,3 +127,13 @@ for (const [tier, mustSay, mustNotSay] of [
     else assert.doesNotMatch(all, mustNotSay);
   });
 }
+
+test("agent-entry tells citers to keep the tier, and says only C3 earns \"genuine divergence\"", async () => {
+  fresh();
+  const r = await call("/api/agent-entry");
+  assert.equal(r.status, 200);
+  const how = r.body.citation.how;
+  assert.match(how, /certification tier/);
+  assert.match(how, /only C3 earns/);
+});
+
