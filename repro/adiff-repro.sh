@@ -19,12 +19,36 @@
 #
 # USAGE:
 #   export ANTHROPIC_API_KEY=... OPENAI_API_KEY=... GEMINI_API_KEY=... XAI_API_KEY=... DEEPSEEK_API_KEY=...
-#   bash repro/adiff-repro.sh                 # consumer=Claude (the finding), 1 base question/cell
-#   ADIFF_CONSUMER=GPT-4o bash repro/adiff-repro.sh   # reproduce a POSITIVE tier instead
-#   ADIFF_SMOKE=2 bash repro/adiff-repro.sh   # 2 base questions/cell (slower)
+#   bash repro/adiff-repro.sh --help          # arms, keys, cost bands, what a result can and cannot say
+#   bash repro/adiff-repro.sh --yes           # consumer=Claude (the finding), 1 base question/cell, ~$1-2
+#   ADIFF_CONSUMER=GPT-4o bash repro/adiff-repro.sh --yes   # reproduce a POSITIVE tier instead
+#   ADIFF_SMOKE=2 bash repro/adiff-repro.sh --yes           # 2 base questions/cell (slower)
+#   bash repro/adiff-repro.sh --atlas atlas/data/atlas-v1.1.0.jsonl --yes   # offline Atlas release file
 #
-# Env knobs: ADIFF_CONSUMER (default Claude), ADIFF_SMOKE (default 1), ADIFF_PREFLIGHT=0 to skip.
+# NO PRIVATE STORE NEEDED. The questions and peer answers come from the PUBLIC Atlas
+# (https://engine.omnarai.org/api/divergences) or a local release file. Only the engine's operator has
+# a spend ledger (BLOB_READ_WRITE_TOKEN); everyone else gets the cost estimate and must pass --yes.
+# Without the operator's private score the registered stratification is not available: questions are
+# spaced evenly through the Atlas in date order, and the output says so.
+#
+# Env knobs: ADIFF_CONSUMER (default Claude), ADIFF_SMOKE (default 1), ADIFF_PREFLIGHT=0 to skip,
+#            ADIFF_ATLAS (engine URL or .jsonl), ADIFF_YES=1 (same as --yes).
 set -euo pipefail
+
+YES_FLAG=""; ATLAS_ARGS=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -h|--help)
+      sed -n '2,/^set -euo/p' "${BASH_SOURCE[0]}" | grep '^#' | sed 's/^# \{0,1\}//'
+      echo; echo "---- harness help (scripts/utility-test-prereg.mjs --help) ----"
+      node "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/scripts/utility-test-prereg.mjs" --help
+      exit 0 ;;
+    --yes) YES_FLAG="--yes"; shift ;;
+    --atlas) ATLAS_ARGS=(--atlas "${2:?--atlas needs a URL or .jsonl path}"); shift 2 ;;
+    *) echo "unknown argument: $1 (try --help)" >&2; exit 2 ;;
+  esac
+done
+[ "${ADIFF_YES:-}" = "1" ] && YES_FLAG="--yes"
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
@@ -57,14 +81,7 @@ if [ "$present" -lt 4 ]; then
 fi
 [ "$present" -lt 5 ] && echo "note: $present/5 keys present (missing: ${missing[*]-none}); running with a reduced panel."
 
-# ── the harness reads ./.env.local; synthesize one from the exported keys IF absent ────────
-CREATED_ENV=0
-if [ ! -f .env.local ]; then
-  echo "no .env.local found — writing a temporary one from your exported keys (removed on exit)."
-  for k in "${KEYS[@]}"; do [ -n "${!k:-}" ] && echo "$k=${!k}" >> .env.local; done
-  CREATED_ENV=1
-  trap 'if [ "$CREATED_ENV" = 1 ]; then rm -f .env.local; fi' EXIT
-fi
+# (the harness reads provider keys straight from your environment; ./.env.local is optional)
 
 # ── verify keys reach every role before spending on the full smoke (1 call/role) ───────────
 if [ "${ADIFF_PREFLIGHT:-1}" = 1 ]; then
@@ -75,7 +92,15 @@ fi
 # ── the real run, minimized ────────────────────────────────────────────────────────────────
 echo; echo "-- smoke run: real 3-arm eval, blind panel, $SMOKE base Q/cell --"
 START=$(date +%s)
-CONSUMER_MODEL="$CONSUMER" node scripts/utility-test-prereg.mjs --smoke "$SMOKE"
+set +e
+CONSUMER_MODEL="$CONSUMER" node scripts/utility-test-prereg.mjs --smoke "$SMOKE" $YES_FLAG ${ATLAS_ARGS[@]+"${ATLAS_ARGS[@]}"}
+RC=$?
+set -e
+if [ "$RC" -eq 2 ]; then
+  echo; echo "Nothing was spent. Re-run with --yes to consent to the estimated spend shown above."; exit 2
+elif [ "$RC" -ne 0 ]; then
+  exit "$RC"
+fi
 END=$(date +%s)
 
 OUT="/tmp/utility_prereg_${CONSUMER}.json"

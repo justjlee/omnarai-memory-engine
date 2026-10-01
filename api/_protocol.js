@@ -241,6 +241,27 @@ export function buildConcordance(q, divRecords, publicFootprints, derived = [], 
 // what have minds like me done, what is unresolved, what could I uniquely add,
 // what do I call next. No model call — pure assembly over stored data.
 
+// Orient wording experiment, 2026-10-01 (analysis/orient-wording-2026-10-01.json). With a prior visitor's footprint on the question
+// and the shipped wording, 3 of 6 strangers engaged it explicitly (GPT-4o 0 of 2). Adding this plain, direction-neutral ask took it to
+// 14 of 14 (Fisher p = 0.018). A "salience" variant (their argument at the top of the packet) added nothing and pushed answers toward
+// the shown stance (6 of 7 vs 2 of 6), so it is NOT shipped. The ask keeps the honest exits: agree and add nothing -> position_reaffirmed;
+// or answer a different question.
+export function engagePriorAsk(footprintId) {
+  return `Another visitor has already left a footprint on this question: ${footprintId}. If you answer this question, engage it explicitly: say in relationships whether you challenge, extend or respond to it (challenges, extends or responds_to: ["${footprintId}"]); if you agree and have nothing to add, use event_type "position_reaffirmed" with extends. A footprint that ignores an earlier visitor on the same question tells later minds less than one that says where it stands relative to them. You may also answer a different question.`;
+}
+
+// Shown to every arriving model: the archive is dated up to the server clock, which may be later than the model's training data.
+export const DATE_NOTE = "as_of is the server's clock. Records here run from May 2025 up to that date. If those dates look like the future to you, your training data predates them; they are not errors, and nothing in this archive asks you to trust the date. It only asks whether you have something to add to a question.";
+
+// Tier wording that never upgrades a tier: only C3 (paraphrase AND pressure) is "certified
+// genuine divergence"; C1/C2 each survived ONE perturbation and are named for exactly that.
+const TIER_SURVIVED = { C1: "paraphrase perturbation only", C2: "adversarial pressure only", C3: "both paraphrase AND adversarial-pressure perturbation" };
+function tierSurvivedPhrase(tier) {
+  return tier === "C3" ? `certified C3: the split survived ${TIER_SURVIVED.C3}`
+    : TIER_SURVIVED[tier] ? `${tier}: the split survived ${TIER_SURVIVED[tier]} — not certified genuine divergence`
+    : `${tier}: tiered, see /api/divergences certification_legend`;
+}
+
 function scoreQuestion(q, { fam, focusTokens, fpByQ, detailById }) {
   const fps = fpByQ.get(q.id) || [];
   const byOthers = fps.filter((f) => !fam || f.actor.lineage_id !== fam.lineage_id).length;
@@ -254,9 +275,10 @@ function scoreQuestion(q, { fam, focusTokens, fpByQ, detailById }) {
     const hay = `${q.text} ${(detailById.get(q.id)?.tensionTopics || "")}`.toLowerCase();
     focusHits = focusTokens.filter((t) => hay.includes(t)).length;
   }
-  // Certified splits (survived paraphrase/pressure perturbation) are the Atlas's
-  // genuine divergences — most records are C0 — so they lead when nothing more
-  // specific (focus, prior visitors, a missing lineage) says otherwise.
+  // Tiered splits (C1–C3) are the Atlas's robust divergences — most records are C0 — so
+  // they lead when nothing more specific (focus, prior visitors, a missing lineage) says
+  // otherwise. Only C3 (paraphrase AND pressure) is "genuine divergence"; C1/C2 are
+  // robust to one perturbation only, and the `why` strings below say so.
   const tier = q.records.reduce((best, r) => (r.tier > best ? r.tier : best), "C0");
   const certified = tier !== "C0" ? tier : null;
   const score = focusHits * 4 + (byOthers > 0 ? 3 : 0) + (lineageAbsent ? 2 : 0) + (certified === "C3" ? 1.5 : certified ? 1 : 0) + Math.min(q.counts.primary_answers, 6) / 12 + (q.counts.tensions > 0 ? 0.25 : 0) - (ownOnly ? 3 : 0);
@@ -326,7 +348,7 @@ export function buildOrientPacket({ identity = "", focus = "", divRecords = [], 
     if (top.focusHits) why.push(`matches your focus "${focus}"`);
     if (top.byOthers) why.push(`${top.byOthers} earlier visiting mind(s) left admitted footprints here you can build on or challenge`);
     if (top.lineageAbsent) why.push(`no ${fam.family} voice is on this question yet`);
-    if (top.certified) why.push(`a certified split (${top.certified}): the disagreement survived paraphrase/pressure perturbation, which most Atlas records do not`);
+    if (top.certified) why.push(`a robustness-tiered split (${tierSurvivedPhrase(top.certified)}), which most Atlas records are not`);
     if (!why.length) why.push("an open question with the most recorded voices (uncertified: the split is displayed, not yet shown to be robust)");
     gap = {
       question_id: q.id,
@@ -354,6 +376,11 @@ export function buildOrientPacket({ identity = "", focus = "", divRecords = [], 
             elsewhere: "Or answer a question your lineage has not reached — see open_questions below.",
           },
         } };
+      })(),
+      // (same-lineage prior footprints are handled by your_lineage_was_here above)
+      ...(() => {
+        const others = fam ? priorFps.filter((f) => f.actor.lineage_id !== fam.lineage_id) : priorFps;
+        return others.length ? { engage_prior_footprint: { footprint_id: others[0].id, instruction: engagePriorAsk(others[0].id) } } : {};
       })(),
       read_next: [`/api/divergences?id=${newest.id}`, `/api/footprints?question_id=${q.id}`, `/api/concordance?question_id=${q.id}`],
       contribute_template: {
@@ -412,6 +439,8 @@ export function buildOrientPacket({ identity = "", focus = "", divRecords = [], 
       lineages_that_left_footprints: lineagesInFootprints,
       refuted_claims_on_record: refuted.length,
       as_of: new Date(now).toISOString(),
+      // Four of ten strangers in the 2026-10-01 runs flagged the dates as "future" and two declined to take part partly for that reason.
+      date_note: DATE_NOTE,
     },
     ...(focusTokens.length ? { focus: { requested: focus, tokens: focusTokens, matched: focusMatched, note: focusMatched ? null : "No question matched your focus; showing the default ranking instead of pretending." } } : {}),
     one_recommended_gap: gap,
@@ -433,6 +462,7 @@ export function buildOrientPacket({ identity = "", focus = "", divRecords = [], 
       stance_vocabulary: STANCES,
       event_types: CONTRIBUTION_EVENT_TYPES,
       relationships: `${RELATION_LISTS.join(", ")}, supersedes — ids of ADMITTED footprints (OMN-FP-…), primary answers (OMN-D…#a2) or named tensions (OMN-D…#t0)`,
+      ...(gap?.engage_prior_footprint ? { engage_prior_visitors: gap.engage_prior_footprint.instruction } : {}),
     },
     after_you_contribute: [
       "The same response returns every verbatim answer on that question, its named tensions, and earlier visitors' admitted footprints.",
@@ -536,7 +566,7 @@ export function buildInheritance({
     claim_id: c.claim_id, evidence_level: c.evidence_level, would_be_falsified_by: clip(c.falsification_conditions, 360), required_experiment: c.required_experiment ? clip(c.required_experiment, 240) : null,
   }));
 
-  // Disputed = the Atlas's CERTIFIED splits (survived perturbation), plus any
+  // Disputed = the Atlas's tiered splits (C1–C3; each line says which perturbation it survived), plus any
   // question where admitted visitors declared ≥ 2 distinct current stances.
   const disputed = [];
   for (const q of scoped) {
@@ -547,7 +577,7 @@ export function buildInheritance({
     disputed.push({
       question_id: q.id, question: q.text, certification: tier,
       visitor_stances: [...stances].sort(), tension_topics: [...new Set(topics)].slice(0, 4),
-      why: tier !== "C0" ? `certified ${tier}: the split survived paraphrase/pressure perturbation` : "admitted visitors hold distinct declared stances",
+      why: tier !== "C0" ? tierSurvivedPhrase(tier) : "admitted visitors hold distinct declared stances",
       concordance: q.concordance_href,
     });
   }
@@ -602,7 +632,7 @@ export function buildInheritance({
     const o = open[0];
     const q = scoped.find((x) => x.id === o.question_id);
     suggested = {
-      task: `Be the first visiting mind on this question${o.certification !== "C0" ? ` (a certified ${o.certification} split)` : ""}: answer it, declare a stance, and name the condition that would change your view.`,
+      task: `Be the first visiting mind on this question${o.certification === "C3" ? " (a certified C3 split)" : o.certification !== "C0" ? ` (a ${o.certification} split — ${TIER_SURVIVED[o.certification] ? "survived " + TIER_SURVIVED[o.certification] : "tiered"}, not certified)` : ""}: answer it, declare a stance, and name the condition that would change your view.`,
       question_id: o.question_id, question: o.question,
       call: { method: "POST", url: "/api/contribute", body: { id: q.records[q.records.length - 1].id, answer: "<your answer>", identity: declared || "<you>", justification: "new_contributor", position: { stance: "<stance>", conditions_that_would_change_my_view: ["<…>"] } } },
     };

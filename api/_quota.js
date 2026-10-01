@@ -165,3 +165,74 @@ export async function recordCouncilRun(hash, { day = today() } = {}) {
     return false;
   }
 }
+
+
+// ── Contribution flood guard (Full Expansion Architecture §34: "input size limits; rate limiting;
+// moderation; deduplication") ─────────────────────────────────────────────────
+// /api/contribute is open and unauthenticated, and every call writes a contribution blob and a
+// footprint blob and lands in the curator's pending queue. Size limits, the justification
+// vocabulary and secret detection already exist; per-visitor rate limiting and exact-duplicate
+// refusal did not. Same constraints as the council meter above: no read-modify-write (one marker
+// blob per submission, counted by prefix LIST), keyed on the same salted ipHash (raw IPs are never
+// stored), signed origin passthrough for remote-MCP callers, and FAIL OPEN on a storage error — this
+// protects the curator's queue and our storage bill, it is not a security boundary; moderation still
+// gates everything.
+const CONTRIB_PREFIX = "contribute-usage/";
+const DEDUPE_PREFIX = "contribute-dedupe/";
+const DEFAULT_CONTRIB_CAP = 10;
+
+export function contributionDailyCap() {
+  const n = parseInt(process.env.CONTRIB_DAILY_CAP || "", 10);
+  return Number.isFinite(n) && n > 0 ? n : DEFAULT_CONTRIB_CAP;
+}
+
+export async function checkContributionQuota(req) {
+  const cap = contributionDailyCap();
+  const { hash, exempt, reason } = quotaSubject(req);
+  const open = (why) => ({ allowed: true, used: 0, cap, remaining: cap, hash, exempt: true, reason: why, resetsAt: quotaResetsAt() });
+  if (exempt || !hash) return open(reason || "unidentified");
+  try {
+    const { blobs } = await list({ prefix: `${CONTRIB_PREFIX}${today()}/${hash}-` });
+    return { allowed: blobs.length < cap, used: blobs.length, cap, remaining: Math.max(0, cap - blobs.length), hash, exempt: false, reason: null, resetsAt: quotaResetsAt() };
+  } catch {
+    return open("ledger-unavailable");
+  }
+}
+
+// Call AFTER the contribution is stored: a rejected or failed submission never counts against the visitor.
+export async function recordContributionUse(hash) {
+  if (!hash) return false;
+  try {
+    await put(`${CONTRIB_PREFIX}${today()}/${hash}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.json`, JSON.stringify({ at: new Date().toISOString() }), { access: "public", contentType: "application/json", addRandomSuffix: false });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const normForDedupe = (s) => String(s || "").toLowerCase().replace(/\s+/g, " ").trim();
+/** Stable fingerprint of (target question, declared identity, answer text) after whitespace/case folding. */
+export function contributionFingerprint(targetId, identity, answer) {
+  return createHash("sha256").update(`${targetId}\n${normForDedupe(identity)}\n${normForDedupe(answer)}`).digest("hex").slice(0, 32);
+}
+
+/** The id of an earlier identical contribution, or null. Never throws (a read failure is "not a duplicate"). */
+export async function findDuplicateContribution(fp) {
+  try {
+    const { blobs } = await list({ prefix: `${DEDUPE_PREFIX}${fp}__` });
+    if (!blobs.length) return null;
+    const m = /__(OMN-[A-Za-z0-9-]+)\.json$/.exec(blobs[0].pathname || "");
+    return m ? m[1] : "unknown";
+  } catch {
+    return null;
+  }
+}
+
+export async function recordContributionFingerprint(fp, contributionId) {
+  try {
+    await put(`${DEDUPE_PREFIX}${fp}__${contributionId}.json`, JSON.stringify({ at: new Date().toISOString() }), { access: "public", contentType: "application/json", addRandomSuffix: false });
+    return true;
+  } catch {
+    return false;
+  }
+}

@@ -46,24 +46,46 @@ export function tensionKey(t) {
   return `${voices}__${topic}`.slice(0, 120);
 }
 
-async function listTensions(statusFilter, searchQuery) {
-  const { blobs } = await list({ prefix: BLOB_PREFIX });
-  const tensions = [];
+// Vercel Blob's list() returns at most 1000 entries per page. Reading only the first page silently truncated the
+// registry (a live read returned exactly 1000 tensions: 471 + 399 + 130), so follow the cursor to the end.
+async function listAllBlobs(prefix) {
+  const out = [];
+  let cursor;
+  do {
+    const page = await list({ prefix, cursor, limit: 1000 });
+    out.push(...page.blobs);
+    cursor = page.hasMore ? page.cursor : undefined;
+  } while (cursor);
+  return out;
+}
 
-  for (const blob of blobs) {
+// Bounded parallelism. The registry was read one blob at a time (~1000 sequential fetches ≈ 20–25 s per request,
+// past most agents' HTTP timeouts); 24 at a time brings the same read to a couple of seconds.
+async function mapLimit(items, n, fn) {
+  const out = new Array(items.length);
+  let i = 0;
+  await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => {
+    while (i < items.length) { const k = i++; out[k] = await fn(items[k], k); }
+  }));
+  return out;
+}
+
+async function listTensions(statusFilter, searchQuery) {
+  const blobs = await listAllBlobs(BLOB_PREFIX);
+  const q = searchQuery ? searchQuery.toLowerCase() : null;
+  const read = await mapLimit(blobs, 24, async (blob) => {
     try {
       const res = await fetch(blob.url);
       const t = await res.json();
-      if (statusFilter && t.status !== statusFilter) continue;
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
+      if (statusFilter && t.status !== statusFilter) return null;
+      if (q) {
         const haystack = `${t.topic} ${t.voice_a} ${t.voice_b} ${t.claim_a} ${t.claim_b}`.toLowerCase();
-        if (!haystack.includes(q)) continue;
+        if (!haystack.includes(q)) return null;
       }
-      tensions.push(t);
-    } catch { /* skip malformed */ }
-  }
-
+      return t;
+    } catch { return null; /* skip malformed */ }
+  });
+  const tensions = read.filter(Boolean);
   tensions.sort((a, b) => (b.lastSeenAt || "").localeCompare(a.lastSeenAt || ""));
   return tensions;
 }
@@ -349,10 +371,17 @@ export default async function handler(req, res) {
     const q = req.query.q || null;
 
     try {
-      const tensions = await listTensions(status, q);
+      const all = await listTensions(status, q);
+      // Optional paging (newest first). `limit` was documented nowhere and silently ignored before; omitted = everything, as before.
+      const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 0, 0), 5000);
+      const offset = Math.max(parseInt(req.query.offset, 10) || 0, 0);
+      const tensions = limit ? all.slice(offset, offset + limit) : (offset ? all.slice(offset) : all);
+      res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
       return res.status(200).json({
         tensions,
         count: tensions.length,
+        total: all.length,
+        ...(limit || offset ? { limit: limit || null, offset, has_more: offset + tensions.length < all.length } : {}),
         filter: { status, query: q },
         note: "Poll GET /api/tensions?status=unresolved for open cognitive gaps. POST {action:'persist'} to store new tensions.",
       });

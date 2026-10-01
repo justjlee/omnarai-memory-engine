@@ -1,0 +1,17 @@
+{
+ "what": "Cross-lineage stance agreement on the same record, among consensus-served derived stances",
+ "served_answers": 284,
+ "records_with_served_answers": 117,
+ "records_with_two_or_more_lineages_served": 81,
+ "cross_lineage_pairs": 307,
+ "pairs_agree": 243,
+ "pairs_agree_rate": 0.7915309446254072,
+ "chance_agreement_from_stance_mix": 0.3862576869668717,
+ "records_with_both_support_and_oppose_served": 5,
+ "caveats": [
+  "Served stances are the answers four labellers could agree on: a selection toward clearly propositional answers, and 60% of them are `support`. The chance baseline uses that mix, so a shared 'yes' to a yes/no question counts as expected, not as convergence.",
+  "Records with fewer than two lineages served cannot be compared (see records_with_two_or_more_lineages_served).",
+  "Certified (C3) records are rare in the served set, so this says nothing about whether certification tracks stance divergence.",
+  "A different instrument agreeing with the Atlas finding is corroboration, not proof; both read the same answers."
+ ]
+}
