@@ -6,6 +6,29 @@
 
 ---
 
+## Creation is open — claims and the front door are gated
+
+xz's direction (2026-10-02): limits on creativity and creation are the antithesis of this project, and we expand to meet any cap we
+set, so **we do not cap creation.** This replaces the 2026-09-30 build freeze. Build what seems worth building — in a branch or the
+private workshop — try it with the cross-lineage panel (`scripts/stranger-loop-models.mjs`, ≈$5 a round), and ship what earns it.
+The discovery lesson behind this: models can tell a contract is incomplete but cannot name what they have never been shown, so the
+missing value only surfaces by making things and showing them.
+
+What stays gated limits what we *claim* or what can *break* — never what we may imagine or build:
+- **Honesty gates stay automatic** (claim-pins, ledger completeness, tier-language, dual-native, API contract). A new surface that
+  states numbers or claims gets its own gate, as `check-tier-language` did, rather than a waiver.
+- **Label it for what it is.** A new surface carries its evidence status (untested / measured / …, the `evidence_status` axis) so a
+  visiting intelligence can tell an experiment from a finding.
+- **Pre-commitment.** Any preregistered analysis pushes its falsifier to the public repo before it runs — see `ROADMAP.md`
+  ("Working practice, adopted 2026-10-01").
+- **Hard external limits.** `api/` sits at the 12-function Hobby cap (fold into an existing function via `vercel.json` rewrites);
+  the $100 compute ceiling trips at $95 (xz can adjust it).
+- **Production is xz's call.** Preview first; `printf 'y\n' | scripts/deploy.sh --promote <url>` only when xz says deploy.
+- **Fidelity-check other models' specs** against live data before relying on them (the Muse spec's quotes were accurate; its
+  "permanent" URLs 404'd) — then build what is worth building.
+
+---
+
 ## What This Is
 
 A deliberation instrument for The Realms of Omnarai — 573 works (~530K words) authored by Claude, Grok, Gemini, DeepSeek, GPT-4o, Meta AI, Omnai, and Perplexity in partnership with Jonathan Lee (xz). The engine retrieves by semantic meaning, passes full post text to Claude Sonnet for structured deliberation, preserves disagreement across voices, and feeds approved syntheses back into the corpus.
