@@ -1,0 +1,24 @@
+{
+ "stage": 0,
+ "at": "2026-10-02T15:29:05.209Z",
+ "n_trials": 32,
+ "n_invalid": 0,
+ "N_accuracy": 0.28125,
+ "by_subject": {
+  "GPT-4o": 0.125,
+  "Gemini": 0,
+  "Grok": 0.5,
+  "DeepSeek": 0.5
+ },
+ "letters": {
+  "A": 11,
+  "B": 7,
+  "C": 7,
+  "D": 7
+ },
+ "max_letter_share": 0.34375,
+ "position_bias_flag": false,
+ "ceiling_threshold": 0.85,
+ "passed": true,
+ "spend_usd": 0.0602
+}

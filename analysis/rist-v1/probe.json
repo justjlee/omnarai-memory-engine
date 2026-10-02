@@ -1,0 +1,37 @@
+{
+ "at": "2026-10-02T15:31:35.198Z",
+ "rows": [
+  {
+   "subject": "GPT-4o",
+   "temperature_accepted": true,
+   "model_returned": "gpt-4o-2024-08-06",
+   "reply": "B",
+   "tin": 14,
+   "tout": 1
+  },
+  {
+   "subject": "Gemini",
+   "temperature_accepted": true,
+   "model_returned": "gemini-2.5-flash",
+   "reply": "B",
+   "tin": 8,
+   "tout": 1
+  },
+  {
+   "subject": "Grok",
+   "temperature_accepted": true,
+   "model_returned": "grok-4.3",
+   "reply": "B",
+   "tin": 199,
+   "tout": 1
+  },
+  {
+   "subject": "DeepSeek",
+   "temperature_accepted": true,
+   "model_returned": "deepseek-flash",
+   "reply": "B",
+   "tin": 11,
+   "tout": 1
+  }
+ ]
+}

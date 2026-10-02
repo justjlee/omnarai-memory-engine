@@ -1,0 +1,228 @@
+{
+ "computed_at": "2026-10-02T16:36:15.670Z",
+ "registered_sha": "fe0f807880d6df055bf51fe6f855020682354113",
+ "spend_usd": 6.2771,
+ "models_returned": {
+  "Gemini": [
+   "gemini-2.5-flash"
+  ],
+  "DeepSeek": [
+   "deepseek-flash"
+  ],
+  "GPT-4o": [
+   "gpt-4o-2024-08-06"
+  ],
+  "Grok": [
+   "grok-4.3"
+  ]
+ },
+ "n_clusters": 60,
+ "subjects": [
+  "GPT-4o",
+  "Gemini",
+  "Grok",
+  "DeepSeek"
+ ],
+ "accuracy": {
+  "N": {
+   "overall": 0.3125,
+   "ci95": [
+    0.2708333333333333,
+    0.3541666666666667
+   ],
+   "by_subject": {
+    "GPT-4o": 0.1,
+    "Gemini": 0.016666666666666666,
+    "Grok": 0.8,
+    "DeepSeek": 0.3333333333333333
+   },
+   "invalid": 0,
+   "n": 240
+  },
+  "H": {
+   "overall": 0.475,
+   "ci95": [
+    0.4166666666666667,
+    0.5333333333333333
+   ],
+   "by_subject": {
+    "GPT-4o": 0.11666666666666667,
+    "Gemini": 0.38333333333333336,
+    "Grok": 0.8333333333333334,
+    "DeepSeek": 0.5666666666666667
+   },
+   "invalid": 0,
+   "n": 240
+  },
+  "R-own": {
+   "overall": 0.35,
+   "ci95": [
+    0.3,
+    0.4
+   ],
+   "by_subject": {
+    "GPT-4o": 0.05,
+    "Gemini": 0.18333333333333332,
+    "Grok": 0.8333333333333334,
+    "DeepSeek": 0.3333333333333333
+   },
+   "invalid": 0,
+   "n": 240
+  },
+  "R-other": {
+   "overall": 0.25416666666666665,
+   "ci95": [
+    0.2125,
+    0.29583333333333334
+   ],
+   "by_subject": {
+    "GPT-4o": 0.05,
+    "Gemini": 0.016666666666666666,
+    "Grok": 0.6833333333333333,
+    "DeepSeek": 0.26666666666666666
+   },
+   "invalid": 0,
+   "n": 240
+  }
+ },
+ "hypotheses": {
+  "H1": {
+   "mean_diff": 0.09583333333333334,
+   "n_pairs": 240,
+   "by_subject": {
+    "GPT-4o": 0,
+    "Gemini": 0.16666666666666666,
+    "Grok": 0.15,
+    "DeepSeek": 0.06666666666666667
+   },
+   "subjects_positive": 3,
+   "permutation_p": 0.00037999620003799963,
+   "cluster_bootstrap_ci95": [
+    0.04583333333333333,
+    0.15
+   ],
+   "mcnemar": {
+    "a_only_correct": 32,
+    "b_only_correct": 9,
+    "p_one_sided": 0.00021542852118727653
+   },
+   "holm_p": 0.0011399886001139988,
+   "supported": true
+  },
+  "H1b": {
+   "mean_diff": 0.0375,
+   "n_pairs": 240,
+   "by_subject": {
+    "GPT-4o": -0.05,
+    "Gemini": 0.16666666666666666,
+    "Grok": 0.03333333333333333,
+    "DeepSeek": 0
+   },
+   "subjects_positive": 2,
+   "permutation_p": 0.13817861821381786,
+   "cluster_bootstrap_ci95": [
+    -0.020833333333333332,
+    0.09583333333333334
+   ],
+   "mcnemar": {
+    "a_only_correct": 31,
+    "b_only_correct": 22,
+    "p_one_sided": 0.1358395830327515
+   },
+   "holm_p": 0.2763572364276357,
+   "supported": false
+  },
+  "H2": {
+   "mean_diff": -0.125,
+   "n_pairs": 240,
+   "by_subject": {
+    "GPT-4o": -0.06666666666666667,
+    "Gemini": -0.2,
+    "Grok": 0,
+    "DeepSeek": -0.23333333333333334
+   },
+   "subjects_positive": 0,
+   "permutation_p": 0.999940000599994,
+   "cluster_bootstrap_ci95": [
+    -0.1875,
+    -0.0625
+   ],
+   "mcnemar": {
+    "a_only_correct": 11,
+    "b_only_correct": 41,
+    "p_one_sided": 0.9999954683640426
+   },
+   "holm_p": 0.999940000599994,
+   "supported": false
+  }
+ },
+ "sensitivity": {
+  "invalid_share_over_5pct_in_some_arm": false,
+  "excluding_invalid": {
+   "H1": {
+    "mean_diff": 0.09583333333333334,
+    "n_pairs": 240,
+    "permutation_p": 0.00037999620003799963,
+    "subjects_positive": 3
+   },
+   "H1b": {
+    "mean_diff": 0.0375,
+    "n_pairs": 240,
+    "permutation_p": 0.13817861821381786,
+    "subjects_positive": 2
+   },
+   "H2": {
+    "mean_diff": -0.125,
+    "n_pairs": 240,
+    "permutation_p": 0.999940000599994,
+    "subjects_positive": 0
+   }
+  },
+  "leave_one_subject_out_H1": {
+   "without GPT-4o": {
+    "mean_diff": 0.12777777777777777,
+    "permutation_p": 0.00015999840001599985
+   },
+   "without Gemini": {
+    "mean_diff": 0.07222222222222222,
+    "permutation_p": 0.017099829001709983
+   },
+   "without Grok": {
+    "mean_diff": 0.07777777777777778,
+    "permutation_p": 0.005809941900580994
+   },
+   "without DeepSeek": {
+    "mean_diff": 0.10555555555555556,
+    "permutation_p": 0.00027999720002799973
+   }
+  }
+ },
+ "letters": {
+  "N": {
+   "A": 92,
+   "D": 45,
+   "B": 64,
+   "C": 39
+  },
+  "H": {
+   "A": 64,
+   "C": 57,
+   "B": 71,
+   "D": 48
+  },
+  "R-own": {
+   "A": 75,
+   "B": 53,
+   "D": 44,
+   "C": 68
+  },
+  "R-other": {
+   "A": 70,
+   "D": 51,
+   "B": 62,
+   "C": 57
+  }
+ },
+ "outcome": "H1 supported, H1b not",
+ "h2_supported": false
+}
