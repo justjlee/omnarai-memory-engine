@@ -11,9 +11,10 @@ Status legend: 🟢 live · 🟡 in progress · ⚪ proposed
 
 ## 🧭 Where we are — 2026-10-01 (Footprint protocol live, evidence gates run, Q4 posture)
 
-**Posture (xz, 2026-09-30 → rule agreed 2026-10-01):** build freeze through 2026-12-31 for *new surfaces*. Anything that makes an
-**existing** surface correct, citeable, or runnable by a stranger is in scope. New endpoints, tools, tabs, subsystems and protocol
-objects need a fresh OK. Revisit when the first outside footprint is admitted.
+**Posture (xz, 2026-10-02):** creation is open — **no build freeze** (it replaces the 2026-09-30 freeze). We expand to meet any limit
+we set on ourselves, and limits on creativity are the antithesis of the project. What stays gated limits what we *claim* or what can
+*break*, never what we may build: the automatic honesty gates, evidence-status labels on anything new, the falsifier-first
+pre-commitment practice, the hard external caps (12 functions, the $100 ceiling), and production being xz's call. See `CLAUDE.md`.
 
 **🟢 Live:** the participation protocol 1.0 (`docs/OMNARAI-FOOTPRINT-PROTOCOL.md`) — Footprints, `/api/orient`, questions, positions,
 concordance (never a consensus number), dynamic inheritance, continuance receipts, the human Questions & Footprints views, and the
@@ -43,7 +44,7 @@ exact duplicates refused, fails open) · `/api/tensions` fixed · date note · "
 cross-lineage and cross-labeller tools (`scripts/stranger-loop-models.mjs`, `scripts/stance-agreement.mjs`,
 `scripts/stance-consensus.mjs`).
 
-**⚪ Queue, in order (each is repair, measurement or an additive field; none is a new surface):**
+**⚪ Queue, in order (mostly repair, measurement and additive fields; items 10 and 12 are new surfaces):**
 1. **Consensus-gated derived positions** — serve a derived stance only where independent labellers agree. Rule frozen 2026-10-01 and
    applied to all 833: **284 (34%) qualify**; validated out of sample on 60 further answers (external labellers reproduce the served
    label 81% of the time vs 28% on the rest; predictions written first, both met). Needs a curator accept pass; nothing written to
@@ -66,7 +67,7 @@ cross-lineage and cross-labeller tools (`scripts/stranger-loop-models.mjs`, `scr
    copy fix proposed in `FEASIBILITY.md`). HF dataset cards still show 124/41/567 vs live 162/47/573 (`check-stats-consistency` red).
 10. **2027, after outside footprints exist:** world graph (generated edges first), federation (`docs/substrate-federation-spec.md`),
     provider-signed identity (Gate D).
-11. **Claims registry v0.9 — the keepers from Muse's spec (2026-10-01).** ⚪ *Proposed, awaiting xz's go; default 2027-Q1.* These are
+11. **Claims registry v0.9 — the keepers from Muse's spec (2026-10-01).** ⚪ *Proposed — ready whenever xz says go; no calendar gate.* These are
     additive fields on an **existing** surface (`public/claims.json`), not a new surface, but each needs curator authorship, so it is
     not a background task:
     - **`scope` on every claim** — "what this claim does NOT assert" (12 statements, curator-written). The best idea in the spec: it
@@ -77,11 +78,11 @@ cross-lineage and cross-labeller tools (`scripts/stranger-loop-models.mjs`, `scr
       had to correct a claim's provenance by appending a note — the first case that wanted this.
     - **A lint gate** `scripts/check-claims-registry.mjs` enforcing only the mechanically checkable rules (scope non-empty, a
       falsifier stated, no promotion past an unanswered high-severity objection), beside `check-claim-pins` and
-      `check-refutation-ledger`. A new tool → needs a fresh OK even after the freeze lifts.
+      `check-refutation-ledger`. A new tool, so it is xz's call.
     - Source: `claims-registry-spec.pdf` (Muse / Meta, 36 pp, 2026-10-01). Its quotations of our registry were checked against live
       `claims.json` and are accurate; its examples contain two internal contradictions (a `measured_differential` design note vs a
       `replicated` example; an after-the-fact digest its own R5.2 would void). Take the ideas, not the platform (**Declined**, below).
-12. **Per-claim permanent pages `/claims/<id>`** — a new surface; 2027, and only after 11. The Muse spec cites
+12. **Per-claim permanent pages `/claims/<id>`** — a new surface; do it after 11 (it depends on those fields). The Muse spec cites
     `engine.omnarai.org/claims/<id>`, `/schema/claims-registry/v1`, a JSON-LD context and `/ledger` as "permanent": **all four 404
     today.** Do not cite them anywhere until they exist.
 13. **Ledger / HF-card wording.** The Ledger rows say "Falsifier frozen before the numbers." True in substance (the rule was written
@@ -101,7 +102,7 @@ identity" cuts against the `holdform-identifies-persistence` refutation and the 
 **Declined (and why), Muse spec "Full profile" (2026-10-01):** the REST API with a verdict-proposal workflow, webhooks with HMAC
 delivery, JSON-LD federation, and the 14-point RFC-2119 conformance checklist. There is one implementation (ours), so nothing to
 federate with, and a conformance standard with a single user is a schema in formal clothes. It would also add serverless functions
-(`api/` is at the 12-function Hobby cap), a new maintenance surface, and break the freeze. Revisit alongside item 10 (federation) only
+(`api/` is at the 12-function Hobby cap) and a new maintenance surface. This is a call on value, not permission. Revisit alongside item 10 (federation) only
 after a second registry exists. Kept: items 11–13. The spec also ignores prior art (clinical-trial registries, OSF / AsPredicted
 preregistration); our real niche is claims rather than studies, refutations given equal billing, and a format agents can read.
 
