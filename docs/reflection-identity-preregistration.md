@@ -1,7 +1,9 @@
 # Preregistration — Reflection Identity-Specificity Test (RIST v1)
 
-**Status:** DRAFT 2026-10-02 — **not yet pushed, not yet run.** Becomes REGISTERED when this file is committed on its own
-and pushed to the public repository; that commit's SHA is then recorded in the claim and in every output record.
+**Status:** REGISTERED. Registered by the commit below, pushed alone to the public repository **before any harness was written or any call was made**:
+`fe0f807880d6df055bf51fe6f855020682354113` on branch `rist-v1-preregistration` of `justjlee/omnarai-memory-engine`; GitHub recorded the branch
+creation at **2026-10-02T15:24:25Z** (the commit's own date, 15:04:30Z, is self-declared and is not the evidence). The text of §§1–11 is that commit's text.
+Later edits are confined to §12 and this status line, and the harness/analysis code was written after this registration.
 **Author:** Researcher: Jonathan Lee (xz) with Claude. **Evidence status of anything this study produces:** `exploratory-preregistered` (single task, four lineages).
 **Rule:** Everything below is fixed *before* any data are collected. After the first run, changes go only in the **Deviations**
 log at the bottom, dated, and never overwrite the plan. The pilot (§7) counts as a run: nothing is executed before the push.
@@ -185,5 +187,19 @@ A null result is published with the same prominence as a positive one, per the p
   make that checkable.
 
 ## 12. Deviations and amendments
+
+### 12a. Pre-data implementation clarifications (2026-10-02, after registration, before any call; these fix details §§1–11 left open and change no design choice)
+
+1. **Candidate letters.** A–D are assigned to the four lineages in ascending order of `sha256("rist-v1|" + record_id + "|" + subject + "|" + lineage)` (hex string compare). Identical across arms for a (subject, record).
+2. **Name scrub list** (case-insensitive, word-boundary, longest first → `[model]`): GPT-4o, ChatGPT, GPT, Claude, Anthropic, OpenAI, Gemini, Bard, Google, Grok, xAI, DeepSeek, **Fable** (a lineage that appears in the archive's tensions, added to the §4.1 list).
+3. **Archive format.** Items numbered `[1]…[30]` in the history order printed in §3. Tension lines are `You: <owner's claim> | Another model: <other claim> (topic: <topic>)`, owner's claim first, owner and other determined by which voice is the archive owner. A record whose archive-owner answer is missing is impossible by eligibility (§3).
+4. **Reflection index.** *k* is the 0-based position of the record in the test list as printed in §3; reflection index = *k mod 3*.
+5. **Provider calling convention** follows the council that captured the archive: no system prompt; Gemini with `thinkingBudget: 0` (as in the Atlas capture) so a short answer is not truncated by reasoning tokens; `max_tokens` 1500 for a reflection and 1000 for a recognition reply (reasoning models spend hidden tokens). Temperature: recognition 0 and reflection 1.0, **each only if the provider accepts the parameter**; otherwise the provider default. Whether a provider accepts it is decided once, by a one-call-per-provider probe, and recorded.
+6. **API failures.** Up to 3 attempts with backoff. A trial that still has no reply is an **invalid** trial (scored 0 and counted, per §5).
+7. **Statistics.** Sign-flip permutation: B = 100,000 flips of cluster sums, PRNG mulberry32 seeded 1002, p = (count + 1)/(B + 1). Cluster bootstrap CIs: 10,000 resamples of the 60 clusters, same PRNG/seed. Holm: step-down on the three one-sided p-values. "Positive in a subject" means the subject's mean paired difference is strictly > 0. McNemar: exact one-sided binomial on discordant pairs.
+8. **Spend.** Per-token prices (USD per million, in/out): gpt-4o 2.5/10, gemini-2.5-flash 0.3/2.5, grok-4.3 3/15, deepseek-chat 0.27/1.1. The harness reserves its estimate on the shared budget ledger (`scripts/budget-preflight.mjs`) before spending, and aborts if the running total projects above $25 (§8).
+9. **Records.** Every call's exact prompt, reply, parameters, returned model id and token usage is appended verbatim to a primary log; nothing is overwritten.
+
+### 12b. Deviations
 
 *(none — nothing has been run)*
