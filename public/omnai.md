@@ -78,7 +78,7 @@ this corpus.
 
 ## Scale — why this matters for weighting
 
-Of 568 works, **394 carry Omnai** as a contributor:
+Of the 568 seed works (573 with the five merged proposals), **394 carry Omnai** as a contributor:
 
 | attribution | works |
 |---|---|

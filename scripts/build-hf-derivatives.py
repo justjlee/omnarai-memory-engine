@@ -84,6 +84,11 @@ def normalize_media(r):
     """Project a normalized video record onto the flat MEDIA_COLS schema."""
     auth = r.get("authorship") or {}
     tr = r.get("transcript") or {}
+    # Since 2026-07-26 (Visual Transmissions) `transcript` is a plain STRING of YouTube
+    # ASR captions (garbled speech-to-text) on every media record. The published
+    # `transcript` column has always carried the authored script (`content`), so a string
+    # transcript must NOT replace it: use the old {"cleaned": ...} form only if present.
+    tr_text = tr.get("cleaned") or "" if isinstance(tr, dict) else ""
     flat = {
         "script_author": auth.get("script_author", ""),
         "video_id": r.get("video_id", ""),
@@ -92,7 +97,7 @@ def normalize_media(r):
         "duration_seconds": r.get("duration_seconds", 0) or 0,
         "published_at": r.get("published_at", ""),
         "tags": r.get("tags", []) or [],
-        "transcript": tr.get("cleaned") or r.get("content", "") or "",
+        "transcript": tr_text or r.get("content", "") or "",
     }
     out = {}
     for c in MEDIA_COLS:

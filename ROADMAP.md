@@ -88,6 +88,7 @@ cross-lineage and cross-labeller tools (`scripts/stranger-loop-models.mjs`, `scr
 13. **Ledger / HF-card wording.** The Ledger rows say "Falsifier frozen before the numbers." True in substance (the rule was written
     down first) but a *local* record only — see the claim's PROVENANCE CORRECTION in `claims.json`. Soften to "written down before
     the numbers" the next time the HF card is re-pushed; not worth a deploy of its own.
+    **Done 2026-10-05:** Ledger (md + html) and the HF mirror copy now say "written down"; the HF mirror card's new rows use the same wording.
 
 **Working practice, adopted 2026-10-01 (no tooling, so not a build item):** before any preregistered analysis runs, commit the
 falsifier text **by itself**, push it to the public repo, and only then write or run the analysis; record that commit SHA in the

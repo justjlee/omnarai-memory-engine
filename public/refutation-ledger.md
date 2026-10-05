@@ -86,7 +86,7 @@ Honesty has to cut both ways or it is just a subtler kind of marketing — so th
 
 **Claim (`register-proximity-explains-the-gradient`):** The gradient in the surviving finding below — Atlas exposure helping GPT-4o and Gemini while *degrading* Claude — is produced by register-proximity **capture**: because the corpus sits close to Claude's own deliberative register, exposure pulls Claude toward performing that register, so the harm should concentrate on tasks demanding a determinate, direct answer. This was the project's lead mechanism hypothesis.
 
-**The control that killed it — a falsifier frozen before the numbers existed.** The falsifier was locked in writing on 2026-08-07, *before* the breakdown was computed: *if the degradation is uniform across task types rather than concentrated on convergence-demanding tasks, the capture mechanism loses its main support.* It fired. The [task-type breakdown](https://github.com/justjlee/omnarai-memory-engine/blob/main/analysis/adiff-tasktype-2026-08.md) of the preregistered Claude arm (27 base questions × 3 paraphrases × 2 length caps = 162 items, blind 3-judge panel):
+**The control that killed it — a falsifier written down before the numbers existed.** The falsifier's decision rule was written down on 2026-08-07, *before* the breakdown was computed (a local record, not a publicly timestamped one — see the provenance note in `claims.json`): *if the degradation is uniform across task types rather than concentrated on convergence-demanding tasks, the capture mechanism loses its main support.* It fired. The [task-type breakdown](https://github.com/justjlee/omnarai-memory-engine/blob/main/analysis/adiff-tasktype-2026-08.md) of the preregistered Claude arm (27 base questions × 3 paraphrases × 2 length caps = 162 items, blind 3-judge panel):
 
 - **Convergent − deliberative contrast: +0.183, 95% CI [−0.087, +0.480].** The **wrong sign** — the hypothesis predicted it negative — and the interval spans zero.
 - **The median base-question delta is −0.667 in every subgroup**, convergent and deliberative, corpus-like and corpus-distant alike. The typical question degrades identically however it is tagged.
@@ -107,7 +107,7 @@ Honesty has to cut both ways or it is just a subtler kind of marketing — so th
 | 3 | Within-lab divergence is robust | Strict-min ×3 consensus | Refuted — 0/3 certify |
 | 4 | Inward probe finds load-bearing memory | Contentless sham primary cleared 9/9 | Refuted — measures topical occupancy |
 | 5 | Cross-model divergence is prevalent | Strict-min certification over 124 splits | Refuted — 5/124 certify, median DRI 0.987 |
-| 6 | Register proximity explains the gradient | Falsifier frozen before the numbers | Refuted — contrast +0.183, wrong sign |
+| 6 | Register proximity explains the gradient | Falsifier written down before the numbers | Refuted — contrast +0.183, wrong sign |
 
 The through-line is not that the ideas were bad — most of the six are still the kind of thing a careful person would want to be true. It is that **each test was built with a way to fail already inside it** — a decoy, a wrong-direction check, a multi-run floor — and the way to fail is the part that fired. A project that only reports its passes never learns which of these six were real. This one now knows: none of them, as originally stated.
 

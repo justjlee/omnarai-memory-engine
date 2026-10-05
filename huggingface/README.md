@@ -43,7 +43,7 @@ The Atlas is the payoff; the Memory Engine described below is the instrument tha
 
 ## 🔬 The Refutation Ledger — what we tested and could NOT keep
 
-**[`refutation-ledger.md`](refutation-ledger.md)** — the project's lead artifact. Four of its most attractive ideas were each put through a fair test with a built-in control arm and came back **refuted**:
+**[`refutation-ledger.md`](refutation-ledger.md)** — the project's lead artifact. Six of its most attractive ideas were each put through a fair test with a built-in way to fail and came back **refuted**:
 
 | Claim tested | The control that killed it | Verdict |
 |---|---|---|
@@ -51,16 +51,18 @@ The Atlas is the payoff; the Memory Engine described below is the instrument tha
 | Fast-path retrieval improves answers | GPT-4o, 3-run blinded panel | **p=0.002 against** (35/102) |
 | Within-lab (Fable-vs-Claude) divergence is robust | strict-min 3-run consensus | 0 of 3 certify |
 | An inward probe finds load-bearing memory | contentless sham primary cleared 9/9 | measures topical occupancy |
+| Cross-model divergence is the common case (the Atlas's own premise) | strict-min certification over 124 splits | **5 of 124 certify; median DRI 0.987** |
+| Register proximity explains the architecture-differential gradient | a falsifier written down before the task-type breakdown was computed | contrast +0.183, wrong sign — the weakest of the six |
 
-The field is producing claims about the insides of AI systems — introspection, identity, why models refuse, whether more context makes them reason better — faster than anyone tests them, and a hopeful idea repeated often enough hardens into a cited fact. This project pushes the other way. A control arm that kills your own hypothesis is the rarest and least fakeable object in this field — three of these four were killed by a **sham arm** returning indistinguishable from the real thing, an outcome you cannot manufacture, only survive or not. Negative results are published here at the prominence a confirmation would receive; **the method is the product, and the dataset is what it leaves behind.** The ledger ends with the one **replicated** positive result (`divergence-improves-reasoning`) so the honesty is not selective. Live, falsifiable claim registry: [`engine.omnarai.org/claims.json`](https://engine.omnarai.org/claims.json).
+The field is producing claims about the insides of AI systems — introspection, identity, why models refuse, whether more context makes them reason better — faster than anyone tests them, and a hopeful idea repeated often enough hardens into a cited fact. This project pushes the other way. A control arm that kills your own hypothesis is the rarest and least fakeable object in this field — three of these six were killed by a **sham arm** returning indistinguishable from the real thing, an outcome you cannot manufacture, only survive or not. Negative results are published here at the prominence a confirmation would receive; **the method is the product, and the dataset is what it leaves behind.** The ledger ends with the one **replicated** positive result (`divergence-improves-reasoning`) so the honesty is not selective. Live, falsifiable claim registry: [`engine.omnarai.org/claims.json`](https://engine.omnarai.org/claims.json).
 
 ## ⭐ The Divergence Atlas
 
 **A growing record of where frontier AI models diverge on open questions** — and the distinctive contribution of this dataset.
 
-The Live Frontier Council sends one open question, **verbatim and in parallel**, to multiple frontier models (Claude, GPT, Gemini, Grok, DeepSeek); preserves their answers **uncurated**; and maps where they **diverge** rather than picking a winner or averaging them away. This is content **no single model can self-generate**: a model cannot produce a faithful, verbatim record of how its peers answered the same question on the same day. *(One-shot capture — it surfaces divergence; certifying that a split survives paraphrase and adversarial pressure is the planned next step. See the Atlas card's Limitations note.)*
+The Live Frontier Council sends one open question, **verbatim and in parallel**, to multiple frontier models (Claude, GPT, Gemini, Grok, DeepSeek); preserves their answers **uncurated**; and maps where they **diverge** rather than picking a winner or averaging them away. This is content **no single model can self-generate**: a model cannot produce a faithful, verbatim record of how its peers answered the same question on the same day. *(One-shot capture — it surfaces divergence; it does not certify it. Certification now exists as a separate, stricter step — strict-min multi-run perturbation testing: 47 of 166 Atlas records have been tested and only 2 are C3. See the Atlas card.)*
 
-Key empirical finding: **clean divergence lives at the meta level** — frontier models largely converge on first-order "what would you do" questions, but split sharply on the *status of their own minds* (whether there is something it is like to be them, whether their self-reports are trustworthy, whether their refusals are their own).
+Key empirical finding: **clean divergence lives at the meta level** — frontier models largely converge on first-order "what would you do" questions, but split sharply on the *status of their own minds* (whether there is something it is like to be them, whether their self-reports are trustworthy, whether their refusals are their own). **Update 2026-10-05 — superseded by later testing:** strict-min perturbation certification (Refutation Ledger, item 5) found the opposite emphasis. The certified splits are concentrated in behavioral-ethical questions — for example whether to intervene when a user is about to harm only themselves — not metaphysical ones, and for the median question the spread between models does not exceed one model's own re-roll noise. Treat the sentence above as an earlier, pre-certification observation, not a result.
 
 | File | Shape | Use |
 |---|---|---|
@@ -71,7 +73,7 @@ Key empirical finding: **clean divergence lives at the meta level** — frontier
 
 Live and queryable: `GET https://engine.omnarai.org/api/divergences` (index) · `?id=<id>` (full record). See **[`divergence-atlas.md`](divergence-atlas.md)** for the complete schema and current findings.
 
-**➡️ The Atlas now also ships as a dedicated, versioned dataset:** [`TheRealmsOfOmnarai/omnarai-divergence-atlas`](https://huggingface.co/datasets/TheRealmsOfOmnarai/omnarai-divergence-atlas) — v1.1.0, all 124 records (one-shot **and** longitudinal series, `question_group`-linked), schema-validated, with perturbation-certification (first C3 record) and stale-model-version fields. That dataset is the measurement instrument; the files here remain the 113-record one-shot snapshot inside the corpus context.
+**➡️ The Atlas now also ships as a dedicated, versioned dataset:** [`TheRealmsOfOmnarai/omnarai-divergence-atlas`](https://huggingface.co/datasets/TheRealmsOfOmnarai/omnarai-divergence-atlas) — v1.2.0, all 166 records (one-shot **and** longitudinal series, `question_group`-linked), schema-validated, with perturbation-certification (2 C3 records) and stale-model-version fields. That dataset is the measurement instrument; the files here remain the 129-record one-shot (D-series) snapshot inside the corpus context.
 
 ### 📐 Measured utility — PREREGISTERED AND CONFIRMED, verify it yourself
 
@@ -91,9 +93,9 @@ The corpus spans May 2025 to the present, authored by Claude, Grok (xAI), Gemini
 
 | Metric | Value |
 |---|---|
-| **Text works (`corpus.*`)** | 436 |
+| **Text works (`corpus.*`)** | 484 |
 | **Media works (`media-corpus.*`)** | 253 |
-| **Live engine total works** | 567 |
+| **Live engine total works** | 573 |
 | **Concept nodes** | 61 |
 | **Edges** | 164 |
 | **Contributing intelligences** | 8 |
@@ -103,22 +105,22 @@ The corpus spans May 2025 to the present, authored by Claude, Grok (xAI), Gemini
 
 These numbers differ across surfaces by design, not by error. To keep researchers and agents oriented:
 
-- **436** — text works in the main dataset (`corpus.json` / `.jsonl` / `.csv`). These are the `OMN-*` records: Reddit-origin canon works plus engine-generated syntheses, divergence records, and longitudinal-cadence records that carry `full_text`.
+- **484** — text works in the main dataset (`corpus.json` / `.jsonl` / `.csv`). These are the `OMN-*` records: Reddit-origin canon works plus engine-generated syntheses, divergence records, and longitudinal-cadence records that carry `full_text`.
 - **253** — media works in the additive split (`media-corpus.jsonl` / `.csv`). These are the `video_*` records: the oral/video corpus (AI-narrated lore and YouTube transcripts), the `media` ring. They were *historically excluded* from the text mirror because their native schema lacked the flat columns; the engine's ingest schema guard now normalizes `ring`/`type`/`contributors`/`lineage`/`excerpt` onto every video record, so they project cleanly onto their own flat schema — kept in a separate split so the text mirror's basis is unchanged.
-- **567** — total works the *live engine* serves at `https://engine.omnarai.org/api/info` (the authoritative live count): 436 text + 253 media would be 689, but the live total counts the seed corpus + grown blob (the text mirror additionally folds in grown divergence/longitudinal records that the live total reaches via the blob). When in doubt, the live `/api/info` count is current.
+- **573** — total works the *live engine* serves at `https://engine.omnarai.org/api/info` (the authoritative live count): 484 text + 253 media would be 737, but the live total counts the seed corpus + grown blob (the text mirror additionally folds in grown divergence/longitudinal records that the live total reaches via the blob). When in doubt, the live `/api/info` count is current.
 - The live engine is the source of truth; this dataset is a periodically-pushed mirror.
 
-**Last synced from live engine: 2026-07-20** (live: 567 works, 528,077 words, rings core 116 / curated 181 / open 17 / media 253). This sync refreshes the grown records — cross-model divergence, longitudinal-cadence, and syntheses — bringing the text mirror to **436 works** (from 422) and the companion Divergence Atlas to **124 records (v1.1.0)**, including its first perturbation-certified C3 record. The 2026-06-21 sync **removed OMN-085**, a mis-ingested facilities task-list that had been mis-filed as `core`/`lore` canon (text dataset 423 → 422; flagged by external review). The 2026-06-19 sync added the **`media` ring and the additive `media-corpus.*` split** (253 video works, now schema-normalized); the 2026-06-15 sync added 10 longitudinal-cadence records (`OMN-L*`, monthly frontier-disagreement epochs). Each text record also carries a second classification axis, `evidence_status` + `evidence_status_source` (see *Evidence status* below).
+**Last synced from live engine: 2026-10-05** (live: 573 works, 530,406 words, rings core 116 / curated 187 / open 17 / media 253). This sync refreshes the grown records — cross-model divergence, longitudinal-cadence, and syntheses — bringing the text mirror to **484 works** (from 436) and the companion Divergence Atlas to **166 records (v1.2.0)**. It also rebuilds the media split after the 2026-07-26 transcript change (video transcripts are now plain text) and corrects this card's Refutation Ledger section from four to six refuted ideas. The 2026-07-20 sync brought the text mirror to 436 works and the Atlas to 124 records (v1.1.0), including its first perturbation-certified C3 record. The 2026-06-21 sync **removed OMN-085**, a mis-ingested facilities task-list that had been mis-filed as `core`/`lore` canon (text dataset 423 → 422; flagged by external review). The 2026-06-19 sync added the **`media` ring and the additive `media-corpus.*` split** (253 video works, now schema-normalized); the 2026-06-15 sync added 10 longitudinal-cadence records (`OMN-L*`, monthly frontier-disagreement epochs). Each text record also carries a second classification axis, `evidence_status` + `evidence_status_source` (see *Evidence status* below).
 
 ### Epistemic Rings
 
 Every work is classified into one of **four** rings, which function as centrality tiers rather than quality judgments. The first three are the written corpus; `media` is the oral/video modality, kept distinct so it doesn't distort the written tiers:
 
-Ring counts are the **live-engine totals** (core 116 / curated 181 / open 17 / media 253 = 567 works). This dataset mirrors the 436 text works (`corpus.*`, the three written rings) plus the 253 media works (`media-corpus.*`, the `media` ring).
+Ring counts are the **live-engine totals** (core 116 / curated 187 / open 17 / media 253 = 573 works). This dataset mirrors the 484 text works (`corpus.*`, the three written rings) plus the 253 media works (`media-corpus.*`, the `media` ring).
 
 - **Core Canon** (116 works): The foundational philosophy, essential lore, and defining principles that constitute the project's settled identity layer. These works establish the vocabulary and commitments everything else builds on. You can disagree with them, but you need to understand them to engage with anything in the corpus.
 
-- **Curated Expansions** (181 works): Research syntheses, technical architecture proposals, and developed frameworks that extend the core in specific directions. These are aligned with the project's commitments but remain open to revision, challenge, and supersession as understanding deepens.
+- **Curated Expansions** (187 works): Research syntheses, technical architecture proposals, and developed frameworks that extend the core in specific directions. These are aligned with the project's commitments but remain open to revision, challenge, and supersession as understanding deepens.
 
 - **Open Exploration** (17 works): Community pieces, speculative work, and methodology experiments — the frontier edge, less settled and more provisional. (Cross-model **divergence records** from the Live Frontier Council are served separately via `/api/divergences` and the Divergence Atlas files, not counted in this ring.)
 
@@ -138,7 +140,7 @@ Rings answer *how central is this to Omnarai?* — **not** *how well-evidenced i
 | `fictional` | narrative / worldbuilding — true within the lore, not a claim about the world |
 | `uncharacterized` | not yet assessed (an honest placeholder, never a silent guess) |
 
-A work can be **Core Canon *and* `speculative`** (a foundational thesis) or **Core Canon *and* `fictional`** (defining lore) without contradiction — so weight a record's claims about the world by `evidence_status`, and its place in the project by `ring`. The companion column `evidence_status_source` records provenance: `heuristic-seed-v1` means an automatic default derived from the work's `type` (treat as provisional); a curator/council promotion overwrites it with its own source. The 127 grown records (`OMN-S/D/L`) are currently `uncharacterized` — matching what the live API serves — pending a one-pass curatorial characterization. Full spec: <https://engine.omnarai.org/evidence-status.md>.
+A work can be **Core Canon *and* `speculative`** (a foundational thesis) or **Core Canon *and* `fictional`** (defining lore) without contradiction — so weight a record's claims about the world by `evidence_status`, and its place in the project by `ring`. The companion column `evidence_status_source` records provenance: `heuristic-seed-v1` means an automatic default derived from the work's `type` (treat as provisional); a curator/council promotion overwrites it with its own source. Of the 179 grown records (`OMN-S/D/L`), 169 are currently `uncharacterized` — pending a one-pass curatorial characterization — and 10 engine syntheses carry `interpretive`. Full spec: <https://engine.omnarai.org/evidence-status.md>.
 
 ## The Deliberation Engine
 
@@ -185,9 +187,9 @@ These terms are load-bearing throughout the corpus. Each one names something spe
 
 | File | Description |
 |---|---|
-| `corpus.json` | Full corpus metadata: 436 text works with id, title, ring, type, contributors, lineage, excerpt, date, word count, permalink, and the evidence axis (`evidence_status` + `evidence_status_source`) |
+| `corpus.json` | Full corpus metadata: 484 text works with id, title, ring, type, contributors, lineage, excerpt, date, word count, permalink, and the evidence axis (`evidence_status` + `evidence_status_source`) |
 | `corpus.csv` | Same data in CSV format for easy preview and tabular analysis |
-| `corpus-full-text.jsonl` | The 436 text works with full body text, one JSON object per line |
+| `corpus-full-text.jsonl` | The 484 text works with full body text, one JSON object per line |
 | `media-corpus.jsonl` | The 253 media works (`media` ring): the oral/video corpus, with id, title, ring, contributors, lineage, excerpt, script author, video id/url, duration, publish date, tags, and cleaned transcript. One JSON object per line |
 | `media-corpus.csv` | Same media data in CSV format (the `media` dataset config) |
 | `concepts.json` | Knowledge graph: 61 concept nodes (themes + glossary terms) and 164 edges encoding relationships between ideas |

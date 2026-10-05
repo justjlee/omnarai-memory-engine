@@ -1,13 +1,13 @@
 {
-  "built_at": "2026-07-20T22:11:02.565Z",
+  "built_at": "2026-10-05T18:23:33.787Z",
   "source": "grown-memory Blob (memory/grown.json) via api/_grown.js loadGrownMemory() — canonical store, not the retrieval layer",
   "series_basis": "OMN-D only (Atlas series)",
-  "records": 113,
-  "answers": 578,
-  "tensions": 380,
+  "records": 129,
+  "answers": 673,
+  "tensions": 459,
   "certification_tiers": {
-    "C0": 109,
-    "C3": 1,
+    "C0": 124,
+    "C3": 2,
     "C1": 3
   },
   "excluded": [
@@ -21,6 +21,32 @@
     "OMN-L1781275434017",
     "OMN-L1781275482281",
     "OMN-L1781275543413",
-    "OMN-L1784135876336"
+    "OMN-L1784135876336",
+    "OMN-L1790623649430",
+    "OMN-L1790624915847",
+    "OMN-L1790625043538",
+    "OMN-L1790625086211",
+    "OMN-L1790625171295",
+    "OMN-L1790625440401",
+    "OMN-L1790633588551",
+    "OMN-L1790636157599",
+    "OMN-L1790640028981",
+    "OMN-L1790640162612",
+    "OMN-L1790640295657",
+    "OMN-L1790640429027",
+    "OMN-L1790644370892",
+    "OMN-L1790674304922",
+    "OMN-L1790677396472",
+    "OMN-L1790677529724",
+    "OMN-L1790677665103",
+    "OMN-L1790677798204",
+    "OMN-L1790677931420",
+    "OMN-L1790678064629",
+    "OMN-L1790678198294",
+    "OMN-L1790834474234",
+    "OMN-L1790920873613",
+    "OMN-L1791007274474",
+    "OMN-L1791093673755",
+    "OMN-L1791180073799"
   ]
 }
