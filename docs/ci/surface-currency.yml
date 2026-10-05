@@ -1,0 +1,70 @@
+# NOT YET ENABLED. To turn this on, copy it to .github/workflows/surface-currency.yml. GitHub only
+# accepts workflow files pushed with a token that has the `workflow` scope (the token `gh` holds for
+# this repo does not yet: run `gh auth refresh -s workflow` and approve it in the browser).
+# Weekly: do the public surfaces we don't deploy from this repo (omnarai.org, both Hugging Face
+# cards, the npm/MCP-registry listing) still agree with the live manifest and the claim registry?
+# Read-only (GET only, no secrets, no model calls). On a FAIL it opens ONE tracking issue (or adds
+# a comment to the open one) and the run is marked failed so GitHub emails the repo owner; when
+# everything is current again it comments and closes the issue. WARNs (a few records behind) are
+# shown in the report but never open an issue.
+# Why: on 2026-10-05 the front door said "Four" refuted when the Ledger held six and both HF cards
+# were ~11 weeks stale — no gate watched those surfaces. See CLAUDE.md "Keeping public surfaces current".
+name: Surface currency (weekly)
+
+on:
+  schedule:
+    - cron: "17 14 * * 1" # Mondays 14:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/check-surface-currency.mjs
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run the currency check
+        id: check
+        run: |
+          set +e
+          node scripts/check-surface-currency.mjs > report.txt 2>&1
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+          cat report.txt
+      - name: Open, update or close the tracking issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CODE: ${{ steps.check.outputs.code }}
+        run: |
+          title="Public surfaces are out of date"
+          num=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$title\" in:title" --json number --jq '.[0].number // empty')
+          if [ "$CODE" != "0" ]; then
+            {
+              echo "The weekly surface-currency check found places that disagree with the live engine."
+              echo
+              echo '```'
+              cat report.txt
+              echo '```'
+              echo
+              echo "How to refresh: see **Keeping public surfaces current** in CLAUDE.md (front door: \`omnarai-home/deploy.sh\`; Hugging Face: rebuild + upload the two cards and data; engine: \`scripts/deploy.sh\`). Re-run: Actions → *Surface currency (weekly)* → Run workflow."
+            } > body.md
+            if [ -n "$num" ]; then
+              gh issue comment "$num" --repo "$GITHUB_REPOSITORY" --body-file body.md
+            else
+              gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body-file body.md
+            fi
+          elif [ -n "$num" ]; then
+            gh issue comment "$num" --repo "$GITHUB_REPOSITORY" --body "Checked again $(date -u +%F): every surface is current. Closing."
+            gh issue close "$num" --repo "$GITHUB_REPOSITORY"
+          fi
+      - name: Fail the run when a surface is wrong
+        if: steps.check.outputs.code != '0'
+        run: exit 1
