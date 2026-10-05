@@ -32,6 +32,15 @@ DOMAIN="engine.omnarai.org"   # canonical — used for the post-deploy bundle ve
 # served 200 instead of the 301 its newer vercel.json carries.
 PROD_DOMAINS=("omnarai.vercel.app" "engine.omnarai.org" "omnarai-memory-engine.vercel.app")
 
+# ── Build stamp — /api/health + /api/manifest report WHICH build is live ────────────────
+# Written before every build (preview AND promote) and restored on exit, so the committed
+# api/_build-stamp.js stays "unstamped" and the working tree stays clean afterwards.
+BUILD_STAMP_VALUE="$(date -u +%Y.%m.%d)+$(git rev-parse --short=7 HEAD 2>/dev/null || echo nogit)"
+trap 'git checkout -q -- api/_build-stamp.js 2>/dev/null || true' EXIT
+sed -i.bak -E "s/^export const BUILD_STAMP = \".*\";/export const BUILD_STAMP = \"${BUILD_STAMP_VALUE}\";/" api/_build-stamp.js && rm -f api/_build-stamp.js.bak
+echo ">> Build stamp: ${BUILD_STAMP_VALUE}"
+echo
+
 # ── Count self-maintenance — no babysitting ──────────────────────────────────
 # Every deploy (preview AND promote) first rewrites the corpus-count literals
 # baked across the served docs (index.html, llms.txt, omnarai.context.md, …) to

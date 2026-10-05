@@ -16,13 +16,14 @@ import { foldLineages } from "./_lineages.js";
 import { budgetStatus, writeBudgetConfig, resetBudgetConfig } from "./_budget.js";
 import { loadPublicFootprints, footprintDomainCounts, footprintStateHash, questionIdFor } from "./_footprints.js";
 import { GREETING, DATE_NOTE } from "./_protocol.js";
+import { BUILD_STAMP } from "./_build-stamp.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const projectRoot = join(__dirname, "..");
 
-// Bumped by hand when the API surface changes (Vite leaves package.json at 0.0.0).
-const ENGINE_VERSION = "2026.09.29";
+// Stamped by scripts/deploy.sh at build time ("YYYY.MM.DD+<commit>"); "unstamped" = a local/dev run.
+const ENGINE_VERSION = BUILD_STAMP;
 
 // One TTL for every count-bearing surface (info / agent-entry / health / manifest).
 // These all read the same cold-start `mergedCorpus` count; if they cache at
