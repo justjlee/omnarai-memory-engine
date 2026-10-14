@@ -79,10 +79,17 @@ const LABEL = [
 ];
 export const isLabeled = (ctx) => LABEL.some((re) => re.test(ctx));
 
+// Quantities the daily 06:00 UTC cron / merges keep growing. A page baked at deploy time lags them BY
+// DESIGN, so a small lag is a DRIFT warning (refresh when convenient), not a failure — past the
+// tolerance it is a FAIL, exactly like check-surface-currency's COUNT_TOLERANCE_PCT. Structural counts
+// (tools, nodes, edges) never drift this way and stay exact.
+export const DRIFTING = new Set(["works", "records", "answers", "tensions"]);
+export const DRIFT_TOLERANCE_PCT = 5;
+
 /**
  * truth = { works:[…], records:[…], answers:[…], tensions:[…], nodes:[…], edges:[…], tools:[…], words: n }
  * allow = [{ surface, key, number, reason }]
- * → { level: "PASS"|"LABELED"|"ALLOWED"|"FAIL", why }
+ * → { level: "PASS"|"LABELED"|"ALLOWED"|"DRIFT"|"FAIL", why }
  */
 export function judge(hit, truth, allow = [], surface = "") {
   const { key, number: n } = hit;
@@ -100,6 +107,11 @@ function verdict(hit, truth, allow, surface) {
   if (a) return { level: "ALLOWED", why: a.reason };
   if (isLabeled(hit.ctx)) return { level: "LABELED", why: "dated/versioned snapshot" };
   const want = hit.key === "words" ? truth.words : (truth[hit.key] || []).join(" | ");
+  if (DRIFTING.has(hit.key)) {
+    const live = truth[hit.key][0];
+    if (live && Math.abs(hit.number - live) / live <= DRIFT_TOLERANCE_PCT / 100)
+      return { level: "DRIFT", why: `${hit.number} ${hit.key} vs live ${live} (${hit.number - live > 0 ? "+" : ""}${hit.number - live}, within ${DRIFT_TOLERANCE_PCT}% — baked figure lags the growing store; refresh the surface)` };
+  }
   return { level: "FAIL", why: `${hit.number} ${hit.key} ≠ ${want}` };
 }
 

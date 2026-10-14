@@ -34,6 +34,17 @@ const wordOrNum = (s) => (WORDS.indexOf(String(s).toLowerCase()) >= 0 ? WORDS.in
 let fails = 0, unreachable = 0;
 const bad = (m) => { fails++; console.log(`  🔴 ${m}`); };
 const warn = (m) => { unreachable++; console.log(`  🟡 ${m}`); };
+let drifting = 0;
+// Growing counts (records, answers, …) lag a surface baked at deploy time BY DESIGN — the daily cron adds
+// Atlas records. Within DRIFT_PCT it is a warning ("refresh when convenient"); beyond it, a failure.
+// Structural figures (tool counts) and prose figures use plain eq().
+const DRIFT_PCT = 5;
+const eqDrift = (label, got, want) => {
+  const g = Number(got), w = Number(want);
+  if (g === w) return ok(`${label} = ${want}`);
+  if (w && Math.abs(g - w) / w <= DRIFT_PCT / 100) { drifting++; return console.log(`  🟡 ${label}: baked ${got} vs live ${want} (${g - w > 0 ? "+" : ""}${g - w}, within ${DRIFT_PCT}% — refresh when convenient)`); }
+  bad(`${label}: surface says ${got}, /api/stats says ${want}`);
+};
 const ok = (m) => console.log(`  🟢 ${m}`);
 const eq = (label, got, want) => (String(got) === String(want) ? ok(`${label} = ${want}`) : bad(`${label}: surface says ${got}, /api/stats says ${want}`));
 // A slow or unreachable SURFACE is a warning, never a crash (2026-10-14: an unhandled timeout used to blank the whole run).
@@ -69,11 +80,11 @@ if (ONLY !== "mcp") {
       certified: A.certified, certified_strong: A.certified_strongest, untested: A.untested, tools: S.mcp?.remote };
     for (const page of ["https://omnarai.org/", "https://omnarai.org/explore"]) {
       const html = await tryText(page); if (html === null) continue;
-      for (const [, key, val] of html.matchAll(/data-live="([a-z_]+)">([^<]*)</g)) if (LIVE[key] != null) eq(`${page} [${key}] fallback`, num(val), LIVE[key]);
+      for (const [, key, val] of html.matchAll(/data-live="([a-z_]+)">([^<]*)</g)) if (LIVE[key] != null) (key === "tools" ? eq : eqDrift)(`${page} [${key}] fallback`, num(val), LIVE[key]);
       const ld = html.match(/(\d[\d,]*) records hold (\d[\d,]*) verbatim model answers across (\d[\d,]*) tension axes/);
-      if (ld) { eq(`${page} JSON-LD records`, num(ld[1]), A.recorded); eq(`${page} JSON-LD answers`, num(ld[2]), A.verbatim_answers); eq(`${page} JSON-LD tensions`, num(ld[3]), A.tension_axes); }
+      if (ld) { eqDrift(`${page} JSON-LD records`, num(ld[1]), A.recorded); eqDrift(`${page} JSON-LD answers`, num(ld[2]), A.verbatim_answers); eqDrift(`${page} JSON-LD tensions`, num(ld[3]), A.tension_axes); }
       const lt = html.match(/of the (\d+) records put through perturbation testing, (\d+) (?:is|are) paraphrase-robust and (\d+) clears? both/);
-      if (lt) { eq(`${page} JSON-LD tested`, lt[1], A.tested); eq(`${page} JSON-LD C1`, lt[2], A.tier_distribution?.C1 || 0); eq(`${page} JSON-LD C3`, lt[3], A.certified_strongest); }
+      if (lt) { eqDrift(`${page} JSON-LD tested`, lt[1], A.tested); eqDrift(`${page} JSON-LD C1`, lt[2], A.tier_distribution?.C1 || 0); eqDrift(`${page} JSON-LD C3`, lt[3], A.certified_strongest); }
     }
   }
 
@@ -82,7 +93,7 @@ if (ONLY !== "mcp") {
     if (!inScope(scope)) continue;
     const t = await tryText(u); if (t === null) continue;
     const hits = [...t.matchAll(/\b(\d{3}) (?:attributed )?works\b/g)].map((m) => num(m[1]));
-    hits.length ? [...new Set(hits)].forEach((n) => eq(`${u} "N works"`, n, C.works)) : ok(`${u}: quotes no work count`);
+    hits.length ? [...new Set(hits)].forEach((n) => eqDrift(`${u} "N works"`, n, C.works)) : ok(`${u}: quotes no work count`);
   }
 
   if (inScope("hf")) {
@@ -140,5 +151,6 @@ if (ONLY !== "stats") {
   }
 }
 
-console.log(fails ? `\n🔴 stats-consistency: ${fails} mismatch(es)${unreachable ? `, ${unreachable} unreachable` : ""}` : `\n🟢 stats-consistency: all surfaces agree${unreachable ? ` (${unreachable} unreachable — not judged)` : ""}`);
+const notes = [drifting && `${drifting} drifting within ${DRIFT_PCT}%`, unreachable && `${unreachable} unreachable — not judged`].filter(Boolean).join(", ");
+console.log(fails ? `\n🔴 stats-consistency: ${fails} mismatch(es)${notes ? `, ${notes}` : ""}` : `\n🟢 stats-consistency: all surfaces agree${notes ? ` (${notes})` : ""}`);
 process.exit(fails ? 1 : 0);

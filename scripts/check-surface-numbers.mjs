@@ -89,15 +89,16 @@ for (const s of scopes) {
 const by = (l) => rows.filter((r) => r.level === l);
 const fails = by("FAIL");
 if (AS_JSON) {
-  console.log(JSON.stringify({ truth, scanned: seen.size, figures: rows.length, fails, warns, labeled: by("LABELED"), allowed: by("ALLOWED") }, null, 1));
+  console.log(JSON.stringify({ truth, scanned: seen.size, figures: rows.length, fails, drift: by("DRIFT"), warns, labeled: by("LABELED"), allowed: by("ALLOWED") }, null, 1));
 } else {
   console.log(`\n  SURFACE NUMBERS — ${seen.size} surfaces · ${rows.length} counted figures · live: ${truth.works[0]} works, ${truth.records[0]} records, ${truth.answers[0]} answers, ${truth.tools[0]} remote tools\n`);
   for (const r of fails) console.log(`  🔴  ${r.surface.padEnd(36)} "${r.raw}" → ${r.why}`);
+  for (const r of by("DRIFT")) console.log(`  🟡  ${r.surface.padEnd(36)} "${r.raw}" → ${r.why}`);
   for (const w of warns) console.log(`  🟡  ${w}`);
   if (VERBOSE) {
     for (const r of by("LABELED")) console.log(`  🏷️   ${r.surface.padEnd(36)} "${r.raw}" (${r.why})`);
     for (const r of by("ALLOWED")) console.log(`  ✅  ${r.surface.padEnd(36)} "${r.raw}" allowlisted: ${r.why}`);
   }
-  console.log(`\n  ${fails.length ? "🔴" : "🟢"} ${fails.length} stale · ${by("LABELED").length} dated/versioned · ${by("ALLOWED").length} allowlisted · ${by("PASS").length} match live · ${warns.length} unreachable\n`);
+  console.log(`\n  ${fails.length ? "🔴" : "🟢"} ${fails.length} stale · ${by("LABELED").length} dated/versioned · ${by("ALLOWED").length} allowlisted · ${by("PASS").length} match live · ${by("DRIFT").length} drifting (warn) · ${warns.length} unreachable\n`);
 }
 process.exit(fails.length ? 1 : 0);
