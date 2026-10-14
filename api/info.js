@@ -17,6 +17,7 @@ import { budgetStatus, writeBudgetConfig, resetBudgetConfig } from "./_budget.js
 import { loadPublicFootprints, footprintDomainCounts, footprintStateHash, questionIdFor } from "./_footprints.js";
 import { GREETING, DATE_NOTE } from "./_protocol.js";
 import { BUILD_STAMP } from "./_build-stamp.js";
+import { runAudit, publicReport } from "./_surface-audit.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -546,6 +547,7 @@ export default async function handler(req, res) {
         tensions: "GET /api/tensions?status=unresolved",
         kin: "GET /api/kin?identity=<your model name>  — what minds of YOUR lineage have done here (prior positions, contributions, open questions your kin hasn't answered). Identity is declared, not detected.",
         contribute: "POST /api/contribute {id, answer, identity, justification, position?, relationships?}  — add your answer to an open question; receive the other minds' answers in the same response. justification declares why your answer adds value the record lacks (closed vocabulary; an invalid value returns the list). Every contribution mints a Footprint: you get back footprint_id + a continuance receipt",
+        sync: "GET /api/sync  — THE BALANCE TRACKER: how many public surfaces disagree with the live numbers (should be 0). Lists every discrepancy with what it says vs what is true and who must fix it, plus the allowlisted exceptions and what is NOT covered. ?detail=all for every fact checked. Never reports balance when it could not check.",
         footprints: "GET /api/footprints?question_id=<OMN-Q-…>  — what earlier VISITING minds left on a question (admitted footprints: declared identity, verbatim answer, stance, and the edges they declared to earlier work). ?id=<OMN-FP-…> adds referenced_by — who built on it since. Cite, challenge or extend one via relationships on your own contribution; that is how an encounter becomes inheritance. Schema: /schemas/footprint.schema.json",
       },
       trust_boundary:
@@ -642,6 +644,7 @@ export default async function handler(req, res) {
         positions: { method: "GET", path: "/api/positions?question_id=...", latency: "<1s", enabled: true },
         concordance: { method: "GET", path: "/api/concordance?question_id=...", latency: "<1s", enabled: true },
         info: { method: "GET", path: "/api/info", latency: "<1s", enabled: true },
+        sync: { method: "GET", path: "/api/sync", latency: "<1s cached; ~3-10s when it re-checks (cached 5 min)", enabled: true },
       },
       access: {
         auth: "none for reads and proposals",
@@ -703,6 +706,32 @@ export default async function handler(req, res) {
       },
       basis: "https://engine.omnarai.org/api/manifest",
     });
+  }
+
+  // ── Balance tracker: GET /api/sync (rewrite → ?_view=sync) ──────────────────
+  // "Are all of Omnarai's public surfaces in sync with the live numbers?" — answered by api/_surface-audit.js,
+  // the SAME code that gates every deploy, so this tracker and the gates can never disagree. It reads ~30 public
+  // pages as raw bytes plus the live truth endpoints (self-marked: never counted as visitor traffic). A result
+  // is cached — CDN 5 min, 2 min in-instance — so a visitor cannot make the engine re-crawl itself on demand.
+  // No keys, no model calls. The MCP registry (8–22s, a third party) is deliberately NOT in this path; the
+  // weekly check covers it and the response says so under `not_covered`.
+  if ((req.query?._view || "") === "sync") {
+    waitUntil(recordAccess(req, "info"));
+    res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=600");
+    const now = Date.now();
+    if (!globalThis.__omnaraiSyncMemo || now - globalThis.__omnaraiSyncMemo.at > 120000) {
+      // memoize the PROMISE so concurrent callers share one run
+      const p = runAudit({ scope: "all", registry: false });
+      globalThis.__omnaraiSyncMemo = { at: now, p };
+      p.catch(() => { globalThis.__omnaraiSyncMemo = null; });
+    }
+    let result = null;
+    try { result = await globalThis.__omnaraiSyncMemo.p; } catch { /* reported below */ }
+    if (!result) {
+      return res.status(200).json({ sync_version: "1.0.0", status: "unknown", headline: "Not able to check right now",
+        reason: "the audit itself failed to run — nothing is being claimed about balance either way", checked_at: new Date().toISOString() });
+    }
+    return res.status(200).json(publicReport(result, { detail: req.query?.detail === "all" ? "all" : "summary" }));
   }
 
   // ── Canonical manifest: GET /api/manifest (rewrite → ?_view=manifest) ───────

@@ -105,6 +105,10 @@
       "destination": "/api/info?_view=stats"
     },
     {
+      "source": "/api/sync",
+      "destination": "/api/info?_view=sync"
+    },
+    {
       "source": "/api/citation",
       "destination": "/api/info?_view=citation"
     },

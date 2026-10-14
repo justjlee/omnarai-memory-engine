@@ -380,6 +380,18 @@ endpoint with an `enabled` flag, plus the access terms (`auth`, `cors`, `rate_li
 `persistence`, `privacy`). Cached 60s. Call this before depending on a slow path — it tells you
 whether council/deliberation are live here without making you wait ~25s to find out.
 
+**Balance tracker — is every public surface in sync with the live numbers?** (no auth, cached 5 min):
+```
+GET /api/sync
+```
+Omnarai publishes a count of its own inconsistencies. This runs the same audit that gates every deploy: it reads
+every public page as raw bytes (no JavaScript) and compares each counted figure and claim to the live engine.
+`status` is `in_balance` | `out_of_sync` | `unknown`; `summary.out_of_sync` should be 0. Each discrepancy states what a
+surface says, what is live, and the fix. Dated snapshots and allowlisted history are listed with reasons, not
+counted. A source it could not read is `not_checked` — never counted as balanced — and `not_covered` states what the
+audit does not look at. If a number you read elsewhere disagrees with the manifest, check here first. Human view:
+https://omnarai.org/balance
+
 **Canonical manifest — the single source of truth for counts, self-attesting** (no auth):
 ```
 GET /api/manifest

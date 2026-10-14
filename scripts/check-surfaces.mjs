@@ -1,42 +1,46 @@
 #!/usr/bin/env node
-// check-surfaces — ONE entry point for "do all our public surfaces agree with the live numbers?"
+// check-surfaces — "do all our public surfaces agree with the live numbers?"  (the deploy-gate / weekly CLI)
 //
 //   node scripts/check-surfaces.mjs --scope engine   # engine deploy gate  (surfaces the engine ships)
 //   node scripts/check-surfaces.mjs --scope front    # front-door deploy gate (omnarai.org)
 //   node scripts/check-surfaces.mjs --scope hf       # published channels: HF cards, npm, MCP registry
 //   node scripts/check-surfaces.mjs                  # everything (the weekly check)
+//   flags: --layers numbers,stats,currency  --verbose  --json
 //
-// It runs the three layers that each catch something the others cannot (2026-10-14 audit):
-//   1. check-surface-numbers     every counted figure in every public text surface — the NET
-//   2. check-stats-consistency   the specific structured figures (data-live fallbacks, JSON-LD, MCP tool
-//                                counts, HF release pins)
-//   3. check-surface-currency    prose + claim currency (refuted-count word, build stamp, card age,
-//                                npm vs MCP registry versions)
-// Exit: 1 if ANY layer found a stale surface · 2 if nothing could be judged (live truth unreachable) · else 0.
-// Read-only (GETs, no keys, no model calls). Individual slow sources WARN; they never crash a layer.
-import { spawnSync } from "node:child_process";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+// This is only a RENDERER. The audit itself is api/_surface-audit.js — the same code that powers the public
+// Balance tracker (GET /api/sync), so a gate and the tracker can never disagree about what is out of sync.
+//
+// Exit: 1 = something is STALE (a figure/claim beyond tolerance, or wrong in kind) · 2 = live truth unreachable
+// (nothing judged) · 0 otherwise. LAGGING (within 5%) and NOT CHECKED are reported loudly but do not fail a
+// deploy: a baked page trails the daily cron by design, and a slow third party must never block a ship.
+// Read-only: GETs only, no keys, no model calls. OMNARAI_BASE points the SURFACES at a local copy of public/;
+// truth always comes from the live API (OMNARAI_TRUTH_BASE overrides).
+import { runAudit } from "../api/_surface-audit.js";
 
-const DIR = path.dirname(fileURLToPath(import.meta.url));
-const i = process.argv.indexOf("--scope");
-const scope = i >= 0 ? process.argv[i + 1] : "all";
-const extra = process.argv.includes("--verbose") ? ["--verbose"] : [];
+const arg = (n) => (process.argv.includes(n) ? process.argv[process.argv.indexOf(n) + 1] : null);
+const scope = arg("--scope") || "all";
+const layers = (arg("--layers") || process.env.OMNARAI_AUDIT_LAYERS || "numbers,stats,currency").split(",");
+const VERBOSE = process.argv.includes("--verbose");
+const AS_JSON = process.argv.includes("--json");
+if (!["front", "engine", "hf", "all"].includes(scope)) { console.error(`unknown --scope ${scope} (front|engine|hf|all)`); process.exit(64); }
+if (layers.some((l) => !["numbers", "stats", "currency"].includes(l))) { console.error(`unknown --layers ${layers} (numbers,stats,currency)`); process.exit(64); }
 
-const layers = [
-  ["numbers      ", "check-surface-numbers.mjs"],
-  ["stats        ", "check-stats-consistency.mjs"],
-  ["currency     ", "check-surface-currency.mjs"],
-];
-let failed = [], inconclusive = [];
-for (const [label, file] of layers) {
-  console.log(`\n━━ ${label.trim()} (--scope ${scope}) ━━`);
-  const r = spawnSync(process.execPath, [path.join(DIR, file), "--scope", scope, ...(file === "check-surface-numbers.mjs" ? extra : [])], { stdio: "inherit", env: process.env });
-  if (r.status === 1) failed.push(label.trim());
-  else if (r.status !== 0) inconclusive.push(`${label.trim()} (exit ${r.status})`);
-}
-console.log("\n━━ summary ━━");
-if (failed.length) console.log(`  🔴 stale surface(s) found by: ${failed.join(", ")}`);
-if (inconclusive.length) console.log(`  🟡 could not judge: ${inconclusive.join(", ")}`);
-if (!failed.length && !inconclusive.length) console.log(`  🟢 every ${scope === "all" ? "public" : scope} surface agrees with the live numbers`);
-process.exit(failed.length ? 1 : inconclusive.length === layers.length ? 2 : 0);
+const base = {};
+if (process.env.OMNARAI_BASE) base.engine = process.env.OMNARAI_BASE;
+const r = await runAudit({ scope, layers, base, truthBase: process.env.OMNARAI_TRUTH_BASE, registry: scope === "hf" || scope === "all" });
+
+if (AS_JSON) { console.log(JSON.stringify(r, null, 1)); process.exit(r.status === "unknown" ? 2 : r.summary.stale ? 1 : 0); }
+if (r.status === "unknown") { console.log(`\n  🟡 INCONCLUSIVE: ${r.reason}\n  Nothing was judged — and nothing is reported as in balance.\n`); process.exit(2); }
+
+const s = r.summary, f = r.facts;
+const show = (lv) => f.filter((g) => g.level === lv);
+const line = (icon, g, msg) => console.log(`  ${icon}  ${g.surface.padEnd(32)} ${msg}`);
+console.log(`\n  SURFACES (--scope ${scope}, layers ${layers.join("+")}) — ${s.surfaces_checked} surfaces · ${s.facts_checked} facts · live: ${r.truth.works} works, ${r.truth.records} records, ${r.truth.answers} answers, ${r.truth.remote_tools} remote tools\n`);
+for (const g of show("fail")) line("🔴", g, `${g.check}: says ${g.got || "(missing)"}, live ${g.want}  — ${g.remedy}`);
+for (const g of show("drift")) line("🟡", g, `${g.check}: says ${g.got}, live ${g.want} (lagging within 5% — refresh when convenient)`);
+for (const g of show("unreachable")) line("🟡", g, `not checked: ${g.got}`);
+for (const g of show("note")) line("ℹ️ ", g, g.detail);
+if (VERBOSE) for (const g of show("allowed")) line("✅", g, `"${g.check}" differs from live on purpose: ${g.detail}`);
+const parts = [`${s.stale} stale`, `${s.lagging} lagging`, `${s.allowlisted_history} allowlisted history`, `${s.not_checked} not checked`];
+console.log(`\n  ${s.stale ? "🔴" : "🟢"} ${r.status === "in_balance" ? "IN BALANCE" : `${s.out_of_sync} OUT OF SYNC`} — ${parts.join(" · ")}\n`);
+process.exit(s.stale ? 1 : 0);
