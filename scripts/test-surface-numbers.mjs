@@ -17,7 +17,7 @@ const run = (text, { allow = [], surface = "/x" } = {}) =>
 test("the literals that shipped stale on 2026-10-14 are caught", () => {
   assert.deepEqual(run("See 166 splits"), [{ n: 166, key: "records", level: "PASS" }]); // 166 is the pinned v1.2.0 release…
   assert.deepEqual(run("162 splits recorded")[0].level, "FAIL");                          // …162 is neither live nor a release
-  assert.deepEqual(run("567 attributed works spanning every frontier lineage")[0].level, "FAIL");
+  assert.deepEqual(run("480 attributed works spanning every frontier lineage")[0].level, "FAIL");
   assert.deepEqual(run("Eight tools, no key.")[0], { n: 8, key: "tools", level: "FAIL" });
   assert.deepEqual(run("Two tools — omnarai_query, omnarai_info")[0], { n: 2, key: "tools", level: "FAIL" });
   assert.deepEqual(run("175 records hold 858 verbatim model answers across 496 tension axes").map((r) => r.level), ["PASS", "PASS", "PASS"]);
@@ -29,7 +29,18 @@ test("live and per-transport tool counts pass; word forms are understood", () =>
 
 test("regression: a nearby WORD like 'snapshot' must not launder a stale 'live' number", () => {
   const t = "`corpus.json` is an immutable seed — a fixed, citable snapshot. **Live**: **567 works** at this writing.";
-  assert.equal(run(t)[0].level, "FAIL");
+  assert.equal(run(t)[0].level, "DRIFT"); // 1% behind: a warning — but NEVER "LABELED"
+  assert.equal(run(t.replace("567", "480"))[0].level, "FAIL");
+});
+
+test("growing counts lag a baked page by design: within 5% warns (DRIFT), beyond fails; structural counts stay exact", () => {
+  assert.equal(run("170 records")[0].level, "DRIFT");   // 2.9% behind live 175
+  assert.equal(run("166 records")[0].level, "PASS");    // the pinned v1.2.0 release, not drift
+  assert.equal(run("162 splits recorded")[0].level, "FAIL"); // 7.4% behind — the shipped 2026-10-14 defect
+  assert.equal(run("890 verbatim answers")[0].level, "DRIFT");
+  assert.equal(run("Eleven tools")[0].level, "PASS");
+  assert.equal(run("Ten tools")[0].level, "FAIL");      // tool counts never drift
+  assert.equal(run("62 nodes")[0].level, "FAIL");       // nor does the graph
 });
 
 test("a number that names its release or date is honestly labeled; seed counts are judged, not waved through", () => {
@@ -37,7 +48,8 @@ test("a number that names its release or date is honestly labeled; seed counts a
   assert.equal(run("Corpus figures verified live on 2026-08-17 (562 works)")[0].level, "LABELED");
   // "seed" is NOT a label: it is judged against the true seed count, so a stale one fails.
   assert.equal(run("Of the 568 seed works (573 with merged proposals)")[0].level, "PASS");
-  assert.equal(run("Of the 562 seed works (573 with merged proposals)")[0].level, "FAIL");
+  assert.equal(run("Of the 500 seed works (573 with merged proposals)")[0].level, "FAIL");
+  assert.equal(run("Of the 562 seed works (573 with merged proposals)")[0].level, "DRIFT"); // warned, never waved through
 });
 
 test("allowlist needs the right surface, key AND number — it cannot silence a different stale figure", () => {
