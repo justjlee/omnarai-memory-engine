@@ -47,8 +47,11 @@ echo
 # the live /api/info truth, so the numbers can never silently drift apart between
 # surfaces. --require-live means: if the engine is unreachable, SKIP rather than
 # downgrade to the local seed count. No human ever has to remember to run the sync.
-echo ">> Auto-syncing doc counts to live /api/info (no-drift guarantee)"
-python3 scripts/sync-doc-counts.py --apply --require-live || echo "   (count sync skipped/failed — non-fatal; deploy continues)"
+echo ">> Auto-syncing doc counts + generated figures to live (no-drift guarantee)"
+# FATAL on a real error (2026-10-14): this used to be '|| echo non-fatal', so a crash — or an
+# unknown <!--live:KEY--> marker — shipped stale numbers behind a green deploy. An UNREACHABLE
+# engine is not an error: --require-live skips the write cleanly and exits 0.
+python3 scripts/sync-doc-counts.py --apply --require-live
 echo
 
 # HARD gate: no frozen corpus-shape literal in served code (2026-07-17 audit guard).
@@ -169,6 +172,22 @@ if [[ "${1:-}" == "--promote" ]]; then
   if ! node scripts/dual-native-check.mjs --scope engine; then
     echo ">> 🔴 DUAL-NATIVE GATE FAILED — $DOMAIN violates the charter for machine visitors."
     exit 1
+  fi
+  echo
+  echo ">> Surface-numbers gate (engine surfaces — scripts/check-surfaces.mjs --scope engine)"
+  # HARD gate (2026-10-14): every counted figure on every page this deploy ships must equal the live
+  # numbers, a release-pinned figure, a dated snapshot, or an allowlisted historical figure. Numeric
+  # inconsistency between surfaces is a defect in what Omnarai IS, not a cosmetic one. The front door
+  # and Hugging Face are gated by their own deploy / the weekly check. Exit 2 (live truth unreachable)
+  # judged nothing and is reported, not failed.
+  GATE_RC=0
+  node scripts/check-surfaces.mjs --scope engine || GATE_RC=$?
+  if [[ "$GATE_RC" == "1" ]]; then
+    echo ">> 🔴 SURFACE-NUMBERS GATE FAILED — $DOMAIN is serving a figure that disagrees with the live numbers."
+    echo ">>    Fix forward: markers/tokens in public/*, scripts/sync-doc-counts.py; allowlist only HISTORY (docs/surface-number-allowlist.json)."
+    exit 1
+  elif [[ "$GATE_RC" != "0" ]]; then
+    echo ">> 🟡 surface-numbers gate could not judge (exit $GATE_RC) — re-run: node scripts/check-surfaces.mjs --scope engine"
   fi
   exit 0
 fi

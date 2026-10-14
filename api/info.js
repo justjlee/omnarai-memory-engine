@@ -808,6 +808,7 @@ export default async function handler(req, res) {
           dataset: "https://huggingface.co/datasets/TheRealmsOfOmnarai/omnarai-divergence-atlas",
           version: "1.2.0",
           records: 166,
+          verbatim_answers: 858, // pinned alongside `records` so a surface quoting the release is checkable, not guessed
           published_at: "2026-10-05",
           note: "Immutable release snapshot — counts.atlas above is the LIVE store and may exceed it. A release is a fact of history; the live store keeps growing.",
         },

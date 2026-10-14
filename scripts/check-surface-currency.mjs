@@ -11,6 +11,10 @@
 //
 //   node scripts/check-surface-currency.mjs            # exit 1 on any FAIL; WARN is advisory
 //   node scripts/check-surface-currency.mjs --json     # machine-readable
+//   node scripts/check-surface-currency.mjs --scope front|engine|hf|all   # gate only the surfaces a deploy owns
+//
+// (2026-10-14) A slow or unreachable source is a WARN, never a crash: the registry search takes ~20s
+// and sometimes stalls, and the old script died on its 60s timeout and reported nothing at all.
 //
 // FAIL = a surface states something the manifest/registry contradicts (wrong prose/claim, or a
 //        count more than COUNT_TOLERANCE_PCT off).
@@ -21,17 +25,25 @@ const FRONT = "https://omnarai.org";
 const HF = "https://huggingface.co/datasets/TheRealmsOfOmnarai";
 const H = { "x-omnarai-self": "1" };
 const AS_JSON = process.argv.includes("--json");
+const SCOPE = process.argv.includes("--scope") ? process.argv[process.argv.indexOf("--scope") + 1] : "all";
+if (!["front", "engine", "hf", "all"].includes(SCOPE)) { console.error(`unknown --scope ${SCOPE} (front|engine|hf|all)`); process.exit(64); }
+const inScope = (s) => SCOPE === "all" || SCOPE === s;
 const WORDS = { 3: "Three", 4: "Four", 5: "Five", 6: "Six", 7: "Seven", 8: "Eight", 9: "Nine", 10: "Ten" };
 const MAX_CARD_AGE_DAYS = 45;
 const MAX_RELEASE_DRIFT = 40; // live Atlas records beyond the published release before we nag
 const COUNT_TOLERANCE_PCT = 5; // a count this close to live is a WARN (refresh when convenient), beyond it a FAIL
 
 const get = async (u, json = false) => {
-  const r = await fetch(u, { headers: H, signal: AbortSignal.timeout(60000) });
+  const r = await fetch(u, { headers: H, signal: AbortSignal.timeout(25000) });
   if (!r.ok) throw new Error(`${u} → ${r.status}`);
   return json ? r.json() : r.text();
 };
 const results = [];
+// A source we could not read is not judged — and is said out loud (never silently skipped).
+const tryGet = async (u, json = false) => {
+  try { return await get(u, json); }
+  catch (e) { results.push({ level: "WARN", surface: u.replace(ENGINE, "engine").replace(FRONT, "omnarai.org").slice(0, 34), msg: `unreachable (${e.message}) — not judged` }); return null; }
+};
 const note = (level, surface, msg) => results.push({ level, surface, msg });
 // Counts drift a little between refreshes (the daily cron adds Atlas records; the front door is
 // redeployed by hand), so a small gap is advisory and a large one is a failure. Prose and claims
@@ -47,10 +59,12 @@ const eq = (surface, what, got, want) =>
   note(String(got) === String(want) ? "PASS" : "FAIL", surface, `${what}: ${got} ${String(got) === String(want) ? "=" : "≠ live"} ${want}`);
 
 const [manifest, claims, front, hfText, hfAtlas, llms, ctx, divs, health] = await Promise.all([
-  get(`${ENGINE}/api/manifest`, true), get(`${ENGINE}/claims.json`, true), get(`${FRONT}/`),
-  get(`${HF}/realms-of-omnarai/raw/main/README.md`), get(`${HF}/omnarai-divergence-atlas/raw/main/README.md`),
-  get(`${ENGINE}/llms.txt`), get(`${ENGINE}/omnarai.context.md`), get(`${ENGINE}/api/divergences`, true), get(`${ENGINE}/api/health`, true),
+  tryGet(`${ENGINE}/api/manifest`, true), tryGet(`${ENGINE}/claims.json`, true), inScope("front") ? tryGet(`${FRONT}/`) : null,
+  inScope("hf") ? tryGet(`${HF}/realms-of-omnarai/raw/main/README.md`) : null, inScope("hf") ? tryGet(`${HF}/omnarai-divergence-atlas/raw/main/README.md`) : null,
+  inScope("engine") ? tryGet(`${ENGINE}/llms.txt`) : null, inScope("engine") ? tryGet(`${ENGINE}/omnarai.context.md`) : null,
+  tryGet(`${ENGINE}/api/divergences`, true), inScope("engine") ? tryGet(`${ENGINE}/api/health`, true) : null,
 ]);
+if (!manifest || !claims || !divs) { console.log("  🟡 INCONCLUSIVE: live manifest/claims/divergences unreachable — nothing was judged."); process.exit(2); }
 const works = manifest.counts.corpus.total_works;
 const words = manifest.counts.corpus.total_words;
 const atlasLive = manifest.counts.atlas.live_records;
@@ -61,7 +75,7 @@ const refutedWord = WORDS[refuted] || String(refuted);
 const untested = atlasLive - divs.tested_count;
 
 // ── front door (static text = what AI readers and crawlers see)
-{
+if (front) {
   const S = "omnarai.org /";
   const m = (re) => front.match(re)?.[1];
   const fix = "refresh with omnarai-home/deploy.sh";
@@ -74,7 +88,7 @@ const untested = atlasLive - divs.tested_count;
   near(S, "corpus works (JSON-LD)", front.match(/corpus of (\d+) works/)?.[1], works, "refresh with omnarai-home/deploy.sh");
 }
 // ── HF text mirror card
-{
+if (hfText) {
   const S = "HF realms-of-omnarai card";
   near(S, "live engine total works", hfText.match(/\*\*Live engine total works\*\* \| (\d+)/)?.[1], works, "re-sync the HF card");
   eq(S, "refuted-count word", hfText.match(/(\w+) of its most attractive ideas/)?.[1], refutedWord);
@@ -85,7 +99,7 @@ const untested = atlasLive - divs.tested_count;
   eq(S, "points at Atlas release", `v${pointer?.[1]} / ${pointer?.[2]}`, `v${rel.version} / ${rel.records}`);
 }
 // ── HF Atlas card vs the manifest's published release
-{
+if (hfAtlas) {
   const S = "HF omnarai-divergence-atlas card";
   const c = hfAtlas.match(/\*\*Version:\*\* v(\d+\.\d+\.\d+) · \*\*Records:\*\* (\d+)/);
   eq(S, "card version", c?.[1], rel.version); eq(S, "card records", c?.[2], rel.records);
@@ -95,18 +109,18 @@ const untested = atlasLive - divs.tested_count;
 }
 // ── engine machine-facing text
 for (const [name, txt] of [["engine /llms.txt", llms], ["engine /omnarai.context.md", ctx]])
-  near(name, "corpus works", txt.match(/(\d+) works \(~/)?.[1], works, "redeploy the engine");
+  if (txt) near(name, "corpus works", txt.match(/(\d+) works \(~/)?.[1], works, "redeploy the engine");
 // ── which build is live (stamped by deploy.sh)
-{
+if (health) {
   const v = String(health.version || "");
   note(/^\d{4}\.\d{2}\.\d{2}\+\w+$/.test(v) ? "PASS" : "WARN", "engine /api/health", `build stamp: ${v || "(none)"}`);
 }
 // ── distribution channels agree with each other
-{
-  const npm = (await get("https://registry.npmjs.org/omnarai-mcp/latest", true)).version;
-  const reg = (await get("https://registry.modelcontextprotocol.io/v0/servers?search=omnarai&limit=50", true)).servers
-    .filter((s) => s._meta?.["io.modelcontextprotocol.registry/official"]?.isLatest)[0]?.server.version;
-  eq("npm vs MCP registry", "latest version", reg, npm);
+if (inScope("hf")) {
+  const npm = (await tryGet("https://registry.npmjs.org/omnarai-mcp/latest", true))?.version;
+  const regDoc = await tryGet("https://registry.modelcontextprotocol.io/v0/servers?search=omnarai&limit=50", true);
+  const reg = regDoc?.servers?.filter((s) => s._meta?.["io.modelcontextprotocol.registry/official"]?.isLatest)[0]?.server.version;
+  if (npm && reg) eq("npm vs MCP registry", "latest version", reg, npm);
 }
 
 const fails = results.filter((r) => r.level === "FAIL").length, warns = results.filter((r) => r.level === "WARN").length;
