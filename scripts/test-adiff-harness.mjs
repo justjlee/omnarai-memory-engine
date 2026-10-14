@@ -4,20 +4,27 @@
 // read the public Atlas. These tests make NO network calls and spend NOTHING: dummy keys, and
 // every path asserted here exits before the first model call.
 //
-//   node scripts/test-adiff-harness.mjs
+//   node --import ./scripts/lib/register-mem-blob.mjs --test scripts/test-adiff-harness.mjs
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
+const HERMETIC = fileURLToPath(new URL("./lib/register-mem-blob.mjs", import.meta.url));
+// A stranger's environment: no BLOB_READ_WRITE_TOKEN, no .env.local, only what is passed here.
+// The harness reads ROOT/.env.local by itself, so in the operator's checkout the child used to pick
+// up the real ledger token and keys, take the operator path, and reserve $2 on the LIVE spend ledger
+// per case (nine phantom "study" markers on 2026-10-14). ADIFF_NO_ENV_FILE=1 makes it a stranger.
+// The child also runs under the hermetic loader, so a regression that reaches the network or Blob
+// fails fast instead of spending; MEM_BLOB_KEEP_ENV=1 keeps the dummy keys the loader would strip.
+const strangerEnv = (env = {}) => ({ PATH: process.env.PATH, HOME: process.env.HOME, ADIFF_NO_ENV_FILE: "1", MEM_BLOB_KEEP_ENV: "1", ...env });
 const run = (args, env = {}) =>
-  spawnSync(process.execPath, ["scripts/utility-test-prereg.mjs", ...args], {
+  spawnSync(process.execPath, ["--import", HERMETIC, "scripts/utility-test-prereg.mjs", ...args], {
     cwd: ROOT,
     encoding: "utf8",
     timeout: 60_000,
-    // A stranger's environment: no BLOB_READ_WRITE_TOKEN, no .env.local, only what is passed here.
-    env: { PATH: process.env.PATH, HOME: process.env.HOME, ...env },
+    env: strangerEnv(env),
   });
 
 const DUMMY_KEYS = {
@@ -61,8 +68,15 @@ test("the blind panel cannot shrink below the registered minimum (needs >=2 judg
   assert.match(`${r.stdout}${r.stderr}`, /need >=2 judges|held-out paraphraser/);
 });
 
+test("the stranger run is sealed: a path that would reach the network fails fast instead of spending", () => {
+  const r = run(["--smoke", "1", "--yes", "--atlas", "https://engine.omnarai.org"], { ...DUMMY_KEYS, CONSUMER_MODEL: "Claude" });
+  assert.notEqual(r.status, 0);
+  assert.match(r.stderr, /no shared ledger/, "never the operator ledger path");
+  assert.match(r.stderr, /hermetic: network blocked/);
+});
+
 test("repro wrapper: --help runs offline and the old .env.local synthesis is gone", async () => {
-  const r = spawnSync("bash", ["repro/adiff-repro.sh", "--help"], { cwd: ROOT, encoding: "utf8", timeout: 60_000, env: { PATH: process.env.PATH, HOME: process.env.HOME } });
+  const r = spawnSync("bash", ["repro/adiff-repro.sh", "--help"], { cwd: ROOT, encoding: "utf8", timeout: 60_000, env: strangerEnv() });
   assert.equal(r.status, 0, r.stderr);
   assert.match(r.stdout, /NO PRIVATE STORE NEEDED/);
   const src = (await import("node:fs")).readFileSync(`${ROOT}repro/adiff-repro.sh`, "utf8");

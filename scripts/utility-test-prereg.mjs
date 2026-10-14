@@ -87,6 +87,7 @@ KEYS (environment or ./.env.local)
   Provider keys: ANTHROPIC_API_KEY OPENAI_API_KEY GEMINI_API_KEY XAI_API_KEY DEEPSEEK_API_KEY
   The consumer's own key is mandatory; the blind panel needs >= 2 judges plus a held-out paraphraser,
   i.e. at least 4 of the 5 keys. Fewer than that measures something else, so the script refuses.
+  ADIFF_NO_ENV_FILE=1 ignores ./.env.local and uses only the environment.
 
 COST AND CONSENT
   Smoke ~$1-2. Full ~$40-90. If you are the engine's operator (BLOB_READ_WRITE_TOKEN set), the run is
@@ -110,8 +111,10 @@ READ FIRST
 }
 
 // .env.local is optional: a stranger exports keys in the shell and has no such file.
+// ADIFF_NO_ENV_FILE=1 ignores it even when present — that is how scripts/test-adiff-harness.mjs
+// runs as a stranger from the operator's checkout, whose .env.local holds the real ledger token.
 const ENV_FILE = path.join(ROOT, ".env.local");
-if (fs.existsSync(ENV_FILE)) {
+if (process.env.ADIFF_NO_ENV_FILE !== "1" && fs.existsSync(ENV_FILE)) {
   for (const line of fs.readFileSync(ENV_FILE, "utf8").split("\n")) {
     const m = line.match(/^\s*([A-Z_]+)\s*=\s*(.*)\s*$/);
     if (m) { let v = m[2].trim(); if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1); if (!(m[1] in process.env)) process.env[m[1]] = v; }
