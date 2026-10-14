@@ -1706,6 +1706,89 @@
           }
         }
       }
+    },
+    "/api/sync": {
+      "get": {
+        "tags": [
+          "orientation"
+        ],
+        "operationId": "sync",
+        "summary": "Balance tracker: how many public surfaces disagree with the live numbers",
+        "description": "The substrate's own consistency check, public. Runs the same audit that gates every deploy: reads every public page as raw bytes (no JavaScript) and compares each counted figure and claim to the live engine. `status` is in_balance | out_of_sync | unknown. `summary.out_of_sync` = stale + lagging (stale: differs from live by more than 5% or is wrong in kind; lagging: a baked figure within 5%). Every discrepancy lists what the surface says, what is live, and the fix. Dated/versioned snapshots and allowlisted history (with reasons) are listed, not counted. A source that could not be read is `not_checked` — never counted as balanced; if live truth itself is unreachable `status` is `unknown`. `not_covered` states what the audit does not look at. Cached 5 minutes. ?detail=all returns every fact checked.",
+        "parameters": [
+          {
+            "name": "detail",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "summary",
+                "all"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Balance report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "in_balance",
+                        "out_of_sync",
+                        "unknown"
+                      ]
+                    },
+                    "headline": {
+                      "type": "string"
+                    },
+                    "checked_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "summary": {
+                      "type": "object"
+                    },
+                    "discrepancies": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "not_checked": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "allowlisted_history": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "not_covered": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "definition": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {

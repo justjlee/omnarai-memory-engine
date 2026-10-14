@@ -184,7 +184,7 @@ if [[ "${1:-}" == "--promote" ]]; then
   node scripts/check-surfaces.mjs --scope engine || GATE_RC=$?
   if [[ "$GATE_RC" == "1" ]]; then
     echo ">> 🔴 SURFACE-NUMBERS GATE FAILED — $DOMAIN is serving a figure that disagrees with the live numbers."
-    echo ">>    Fix forward: markers/tokens in public/*, scripts/sync-doc-counts.py; allowlist only HISTORY (docs/surface-number-allowlist.json)."
+    echo ">>    Fix forward: markers/tokens in public/*, scripts/sync-doc-counts.py; allowlist only HISTORY (api/_surface-allowlist.js)."
     exit 1
   elif [[ "$GATE_RC" != "0" ]]; then
     echo ">> 🟡 surface-numbers gate could not judge (exit $GATE_RC) — re-run: node scripts/check-surfaces.mjs --scope engine"
