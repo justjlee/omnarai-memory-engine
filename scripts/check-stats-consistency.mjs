@@ -132,7 +132,9 @@ if (ONLY !== "stats") {
     const explore = await tryText("https://omnarai.org/explore");
     if (explore !== null) {
       // Accepts "Twelve tools" (prose) or "12 tools" (the data-live token the front-door sync maintains).
-      const ew = explore.replace(/<[^>]*>/g, " ").match(/api\/mcp[\s\S]{0,120}?\b(\w+) tools/i);
+      // \s+ not a literal space: stripping the token's <span> leaves "12  tools" (two spaces) — the first
+      // deploy of the token tripped this gate on a perfectly correct page (2026-10-14).
+      const ew = explore.replace(/<[^>]*>/g, " ").match(/api\/mcp[\s\S]{0,120}?\b(\w+)\s+tools/i);
       ew ? eq("/explore remote tool count", wordOrNum(ew[1]), remoteN) : bad("/explore states no remote tool count");
     }
   }
