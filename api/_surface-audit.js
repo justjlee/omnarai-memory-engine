@@ -424,7 +424,7 @@ export function publicReport(r, { detail = "summary" } = {}) {
     allowlisted_history: facts.filter((g) => g.level === "allowed").map((g) => ({ surface: g.surface, what: what(g), says: g.got, quantity: g.quantity, why: g.detail })),
     live: r.truth,
     definition: {
-      out_of_sync: "stale + lagging. stale = a surface states a figure or claim that differs from the live engine by more than 5%, or is wrong in kind. lagging = a baked figure within 5% of live (the daily cron grows the Atlas, so pages baked at deploy time trail it).",
+      out_of_sync: "stale + lagging. stale = a surface states a figure or claim that differs from the live engine by more than 5%, or is wrong in kind. lagging = a figure within 5% of live — a page serving the numbers from its last deploy (pages fill in live numbers as they are served, and fall back to their deploy-time figures only if the engine is slow) while the daily cron grows the Atlas.",
       not_counted: "Dated or versioned snapshots ('v1.2.0 · 166 records') and allowlisted history (each with a public reason) are correct by construction, so they are not discrepancies — but they are listed.",
       not_checked: "A source we could not read is reported as not checked. It is never counted as in balance.",
       unit: "One discrepancy = one (surface, quantity, stated value). The same stale figure seen by several checks counts once.",
