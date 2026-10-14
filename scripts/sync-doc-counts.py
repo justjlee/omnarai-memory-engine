@@ -167,83 +167,26 @@ TARGETS = [
 
 
 # ── Generated figures (2026-10-14) ───────────────────────────────────────────
-# The regex TARGETS above cover specific SENTENCES. A number in any other sentence
-# or table cell was invisible to them: release-manifest.md sat ~14 Atlas records
-# behind its own rule ("if prose disagrees with the endpoints, the prose is the
-# bug"), and for-researchers.html reported "all current" with a stale count in it.
-# Two structural mechanisms replace "remember to add a regex":
-#   1. <!--live:KEY-->N<!--/live-->  — the text between the markers is GENERATED.
-#      Works in any public/*.md|html|txt. An unknown KEY is an error, never a skip.
-#   2. data-live="KEY">N<            — the no-JS fallback of a hydrated element (the
-#      browser overwrites it; crawlers and AI fetchers read only this).
-# Source of truth = /api/stats + /api/manifest (the same pair every gate reads).
-ENGINE_URL = "https://engine.omnarai.org"
-FIGURE_FILES = (sorted((BASE / "public").glob("*.md")) + sorted((BASE / "public").glob("*.html"))
-                + sorted((BASE / "public").glob("*.txt")))
-ALIASES = {"cleared": "certified", "certified_strong": "c3", "distinct": "distinct_questions"}
-_MARK = re.compile(r"(<!--live:([a-z0-9_]+)-->)([^<]*?)(<!--/live-->)")
-_TOKEN = re.compile(r'(data-live="([a-z0-9_]+)">)([^<]*)(<)')
+# The regex TARGETS above cover specific SENTENCES. Every other live figure is a GENERATED marker
+# (<!--live:KEY-->N<!--/live-->) or a data-live fallback, rewritten by ONE implementation —
+# api/_figures.js — which middleware.js also applies at REQUEST time, so deploy-time and serve-time
+# rules can never diverge. This script only delegates to it (scripts/bake-figures.mjs).
+import subprocess
 
 
-def _get_json(url):
-    req = urllib.request.Request(url, headers={"x-omnarai-self": "1"})
-    with urllib.request.urlopen(req, timeout=15) as r:
-        return json.loads(r.read())
-
-
-def load_figures():
-    """Live figures keyed for markers/tokens, or (None, reason) if the engine is unreachable."""
+def run_figure_bake(apply):
+    """Returns (files_changed, failed). Prints the bake's own report."""
+    cmd = ["node", str(BASE / "scripts/bake-figures.mjs")] + (["--apply"] if apply else [])
     try:
-        s = _get_json(ENGINE_URL + "/api/stats")
-        m = _get_json(ENGINE_URL + "/api/manifest")
-        a, c, mc = s["atlas"], s["corpus"], m["counts"]["corpus"]
-        td = a.get("tier_distribution", {})
-        q = m["domains"]["questions"]["canonical_questions"]
-        return {
-            "works": c["works"], "words": c["words"],
-            "seed_works": mc["seed_works"], "merged_proposals": mc["merged_proposals"],
-            "records": a["recorded"], "distinct_questions": q, "reelicitations": a["recorded"] - q,
-            "tested": a["tested"], "untested": a["untested"], "certified": a["certified"],
-            "c0": td.get("C0", 0), "c1": td.get("C1", 0), "c2": td.get("C2", 0), "c3": td.get("C3", 0),
-            "answers": a["verbatim_answers"], "tensions": a["tension_axes"],
-            "nodes": NODES, "edges": EDGES, "lineages": c.get("lineages"),
-            "tools_remote": s["mcp"]["remote"], "tools_stdio": s["mcp"]["stdio_default"],
-        }, None
-    except Exception as e:  # noqa: BLE001 — any failure means "don't write", never "write something"
-        return None, str(e)
-
-
-def _fmt(key, v):
-    return f"{v:,}" if key == "words" and isinstance(v, int) else str(v)
-
-
-def sync_figures(figs, apply):
-    """Rewrite generated figures in place. Returns (files_changed, errors)."""
-    changed, errors = 0, []
-    for path in FIGURE_FILES:
-        text = orig = path.read_text()
-
-        def mark(m, path=path):
-            key = m.group(2)
-            if figs.get(key) is None:
-                errors.append(f"{path.name}: unknown figure key '{key}' in <!--live:{key}-->")
-                return m.group(0)
-            return m.group(1) + _fmt(key, figs[key]) + m.group(4)
-
-        def token(m, path=path):
-            key = ALIASES.get(m.group(2), m.group(2))
-            if figs.get(key) is None:
-                errors.append(f"{path.name}: unknown figure key '{m.group(2)}' in data-live")
-                return m.group(0)
-            return m.group(1) + _fmt(key, figs[key]) + m.group(4)
-
-        text = _TOKEN.sub(token, _MARK.sub(mark, text))
-        if text != orig:
-            changed += 1
-            print(f"  {'WRITE' if apply else 'WOULD CHANGE'}: {path.relative_to(BASE.parent)}  (generated figures)")
-            if apply:
-                path.write_text(text)
-    return changed, errors
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+    except Exception as e:  # noqa: BLE001
+        print(f"  generated figures: could not run bake-figures.mjs ({e})")
+        return 0, True
+    lines = [l for l in r.stdout.splitlines() if not l.startswith("CHANGED ")]
+    if lines:
+        print("\n".join(lines))
+    m = re.search(r"^CHANGED (\d+)$", r.stdout, re.M)
+    return (int(m.group(1)) if m else 0), r.returncode == 2 or not m
 
 
 def main():
@@ -290,16 +233,11 @@ def main():
 
     # Generated figures (markers + data-live fallbacks). Skipped, never guessed, if the
     # engine can't be read — same rule as the corpus counts above.
-    figs, ferr = load_figures()
-    if figs is None:
-        print(f"  generated figures: SKIPPED — live /api/stats unreachable ({ferr})")
-    else:
-        n, errors = sync_figures(figs, args.apply)
-        total_changes += n
-        if errors:
-            for e in errors:
-                print(f"  ERROR: {e}")
-            raise SystemExit(2)
+    n, failed = run_figure_bake(args.apply)
+    total_changes += n
+    if failed:
+        print("  generated figures: FAILED (unknown key or bake error — see above)")
+        raise SystemExit(2)
     if total_changes == 0:
         print("  All doc counts already current.")
     elif not args.apply:
