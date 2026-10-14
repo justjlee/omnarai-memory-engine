@@ -27,14 +27,14 @@ the prose is the bug.
 
 ## 1. Corpus: live count vs. the static download
 
-- **Live** (`/api/info` → `corpus.totalWorks`): **567 works** at this writing.
-- **Static download** (`public/data/corpus.json`): **562 entries.**
+- **Live** (`/api/info` → `corpus.totalWorks`): **<!--live:works-->573<!--/live--> works** as of this build.
+- **Static download** (`public/data/corpus.json`): **<!--live:seed_works-->568<!--/live--> entries.**
 
 This gap is by design, not drift. `corpus.json` is an **immutable seed** — a fixed,
-citable snapshot of 562 entries. Everything approved into the corpus *after* that seed was
+citable snapshot of <!--live:seed_works-->568<!--/live--> entries. Everything approved into the corpus *after* that seed was
 frozen is appended to a durable Vercel Blob (`memory/grown.json`) and merged at cold start,
 so growth never requires a redeploy or a rewrite of the seed. The live figure is therefore
-always **seed + grown ≥ 562**; the download is the reproducible floor.
+always **seed + grown ≥ <!--live:seed_works-->568<!--/live-->**; the download is the reproducible floor.
 
 To reproduce the live number yourself: `curl -s https://engine.omnarai.org/api/info | jq
 .corpus.totalWorks`.
@@ -43,10 +43,10 @@ To reproduce the live number yourself: `curl -s https://engine.omnarai.org/api/i
 
 ## 2. Divergence Atlas: records vs. distinct questions
 
-- **Records** (`/api/divergences` → `count`): **124.**
-- **Distinct questions** (`distinct_questions`): **113.**
+- **Records** (`/api/divergences` → `count`): **<!--live:records-->175<!--/live-->.**
+- **Distinct questions** (`distinct_questions`): **<!--live:distinct_questions-->129<!--/live-->.**
 
-The difference — **11 records** — is **intentional re-elicitations**, not duplicates. A
+The difference — **<!--live:reelicitations-->46<!--/live--> records** — is **intentional re-elicitations**, not duplicates. A
 re-elicitation asks a question that an earlier record already asked, but *later, to the
 current models*: the pair is a **longitudinal probe** of whether a split persists as models
 change. A re-eliciting record carries `re_elicits: <original-id>`; `distinct_questions`
@@ -55,20 +55,20 @@ counts each shared question once. So `records − distinct_questions = re-elicit
 ### Certification split — what "certify" does and does not mean
 
 The Atlas separates **displaying** a divergence (a one-shot capture) from **certifying**
-one (it survives perturbation). At this writing:
+one (it survives perturbation). As of this build:
 
 | Field | Value | Meaning |
 |---|---|---|
-| `tested_count` | 33 | put through perturbation so far |
-| `certified_count` | 5 | cleared **some** certification tier |
-| `tier_distribution.C1` | 4 | paraphrase-robust only |
-| `tier_distribution.C3` | 1 | **paraphrase- AND pressure-robust** |
-| `tier_distribution.C0` | 119 | displayed, not yet certified |
-| untested | `count − tested_count` = 91 | never perturbation-tested |
+| `tested_count` | <!--live:tested-->47<!--/live--> | put through perturbation so far |
+| `certified_count` | <!--live:certified-->6<!--/live--> | cleared **some** certification tier |
+| `tier_distribution.C1` | <!--live:c1-->4<!--/live--> | paraphrase-robust only |
+| `tier_distribution.C3` | <!--live:c3-->2<!--/live--> | **paraphrase- AND pressure-robust** |
+| `tier_distribution.C0` | <!--live:c0-->169<!--/live--> | displayed, not yet certified |
+| untested | `count − tested_count` = <!--live:untested-->128<!--/live--> | never perturbation-tested |
 
 **Only C3 earns the unqualified phrase "genuine divergence."** C1 is a weaker bar
 (paraphrase-robust, but not shown to survive adversarial pressure). Any surface that rounds
-all five certified records up to "the robust ones" is overclaiming by the project's own
+all certified records (C1 and C3 alike) up to "the robust ones" is overclaiming by the project's own
 definitions — read `tier_distribution` from the API, not a headline. `untested` is computed
 as `count − tested_count`; it is **not** tier C0 (C0 also holds records that *were* tested
 and did not clear a tier).
@@ -80,8 +80,9 @@ and did not clear a tier).
 The Hugging Face datasets (`TheRealmsOfOmnarai/realms-of-omnarai` and the Divergence Atlas)
 are **periodic snapshots**, so they lag the live engine by design:
 
-- The **text mirror** is built on a text-only basis (~436 works at last refresh) and will
-  read lower than the live `567`; it is a documented basis difference, not a lost-records bug.
+- The **text mirror** is built on a text-only basis, so its count reads lower than the live
+  total (`<!--live:works-->573<!--/live-->` works as of this build); it is a documented basis difference, not a
+  lost-records bug. Its card states its own count and refresh date.
 - The **Atlas dataset card** freezes counts at each version bump (e.g. tested/untested), so
   it can trail the live `tested_count`. The live engine is always ahead.
 
