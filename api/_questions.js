@@ -84,7 +84,8 @@ export function spreadPercentile(spread) {
 //     it is compared against is not a measurement, it's a coincidence.
 //   · Batched in ONE request with dimensions:512, same as the canonical call.
 //
-// Verified against stored scores by scripts/test-question-scoring.mjs.
+// Pinned by scripts/test-question-scoring.mjs (hermetic method check; --live
+// re-verifies against the stored scores with real embeddings).
 const EMBED_ENDPOINT = "https://api.openai.com/v1/embeddings";
 const SPREAD_DIMS = 512;
 
