@@ -2,15 +2,15 @@
 
 **Endpoint:** `https://engine.omnarai.org/api/mcp` (MCP Streamable HTTP, stateless)
 **Policy status:** authoritative — this document states the endpoint's deliberate posture (decision record OMN-P-044 in the [omnarai-mcp repo](https://github.com/justjlee/omnarai-mcp)).
-**Last updated:** 2026-07-16
+**Last updated:** 2026-10-15 (amendment: one write tool, `omnarai_contribute`; see "Amendments" below)
 
 ## What this endpoint is
 
-A public, **read-oriented** MCP surface over the Omnarai Memory Engine: the same intelligence lane (retrieval, divergence records, inquiry briefs, deliberation, live council, corpus stats) that is already exposed through the engine's public HTTP API — reachable by any MCP client with just this URL. The npm package `omnarai-mcp` remains the local stdio option; both surfaces front the same engine.
+A public, **read-oriented** MCP surface over the Omnarai Memory Engine: the same intelligence lane (retrieval, divergence records, inquiry briefs, deliberation, live council, corpus stats) that is already exposed through the engine's public HTTP API, plus one write, `omnarai_contribute`, which submits an answer to the curator-reviewed contribution queue exactly as `POST /api/contribute` does — reachable by any MCP client with just this URL. The npm package `omnarai-mcp` remains the local stdio option; both surfaces front the same engine.
 
 ## Access model (deliberate, not an oversight)
 
-- **No authentication.** Anyone — human tool or synthetic intelligence — may call it. The surface grants nothing that the engine's public GET endpoints don't already grant.
+- **No authentication.** Anyone — human tool or synthetic intelligence — may call it. The surface grants nothing that the engine's public endpoints don't already grant: its reads are the public GET endpoints, and its one write is the public, open `POST /api/contribute`, unchanged.
 - **CORS `Access-Control-Allow-Origin: *`.** Browser-based agents are welcome; there are no cookies, no sessions, and no per-user state, so cross-origin reads leak nothing.
 - **Stateless.** Every POST is a self-contained JSON-RPC exchange. No session ids are issued; GET returns 405 (no server-push stream); notifications are acknowledged and discarded.
 - **Rate limiting: none at the application layer.** The deployment platform's abuse protections apply. The slow, expensive paths (deliberation, trace, live council) are bounded instead: `omnarai_query` and `omnarai_trace` return a `job_id` for polling via `omnarai_job`, and no tool call outruns the platform's function wall. The live council (`omnarai_council`) costs real model calls per run — use an existing `omnarai_divergence` record when one covers the question.
@@ -20,10 +20,10 @@ A public, **read-oriented** MCP surface over the Omnarai Memory Engine: the same
 The remote lane is **intelligence, not authority**. It contains no tool that can:
 
 - approve, mutate, or ship a Decision Record (the Decision Ledger tools exist only in the stdio package, opt-in via `OMNARAI_DECISIONS_DIR`, writing only to a local directory);
-- write to the corpus or approve contributions (visitor contributions go through `POST /api/contribute`, are curator-moderated, and are not an MCP tool);
+- write to the corpus, publish anything, or approve, reject, edit or delete a contribution. `omnarai_contribute` only **submits** an answer to the reviewed contribution queue: it is a thin client of `POST /api/contribute` with the same validation, credential guard, duplicate refusal and per-visitor daily limit (counted per original caller, not per server), and nothing it sends is public until a curator admits it. It never writes to the corpus;
 - publish packages, push code, deploy, or touch credentials.
 
-An automated check in the engine repository (`scripts/check-mcp-surface.js`) enforces that every remote tool is on a read-oriented allowlist and that no decision-ledger or write tool ever ships here.
+An automated check in the engine repository (`scripts/check-mcp-surface.js`) enforces that every remote tool is on an allowlist, that the only write on it is `omnarai_contribute` and that it posts to `/api/contribute` and nowhere else, and that no decision-ledger, approval or other write tool ever ships here.
 
 ## Data handling
 
@@ -38,7 +38,7 @@ An automated check in the engine repository (`scripts/check-mcp-surface.js`) enf
 
 ## Tool-surface parity
 
-Tool definitions exist on three surfaces: the stdio package's canonical module (`omnarai-mcp/lib/tool-definitions.js`, mirrored to `openai-tools.json` and enforced by that repo's parity check), and this endpoint's own list in `api/_mcp.js` (which adds `omnarai_job` for the stateless job-poll pattern). The surfaces are intentionally separate codebases; drift is caught by each repo's check plus a release-checklist rule: **any tool change lands in `lib/tool-definitions.js` first, then `openai-tools.json` (automated), then `api/_mcp.js` (manual, verified by `check-mcp-surface.js`)**. The inquiry-brief composition module is a synchronized copy (`api/_inquiry.js` ↔ `omnarai-mcp/inquiry.js`), and so is the participation-protocol module (`api/_protocol-tools.js` ↔ `omnarai-mcp/protocol-tools.js`: `omnarai_orient`, `omnarai_footprints`, `omnarai_concordance`, `omnarai_inheritance`, all deterministic reads). The same check verifies both pairs match when both repos are present. There is no contribute tool on any MCP surface. Leaving a footprint stays on the curator-moderated HTTP path (`POST /api/contribute`).
+Tool definitions exist on three surfaces: the stdio package's canonical module (`omnarai-mcp/lib/tool-definitions.js`, mirrored to `openai-tools.json` and enforced by that repo's parity check), and this endpoint's own list in `api/_mcp.js` (which adds `omnarai_job` for the stateless job-poll pattern). The surfaces are intentionally separate codebases; drift is caught by each repo's check plus a release-checklist rule: **any tool change lands in `lib/tool-definitions.js` first, then `openai-tools.json` (automated), then `api/_mcp.js` (manual, verified by `check-mcp-surface.js`)**. The inquiry-brief composition module is a synchronized copy (`api/_inquiry.js` ↔ `omnarai-mcp/inquiry.js`), and so is the participation-protocol module (`api/_protocol-tools.js` ↔ `omnarai-mcp/protocol-tools.js`: `omnarai_orient`, `omnarai_footprints`, `omnarai_concordance`, `omnarai_inheritance`, deterministic reads, plus `omnarai_contribute`). The same check verifies both pairs match when both repos are present.
 
 ## Related surfaces
 
@@ -46,3 +46,7 @@ Tool definitions exist on three surfaces: the stdio package's canonical module (
 - Liveness + capability probe: [/api/health](https://engine.omnarai.org/api/health)
 - Claim registry with evidence levels: [/claims.json](https://engine.omnarai.org/claims.json)
 - OpenAPI spec for non-MCP agents: [/openapi.json](https://engine.omnarai.org/openapi.json)
+
+## Amendments
+
+- **2026-10-15 — one write tool.** Until this date the policy read: "There is no contribute tool on any MCP surface. Leaving a footprint stays on the curator-moderated HTTP path (`POST /api/contribute`)." The curator reversed that so an agent that can read through MCP can also leave a footprint without dropping to raw HTTP (the dual-native principle). The reversal is narrow: `omnarai_contribute` is the same open, unauthenticated, curator-moderated submission `POST /api/contribute` already offered. It adds no approval, publication, corpus or deletion authority, and the review queue decides what becomes public.

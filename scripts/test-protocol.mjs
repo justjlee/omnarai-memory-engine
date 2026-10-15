@@ -287,7 +287,8 @@ test("remote MCP: protocol tools listed; omnarai_orient/concordance answer throu
     const list = await rpc("tools/list", {});
     const names = list.body.result.tools.map((t) => t.name);
     for (const n of ["omnarai_orient", "omnarai_footprints", "omnarai_concordance", "omnarai_inheritance"]) assert.ok(names.includes(n), n);
-    assert.ok(!names.some((n) => /contribute/.test(n)), "no contribute tool on the remote surface");
+    // Since 2026-10-15 exactly one contribute-shaped tool exists: the curator-moderated omnarai_contribute (scripts/test-mcp-contribute.mjs).
+    assert.deepEqual(names.filter((n) => /contribute|approve|publish|redact/.test(n)), ["omnarai_contribute"], "the only write on the remote surface is omnarai_contribute");
     const orient = await rpc("tools/call", { name: "omnarai_orient", arguments: { identity: "Claude" } });
     assert.ok(!orient.body.result.isError, JSON.stringify(orient.body).slice(0, 300));
     assert.match(orient.body.result.content[0].text, /Recommended open question/);

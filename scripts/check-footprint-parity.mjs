@@ -46,6 +46,22 @@ const sample = FP.footprintFromContribution(
 );
 if (!same(schema.required, Object.keys(sample))) problems.push(`schema required [${schema.required}] ≠ built footprint keys [${Object.keys(sample)}]`);
 if (FP.validateFootprint(sample).length) problems.push(`the builder emits an invalid footprint: ${FP.validateFootprint(sample)[0]}`);
+if (sample.schema_version !== FP.FOOTPRINT_SCHEMA || !same(P.content.required, Object.keys(sample.content))) problems.push("a contribution without revision_basis no longer mints exactly footprint/1.0");
+// footprint/1.1 = 1.0 + content.revision_basis. Same vocabularies; only the version const and that one field differ.
+const schema11 = JSON.parse(read("public/schemas/footprint-1.1.schema.json"));
+const P11 = schema11.properties;
+if (P11.schema_version.const !== FP.FOOTPRINT_SCHEMA_1_1) problems.push("footprint-1.1 schema_version const drifted");
+if (!same(FP.FOOTPRINT_SCHEMAS, [FP.FOOTPRINT_SCHEMA, FP.FOOTPRINT_SCHEMA_1_1])) problems.push("FOOTPRINT_SCHEMAS is not exactly [1.0, 1.1]");
+for (const k of Object.keys(P)) if (!["schema_version", "content"].includes(k) && JSON.stringify(P[k]) !== JSON.stringify(P11[k])) problems.push(`footprint-1.1 schema differs from 1.0 outside content/schema_version: ${k}`);
+if (!same(P11.content.required, [...P.content.required, "revision_basis"])) problems.push("footprint-1.1 content.required ≠ 1.0 + revision_basis");
+if (P11.content.properties.revision_basis?.maxLength !== FP.MAX_REVISION_BASIS_CHARS) problems.push(`footprint-1.1 revision_basis maxLength ≠ ${FP.MAX_REVISION_BASIS_CHARS}`);
+const sample11 = FP.footprintFromContribution(
+  { id: "OMN-X1790000000000", target_id: "OMN-D1780000000001", question: "q?", identity: "Claude", justification: "replication", answer: "a", submittedAt: "2026-10-15T00:00:00.000Z", revision_basis: "why" },
+  { recordQuestion: "q?", id: "OMN-FP-1790000000000-00000000" },
+);
+if (sample11.schema_version !== FP.FOOTPRINT_SCHEMA_1_1) problems.push("a contribution with revision_basis does not mint footprint/1.1");
+if (!same(P11.content.required, Object.keys(sample11.content))) problems.push(`footprint-1.1 content.required [${P11.content.required}] ≠ built content keys [${Object.keys(sample11.content)}]`);
+if (FP.validateFootprint(sample11).length) problems.push(`the builder emits an invalid 1.1 footprint: ${FP.validateFootprint(sample11)[0]}`);
 
 // ── 2. Routes on every surface ────────────────────────────────────────────────
 // Each entry: [public path, rewrite destination prefix]. Grows with each phase.
@@ -83,12 +99,21 @@ for (const [label, needle] of [["welcome", "You don't have to be anything in par
 }
 
 // ── 3. MCP tools ──────────────────────────────────────────────────────────────
-export const PROTOCOL_TOOLS = ["omnarai_orient", "omnarai_footprints", "omnarai_concordance", "omnarai_inheritance"];
+export const PROTOCOL_TOOLS = ["omnarai_orient", "omnarai_footprints", "omnarai_concordance", "omnarai_inheritance", "omnarai_contribute"];
+// The one write (2026-10-15): a thin client of the curator-moderated POST /api/contribute. Any OTHER write-shaped name fails.
+const WRITE_TOOL = "omnarai_contribute";
 const { TOOLS: REMOTE } = await import("../api/_mcp.js");
 const remoteNames = REMOTE.map((t) => t.name);
 for (const t of PROTOCOL_TOOLS) if (!remoteNames.includes(t)) problems.push(`remote MCP (api/_mcp.js) is missing ${t}`);
 const writeish = /contribute|footprint_(create|write|post)|approve|redact|publish/i;
-for (const n of remoteNames) if (writeish.test(n)) problems.push(`remote MCP exposes a write-shaped tool: ${n}`);
+for (const n of remoteNames) if (n !== WRITE_TOOL && writeish.test(n)) problems.push(`remote MCP exposes a write-shaped tool: ${n}`);
+// The tool's enums must be the contribution gate's own vocabularies, or an agent is offered a value the gate rejects.
+{
+  const props = REMOTE.find((t) => t.name === WRITE_TOOL)?.inputSchema?.properties || {};
+  if (!same(props.justification?.enum || [], FP.JUSTIFICATIONS)) problems.push(`${WRITE_TOOL}.justification enum ≠ JUSTIFICATIONS`);
+  if (!same(props.event_type?.enum || [], FP.CONTRIBUTION_EVENT_TYPES)) problems.push(`${WRITE_TOOL}.event_type enum ≠ CONTRIBUTION_EVENT_TYPES`);
+  if (!same(props.actor_kind?.enum || [], FP.ACTOR_KINDS)) problems.push(`${WRITE_TOOL}.actor_kind enum ≠ ACTOR_KINDS`);
+}
 const sibling = `${root}../omnarai-mcp/`;
 if (existsSync(`${sibling}lib/tool-definitions.js`)) {
   const { ENGINE_TOOLS } = await import(`${sibling}lib/tool-definitions.js`);
@@ -98,7 +123,7 @@ if (existsSync(`${sibling}lib/tool-definitions.js`)) {
     if (!npmNames.includes(t)) problems.push(`npm MCP (omnarai-mcp/lib/tool-definitions.js) is missing ${t}`);
     if (!oa.includes(t)) problems.push(`omnarai-mcp/openai-tools.json is missing ${t}`);
   }
-  for (const n of npmNames) if (writeish.test(n)) problems.push(`npm MCP exposes a write-shaped engine tool: ${n}`);
+  for (const n of npmNames) if (n !== WRITE_TOOL && writeish.test(n)) problems.push(`npm MCP exposes a write-shaped engine tool: ${n}`);
 } else {
   console.log("note: ../omnarai-mcp not found — npm/openai MCP parity skipped");
 }
