@@ -182,3 +182,27 @@ test("a curator accept reads as human-checked; a rule accept carries the actual 
   assert.equal(Object.keys(CONSENSUS_SERVED).length, CONSENSUS_RULE.served_count);
   assert.equal(reviewFromAction(realId, "reject", 0).state, "rejected");
 });
+
+// ── Loader: bounded + retried + never a quietly partial set (2026-10-15) ────────────────────────────────────
+import { getDefaultStore } from "../api/_footprints.js";
+import { loadDerivedPositions } from "../api/_protocol.js";
+
+test("transient read failures are retried — every stored derivation comes back", async () => {
+  fresh();
+  await run(["--run", "--apply"], { classifier: stub, log: quiet, outDir });
+  const base = getDefaultStore();
+  const failsLeft = new Map(); // each blob fails its first read
+  const flaky = { ...base, readJson: async (u) => { if (!failsLeft.has(u)) { failsLeft.set(u, 0); throw new Error("fetch failed"); } return base.readJson(u); } };
+  const all = await loadDerivedPositions(flaky, { backoffMs: 1 });
+  assert.equal(all.length, 10, "nothing silently dropped");
+});
+
+test("a derivation that stays unreadable makes the loader REFUSE, never return a partial set", async () => {
+  fresh();
+  await run(["--run", "--apply"], { classifier: stub, log: quiet, outDir });
+  const base = getDefaultStore();
+  const blobs = await base.listPrefix(DERIVED_PREFIX);
+  const broken = blobs[3].url;
+  const flaky = { ...base, readJson: async (u) => { if (u === broken) throw new Error("fetch failed"); return base.readJson(u); } };
+  await assert.rejects(loadDerivedPositions(flaky, { backoffMs: 1 }), /1 of 10 derived positions could not be read/);
+});
