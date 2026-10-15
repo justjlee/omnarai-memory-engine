@@ -181,6 +181,10 @@
       "destination": "/api/council?_view=invite"
     },
     {
+      "source": "/api/footprints/status",
+      "destination": "/api/council?_view=footprint-status"
+    },
+    {
       "source": "/api/footprints",
       "destination": "/api/council?_view=footprints"
     },

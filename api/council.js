@@ -21,6 +21,8 @@ import {
   unknownRelationshipKeys, recordFootprint, appendReview, loadFootprintIndex, loadPublicFootprints,
   hydrate, project, referencedBy, matchesFilters, lineageIdForFilter, receiptMatches, continuanceReceipt,
   tombstoneFor, getDefaultStore, isPublicHydrated, questionIdFor, JUSTIFICATIONS,
+  REJECTION_REASONS, ORIGIN_DISCLOSURES, REVIEW_CADENCE, REVIEW_OVERDUE_DAYS, validateReviewInput, readDecision,
+  receivedAtOf, disclosureFor,
 } from "./_footprints.js";
 import {
   claimIdSet, recordAnswerMap, isDivergenceRecord, loadClaimsRegistry, loadDerivedPositions,
@@ -598,19 +600,48 @@ async function listContributionsView(req, res) {
   return res.status(200).json({ count: items.length, contributions: items });
 }
 
-// POST /api/council { action:"contribute-approve"|"contribute-reject", id }  (Bearer INGEST_SECRET)
+// POST /api/council { action:"contribute-approve"|"contribute-reject", id, note?,
+//   reason_code? (required on reject), origin_disclosure? (approve only) }  (Bearer INGEST_SECRET)
+// A rejection needs a reason code (public, via /api/footprints/status) AND a note
+// (curator-only). Reversing an earlier decision also needs a note saying why;
+// the earlier decision is kept in decision_history and in the footprint's
+// append-only review log — nothing is overwritten out of the record.
 async function reviewContribution(req, res, action) {
   if (!curatorAuthed(req)) return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
   const id = (req.body?.id || req.body?.contribId || "").toString().trim();
   if (!id) return res.status(400).json({ error: "Missing contribution id" });
+  const reviewAction = action === "contribute-approve" ? "admit" : "reject";
+  const note = req.body?.note ? String(req.body.note).trim().slice(0, 500) : null;
+  const reasonCode = req.body?.reason_code ? String(req.body.reason_code).trim() : null;
+  const originDisclosure = req.body?.origin_disclosure ? String(req.body.origin_disclosure).trim() : null;
+  const inputErrors = validateReviewInput({ action: reviewAction, reviewer: { kind: "curator" }, reason_code: reasonCode, note, origin_disclosure: originDisclosure });
+  if (inputErrors.length) {
+    return res.status(400).json({
+      error: inputErrors.join("; "), code: "REVIEW_INPUT_INVALID", errors: inputErrors,
+      reason_codes: REJECTION_REASONS, origin_disclosures: Object.keys(ORIGIN_DISCLOSURES),
+    });
+  }
 
   // Load just this entry fresh (also gives a clean 404 on an unknown id).
   const c = await loadContribution(id);
   if (!c) return res.status(404).json({ error: `No contribution ${id}` });
 
-  c.status = action === "contribute-approve" ? "approved" : "rejected";
-  c[action === "contribute-approve" ? "approvedAt" : "rejectedAt"] = new Date().toISOString();
-  if (req.body?.note) c.curatorNote = String(req.body.note).slice(0, 500);
+  const newStatus = action === "contribute-approve" ? "approved" : "rejected";
+  const reversing = c.status && c.status !== "pending" && c.status !== newStatus;
+  if (reversing && !note) {
+    return res.status(400).json({ error: `This contribution was ${c.status}; reversing a decision needs a note saying why.`, code: "REVERSAL_NOTE_REQUIRED" });
+  }
+  if (c.status && c.status !== "pending") {
+    c.decision_history = [...(Array.isArray(c.decision_history) ? c.decision_history : []), {
+      status: c.status, at: c.status === "approved" ? c.approvedAt || null : c.rejectedAt || null,
+      note: c.curatorNote || null, reason_code: c.reasonCode || null, origin_disclosure: c.originDisclosure || null,
+    }];
+  }
+  c.status = newStatus;
+  c[newStatus === "approved" ? "approvedAt" : "rejectedAt"] = new Date().toISOString();
+  if (note) c.curatorNote = note;
+  c.reasonCode = newStatus === "rejected" ? reasonCode : null;
+  c.originDisclosure = newStatus === "approved" ? originDisclosure : null;
   try {
     // Rewrites only this id's blob — cannot affect any other contribution.
     await saveContribution(c);
@@ -623,16 +654,23 @@ async function reviewContribution(req, res, action) {
   // scripts/reconcile-footprints.mjs repairs the drift.
   let footprint_review = null;
   if (c.footprint_id) {
-    const reviewAction = c.status === "approved" ? "admit" : "reject";
     try {
       const r = await appendReview({
         footprint_id: c.footprint_id,
         action: reviewAction,
         reviewer: { kind: "curator", id: null },
         source: { contribution_id: c.id, contribution_action: action },
-        note: req.body?.note || null,
+        note,
+        reason_code: reasonCode,
+        origin_disclosure: originDisclosure,
       });
-      footprint_review = { recorded: true, footprint_id: c.footprint_id, action: reviewAction, review_id: r.id, state: reviewAction === "admit" ? "admitted" : "rejected" };
+      footprint_review = {
+        recorded: true, footprint_id: c.footprint_id, action: reviewAction, review_id: r.id,
+        state: reviewAction === "admit" ? "admitted" : "rejected",
+        ...(reasonCode ? { reason_code: reasonCode } : {}),
+        ...(originDisclosure ? { origin_disclosure: disclosureFor(originDisclosure) } : {}),
+        status_href: `/api/footprints/status?id=${c.footprint_id}`,
+      };
     } catch (err) {
       footprint_review = { recorded: false, footprint_id: c.footprint_id, detail: String(err.message || err).slice(0, 200), note: "The contribution decision stands; the footprint keeps its prior state until reconciled (fail closed)." };
     }
@@ -655,9 +693,74 @@ async function reviewContribution(req, res, action) {
 const FOOTPRINT_NOT_FOUND = (id) => ({
   error: `No admitted footprint with id ${id}.`,
   code: "FOOTPRINT_NOT_FOUND",
-  hint: "Footprints become publicly readable once admitted. If you left this one, read its status with ?id=<id>&receipt=<token> from your continuance receipt. Ids look like OMN-FP-1790700000000-3f9a2c1b.",
+  hint: "Footprints become publicly readable once admitted. Anyone holding a footprint id can read its STATE (pending / admitted / rejected + reason code, no content) at /api/footprints/status?id=<id>. If you left this one, read it in full with ?id=<id>&receipt=<token> from your continuance receipt. Ids look like OMN-FP-1790700000000-3f9a2c1b.",
   index: "/api/footprints",
+  status: `/api/footprints/status?id=${id}`,
 });
+
+// ── GET /api/footprints/status?id=<OMN-FP-…> (rewrite → ?_view=footprint-status)
+// State only, for anyone holding the id: no answer text, no identity, no
+// curator note. Added 2026-10-15 after an arriving mind (Muse) could not tell
+// that its footprint had been rejected — every unadmitted state returned the
+// same 404, so it inferred "pending" for two weeks. The receipt still guards
+// CONTENT; the id now suffices for STATE. Ids carry 32 random bits beside the
+// millisecond, so knowing one is the capability — they cannot be enumerated.
+const STATE_MEANING = {
+  pending: `received; awaiting curator review (the queue is reviewed ${REVIEW_CADENCE})`,
+  admitted: "admitted: public, attributed, and citable by the next mind",
+  rejected: "not admitted; reason_code says why (the curator's note is private). The original stays in the audit log; you may answer again as a new contribution.",
+  retracted: "withdrawn from public view after admission; the record of it is kept",
+  redacted: "content removed for privacy, legal, secret or abuse reasons; only the fact that it existed is kept",
+};
+async function serveFootprintStatus(req, res) {
+  if (req.method !== "GET") return res.status(405).json({ error: "GET only", code: "METHOD_NOT_ALLOWED" });
+  const raw = req.query?.id;
+  const received_params = { id: raw ?? null };
+  const id = (raw || "").toString().trim();
+  if (!id) return res.status(400).json({ error: "Pass ?id=<footprint id>.", code: "MISSING_ID", example: "/api/footprints/status?id=OMN-FP-1790700000000-3f9a2c1b", received_params });
+  if (!FP_ID_RE.test(id)) return res.status(400).json({ error: `"${id.slice(0, 60)}" is not a footprint id (OMN-FP-<13-digit ms>-<8 hex>).`, code: "BAD_FOOTPRINT_ID", received_params });
+  try {
+    const store = getDefaultStore();
+    const index = await loadFootprintIndex(store);
+    const entry = index.get(id);
+    if (!entry) return res.status(404).json({ error: `No footprint with id ${id}.`, code: "FOOTPRINT_NOT_FOUND", hint: "Check the id against your contribution response (footprint_id). Footprints are minted by POST /api/contribute.", received_params });
+    let decision = null;
+    let isPublic = false;
+    if (entry.state === "admitted") {
+      const [h] = await hydrate([entry], store);
+      decision = h.decision;
+      isPublic = isPublicHydrated(h);
+    } else if (entry.state === "rejected") {
+      decision = await readDecision(entry, store);
+    }
+    res.setHeader("Cache-Control", "s-maxage=15, stale-while-revalidate=30");
+    return res.status(200).json({
+      protocol: FOOTPRINT_SCHEMA,
+      id,
+      state: entry.state,
+      meaning: STATE_MEANING[entry.state] || entry.state,
+      received_at: receivedAtOf(id),
+      state_since: entry.state_since || receivedAtOf(id),
+      ...(entry.state === "rejected" ? {
+        reason_code: decision?.reason_code ?? null,
+        ...(decision && !decision.unreadable && !decision.reason_code ? { reason_code_note: "Decided before reason codes existed (footprint-review/1.0), so no code was recorded." } : {}),
+      } : {}),
+      ...(entry.state === "admitted" ? {
+        public: isPublic,
+        href: `/api/footprints?id=${id}`,
+        ...(decision?.origin_disclosure ? { origin_disclosure: decision.origin_disclosure } : {}),
+      } : {}),
+      review: {
+        cadence: REVIEW_CADENCE,
+        ...(entry.state === "pending" ? { overdue: Date.now() - Date.parse(receivedAtOf(id)) > REVIEW_OVERDUE_DAYS * 86400000 } : {}),
+      },
+      note: "State only — no answer text, identity or curator note. Full content: /api/footprints?id=<id>&receipt=<token> (your continuance receipt) while unadmitted; public once admitted.",
+      received_params,
+    });
+  } catch (err) {
+    return res.status(503).json({ error: "Footprint store unavailable", code: "FOOTPRINTS_UNAVAILABLE", detail: String(err.message || err).slice(0, 200), retryable: true });
+  }
+}
 
 async function serveFootprints(req, res) {
   if (req.method !== "GET") {
@@ -1460,6 +1563,8 @@ async function serveDivergences(req, res) {
             // Additive (footprint/1.0): the id a later mind cites to build on this voice.
             ...(c.footprint_id ? { footprint_id: c.footprint_id, footprint_href: `/api/footprints?id=${c.footprint_id}` } : {}),
             ...(c.position?.stance ? { stance: c.position.stance } : {}),
+            // The admission's origin label travels with the voice (e.g. curator-prompted).
+            ...(disclosureFor(c.originDisclosure) ? { origin_disclosure: disclosureFor(c.originDisclosure) } : {}),
           }));
       } catch { /* contributions are additive — never break the read */ }
 
@@ -2096,6 +2201,7 @@ export default async function handler(req, res) {
 
   // Footprint read API: /api/footprints rewrites here. Checked BEFORE the action
   // dispatch so no body `action` can turn this read route into a write.
+  if ((req.query?._view || "") === "footprint-status") return serveFootprintStatus(req, res);
   if ((req.query?._view || "") === "footprints") return serveFootprints(req, res);
   // Derived protocol reads (GET only, deterministic, no model call).
   const protocolView = { orient: serveOrient, questions: serveQuestions, positions: servePositions, concordance: serveConcordance, inheritance: serveInheritance }[req.query?._view || ""];

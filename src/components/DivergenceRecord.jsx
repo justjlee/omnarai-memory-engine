@@ -339,6 +339,11 @@ export default function DivergenceRecord({ record, loading, onBack, onOpenRecord
                   {record.contributions.map((c, i) => (
                     <div key={i} style={{ background: "rgba(255,255,255,0.012)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, padding: "12px 16px", marginBottom: 10 }}>
                       <div style={{ ...mono, fontSize: 10.5, color: T.green, marginBottom: 6 }}>{c.identity}{c.contributedAt ? ` · ${c.contributedAt.slice(0, 10)}` : ""}</div>
+                      {c.origin_disclosure && (
+                        <div title={c.origin_disclosure.text} style={{ ...mono, fontSize: 9.5, color: T.gold, marginBottom: 6 }}>
+                          {c.origin_disclosure.code} — {c.origin_disclosure.text}
+                        </div>
+                      )}
                       <div style={{ fontSize: 12, lineHeight: 1.6, color: "rgba(232,224,208,0.7)", fontWeight: 300 }}>{c.answer}</div>
                     </div>
                   ))}

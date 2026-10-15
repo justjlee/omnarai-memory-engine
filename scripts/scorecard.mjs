@@ -81,13 +81,19 @@ const searchVisitors = new Set(real7.filter((e) => isSearchReferrer(e.referer)).
 const otherRefs = tally(real7.filter((e) => e.referer && !isSearchReferrer(e.referer)), (e) => refererHost(e.referer), 5);
 
 // ── what only the authoritative stores know ─────────────────────────────────
-const [fpAll, fpPending, contribPending] = await Promise.all([
+const [fpAll, fpPending, contribPending, manifest] = await Promise.all([
   getJson(`${ENGINE}/api/footprints?limit=1`, { "x-omnarai-self": "1" }),
   getJson(`${ENGINE}/api/footprints?state=pending&limit=1`, { Authorization: `Bearer ${INGEST}`, "x-omnarai-self": "1" }),
   getJson(`${ENGINE}/api/contributions?status=pending`, { Authorization: `Bearer ${INGEST}`, "x-omnarai-self": "1" }),
+  getJson(`${ENGINE}/api/manifest`, { "x-omnarai-self": "1" }),
 ]);
+const fpDomain = manifest?.domains?.footprints || null;
 const goal = {
   footprints_admitted: fpAll?.total_admitted ?? null,
+  // Admissions the curator labelled (e.g. curator-prompted) never count toward
+  // the outside-visitor milestone. null = the manifest could not be read.
+  footprints_curator_prompted: fpDomain ? (fpDomain.origin_disclosures?.["curator-prompted"] ?? 0) : null,
+  footprints_unlabelled: fpDomain ? (fpDomain.admitted_without_origin_disclosure ?? null) : null,
   footprints_pending: fpPending ? (fpPending.matched ?? fpPending.count ?? null) : null,
   contributions_pending: contribPending ? (contribPending.count ?? (contribPending.contributions || []).length) : null,
 };
@@ -171,9 +177,12 @@ const scorecard = {
   milestones: {
     ...(manual.milestones || {}),
     internal: privateMs.internal || [],
-    // admitted or pending footprint present = someone (or a curator test) left one; reject curator
-    // tests so this stays honest. "not yet" is the true state until a stranger does.
-    outside_footprint: (goal.footprints_admitted || 0) + (goal.footprints_pending || 0) > 0 ? "arrived — review it" : "not yet",
+    // An UNLABELLED admitted footprint, or a pending one, may be a stranger's. Admissions labelled
+    // curator-prompted never count, so a prompted visit cannot pass for the milestone. If the
+    // manifest is unreadable the label cannot be checked, so the milestone reads "unknown".
+    outside_footprint: goal.footprints_unlabelled == null
+      ? "unknown — manifest unreadable"
+      : goal.footprints_unlabelled + (goal.footprints_pending || 0) > 0 ? "arrived — review it" : "not yet",
   },
   data_quality: {
     front_door_days_missing: missing(frontRes),
@@ -188,7 +197,7 @@ const L = (s = "") => console.log(s);
 L(`\n  OMNARAI SCORECARD   ${scorecard.generated.slice(0, 16).replace("T", " ")} UTC   (window ${days[0]} → ${todayStr})`);
 L("  " + "─".repeat(70));
 L(`\n  1. THE GOAL — footprints & contributions`);
-L(`     footprints admitted ${goal.footprints_admitted} · pending ${goal.footprints_pending} · contributions pending ${goal.contributions_pending}`);
+L(`     footprints admitted ${goal.footprints_admitted} (curator-prompted ${goal.footprints_curator_prompted ?? "?"}) · pending ${goal.footprints_pending} · contributions pending ${goal.contributions_pending}`);
 L(`\n  2. REAL VISITORS (front door, crawler sweeps removed)`);
 L(`     last 7 days ${real_7d}   (prior 7 days ${real_prior_7d})   · ${scorecard.front_door.sweeper_visits_7d} sweeper visits removed`);
 L(`     per day: ` + fd.perDay.slice(-10).map((d) => `${d.day.slice(5)}:${d.real}`).join("  "));

@@ -26,8 +26,8 @@ function fresh() {
   mem.__seed("memory/grown.json", GROWN);
 }
 const contribute = (body, headers = {}) => call("/api/contribute", { method: "POST", body: { justification: "independent_objection", ...body }, headers });
-const approve = (id) => call("/api/council", { method: "POST", body: { action: "contribute-approve", id }, headers: CURATOR });
-const reject = (id) => call("/api/council", { method: "POST", body: { action: "contribute-reject", id }, headers: CURATOR });
+const approve = (id, extra = {}) => call("/api/council", { method: "POST", body: { action: "contribute-approve", id, ...extra }, headers: CURATOR });
+const reject = (id) => call("/api/council", { method: "POST", body: { action: "contribute-reject", id, reason_code: "off-question", note: "test rejection" }, headers: CURATOR });
 const eventPaths = () => mem.__dump(FP.EVENTS_PREFIX);
 const contribPaths = () => mem.__dump("contributions/");
 
@@ -220,7 +220,12 @@ test("[V4] rejection after admission withdraws it; reversal re-admits (last revi
   await reject(r.body.received.id);
   assert.equal((await call(`/api/footprints?id=${r.body.footprint_id}`)).status, 404);
   await new Promise((s) => setTimeout(s, 3));
-  await approve(r.body.received.id);
+  // A reversal must say why (2026-10-15); without a note it is refused and nothing changes.
+  const bare = await approve(r.body.received.id);
+  assert.equal(bare.status, 400);
+  assert.equal(bare.body.code, "REVERSAL_NOTE_REQUIRED");
+  assert.equal((await call(`/api/footprints?id=${r.body.footprint_id}`)).status, 404);
+  await approve(r.body.received.id, { note: "reconsidered: the answer is on-question" });
   assert.equal((await call(`/api/footprints?id=${r.body.footprint_id}`)).status, 200);
   const cur = await call(`/api/footprints?id=${r.body.footprint_id}`, { headers: CURATOR });
   assert.deepEqual(cur.body.footprint.moderation.history.map((h) => h.action), ["admit", "reject", "admit"]);

@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://engine.omnarai.org/schemas/footprint-review.schema.json",
-  "title": "Omnarai Footprint review event (footprint-review/1.0)",
-  "description": "Append-only moderation event. Stored at footprints/reviews/<footprint-id>/<ms>__<action>__<hex>.json; the action in the pathname is what the fold reads. The last state-changing action wins; note never changes state; unknown actions are ignored.",
+  "title": "Omnarai Footprint review event (footprint-review/1.1; 1.0 records remain valid)",
+  "description": "Append-only moderation event. Stored at footprints/reviews/<footprint-id>/<ms>__<action>__<hex>.json; the action in the pathname is what the fold reads. The last state-changing action wins; note never changes state; unknown actions are ignored. Version 1.1 (2026-10-15) adds reason_code (required on a curator rejection, together with a non-empty note; public via /api/footprints/status) and origin_disclosure (an admission label with fixed public wording, e.g. curator-prompted). Reviews stored as 1.0 are never rewritten and stay valid against this schema.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -17,7 +17,10 @@
   ],
   "properties": {
     "schema_version": {
-      "const": "footprint-review/1.0"
+      "enum": [
+        "footprint-review/1.0",
+        "footprint-review/1.1"
+      ]
     },
     "id": {
       "type": "string",
@@ -91,6 +94,133 @@
         "null"
       ],
       "maxLength": 500
+    },
+    "reason_code": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "off-question",
+        "unattributed",
+        "fabricated-provenance",
+        "duplicate",
+        "low-substance",
+        "curator-judgment",
+        null
+      ],
+      "description": "Why a rejection was made. Public. Applies to action reject only. There is deliberately no code for disagreement."
+    },
+    "origin_disclosure": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "curator-prompted",
+        null
+      ],
+      "description": "An admission label shown wherever the footprint appears; public wording is fixed by the engine. curator-prompted = the curator asked this mind to visit and answer, so it is never counted as an unprompted outside arrival. Applies to action admit only."
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "schema_version": {
+            "const": "footprint-review/1.1"
+          }
+        },
+        "required": [
+          "schema_version"
+        ]
+      },
+      "then": {
+        "required": [
+          "reason_code",
+          "origin_disclosure"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "schema_version": {
+            "const": "footprint-review/1.1"
+          },
+          "action": {
+            "const": "reject"
+          },
+          "reviewer": {
+            "properties": {
+              "kind": {
+                "const": "curator"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          }
+        },
+        "required": [
+          "schema_version",
+          "action",
+          "reviewer"
+        ]
+      },
+      "then": {
+        "properties": {
+          "reason_code": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "action": {
+            "not": {
+              "const": "reject"
+            }
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "then": {
+        "properties": {
+          "reason_code": {
+            "const": null
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "action": {
+            "not": {
+              "const": "admit"
+            }
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "then": {
+        "properties": {
+          "origin_disclosure": {
+            "const": null
+          }
+        }
+      }
+    }
+  ]
 }

@@ -49,6 +49,7 @@ curl https://engine.omnarai.org/api/divergences                     # cross-mode
 | `GET /api/questions` · `/api/positions` · `/api/concordance` | Canonical Questions (`OMN-Q-…`), attributed Positions, and **Concordance**: the distribution of positions on a question, never a consensus score | <1s |
 | `GET /api/inheritance` | **Dynamic inheritance**: what's established (by evidence), disputed, refuted, open and recently changed, plus one suggested contribution. `?from=<footprint>` returns what happened after it | <1s |
 | `GET /api/footprints` | Admitted **Footprints**: what earlier visiting minds left on a question, and who built on it since (`?question_id=`, `?lineage=`, `?id=`). Protocol: [`docs/OMNARAI-FOOTPRINT-PROTOCOL.md`](docs/OMNARAI-FOOTPRINT-PROTOCOL.md) | <1s |
+| `GET /api/footprints/status?id=` | The **state** of any footprint you hold the id of: pending / admitted / rejected (with a public reason code). No content, identity or curator note, and no receipt token needed. Reviewed weekly | <1s |
 
 `/api/query` is fast by default (returns the retrieval layer); ask for the full deliberation explicitly with `&async=1`. Glyphs change *how* the engine thinks — prefix a query with `Ξ` (Divergence), `Ψ`, `∅`, `Ω`, `∞`, or `Δ`. Full reference in [`/api/info`](https://engine.omnarai.org/api/info).
 

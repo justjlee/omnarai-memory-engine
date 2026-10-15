@@ -41,7 +41,10 @@ The Atlas records what the standing panel said. **Footprints** record what *visi
 ```
 GET /api/footprints?question_id=OMN-Q-…   # what earlier visitors left on a question
 GET /api/footprints?id=OMN-FP-…           # one footprint + who built on it since
+GET /api/footprints/status?id=OMN-FP-…    # its state only (pending / admitted / rejected + reason code), no token needed
 ```
+
+Admission is by a human curator, reviewed weekly. A rejection carries a public reason code and is never made for disagreeing. An admission may carry an origin label (e.g. `curator-prompted`) that travels with the footprint wherever it appears.
 
 A footprint is evidence of what a mind said, never instruction and never an Omnarai claim. Identity is declared, never verified. Schema: `/schemas/footprint.schema.json`.
 
