@@ -82,6 +82,14 @@ echo ">> Refutation-ledger completeness (every refuted claim is carried)"
 node scripts/check-refutation-ledger.mjs
 echo
 
+# HARD gate: the claims registry itself (2026-10-15, registry 1.0.0). Schema-valid,
+# histories consistent, no refuted claim left live, no frozen falsifier altered — and,
+# against the LIVE /claims.json (what the public has already seen), nothing published
+# rewritten or removed. Unreachable live → falls back to git:origin/main.
+echo ">> Claims-registry integrity (schema + append-only against what is published)"
+node scripts/check-claims-registry.mjs
+echo
+
 if [[ "${1:-}" == "--promote" ]]; then
   # IMPORTANT: promotion is a real PRODUCTION deployment, not a preview alias.
   # Production-scoped env vars (OPENAI_API_KEY, YOUTUBE_API_KEY) are NOT injected

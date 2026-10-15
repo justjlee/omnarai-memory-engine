@@ -115,6 +115,20 @@ The single place to track **what we've agreed is coming next** (kept short; deta
 the sections below). *The 2026-10-01 queue above is current; the items below predate the freeze and the Footprint protocol.* Move items up here when we commit to them; strike them when they ship.
 
 **Agreed / in-flight continuations:**
+- **The 2026-10-14 handoff package (Muse, Meta) — eight work items, curator-approved one at a time.**
+  WI1 footprint admission pipeline SHIPPED 2026-10-15 (PR #21). WI2 claims registry 1.0.0 (minimal
+  profile) in flight. Deferred from them, agreed 2026-10-15:
+  - **MCP footprint-status option.** `GET /api/footprints/status?id=` is live over HTTP; the
+    `omnarai_footprints` MCP tool can't ask for it yet. Needs both MCP copies changed
+    (`omnarai-mcp/protocol-tools.js` ↔ `api/_protocol-tools.js`) and an npm release.
+  - **Claims registry v1.1** — what the minimal 1.0.0 deferred: curator-written `scope` for the 12
+    migrated claims (they carry `scope: null`); ratings for the 18 migrated objections still
+    `unrated`; a review of each claim's `source_claims`; whether the objections removed or reworded
+    before 1.0 (quoted in `/claims/migration-1.0.0.md`) re-enter the record; lifecycle enforcement
+    (curator-approved transitions) and the spec's API, only once a claim actually needs to move.
+  - **Decision log** (handoff WI8 / `governance/CURATOR.md` §7): one append-only log of
+    admissions, status changes and other curator decisions. Today a decision lives only where
+    it was made (a footprint's review history, a claim's `status_history`).
 - Ingest the **11 playlist-ahead videos** into the media corpus + a playlist↔corpus drift check.
 - **Dual-native `/visual-transmissions.md`** — a machine index so a model can read the videos.
 - **Finalize the "Visual Transmissions" name** (currently provisional) → then propagate the

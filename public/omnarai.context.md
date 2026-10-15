@@ -408,7 +408,7 @@ For MCP-compatible clients (Claude Desktop and others), an MCP server is availab
 
 This project distinguishes what it asserts from what it has measured. The full registry —
 every load-bearing claim, its evidence level, and what would falsify it — is machine-readable
-at `/claims.json`. As of 2026-07-15:
+at `/claims.json`. Since registry 1.0.0 (2026-10-15) each claim carries two independent labels: `evidence_level` (the evidence) and `status` (the lifecycle: `open`, `refuted`, `confirmed`, …). Whether a claim is live or dead is readable from `status` alone (the file's `_statuses` table). Wording, status and objections change only by appending to `versions[]`, `status_history[]` and the objections list; the deploy gate refuses any rewrite of what was published. Schema: `/schemas/claims-registry-1.0.0.schema.json` · migration report: `/claims/migration-1.0.0.md` · the 0.8.0 file, frozen: `/claims/v0.8.0.json`. As of 2026-07-15:
 
 - **Replicated:** Atlas exposure sharpens some consumers' answers. A preregistered confirmatory
   study (locked 2026-06-18, run 2026-07-15) confirmed all five registered predictions —

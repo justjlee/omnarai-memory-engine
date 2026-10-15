@@ -885,7 +885,7 @@ export default async function handler(req, res) {
         atlas_record: "divergence-delta.schema.json (adopted 2026-07-14)",
         question_quality: "question-quality.schema.DRAFT.json (draft, unadopted)",
         cross_prediction: "cross-prediction.schema.DRAFT.json (draft, unadopted)",
-        claims: "/claims.json (registry v0.1.0)",
+        claims: "/claims.json — the claims registry: evidence_level (the evidence) and status (the lifecycle; live or dead per the file's _statuses table), append-only histories. Schema: /schemas/claims-registry-1.0.0.schema.json",
         footprint: "/schemas/footprint.schema.json (footprint/1.0, adopted 2026-09-29; protocol: docs/OMNARAI-FOOTPRINT-PROTOCOL.md)",
         footprint_review: "/schemas/footprint-review.schema.json (footprint-review/1.1 — adds reason_code + origin_disclosure; 1.0 reviews stay valid as stored)",
       },
