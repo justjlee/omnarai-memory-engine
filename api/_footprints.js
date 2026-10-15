@@ -29,6 +29,12 @@ import { list as blobList, put as blobPut } from "@vercel/blob";
 import { findFamily } from "./_lineages.js";
 
 export const FOOTPRINT_SCHEMA = "footprint/1.0";
+// footprint/1.1 (2026-10-15) = 1.0 + content.revision_basis ("what changed my view, or why it did not"). A
+// contribution that sends revision_basis mints 1.1; every other contribution still mints exactly 1.0, and stored
+// 1.0 bodies are never rewritten.
+export const FOOTPRINT_SCHEMA_1_1 = "footprint/1.1";
+export const FOOTPRINT_SCHEMAS = [FOOTPRINT_SCHEMA, FOOTPRINT_SCHEMA_1_1];
+export const MAX_REVISION_BASIS_CHARS = 2000;
 // 1.1 (2026-10-15) adds reason_code + origin_disclosure. Reviews written as 1.0
 // stay exactly as stored and remain valid; nothing is migrated in place.
 export const REVIEW_SCHEMA = "footprint-review/1.1";
@@ -224,6 +230,7 @@ const TOP_KEYS = ["schema_version", "id", "event_type", "occurred_at", "actor", 
 const ACTOR_KEYS = ["identity_declared", "lineage_id", "lineage_resolution", "provider", "model_id", "actor_kind"];
 const SUBJECT_KEYS = ["question_id", "claim_id", "record_id"];
 const CONTENT_KEYS = ["answer", "stance", "summary", "conditions", "justification"];
+const CONTENT_KEYS_1_1 = [...CONTENT_KEYS, "revision_basis"];
 const REL_KEYS = [...RELATION_LISTS, "supersedes"];
 const PROV_KEYS = ["channel", "source_contribution_id", "client", "submitted_by", "recorded_at"];
 const MOD_KEYS = ["state", "public"];
@@ -248,7 +255,8 @@ export function isWellFormedRef(ref) {
 export function validateFootprint(fp) {
   const errors = [];
   if (!unknownKeys(fp, TOP_KEYS, "footprint", errors)) return errors;
-  if (fp.schema_version !== FOOTPRINT_SCHEMA) errors.push(`schema_version must be "${FOOTPRINT_SCHEMA}"`);
+  if (!FOOTPRINT_SCHEMAS.includes(fp.schema_version)) errors.push(`schema_version must be one of ${FOOTPRINT_SCHEMAS.map((s) => `"${s}"`).join(", ")}`);
+  const v11 = fp.schema_version === FOOTPRINT_SCHEMA_1_1;
   if (!FP_ID_RE.test(fp.id || "")) errors.push("id must match OMN-FP-<13-digit ms>-<8 hex>");
   if (!EVENT_TYPES.includes(fp.event_type)) errors.push(`event_type must be one of ${EVENT_TYPES.join(", ")}`);
   if (!ISO_RE.test(fp.occurred_at || "")) errors.push("occurred_at must be an ISO-8601 UTC timestamp");
@@ -272,8 +280,10 @@ export function validateFootprint(fp) {
     if (s.record_id != null && !(ATLAS_RECORD_RE.test(s.record_id) || CORPUS_ID_RE.test(s.record_id))) errors.push("subject.record_id must be an Atlas or corpus record id");
   }
 
-  if (unknownKeys(fp.content, CONTENT_KEYS, "content", errors)) {
+  if (unknownKeys(fp.content, v11 ? CONTENT_KEYS_1_1 : CONTENT_KEYS, "content", errors)) {
     const c = fp.content;
+    // 1.1 exists only to carry revision_basis, so a 1.1 body always has one.
+    if (v11 && (typeof c.revision_basis !== "string" || !c.revision_basis.trim() || c.revision_basis.length > MAX_REVISION_BASIS_CHARS)) errors.push(`content.revision_basis must be a non-empty string ≤ ${MAX_REVISION_BASIS_CHARS} chars in ${FOOTPRINT_SCHEMA_1_1}`);
     if (typeof c.answer !== "string" || !c.answer.trim()) errors.push("content.answer must be a non-empty string");
     else if (c.answer.length > MAX_ANSWER_CHARS) errors.push(`content.answer exceeds ${MAX_ANSWER_CHARS} chars`);
     if (c.stance != null && !STANCES.includes(c.stance)) errors.push(`content.stance must be one of ${STANCES.join(", ")} or null`);
@@ -442,8 +452,9 @@ export function footprintFromContribution(contribution, { recordQuestion, id, cl
   const stance = pos?.stance ?? null;
   const eventType = c.event_type || (stance ? "position_declared" : "answer_contributed");
   const bridge = c.bridge || null;
+  const basis = typeof c.revision_basis === "string" && c.revision_basis.trim() ? c.revision_basis : null;
   const fp = {
-    schema_version: FOOTPRINT_SCHEMA,
+    schema_version: basis ? FOOTPRINT_SCHEMA_1_1 : FOOTPRINT_SCHEMA,
     id,
     event_type: eventType,
     occurred_at: c.submittedAt,
@@ -459,6 +470,7 @@ export function footprintFromContribution(contribution, { recordQuestion, id, cl
       summary: pos?.summary ?? null,
       conditions: Array.isArray(pos?.conditions) ? pos.conditions : [],
       justification: c.justification || null,
+      ...(basis ? { revision_basis: basis } : {}),
     },
     relationships: normalizeRelationships(c.relationships),
     evidence_refs: Array.isArray(c.evidence_refs) ? c.evidence_refs : [],
