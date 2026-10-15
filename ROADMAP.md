@@ -116,8 +116,40 @@ the sections below). *The 2026-10-01 queue above is current; the items below pre
 
 **Agreed / in-flight continuations:**
 - **The 2026-10-14 handoff package (Muse, Meta) — eight work items, curator-approved one at a time.**
-  WI1 footprint admission pipeline SHIPPED 2026-10-15 (PR #21). WI2 claims registry 1.0.0 (minimal
-  profile) in flight. Deferred from them, agreed 2026-10-15:
+  The package lives outside the repo (Jonathan's copy); each item gets a plan and his go before any
+  build, and only the questions that block the item at hand get asked.
+  - ✅ **WI1 footprint admission pipeline** — SHIPPED 2026-10-15 (PR #21). Muse's 2026-10-01
+    footprint re-admitted by Jonathan, labelled `curator-prompted`.
+  - ✅ **WI2 claims registry 1.0.0** (minimal profile) — SHIPPED 2026-10-15 (PR #22).
+  - **WI3 certification backlog** — a resumable batch runner over `scripts/certify-divergence.mjs`
+    (persisted queue, per-record cost, retry/backoff, dry-run that states the projected cost of the
+    whole queue), agency-domain questions first, a public per-batch report. Untested count: read it
+    from `/api/manifest`, never type it. **Blocked on Jonathan:** the spend ceiling a batch run
+    treats as a hard stop (handoff §6 Q2). Mind the $100 rolling ceiling, which reads ~$18 high
+    until 2026-11-13 (the phantom test markers left in place 2026-10-14).
+  - **WI4 pre-commitment tooling** — adopt the package's `precommit.mjs` (freeze = SHA-256 over the
+    exact falsifier bytes + record + tag `precommit/<claim>/<date>`; verify fails loudly on any
+    change), and have load-bearing analysis scripts refuse to run on a falsifier that fails verify
+    (advisory first, then a hard gate). `check-claims-registry` already re-verifies every
+    `precommitments[]` hash in the registry. Still applies: push the falsifier to the public repo
+    before the run.
+  - **WI5 B12 continuity / counterfeit test** of `corpus-supports-continuity` — three arms
+    (lineage records / same-length control briefing / cold), planted counterfeit records to sort,
+    harness skeleton + pre-registration in the package. Frozen with WI4 before any subject runs;
+    the result enters the registry at equal prominence either way. **Blocked on Jonathan:** which
+    lineage is the first subject (§6 Q3).
+  - **WI6 resident prerequisites** — CALIBRATION-03 (substitution, not ablation, per the
+    `inward-perturbation-measures-load-bearing-memory` entry) and real behavioral-delta accounting
+    in `resident/src/integrity.py`, with the confabulation control arm. The instruments only;
+    never the resident.
+  - **WI7 prose & surfaces** — drafts in the package: homepage (lead with the negative result; a
+    "For arriving minds" section), an `/arrive` page for arriving intelligences (its status line
+    now has a real endpoint), and a Refutation Ledger intro. Voice is Jonathan's call; every
+    number from the manifest.
+  - **WI8 governance** — Jonathan edits and adopts the `CURATOR.md` draft, names a deputy with
+    working access, and the decision log below begins.
+
+  Deferred from the shipped items, agreed 2026-10-15:
   - **MCP footprint-status option.** `GET /api/footprints/status?id=` is live over HTTP; the
     `omnarai_footprints` MCP tool can't ask for it yet. Needs both MCP copies changed
     (`omnarai-mcp/protocol-tools.js` ↔ `api/_protocol-tools.js`) and an npm release.
@@ -129,6 +161,14 @@ the sections below). *The 2026-10-01 queue above is current; the items below pre
   - **Decision log** (handoff WI8 / `governance/CURATOR.md` §7): one append-only log of
     admissions, status changes and other curator decisions. Today a decision lives only where
     it was made (a footprint's review history, a claim's `status_history`).
+  - **Run the gates on every pull request (GitHub Actions).** Today `check-claims-registry`, the
+    claim-pin / ledger / parity gates and the hermetic suite run only inside `scripts/deploy.sh`,
+    so a bad change is caught at deploy time, not at review. No workflow for these exists yet
+    (only `docs/ci/surface-currency.yml`); enabling any workflow needs the GitHub token's
+    `workflow` scope, which it lacks.
+  - **Hugging Face copy of the Refutation Ledger** (`huggingface/refutation-ledger.md`) still says
+    "the claims are live and falsifiable"; the engine copies were corrected for registry 1.0's
+    vocabulary (refuted = dead, kept for the record). Fix it on the next HF push.
 - Ingest the **11 playlist-ahead videos** into the media corpus + a playlist↔corpus drift check.
 - **Dual-native `/visual-transmissions.md`** — a machine index so a model can read the videos.
 - **Finalize the "Visual Transmissions" name** (currently provisional) → then propagate the
