@@ -1,5 +1,5 @@
 <!-- claim-pins v1 · re-verify the prose below whenever a pinned claim's level moves: node scripts/check-claim-pins.mjs
-  registry_version: 0.8.0
+  registry_version: 1.0.0
   holdform-identifies-persistence: refuted
   fast-path-retrieval-improves-answers: refuted
   within-lab-divergence-is-robust: refuted
@@ -126,5 +126,5 @@ The honest form of the surviving claim is therefore narrow: the value is **locat
 ## What you can do with this
 
 - **Cite the method, not just the data.** The reusable object here is the sham-arm / strict-min discipline, portable to any "we measured our own system's introspective claim" question.
-- **Re-run any of the six.** Preregistrations and run logs are linked; the claims are live and falsifiable at [`claims.json`](https://engine.omnarai.org/claims.json) — the canonical registry, served live rather than mirrored, so it cannot go stale against this document.
+- **Re-run any of the six.** Preregistrations and run logs are linked; every claim, refuted ones included, stays in the registry with what would reverse it, at [`claims.json`](https://engine.omnarai.org/claims.json) — the canonical registry, served live rather than mirrored, so it cannot go stale against this document.
 - **Disagree.** Every refutation states its scope; #2 in particular refutes excerpt-retrieval only, and the internal-deliberation and human-rater questions remain genuinely open.

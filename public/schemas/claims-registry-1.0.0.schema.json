@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://engine.omnarai.org/schemas/claims-registry-1.0.0.schema.json",
+  "title": "Omnarai Claims Registry v1.0.0 (minimal profile)",
+  "description": "The whole registry file (/claims.json). Normative basis: Claims Registry Specification v1.0 (Muse, 2026-10-01), minimal profile (R7.1); derived from the schema in the 2026-10-14 handoff package and extended where the specification requires more (version, scope, precommitments, status_history, x- extensions). `status` is a closed lifecycle enum ORTHOGONAL to `evidence_level`; closure is closed_at + closed_reason, never a dated status string. Deliberate v1.0 deviations, recorded in the migration report: (1) `scope` may be null on claims migrated from 0.8.0 (not yet written; due in v1.1) but is required on every new claim; (2) migrated objections may carry severity \"unrated\" but every new objection must be rated. Rules a JSON Schema cannot express (version numbering, history chaining, append-only against the published file) are enforced by scripts/check-claims-registry.mjs.",
+  "type": "object",
+  "required": ["claims_registry_version", "registry_version", "updated_at", "claims"],
+  "properties": {
+    "claims_registry_version": { "const": "1.0.0" },
+    "registry_version": { "const": "1.0.0", "description": "Legacy alias of claims_registry_version, kept so pre-1.0 readers keep working." },
+    "registry_name": { "type": "string" },
+    "registry_uri": { "type": "string" },
+    "about": { "type": "string" },
+    "license": { "type": "string" },
+    "curators": { "type": "array", "items": { "type": "string" } },
+    "updated_at": { "type": "string", "format": "date" },
+    "migrated_from": { "type": "string" },
+    "previous_versions": { "type": "array", "items": { "type": "string" } },
+    "claims": {
+      "type": "array",
+      "items": {
+        "title": "One load-bearing claim",
+        "type": "object",
+        "additionalProperties": false,
+        "patternProperties": { "^x-": {} },
+        "required": [
+          "claim_id", "wording", "version", "scope", "evidence_level", "evidence_note", "falsification_conditions",
+          "precommitments", "known_objections", "required_experiment", "maintainer", "status", "status_history",
+          "closed_at", "closed_reason", "provenance", "versions"
+        ],
+        "properties": {
+          "claim_id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "description": "Stable, immutable, never reused (R2.1)." },
+          "wording": { "type": "string", "minLength": 1, "description": "Exact current wording; equals the last versions[] entry (R2.2)." },
+          "version": { "type": "integer", "minimum": 1, "description": "Current wording-version number; equals the last versions[] entry." },
+          "scope": { "type": ["string", "null"], "description": "What this claim does NOT assert (R2.5). null = not yet written (migrated claims only; due in v1.1)." },
+          "canonical_url": { "type": "string" },
+          "evidence_level": { "enum": ["untested", "anecdotal", "measured_differential", "replicated", "refuted"] },
+          "evidence_note": { "type": "string" },
+          "falsification_conditions": { "type": "string" },
+          "precommitments": {
+            "type": "array",
+            "description": "Falsifiers frozen BEFORE computation (SHA-256 over the exact UTF-8 bytes). Empty for every migrated claim: none was digest-frozen at the time, and one may not be added retroactively (spec C.1).",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["falsifier_text", "sha256", "frozen_at", "frozen_by"],
+              "properties": {
+                "falsifier_text": { "type": "string", "minLength": 1 },
+                "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+                "frozen_at": { "type": "string", "format": "date-time" },
+                "frozen_by": { "type": "string" },
+                "context": { "type": "string" },
+                "outcome": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "verdict": { "enum": ["fired", "not_fired", "inconclusive"] },
+                    "ran_at": { "type": "string", "format": "date-time" },
+                    "predicted_direction": { "type": "string" },
+                    "observed_direction": { "type": "string" },
+                    "effect_size": { "type": "string" },
+                    "ci": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "known_objections": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "patternProperties": { "^x-": {} },
+              "required": ["objection", "severity", "status"],
+              "properties": {
+                "objection": { "type": "string", "minLength": 1, "description": "Verbatim. Never reworded in place." },
+                "severity": { "enum": ["low", "medium", "high", "fatal-if-unanswered", "unrated"] },
+                "status": { "enum": ["open", "addressed", "conceded"] },
+                "raised_by": { "type": "string" },
+                "date": { "type": "string", "format": "date" }
+              },
+              "allOf": [
+                {
+                  "if": { "properties": { "severity": { "const": "unrated" } }, "required": ["severity"] },
+                  "then": { "required": ["x-legacy"] },
+                  "description": "Only an objection migrated from 0.8.0 may be unrated; every new objection must be rated."
+                }
+              ]
+            }
+          },
+          "required_experiment": { "type": "string" },
+          "maintainer": { "type": "string", "minLength": 1 },
+          "status": {
+            "enum": ["proposed", "open", "under_test", "confirmed", "refuted", "scoped", "superseded", "withdrawn"],
+            "description": "Lifecycle, orthogonal to evidence_level. Terminal: confirmed, refuted, scoped, superseded, withdrawn. See the registry's _statuses table for what each means."
+          },
+          "status_history": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Append-only record of every transition (R2.4); the first entry is the registration (from: null).",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["from", "to", "changed_at", "changed_by", "reason"],
+              "properties": {
+                "from": { "enum": ["proposed", "open", "under_test", "confirmed", "refuted", "scoped", "superseded", "withdrawn", null] },
+                "to": { "enum": ["proposed", "open", "under_test", "confirmed", "refuted", "scoped", "superseded", "withdrawn"] },
+                "changed_at": { "type": "string", "format": "date-time" },
+                "changed_by": { "type": "string" },
+                "reason": { "type": "string", "minLength": 1 },
+                "evidence_ref": { "type": "string" }
+              }
+            }
+          },
+          "closed_at": { "type": ["string", "null"], "format": "date-time" },
+          "closed_reason": { "type": ["string", "null"] },
+          "provenance": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["created_at", "created_by", "source_claims", "supersedes"],
+            "properties": {
+              "created_at": { "type": "string", "format": "date-time" },
+              "created_by": { "type": "string" },
+              "source_claims": { "type": "array", "items": { "type": "string" } },
+              "supersedes": { "type": ["string", "null"] },
+              "legacy_status": { "type": "string", "description": "Migration only: the 0.8.0 status, verbatim. Never set on new claims." }
+            }
+          },
+          "versions": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Append-only wording history (R2.3); entry 1 is the ORIGINAL wording.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["version", "wording", "changed_at", "changed_by", "reason"],
+              "properties": {
+                "version": { "type": "integer", "minimum": 1 },
+                "wording": { "type": "string", "minLength": 1 },
+                "changed_at": { "type": "string", "format": "date-time" },
+                "changed_by": { "type": "string" },
+                "reason": { "type": "string", "minLength": 1 }
+              }
+            }
+          }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "evidence_level": { "const": "refuted" } }, "required": ["evidence_level"] },
+            "then": { "properties": { "status": { "enum": ["refuted", "scoped", "superseded", "withdrawn"] } } },
+            "description": "A refuted claim is never live."
+          },
+          {
+            "if": { "properties": { "status": { "enum": ["confirmed", "refuted", "scoped", "superseded", "withdrawn"] } }, "required": ["status"] },
+            "then": { "properties": { "closed_at": { "type": "string" }, "closed_reason": { "type": "string", "minLength": 1 } } },
+            "else": { "properties": { "closed_at": { "const": null }, "closed_reason": { "const": null } } },
+            "description": "Terminal ⇔ closed."
+          },
+          {
+            "if": { "properties": { "provenance": { "not": { "required": ["legacy_status"] } } }, "required": ["provenance"] },
+            "then": { "properties": { "scope": { "type": "string", "minLength": 1 } } },
+            "description": "Every claim registered after the migration must state its scope."
+          }
+        ]
+      }
+    }
+  },
+  "patternProperties": { "^_": {}, "^x-": {} },
+  "additionalProperties": false
+}

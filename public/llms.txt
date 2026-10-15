@@ -406,6 +406,7 @@ engine repo) so history cannot be silently rewritten, even by the curator.
 ```
 GET /claims.json
 ```
+Since registry 1.0.0 (2026-10-15) each claim carries two independent labels: `evidence_level` (the evidence) and `status` (the lifecycle: `open`, `refuted`, `confirmed`, …). Whether a claim is live or dead is readable from `status` alone (the file's `_statuses` table). Wording, status and objections change only by appending to `versions[]`, `status_history[]` and the objections list; the deploy gate refuses any rewrite of what was published. Schema: `/schemas/claims-registry-1.0.0.schema.json` · migration report: `/claims/migration-1.0.0.md` · the 0.8.0 file, frozen: `/claims/v0.8.0.json`.
 Every load-bearing claim with its evidence level (untested → anecdotal → measured_differential →
 replicated / refuted), falsification conditions, and the experiment that would move it. Includes
 the project's first `replicated` claim (Atlas utility, preregistered-confirmed) and its first

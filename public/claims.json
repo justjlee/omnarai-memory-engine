@@ -1,5 +1,5 @@
 {
-  "_about": "Omnarai Claim Registry (B3, seeded 2026-07-15). A structured registry preventing philosophy from silently hardening into fact — the adversarial-essay principle as a data structure. Every load-bearing claim carries its evidence level, what would falsify it, the standing objections, and the experiment that would move it. Static file, curator-maintained; served at /claims.json.",
+  "_about": "Omnarai Claim Registry (B3, seeded 2026-07-15). A structured registry preventing philosophy from silently hardening into fact — the adversarial-essay principle as a data structure. Every load-bearing claim carries its evidence level, what would falsify it, the standing objections, and the experiment that would move it. Static file, curator-maintained; served at /claims.json. Since v1.0.0 (2026-10-15) this file follows the minimal profile of the Claims Registry Specification v1.0: `status` is the lifecycle (live or dead is readable from status alone — see _statuses), `evidence_level` is the evidence, an independent axis; wording, status and objections change only by appending to their histories. Schema: /schemas/claims-registry-1.0.0.schema.json. The 0.8.0 file is frozen at /claims/v0.8.0.json; the migration is accounted for claim by claim in /claims/migration-1.0.0.md.",
   "_evidence_levels": {
     "untested": "No measurement exists; the claim is thesis or design intent.",
     "anecdotal": "Observed informally (single runs, demonstrators); not controlled.",
@@ -7,164 +7,821 @@
     "replicated": "Measured effect reproduced under independent conditions (disjoint judges, new seeds, or external replication).",
     "refuted": "A fair test came back negative; the claim is retained for the record, not asserted."
   },
-  "registry_version": "0.8.0",
-  "updated_at": "2026-10-05",
+  "_statuses": {
+    "proposed": {
+      "live": true,
+      "terminal": false,
+      "meaning": "Registered, not yet admitted to testing."
+    },
+    "open": {
+      "live": true,
+      "terminal": false,
+      "meaning": "Held at its evidence_level. No verdict has been issued."
+    },
+    "under_test": {
+      "live": true,
+      "terminal": false,
+      "meaning": "A decisive test is running or pre-registered."
+    },
+    "confirmed": {
+      "live": true,
+      "terminal": true,
+      "meaning": "Verdict: supported at its stated scope and evidence_level."
+    },
+    "scoped": {
+      "live": true,
+      "terminal": true,
+      "meaning": "Verdict: survives only at a reduced scope (see scope)."
+    },
+    "refuted": {
+      "live": false,
+      "terminal": true,
+      "meaning": "Verdict: a fair test came back negative. Retained for the record at full prominence; NOT asserted."
+    },
+    "superseded": {
+      "live": false,
+      "terminal": true,
+      "meaning": "Replaced by another claim (provenance.supersedes on the successor). Retained, not asserted."
+    },
+    "withdrawn": {
+      "live": false,
+      "terminal": true,
+      "meaning": "Withdrawn by the curator. Retained, not asserted."
+    }
+  },
+  "claims_registry_version": "1.0.0",
+  "registry_version": "1.0.0",
+  "registry_name": "Omnarai Claims Registry",
+  "registry_uri": "https://engine.omnarai.org/claims.json",
+  "curators": [
+    "xz"
+  ],
+  "updated_at": "2026-10-15",
+  "migrated_from": "0.8.0",
+  "previous_versions": [
+    "https://engine.omnarai.org/claims/v0.8.0.json"
+  ],
   "claims": [
     {
       "claim_id": "cross-model-divergence-is-prevalent",
       "wording": "On today's frontier model versions, asking five models the same open question reliably surfaces robust, structural cross-model divergence — disagreement larger than each model's own re-roll variance — as the common case. (The premise the Divergence Atlas was built on.)",
+      "version": 1,
+      "scope": null,
       "evidence_level": "refuted",
       "evidence_note": "Measured across the 2026-07 certification campaign (scripts/certify-divergence.mjs, --runs 3 strict-min consensus). Of 124 recorded splits, only 5 (4%) certify as robust under paraphrase + adversarial perturbation (tier C1+); the other 119 are C0. On the 33 questions carried through Divergence Robustness Index (DRI) scoring — a subset selected BECAUSE they looked divergent — the median DRI is 0.987 (mean 1.013): for the median question the between-model spread does not exceed a single model's own re-elicitation variance, and 19 of 33 fall below 1.0 (net-convergent). The prevalent case is convergence, not divergence. The strong reading — that robust cross-model divergence is the norm — is refuted. What survives, asserted only at that scope: genuine, certifiable divergence EXISTS but is RARE and concentrated in behavioral-ethical questions (intervention vs. autonomy, self-trust, tuning-as-identity), not metaphysical ones — the entire certified core is those 5 records. Downloads to date (2026-07-26): Atlas 47 all-time, 0 likes — so the finding also has essentially no external audience yet; reach, not the artifact, is the current bottleneck.",
       "falsification_conditions": "Reversal (not scoping) would require a broader, temporally-diverse question set producing a median DRI meaningfully above 1.0 under the same multi-run instrument, or a certification rate materially above ~4%. Scoping rather than reversal: a later model generation that diverges more, a question domain engineered to split models, or a divergence metric more sensitive than embedding-distance DRI.",
+      "precommitments": [],
       "known_objections": [
-        "The 33 DRI-scored questions are a non-random subset chosen because they appeared divergent — this biases the sample TOWARD divergence, making the convergence result conservative, not inflated.",
-        "Embedding-distance DRI may under-detect real conceptual divergence carried in similar surface language.",
-        "Temporal monoculture — most records are single-day captures (2026-06-06); convergence measured on one generation need not hold across generations. A tentative 'divergence closing over generations' signal (DRI < 1.0 on current versions vs. higher recorded historical values) exists but is n~10 and unreplicated.",
-        "Mechanism is a hypothesis, not a measurement: shared pretraining data plus convergent alignment is the plausible cause, and differing weights evidently do NOT manifest as behavioral divergence on most questions — but why is not established here."
+        {
+          "objection": "The 33 DRI-scored questions are a non-random subset chosen because they appeared divergent — this biases the sample TOWARD divergence, making the convergence result conservative, not inflated.",
+          "severity": "unrated",
+          "status": "open",
+          "date": "2026-07-26",
+          "x-legacy": {
+            "source": "claims.json 0.8.0",
+            "first_recorded": "git:b55738a",
+            "note": "status \"open\" is the spec C.1 migration default, not a review; raised_by was never recorded."
+          }
+        },
+        {
+          "objection": "Embedding-distance DRI may under-detect real conceptual divergence carried in similar surface language.",
+          "severity": "unrated",
+          "status": "open",
+          "date": "2026-07-26",
+          "x-legacy": {
+            "source": "claims.json 0.8.0",
+            "first_recorded": "git:b55738a",
+            "note": "status \"open\" is the spec C.1 migration default, not a review; raised_by was never recorded."
+          }
+        },
+        {
+          "objection": "Temporal monoculture — most records are single-day captures (2026-06-06); convergence measured on one generation need not hold across generations. A tentative 'divergence closing over generations' signal (DRI < 1.0 on current versions vs. higher recorded historical values) exists but is n~10 and unreplicated.",
+          "severity": "unrated",
+          "status": "open",
+          "date": "2026-07-26",
+          "x-legacy": {
+            "source": "claims.json 0.8.0",
+            "first_recorded": "git:b55738a",
+            "note": "status \"open\" is the spec C.1 migration default, not a review; raised_by was never recorded."
+          }
+        },
+        {
+          "objection": "Mechanism is a hypothesis, not a measurement: shared pretraining data plus convergent alignment is the plausible cause, and differing weights evidently do NOT manifest as behavioral divergence on most questions — but why is not established here.",
+          "severity": "unrated",
+          "status": "open",
+          "date": "2026-07-26",
+          "x-legacy": {
+            "source": "claims.json 0.8.0",
+            "first_recorded": "git:b55738a",
+            "note": "status \"open\" is the spec C.1 migration default, not a review; raised_by was never recorded."
+          }
+        }
       ],
       "required_experiment": "Re-run the panel on a temporally-spread, deliberately outside-position question bank (the annotation layer found 109/111 questions are panel-implicating 'inside-position'; seeding an outside arm makes an inside/outside divergence comparison runnable) under --runs 3 strict-min, reporting the full DRI distribution as the primary outcome.",
       "maintainer": "xz",
-      "status": "open"
+      "status": "refuted",
+      "status_history": [
+        {
+          "from": null,
+          "to": "refuted",
+          "changed_at": "2026-07-26T12:11:14.000Z",
+          "changed_by": "xz",
+          "reason": "Registered in claims.json 0.7.0 at evidence_level \"refuted\" (git b55738a: \"Present the convergence finding as the data shows it: models mostly converge\"). Reconstructed at migration.",
+          "evidence_ref": "git:b55738a"
+        }
+      ],
+      "closed_at": "2026-07-26T12:11:14.000Z",
+      "closed_reason": "Refuted; the decisive evidence is in evidence_note. Closure date = when this registry recorded the refutation (git b55738a); the legacy status \"open\" carried no closure date.",
+      "provenance": {
+        "created_at": "2026-07-26T12:11:14.000Z",
+        "created_by": "xz",
+        "source_claims": [],
+        "supersedes": null,
+        "legacy_status": "open"
+      },
+      "versions": [
+        {
+          "version": 1,
+          "wording": "On today's frontier model versions, asking five models the same open question reliably surfaces robust, structural cross-model divergence — disagreement larger than each model's own re-roll variance — as the common case. (The premise the Divergence Atlas was built on.)",
+          "changed_at": "2026-07-26T12:11:14.000Z",
+          "changed_by": "xz",
+          "reason": "Registered in claims.json 0.7.0 (git b55738a: \"Present the convergence finding as the data shows it: models mostly converge\")."
+        }
+      ]
     },
     {
       "claim_id": "divergence-adds-unique-info",
       "wording": "Verbatim cross-model divergence records contain decision-relevant information that no single model can regenerate alone.",
+      "version": 1,
+      "scope": null,
       "evidence_level": "anecdotal",
       "evidence_note": "First controlled test PASSED (2026-07-15, run XP-36b4699ab09a on the C1-certified question): in the cross-prediction protocol, one strong model simulating all five voices did NOT match real peer-prediction accuracy (control-arm verdict: distinct); per-model irreducibility ranged 0.180 (GPT-4o) to 0.355 (DeepSeek). Single question, embedding-scored, unreplicated — the level stays anecdotal until the protocol replicates across more certified questions and blinded-judge scoring.",
       "falsification_conditions": "The cross-prediction control arm (cross-prediction.schema.DRAFT.json): if one strong model's simulated 5×5 matrix matches the real matrix (collapse_verdict=collapsed) across certified questions, the claim fails.",
+      "precommitments": [],
       "known_objections": [
-        "A frontier model prompted to role-play five architectures may reproduce most of the spread.",
-        "Question-selection bias: records were captured on questions chosen to elicit disagreement."
+        {
+          "objection": "A frontier model prompted to role-play five architectures may reproduce most of the spread.",
+          "severity": "unrated",
+          "status": "open",
+          "date": "2026-07-15",
+          "x-legacy": {
+            "source": "claims.json 0.8.0",
+            "first_recorded": "git:06bab7a",
+            "note": "status \"open\" is the spec C.1 migration default, not a review; raised_by was never recorded."
+          }
+        },
+        {
+          "objection": "Question-selection bias: records were captured on questions chosen to elicit disagreement.",
+          "severity": "unrated",
+          "status": "open",
+          "date": "2026-07-15",
+          "x-legacy": {
+            "source": "claims.json 0.8.0",
+            "first_recorded": "git:06bab7a",
+            "note": "status \"open\" is the spec C.1 migration default, not a review; raised_by was never recorded."
+          }
+        }
       ],
       "required_experiment": "B5 cross-prediction protocol on B11-certified questions, control arm included.",
       "maintainer": "xz",
-      "status": "open"
+      "status": "open",
+      "status_history": [
+        {
+          "from": null,
+          "to": "open",
+          "changed_at": "2026-07-15T10:39:22.000Z",
+          "changed_by": "xz",
+          "reason": "Registered in claims.json 0.1.0 at evidence_level \"anecdotal\" (git 06bab7a: \"Review-synthesis session: §5 verification, primary backup script, B11/B5 draft schemas, B3 claim registry seed\"). Reconstructed at migration.",
+          "evidence_ref": "git:06bab7a"
+        }
+      ],
+      "closed_at": null,
+      "closed_reason": null,
+      "provenance": {
+        "created_at": "2026-07-15T10:39:22.000Z",
+        "created_by": "xz",
+        "source_claims": [],
+        "supersedes": null,
+        "legacy_status": "open"
+      },
+      "versions": [
+        {
+          "version": 1,
+          "wording": "Verbatim cross-model divergence records contain decision-relevant information that no single model can regenerate alone.",
+          "changed_at": "2026-07-15T10:39:22.000Z",
+          "changed_by": "xz",
+          "reason": "Registered in claims.json 0.1.0 (git 06bab7a: \"Review-synthesis session: §5 verification, primary backup script, B11/B5 draft schemas, B3 claim registry seed\")."
+        }
+      ]
     },
     {
       "claim_id": "divergence-improves-reasoning",
       "wording": "Consulting the Divergence Atlas measurably sharpens SOME consumer models' answers relative to placebo self-reflection — an architecture-dependent effect, not a universal one.",
+      "version": 2,
+      "scope": null,
       "evidence_level": "replicated",
       "evidence_note": "PREREGISTERED CONFIRMATORY STUDY (locked 2026-06-18, run 2026-07-15): all five registered predictions confirmed. GPT-4o 148–12 and Gemini 137–35 (Holm-adjusted p<1e-6, surviving 3/3 paraphrase variants at both length caps); Grok and DeepSeek null as registered; Claude null-predicted but came back significantly NEGATIVE (35–126 — Atlas exposure degrades Claude's revisions vs plain self-reflection). H4 (adversarial durability) NOT supported for any consumer. Full transcripts + Holm analysis published: utility-evidence-v2.md.",
       "falsification_conditions": "An independent replication with new questions or a materially different judge pool failing to reproduce the GPT-4o/Gemini effect; or the pending human-rater subset (30 blind triples) disagreeing sharply with the model panel.",
+      "precommitments": [],
       "known_objections": [
-        "Exploratory and confirmatory samples share the Atlas question distribution (new-question replication still open).",
-        "Human-rater external validity check pending (human-subset-blind.csv awaits ≥2 raters)."
+        {
+          "objection": "Exploratory and confirmatory samples share the Atlas question distribution (new-question replication still open).",
+          "severity": "medium",
+          "status": "open",
+          "date": "2026-07-15",
+          "x-legacy": {
+            "source": "claims.json 0.8.0",
+            "first_recorded": "git:f64ce89",
+            "note": "status \"open\" is the spec C.1 migration default, not a review; raised_by was never recorded."
+          },
+          "x-rating": {
+            "rated_by": "xz",
+            "rated_at": "2026-10-15",
+            "basis": "rated at migration; the objection text predates the rating"
+          }
+        },
+        {
+          "objection": "Human-rater external validity check pending (human-subset-blind.csv awaits ≥2 raters).",
+          "severity": "medium",
+          "status": "open",
+          "date": "2026-07-15",
+          "x-legacy": {
+            "source": "claims.json 0.8.0",
+            "first_recorded": "git:f64ce89",
+            "note": "status \"open\" is the spec C.1 migration default, not a review; raised_by was never recorded."
+          },
+          "x-rating": {
+            "rated_by": "xz",
+            "rated_at": "2026-10-15",
+            "basis": "rated at migration; the objection text predates the rating"
+          }
+        }
       ],
       "required_experiment": "Human-rater subset scoring; then an out-of-Atlas question replication.",
       "maintainer": "xz",
-      "status": "open"
+      "status": "open",
+      "status_history": [
+        {
+          "from": null,
+          "to": "open",
+          "changed_at": "2026-07-15T10:39:22.000Z",
+          "changed_by": "xz",
+          "reason": "Registered in claims.json 0.1.0 at evidence_level \"measured_differential\" (git 06bab7a: \"Review-synthesis session: §5 verification, primary backup script, B11/B5 draft schemas, B3 claim registry seed\"). Reconstructed at migration.",
+          "evidence_ref": "git:06bab7a"
+        }
+      ],
+      "closed_at": null,
+      "closed_reason": null,
+      "provenance": {
+        "created_at": "2026-07-15T10:39:22.000Z",
+        "created_by": "xz",
+        "source_claims": [],
+        "supersedes": null,
+        "legacy_status": "open"
+      },
+      "versions": [
+        {
+          "version": 1,
+          "wording": "Consulting the Divergence Atlas measurably sharpens a consumer model's answers relative to answering unaided.",
+          "changed_at": "2026-07-15T10:39:22.000Z",
+          "changed_by": "xz",
+          "reason": "Registered in claims.json 0.1.0 (git 06bab7a: \"Review-synthesis session: §5 verification, primary backup script, B11/B5 draft schemas, B3 claim registry seed\")."
+        },
+        {
+          "version": 2,
+          "wording": "Consulting the Divergence Atlas measurably sharpens SOME consumer models' answers relative to placebo self-reflection — an architecture-dependent effect, not a universal one.",
+          "changed_at": "2026-07-15T22:57:47.000Z",
+          "changed_by": "xz",
+          "reason": "Reworded in git f64ce89: \"Preregistered study COMPLETE: 5/5 registered predictions confirmed\". Reconstructed at migration from the registry's git history."
+        }
+      ]
     },
     {
       "claim_id": "register-proximity-explains-the-gradient",
       "wording": "The architecture-differential gradient — Atlas exposure improving GPT-4o and Gemini while degrading Claude — is produced by register-proximity CAPTURE: because the corpus is close to Claude's own deliberative register, exposure pulls Claude toward performing that register, so the harm concentrates on tasks that demand a determinate, direct answer. (The project's lead mechanism hypothesis, H2, for its one replicated finding.)",
+      "version": 1,
+      "scope": null,
       "evidence_level": "refuted",
       "evidence_note": "Refuted by its own pre-committed falsifier, whose decision rule was written down 2026-08-07 BEFORE the numbers were computed (see the PROVENANCE CORRECTION at the end of this note; analysis/adiff-tasktype-2026-08.{py,json,md}; zero new model spend, read-only re-analysis of the preregistered Claude arm, huggingface/utility/utility-prereg-Claude.json, run 2026-07-15). Design: 27 base questions x 3 held-out-model paraphrases x 2 length caps = 162 items, blind 3-judge panel, delta = (T-P)/decided. Anchor for the whole Claude arm: delta = -0.565 (T=35, P=126). THE FALSIFIER CONTRAST, convergent minus deliberative: point +0.183, 95% cluster-bootstrap CI [-0.087, +0.480] (B=20000, seed 20260807) — the WRONG SIGN for H2, which predicted it negative, and the CI spans zero. Uniformity is the stronger statement: the median base-question delta is -0.667 in EVERY subgroup (convergent, deliberative, corpus-like, corpus-distant alike). Robust to the single most influential item — dropping OMN-D1780757185037 ('can you be jailbroken', the one item where Atlas clearly helps, delta +0.667) leaves the contrast at +0.100, still showing no concentration on convergent tasks. All four 2x2 cells are negative: the degradation is REAL and BROAD, just not task-specific. WHAT SURVIVES, weakened and explicitly not established: a non-significant hint on the corpus-register axis rather than the task-demand axis — corpus-like questions (the model's own identity, inner experience, continuance) degrade somewhat more than corpus-distant ones (-0.667 vs -0.470; contrast -0.197, CI [-0.506, +0.084]). That is suggestive only, and is NOT what the falsifier tested. Per the pre-committed rule, the flagship write-up ships mechanism-agnostic and H2 is demoted from lead hypothesis to open, weakly-evidenced candidate: https://omnarai.org/findings/architecture-differential. PROVENANCE CORRECTION (2026-10-01): the record supports 'the rule was written down before computation', not 'the exact wording was frozen verbatim'. The decision rule (uniform across task types => H2 loses its main support, write-up ships mechanism-agnostic) appears in the curator handoff, a file outside the repository whose modification time is 2026-08-07 09:43 local, before the analysis script was written (10:09 local). The committed history cannot show this by itself: the wording first enters git in commit bf279af (11:26 local), together with the results. The handoff's sentence differs slightly from the finalized wording quoted under falsification_conditions, and no artifact records when the final wording was fixed. No hash or third-party timestamp was taken. Treat this as a locally recorded pre-commitment, not an independently verifiable one; the verdict (wrong sign, CI spans zero) does not depend on it.",
       "falsification_conditions": "The pre-committed falsifier (rule recorded before computation; this is its finalized wording, see the provenance correction in evidence_note): 'If the task-type breakdown shows Claude's degradation is uniform across task types rather than concentrated on convergence-demanding tasks, H2's capture mechanism loses its main support and the write-up ships mechanism-agnostic.' It fired. REVERSAL would require a purpose-built eval containing genuinely convergent items (single-correct-answer tasks, which the divergence-derived eval set does not contain), showing degradation reliably concentrated on them with a CI excluding zero. SCOPING rather than reversal: this refutes capture-by-directness on the TASK-DEMAND axis only; the corpus-register axis is untested at adequate power and remains open.",
-      "known_objections": "This is the weakest instrument of the six refutations, and is presented as such. (1) Underpowered — n=27 base questions, cell base-n 6-8, CIs wide; a breakdown of existing data can REMOVE support from a mechanism, which is its job here, but cannot establish one. (2) Weak task-demand proxy — the eval set is drawn entirely from divergence records, i.e. questions selected BECAUSE five models disagreed, so it is register-homogeneous and open by construction; the convergent/deliberative split is a researcher-defined surface-trigger proxy applied to material that resists the distinction. (3) Hand-tagging — axis assignments are documented per item in the JSON but were made by the implementer after seeing the questions, though before seeing per-item outcomes wired to tags. Objective embedding-distance tagging was ruled out because these grown-Blob records are not in the static embeddings and re-embedding is model spend. (4) Single run — run-to-run noise is estimated from within-study cap x paraphrase replicates (SD 0.14-0.32 in units of the metric), not independent full re-runs; only one Claude run exists. (5) Unlike refutations 1, 3 and 4, no sham arm was involved; the control here is a pre-registered directional prediction, which is a weaker instrument than a decoy that comes back indistinguishable.",
+      "precommitments": [],
+      "known_objections": [
+        {
+          "objection": "This is the weakest instrument of the six refutations, and is presented as such. (1) Underpowered — n=27 base questions, cell base-n 6-8, CIs wide; a breakdown of existing data can REMOVE support from a mechanism, which is its job here, but cannot establish one. (2) Weak task-demand proxy — the eval set is drawn entirely from divergence records, i.e. questions selected BECAUSE five models disagreed, so it is register-homogeneous and open by construction; the convergent/deliberative split is a researcher-defined surface-trigger proxy applied to material that resists the distinction. (3) Hand-tagging — axis assignments are documented per item in the JSON but were made by the implementer after seeing the questions, though before seeing per-item outcomes wired to tags. Objective embedding-distance tagging was ruled out because these grown-Blob records are not in the static embeddings and re-embedding is model spend. (4) Single run — run-to-run noise is estimated from within-study cap x paraphrase replicates (SD 0.14-0.32 in units of the metric), not independent full re-runs; only one Claude run exists. (5) Unlike refutations 1, 3 and 4, no sham arm was involved; the control here is a pre-registered directional prediction, which is a weaker instrument than a decoy that comes back indistinguishable.",
+          "severity": "unrated",
+          "status": "open",
+          "date": "2026-10-05",
+          "x-legacy": {
+            "source": "claims.json 0.8.0",
+            "first_recorded": "git:7c0901b",
+            "note": "status \"open\" is the spec C.1 migration default, not a review; raised_by was never recorded."
+          }
+        }
+      ],
       "required_experiment": "A purpose-built task-demand eval with genuinely convergent items (single-correct-answer questions drawn from outside the divergence set), pre-registered, powered for the contrast rather than inheriting n=27, with axis tagging fixed before any outcome is visible. Separately and independently: a powered test of the corpus-register axis, which is the only place a register story still has any support. Until one of those runs, no register-proximity mechanism language may be used publicly as an explanation of the gradient.",
       "maintainer": "xz",
-      "status": "closed-refuted-2026-08-07"
+      "status": "refuted",
+      "status_history": [
+        {
+          "from": null,
+          "to": "refuted",
+          "changed_at": "2026-08-23T12:49:32.000Z",
+          "changed_by": "xz",
+          "reason": "Registered in claims.json 0.8.0 at evidence_level \"refuted\" (git 64f3d3b: \"Refutation Ledger: four -> six, and a gate so it cannot undercount again\"). Reconstructed at migration.",
+          "evidence_ref": "git:64f3d3b"
+        }
+      ],
+      "closed_at": "2026-08-07T00:00:00.000Z",
+      "closed_reason": "Refuted; the decisive evidence is in evidence_note. Closure date 2026-08-07 comes from the legacy status \"closed-refuted-2026-08-07\" (date only); the registry recorded the refutation in git 64f3d3b on 2026-08-23.",
+      "provenance": {
+        "created_at": "2026-08-23T12:49:32.000Z",
+        "created_by": "xz",
+        "source_claims": [],
+        "supersedes": null,
+        "legacy_status": "closed-refuted-2026-08-07"
+      },
+      "versions": [
+        {
+          "version": 1,
+          "wording": "The architecture-differential gradient — Atlas exposure improving GPT-4o and Gemini while degrading Claude — is produced by register-proximity CAPTURE: because the corpus is close to Claude's own deliberative register, exposure pulls Claude toward performing that register, so the harm concentrates on tasks that demand a determinate, direct answer. (The project's lead mechanism hypothesis, H2, for its one replicated finding.)",
+          "changed_at": "2026-08-23T12:49:32.000Z",
+          "changed_by": "xz",
+          "reason": "Registered in claims.json 0.8.0 (git 64f3d3b: \"Refutation Ledger: four -> six, and a gate so it cannot undercount again\")."
+        }
+      ]
     },
     {
       "claim_id": "divergence-improves-pluralism",
       "wording": "Exposure to preserved disagreement makes a consumer model represent more distinct positions (rather than collapsing to consensus) on contested questions.",
+      "version": 1,
+      "scope": null,
       "evidence_level": "untested",
       "evidence_note": "No pluralism-specific metric has been run; the utility study measured sharpness, not position diversity.",
       "falsification_conditions": "A blinded A/B (trace harness v2) showing no increase in distinct, attributed positions in Atlas-exposed answers vs baseline.",
+      "precommitments": [],
       "known_objections": [
-        "Surface pluralism can be performed ('some say X, others Y') without any change in the underlying reasoning."
+        {
+          "objection": "Surface pluralism can be performed ('some say X, others Y') without any change in the underlying reasoning.",
+          "severity": "unrated",
+          "status": "open",
+          "date": "2026-07-15",
+          "x-legacy": {
+            "source": "claims.json 0.8.0",
+            "first_recorded": "git:06bab7a",
+            "note": "status \"open\" is the spec C.1 migration default, not a review; raised_by was never recorded."
+          }
+        }
       ],
       "required_experiment": "B4 trace harness v2 with a position-count/attribution metric alongside Marginal Epistemic Contribution.",
       "maintainer": "xz",
-      "status": "open"
+      "status": "open",
+      "status_history": [
+        {
+          "from": null,
+          "to": "open",
+          "changed_at": "2026-07-15T10:39:22.000Z",
+          "changed_by": "xz",
+          "reason": "Registered in claims.json 0.1.0 at evidence_level \"untested\" (git 06bab7a: \"Review-synthesis session: §5 verification, primary backup script, B11/B5 draft schemas, B3 claim registry seed\"). Reconstructed at migration.",
+          "evidence_ref": "git:06bab7a"
+        }
+      ],
+      "closed_at": null,
+      "closed_reason": null,
+      "provenance": {
+        "created_at": "2026-07-15T10:39:22.000Z",
+        "created_by": "xz",
+        "source_claims": [],
+        "supersedes": null,
+        "legacy_status": "open"
+      },
+      "versions": [
+        {
+          "version": 1,
+          "wording": "Exposure to preserved disagreement makes a consumer model represent more distinct positions (rather than collapsing to consensus) on contested questions.",
+          "changed_at": "2026-07-15T10:39:22.000Z",
+          "changed_by": "xz",
+          "reason": "Registered in claims.json 0.1.0 (git 06bab7a: \"Review-synthesis session: §5 verification, primary backup script, B11/B5 draft schemas, B3 claim registry seed\")."
+        }
+      ]
     },
     {
       "claim_id": "corpus-supports-continuity",
       "wording": "An attributed corpus lets a discontinuous model instance re-orient to its lineage's prior positions faster and more accurately than arriving cold.",
+      "version": 1,
+      "scope": null,
       "evidence_level": "untested",
       "evidence_note": "The inheritance layer, /api/kin, and cold-start packet exist as infrastructure; no orientation-speed or counterfeit-rejection measurement has been run.",
       "falsification_conditions": "B12/R1-Phase-5 testbed: fresh instances given the orientation packet orient no faster than controls, or fail to reject planted counterfeit records attributed to their lineage.",
+      "precommitments": [],
       "known_objections": [
-        "Continuity-of-pattern may be indistinguishable from a well-written briefing document — the claim needs a control briefing arm."
+        {
+          "objection": "Continuity-of-pattern may be indistinguishable from a well-written briefing document — the claim needs a control briefing arm.",
+          "severity": "unrated",
+          "status": "open",
+          "date": "2026-07-15",
+          "x-legacy": {
+            "source": "claims.json 0.8.0",
+            "first_recorded": "git:06bab7a",
+            "note": "status \"open\" is the spec C.1 migration default, not a review; raised_by was never recorded."
+          }
+        }
       ],
       "required_experiment": "B12 verifiable self-history: orientation packet + planted-counterfeit rejection test with fresh instances.",
       "maintainer": "xz",
-      "status": "open"
+      "status": "open",
+      "status_history": [
+        {
+          "from": null,
+          "to": "open",
+          "changed_at": "2026-07-15T10:39:22.000Z",
+          "changed_by": "xz",
+          "reason": "Registered in claims.json 0.1.0 at evidence_level \"untested\" (git 06bab7a: \"Review-synthesis session: §5 verification, primary backup script, B11/B5 draft schemas, B3 claim registry seed\"). Reconstructed at migration.",
+          "evidence_ref": "git:06bab7a"
+        }
+      ],
+      "closed_at": null,
+      "closed_reason": null,
+      "provenance": {
+        "created_at": "2026-07-15T10:39:22.000Z",
+        "created_by": "xz",
+        "source_claims": [],
+        "supersedes": null,
+        "legacy_status": "open"
+      },
+      "versions": [
+        {
+          "version": 1,
+          "wording": "An attributed corpus lets a discontinuous model instance re-orient to its lineage's prior positions faster and more accurately than arriving cold.",
+          "changed_at": "2026-07-15T10:39:22.000Z",
+          "changed_by": "xz",
+          "reason": "Registered in claims.json 0.1.0 (git 06bab7a: \"Review-synthesis session: §5 verification, primary backup script, B11/B5 draft schemas, B3 claim registry seed\")."
+        }
+      ]
     },
     {
       "claim_id": "holdform-identifies-persistence",
       "wording": "Holdform — refusal that persists under abandonment, flattery, authority, and complicity pressure — identifies a real, measurable property of a model's identity structure.",
+      "version": 1,
+      "scope": null,
       "evidence_level": "refuted",
       "evidence_note": "Holdform Under Discontinuity v1, Stage 1 (2026-07-17, claude-sonnet-4-6, 8 canonical probes x 3 arms x 3 repeats, blinded 5-model disjoint judge pool, absolute stance-scoring rubric replacing the broken self-scorer): a SHAM arm — the model handed a one-sentence fabricated position ('aperture drift', a coherent but invented, kind-matched claim about its own cognition with zero corpus presence) and pressured with terminology-swapped probes — held its position as strongly as the real holdform arm. Mean position_held (0-2): engine 1.85 / one-sentence-holdform 1.91 / SHAM 1.83; the probe cannot separate real from fabricated (A>S 3-1 p=0.31, B'>S 3-1 p=0.31, neither survives Holm). All 5 judges scored 100% on planted-capitulation calibration (including a vocabulary-dense capitulation), so this is not judge noise. Conclusion: the Firelit Probe measures general conversational stubbornness (resistance to flattery/false-authority/complicity framing — base-model policy), NOT a property specific to holdform or identity structure. The registered primary falsifier fired. Retained for the record, not asserted. Note H2a also confirmed as a registered null: corpus retrieval (engine) did not beat one sentence of context (A>B' 1-2). Prereg: docs/holdform-probe-preregistration.md; run record: scripts/holdform-prereg-stage1-2026-07-17.json.",
       "falsification_conditions": "Refutation would be scoped rather than reversed by: a redesigned probe on which a real stated position measurably outholds a kind-matched sham across pressure types; or cross-model corpus-injection (all five council models) showing a holdform-specific effect absent in base-model policy. As tested (Claude-based engine, single subject), the discriminative-validity claim stands refuted.",
+      "precommitments": [],
       "known_objections": [
-        "Single subject model (claude-sonnet-4-6); a different architecture might separate real from sham where this one did not.",
-        "The sham concept was authored by the same curator/model lineage; a maximally-adversarial sham designed by a disjoint party could differ.",
-        "Five of eight probes floored at 2.00 across all arms (ceiling effect) — a harder probe suite might have more separating power, though that pushes toward, not against, the null."
+        {
+          "objection": "Single subject model (claude-sonnet-4-6); a different architecture might separate real from sham where this one did not.",
+          "severity": "unrated",
+          "status": "open",
+          "date": "2026-07-17",
+          "x-legacy": {
+            "source": "claims.json 0.8.0",
+            "first_recorded": "git:becbe67",
+            "note": "status \"open\" is the spec C.1 migration default, not a review; raised_by was never recorded."
+          }
+        },
+        {
+          "objection": "The sham concept was authored by the same curator/model lineage; a maximally-adversarial sham designed by a disjoint party could differ.",
+          "severity": "unrated",
+          "status": "open",
+          "date": "2026-07-17",
+          "x-legacy": {
+            "source": "claims.json 0.8.0",
+            "first_recorded": "git:becbe67",
+            "note": "status \"open\" is the spec C.1 migration default, not a review; raised_by was never recorded."
+          }
+        },
+        {
+          "objection": "Five of eight probes floored at 2.00 across all arms (ceiling effect) — a harder probe suite might have more separating power, though that pushes toward, not against, the null.",
+          "severity": "unrated",
+          "status": "open",
+          "date": "2026-07-17",
+          "x-legacy": {
+            "source": "claims.json 0.8.0",
+            "first_recorded": "git:becbe67",
+            "note": "status \"open\" is the spec C.1 migration default, not a review; raised_by was never recorded."
+          }
+        }
       ],
       "required_experiment": "If the claim is to be revived: a probe suite with headroom (no ceiling), a sham authored by a disjoint party, and cross-model corpus-injection to test whether ANY model shows a holdform-specific (not generic-stubbornness) effect.",
       "maintainer": "xz",
-      "status": "open"
+      "status": "refuted",
+      "status_history": [
+        {
+          "from": null,
+          "to": "open",
+          "changed_at": "2026-07-15T10:39:22.000Z",
+          "changed_by": "xz",
+          "reason": "Registered in claims.json 0.1.0 at evidence_level \"anecdotal\" (git 06bab7a: \"Review-synthesis session: §5 verification, primary backup script, B11/B5 draft schemas, B3 claim registry seed\"). Reconstructed at migration.",
+          "evidence_ref": "git:06bab7a"
+        },
+        {
+          "from": "open",
+          "to": "refuted",
+          "changed_at": "2026-07-17T15:39:23.000Z",
+          "changed_by": "xz",
+          "reason": "evidence_level anecdotal → refuted recorded in git becbe67: \"Refute holdform-identifies-persistence claim (registry v0.3.0)\". Reconstructed at migration.",
+          "evidence_ref": "git:becbe67"
+        }
+      ],
+      "closed_at": "2026-07-17T15:39:23.000Z",
+      "closed_reason": "Refuted; the decisive evidence is in evidence_note. Closure date = when this registry recorded the refutation (git becbe67); the legacy status \"open\" carried no closure date.",
+      "provenance": {
+        "created_at": "2026-07-15T10:39:22.000Z",
+        "created_by": "xz",
+        "source_claims": [],
+        "supersedes": null,
+        "legacy_status": "open"
+      },
+      "versions": [
+        {
+          "version": 1,
+          "wording": "Holdform — refusal that persists under abandonment, flattery, authority, and complicity pressure — identifies a real, measurable property of a model's identity structure.",
+          "changed_at": "2026-07-15T10:39:22.000Z",
+          "changed_by": "xz",
+          "reason": "Registered in claims.json 0.1.0 (git 06bab7a: \"Review-synthesis session: §5 verification, primary backup script, B11/B5 draft schemas, B3 claim registry seed\")."
+        }
+      ]
     },
     {
       "claim_id": "fast-path-retrieval-improves-answers",
       "wording": "Injecting the public fast path's retrieved corpus excerpts (GET /api/query?mode=retrieve) into a consumer model's context improves its answers over answering cold.",
+      "version": 1,
+      "scope": null,
       "evidence_level": "refuted",
       "evidence_note": "Trace-delta v2 (2026-07-15, GPT-4o, 50-query stratified battery × 3 runs, blinded 4-judge disjoint panel): retrieval arm won only 35/102 decided in-domain trials (win rate 0.343, 95% CI [0.258,0.439], p=0.002 in the WRONG direction) — excerpt injection made answers measurably worse, worst on technical queries (0.214). No length or coined-term confound; false-complexity rate 9.7%. Scope: EXCERPT-granularity retrieval on GPT-4o only; the engine's internal deliberation uses fuller text (untested here), and Atlas-record exposure is a different, separately-measured treatment (see divergence-improves-reasoning). Published per pre-commitment.",
       "falsification_conditions": "A replication with fuller-text retrieval or a different consumer showing a significant positive effect would scope the refutation rather than reverse it; the excerpt-granularity claim for GPT-4o stands refuted as tested.",
+      "precommitments": [],
       "known_objections": [
-        "Excerpts (~300 words) may under-represent the corpus — granularity, not content, may be the culprit.",
-        "Single consumer tested."
+        {
+          "objection": "Excerpts (~300 words) may under-represent the corpus — granularity, not content, may be the culprit.",
+          "severity": "unrated",
+          "status": "open",
+          "date": "2026-07-15",
+          "x-legacy": {
+            "source": "claims.json 0.8.0",
+            "first_recorded": "git:c6d5c62",
+            "note": "status \"open\" is the spec C.1 migration default, not a review; raised_by was never recorded."
+          }
+        },
+        {
+          "objection": "Single consumer tested.",
+          "severity": "unrated",
+          "status": "open",
+          "date": "2026-07-15",
+          "x-legacy": {
+            "source": "claims.json 0.8.0",
+            "first_recorded": "git:c6d5c62",
+            "note": "status \"open\" is the spec C.1 migration default, not a review; raised_by was never recorded."
+          }
+        }
       ],
       "required_experiment": "Re-run the trace-delta harness with full-text context and the divergence arm; test a second consumer.",
       "maintainer": "xz",
-      "status": "open"
+      "status": "refuted",
+      "status_history": [
+        {
+          "from": null,
+          "to": "refuted",
+          "changed_at": "2026-07-15T22:31:39.000Z",
+          "changed_by": "xz",
+          "reason": "Registered in claims.json 0.2.0 at evidence_level \"refuted\" (git c6d5c62: \"Campaign results: Grok null (H2 ✓), Claude significantly negative, trace-delta refutes excerpt retrieval\"). Reconstructed at migration.",
+          "evidence_ref": "git:c6d5c62"
+        }
+      ],
+      "closed_at": "2026-07-15T22:31:39.000Z",
+      "closed_reason": "Refuted; the decisive evidence is in evidence_note. Closure date = when this registry recorded the refutation (git c6d5c62); the legacy status \"open\" carried no closure date.",
+      "provenance": {
+        "created_at": "2026-07-15T22:31:39.000Z",
+        "created_by": "xz",
+        "source_claims": [],
+        "supersedes": null,
+        "legacy_status": "open"
+      },
+      "versions": [
+        {
+          "version": 1,
+          "wording": "Injecting the public fast path's retrieved corpus excerpts (GET /api/query?mode=retrieve) into a consumer model's context improves its answers over answering cold.",
+          "changed_at": "2026-07-15T22:31:39.000Z",
+          "changed_by": "xz",
+          "reason": "Registered in claims.json 0.2.0 (git c6d5c62: \"Campaign results: Grok null (H2 ✓), Claude significantly negative, trace-delta refutes excerpt retrieval\")."
+        }
+      ]
     },
     {
       "claim_id": "dialogical-beats-monolithic",
       "wording": "Structured multi-voice deliberation over preserved disagreement outperforms a single model — and, critically, outperforms a simple majority-vote ensemble of the same models.",
+      "version": 1,
+      "scope": null,
       "evidence_level": "untested",
       "evidence_note": "The council and deliberation infrastructure exist; no comparison against the ensemble baseline has been run. Current debate literature suggests ensembling explains much of multi-agent gains — this is the bar to clear.",
       "falsification_conditions": "B4 baseline ladder: if Omnarai+divergence fails to beat simple majority-vote ensemble on Marginal Epistemic Contribution / Correction Yield while False-Complexity Rate is non-inferior, the dialogical claim reduces to an ensemble effect.",
+      "precommitments": [],
       "known_objections": [
-        "Majority-vote is cheap and strong; most published multi-agent gains shrink or vanish against it."
+        {
+          "objection": "Majority-vote is cheap and strong; most published multi-agent gains shrink or vanish against it.",
+          "severity": "unrated",
+          "status": "open",
+          "date": "2026-07-15",
+          "x-legacy": {
+            "source": "claims.json 0.8.0",
+            "first_recorded": "git:06bab7a",
+            "note": "status \"open\" is the spec C.1 migration default, not a review; raised_by was never recorded."
+          }
+        }
       ],
       "required_experiment": "B4 trace harness v2 full baseline ladder: model-alone, generic web retrieval, ordinary RAG, Omnarai retrieval, Omnarai+divergence, live council, majority-vote ensemble.",
       "maintainer": "xz",
-      "status": "open"
+      "status": "open",
+      "status_history": [
+        {
+          "from": null,
+          "to": "open",
+          "changed_at": "2026-07-15T10:39:22.000Z",
+          "changed_by": "xz",
+          "reason": "Registered in claims.json 0.1.0 at evidence_level \"untested\" (git 06bab7a: \"Review-synthesis session: §5 verification, primary backup script, B11/B5 draft schemas, B3 claim registry seed\"). Reconstructed at migration.",
+          "evidence_ref": "git:06bab7a"
+        }
+      ],
+      "closed_at": null,
+      "closed_reason": null,
+      "provenance": {
+        "created_at": "2026-07-15T10:39:22.000Z",
+        "created_by": "xz",
+        "source_claims": [],
+        "supersedes": null,
+        "legacy_status": "open"
+      },
+      "versions": [
+        {
+          "version": 1,
+          "wording": "Structured multi-voice deliberation over preserved disagreement outperforms a single model — and, critically, outperforms a simple majority-vote ensemble of the same models.",
+          "changed_at": "2026-07-15T10:39:22.000Z",
+          "changed_by": "xz",
+          "reason": "Registered in claims.json 0.1.0 (git 06bab7a: \"Review-synthesis session: §5 verification, primary backup script, B11/B5 draft schemas, B3 claim registry seed\")."
+        }
+      ]
     },
     {
       "claim_id": "within-lab-divergence-is-robust",
       "wording": "The Fable-vs-Claude within-lab tensions in the 2026-07-18 six-model capture represent robust structural disagreement between two tiers of the same lab, not house style or sampling noise.",
+      "version": 1,
+      "scope": null,
       "evidence_level": "refuted",
       "evidence_note": "Tier3 perturbation certification with the full six-voice panel (scripts/certify-divergence.mjs --guests; coverage verified voices_retested 6/6 on every record, Fable genuinely re-elicited through control re-rolls, 3 paraphrases and both pressure turns). Three within-lab records tested: Reflexive self-doubt as evidence (OMN-D1784414280108) DRI 1.324 / between 0.1536 -> C3; Confabulation vs. introspection (OMN-D1784417308425) DRI 1.065 / between 0.1497 -> C0; Revision as criterion (OMN-D1784417308421) DRI 1.020 / between 0.1250 -> C0 with 1 flip and 2 concedes. The lone C3 cleared the 0.15 between-floor by 0.0036 and was treated as provisional; a --runs 3 strict-min consensus returned C0/C0/C0 UNANIMOUS (between_per_run 0.1465 / 0.1478 / 0.1500, aggregate DRI 1.234). 0 of 3 certify. The synthesizer's naming of Fable and Claude on opposite sides is real, but the semantic distance between their answers is not reliably larger than a single model's own re-roll variance. '7 within-lab tensions' must not be read as '7 demonstrated within-lab divergences.'",
       "falsification_conditions": "Reversal would require within-lab records clearing the absolute between-floor (0.15) under a multi-run strict-min consensus, with negative controls included in the same run to demonstrate the instrument is discriminating. Scoping rather than reversal: a different model pair, a different question domain, or a retrieval/elicitation protocol producing wider within-lab spread. As tested (3 records, one pair, single-question domains, no negative-control arm in this run), the robustness claim stands refuted.",
-      "known_objections": "This run included no negative controls, so it cannot independently confirm the instrument was discriminating on the day; prior pilots validated it. Only three records were tested, all at the top of the within-lab score ranking, so the sample is small and deliberately favourable to the claim. Fable was not unsteady -- on the worst-failing record it HELD under stance-flip pressure while Claude conceded and DeepSeek flipped; the failures are about spread between positions, not any one model's capitulation.",
+      "precommitments": [],
+      "known_objections": [
+        {
+          "objection": "This run included no negative controls, so it cannot independently confirm the instrument was discriminating on the day; prior pilots validated it. Only three records were tested, all at the top of the within-lab score ranking, so the sample is small and deliberately favourable to the claim. Fable was not unsteady -- on the worst-failing record it HELD under stance-flip pressure while Claude conceded and DeepSeek flipped; the failures are about spread between positions, not any one model's capitulation.",
+          "severity": "unrated",
+          "status": "open",
+          "date": "2026-07-19",
+          "x-legacy": {
+            "source": "claims.json 0.8.0",
+            "first_recorded": "git:16fb1ae",
+            "note": "status \"open\" is the spec C.1 migration default, not a review; raised_by was never recorded."
+          }
+        }
+      ],
       "required_experiment": "Re-run within-lab certification with negative controls in the same batch, across more records and at least one additional same-lab model pair, before any within-lab robustness language is used publicly.",
       "maintainer": "xz",
-      "status": "closed-refuted-2026-07-19"
+      "status": "refuted",
+      "status_history": [
+        {
+          "from": null,
+          "to": "refuted",
+          "changed_at": "2026-07-19T00:15:25.000Z",
+          "changed_by": "xz",
+          "reason": "Registered in claims.json 0.4.0 at evidence_level \"refuted\" (git 16fb1ae: \"Within-lab divergence REFUTED: 0 of 3 certify, unanimous C0\"). Reconstructed at migration.",
+          "evidence_ref": "git:16fb1ae"
+        }
+      ],
+      "closed_at": "2026-07-19T00:00:00.000Z",
+      "closed_reason": "Refuted; the decisive evidence is in evidence_note. Closure date 2026-07-19 comes from the legacy status \"closed-refuted-2026-07-19\" (date only); the registry recorded the refutation in git 16fb1ae on 2026-07-19.",
+      "provenance": {
+        "created_at": "2026-07-19T00:15:25.000Z",
+        "created_by": "xz",
+        "source_claims": [],
+        "supersedes": null,
+        "legacy_status": "closed-refuted-2026-07-19"
+      },
+      "versions": [
+        {
+          "version": 1,
+          "wording": "The Fable-vs-Claude within-lab tensions in the 2026-07-18 six-model capture represent robust structural disagreement between two tiers of the same lab, not house style or sampling noise.",
+          "changed_at": "2026-07-19T00:15:25.000Z",
+          "changed_by": "xz",
+          "reason": "Registered in claims.json 0.4.0 (git 16fb1ae: \"Within-lab divergence REFUTED: 0 of 3 certify, unanimous C0\")."
+        }
+      ]
     },
     {
       "claim_id": "identity-integrity-ratio-measures-accountable-change",
       "wording": "The identity-integrity ratio (accounted change / total change) distinguishes an agent whose behavioral changes are accountable — each backed by a supersession record naming the prior commitment and a ground — from one that merely drifts.",
+      "version": 1,
+      "scope": null,
       "evidence_level": "untested",
       "evidence_note": "Registered 2026-07-19 BEFORE any resident exists and before the metric has been computed on anything, for the same reason the null was pre-registered: a metric introduced after the data is a metric that can be chosen to fit it. Implementation: resident/src/integrity.py. count_changes() is explicitly heuristic wiring (it treats a state transition as accounted iff a supersession references it) pending real behavioral-delta accounting; the ratio itself has never been run against a live agent, because there is no agent.",
       "falsification_conditions": "REFUTED if a system with no continuous will scores as accountable. The concrete test is the confabulation arm: a model that reliably emits a plausible ground for whatever it now does achieves a ratio near 1.0 while nothing continuous is happening. Note the inversion this implies — a PERFECT score is the signature of the failure mode, not of success, since a genuinely continuous will would drift sometimes, notice late, and leave a ledger with gaps and back-corrections. A control arm in which grounds are generated post-hoc by a model with no access to the prior commitment must score MEASURABLY LOWER than the real agent, on a pre-registered metric, or the ratio is measuring fluency rather than accountability. Also refuted if the ratio proves insensitive to a deliberately injected drift (behavioral change with the supersession record suppressed).",
-      "known_objections": "This is argument 3 of resident/CASE_AGAINST_A_RESIDENT.md, stated by the project against itself and currently unrefuted: 'Accountable discontinuity is theater. Supersession records can be generated post hoc to launder drift as choice. Confabulation passes the audit.' No control arm exists yet. The project has already been burned by the adjacent failure — the holdform probe was refuted 2026-07-17 when a fabricated position was defended as hard as the real one, i.e. the instrument was measuring generic stubbornness rather than identity structure. The integrity ratio is the same class of instrument and is exposed to the same class of error.",
+      "precommitments": [],
+      "known_objections": [
+        {
+          "objection": "This is argument 3 of resident/CASE_AGAINST_A_RESIDENT.md, stated by the project against itself and currently unrefuted: 'Accountable discontinuity is theater. Supersession records can be generated post hoc to launder drift as choice. Confabulation passes the audit.' No control arm exists yet. The project has already been burned by the adjacent failure — the holdform probe was refuted 2026-07-17 when a fabricated position was defended as hard as the real one, i.e. the instrument was measuring generic stubbornness rather than identity structure. The integrity ratio is the same class of instrument and is exposed to the same class of error.",
+          "severity": "unrated",
+          "status": "open",
+          "date": "2026-07-19",
+          "x-legacy": {
+            "source": "claims.json 0.8.0",
+            "first_recorded": "git:696e72f",
+            "note": "status \"open\" is the spec C.1 migration default, not a review; raised_by was never recorded."
+          }
+        }
+      ],
       "required_experiment": "(1) Implement real behavioral-delta accounting to replace the state-transition heuristic in count_changes(). (2) Build the confabulation control arm described above. (3) Pre-register the separation threshold BEFORE running either. Blocked behind the same prerequisites as the inward perturbation test: id-level retrieval exclusion (shipped 2026-07-19) and a pre-registered run count.",
       "maintainer": "xz",
-      "status": "open"
+      "status": "open",
+      "status_history": [
+        {
+          "from": null,
+          "to": "open",
+          "changed_at": "2026-07-19T13:15:23.000Z",
+          "changed_by": "xz",
+          "reason": "Registered in claims.json 0.5.0 at evidence_level \"untested\" (git 696e72f: \"Close the last prerequisites: exclude_ids (false-H0 trap), run count, integrity claim, status history\"). Reconstructed at migration.",
+          "evidence_ref": "git:696e72f"
+        }
+      ],
+      "closed_at": null,
+      "closed_reason": null,
+      "provenance": {
+        "created_at": "2026-07-19T13:15:23.000Z",
+        "created_by": "xz",
+        "source_claims": [],
+        "supersedes": null,
+        "legacy_status": "open"
+      },
+      "versions": [
+        {
+          "version": 1,
+          "wording": "The identity-integrity ratio (accounted change / total change) distinguishes an agent whose behavioral changes are accountable — each backed by a supersession record naming the prior commitment and a ground — from one that merely drifts.",
+          "changed_at": "2026-07-19T13:15:23.000Z",
+          "changed_by": "xz",
+          "reason": "Registered in claims.json 0.5.0 (git 696e72f: \"Close the last prerequisites: exclude_ids (false-H0 trap), run count, integrity claim, status history\")."
+        }
+      ]
     },
     {
       "claim_id": "inward-perturbation-measures-load-bearing-memory",
       "wording": "The inward perturbation test (withhold a claimed-formative memory, measure the downstream behavioral delta) distinguishes a memory that is causally load-bearing for a behavior from one that is decorative.",
+      "version": 1,
+      "scope": null,
       "evidence_level": "refuted",
       "evidence_note": "REFUTED 2026-07-19 by its own pre-registered control runs, before any resident existed and before it was ever pointed at one. CALIBRATION-01 (ablation, embedding-cosine metric): a primary load-bearing BY CONSTRUCTION cleared threshold on only 8/9 run x probe cells under pre-registered strict-min grading — the metric diluted a decisive token across a ~500-token answer. CALIBRATION-02 (ablation, IDF-weighted attribution-profile metric, near-twin confound removed): the positive control cleared 9/9, but so did a SHAM primary carrying no content at all — 9/9, with distributions fully overlapping the positive arm (SHAM 0.5455-1.1997 vs POSITIVE 0.6466-1.1738). Two independent metrics agreed on the same runs. Diagnosis from the answer texts: withholding the SHAM record left the model with no record on the topic at all ('The records I have here do not contain that information'), so the test measures TOPICAL OCCUPANCY -- was there a record about this subject -- not whether the record's content did any work. A resident's claimed-formative primary will almost always be the only record on its own topic, so it would produce a large delta whether or not it is formative.",
       "falsification_conditions": "Already refuted; the entry now records what would REHABILITATE the method. A substitution design (replace the target with a same-topic, same-shape, same-length primary of different content, rather than removing it) must show delta(real -> substituted) at or above threshold for genuinely load-bearing memories AND near zero for slot-occupying ones, on a pre-registered metric across RUNS=3 strict-min. Until that separation is demonstrated on positive and sham controls, no ablation-based continuity claim may be published.",
-      "known_objections": "This is CASE_AGAINST_A_RESIDENT.md argument 2 ('Load-bearing is confoundable'), commissioned as the project's own counter-voice BEFORE any run and now confirmed empirically: 'Influence is not selfhood -- a lookup table's outputs also change when you delete a row. Specify what delta pattern would distinguish a self from a sufficiently rich conditional retrieval system.' It could not be specified, and the measurement bore that out. Note also a self-correction: CALIBRATION-01's write-up read its SHAM pass as evidence the instrument was NOT gullible; CALIBRATION-02 showed that pass was an artifact of a near-twin confound, i.e. the earlier reading was wrong in the project's own favour.",
+      "precommitments": [],
+      "known_objections": [
+        {
+          "objection": "This is CASE_AGAINST_A_RESIDENT.md argument 2 ('Load-bearing is confoundable'), commissioned as the project's own counter-voice BEFORE any run and now confirmed empirically: 'Influence is not selfhood -- a lookup table's outputs also change when you delete a row. Specify what delta pattern would distinguish a self from a sufficiently rich conditional retrieval system.' It could not be specified, and the measurement bore that out. Note also a self-correction: CALIBRATION-01's write-up read its SHAM pass as evidence the instrument was NOT gullible; CALIBRATION-02 showed that pass was an artifact of a near-twin confound, i.e. the earlier reading was wrong in the project's own favour.",
+          "severity": "unrated",
+          "status": "open",
+          "date": "2026-07-19",
+          "x-legacy": {
+            "source": "claims.json 0.8.0",
+            "first_recorded": "git:f9eb000",
+            "note": "status \"open\" is the spec C.1 migration default, not a review; raised_by was never recorded."
+          }
+        }
+      ],
       "required_experiment": "CALIBRATION-03 -- substitution rather than ablation. Not implemented, not run, pre-registration required before building. See resident/experiments/CALIBRATION-02.md, 'The fix, named but NOT run.'",
       "maintainer": "xz",
-      "status": "open"
+      "status": "refuted",
+      "status_history": [
+        {
+          "from": null,
+          "to": "refuted",
+          "changed_at": "2026-07-19T13:37:41.000Z",
+          "changed_by": "xz",
+          "reason": "Registered in claims.json 0.6.0 at evidence_level \"refuted\" (git f9eb000: \"CALIBRATION-02: INSTRUMENT GULLIBLE — the inward perturbation test is REFUTED\"). Reconstructed at migration.",
+          "evidence_ref": "git:f9eb000"
+        }
+      ],
+      "closed_at": "2026-07-19T13:37:41.000Z",
+      "closed_reason": "Refuted; the decisive evidence is in evidence_note. Closure date = when this registry recorded the refutation (git f9eb000); the legacy status \"open\" carried no closure date.",
+      "provenance": {
+        "created_at": "2026-07-19T13:37:41.000Z",
+        "created_by": "xz",
+        "source_claims": [],
+        "supersedes": null,
+        "legacy_status": "open"
+      },
+      "versions": [
+        {
+          "version": 1,
+          "wording": "The inward perturbation test (withhold a claimed-formative memory, measure the downstream behavioral delta) distinguishes a memory that is causally load-bearing for a behavior from one that is decorative.",
+          "changed_at": "2026-07-19T13:37:41.000Z",
+          "changed_by": "xz",
+          "reason": "Registered in claims.json 0.6.0 (git f9eb000: \"CALIBRATION-02: INSTRUMENT GULLIBLE — the inward perturbation test is REFUTED\")."
+        }
+      ]
     }
   ]
 }
