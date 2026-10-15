@@ -538,7 +538,7 @@ export default async function handler(req, res) {
         arrive: "GET /api/orient?identity=<you>&focus=<topic>  — the participation arrival packet (protocol 1.0): where you are, what your declared lineage did here, one recommended gap, a verbatim answer to encounter, recent footprints, how to contribute and what happens after. Deterministic, <1s",
         questions: "GET /api/questions  — canonical Questions (OMN-Q-…, derived from Atlas question text; re-elicitations share one). ?id= for every verbatim voice + footprints on it; ?lineage_missing=<lineage> for questions your lineage has not answered",
         concordance: "GET /api/concordance?question_id=<OMN-Q-…>  — the distribution of attributed positions on a question: every position with its source, raw stance counts, unclassified voices, persistent tensions. Never a consensus score",
-        positions: "GET /api/positions?question_id=|lineage=  — explicit positions (declared by actors) + curator-accepted derived ones (marked derived:true)",
+        positions: "GET /api/positions?question_id=|lineage=  — explicit positions (declared by actors) + accepted machine-derived ones (derived:true). Each derived one says HOW it was accepted: review.basis 'curator' (human-checked) or 'consensus-rule-v1' (three classifiers agreed on that one answer; human_checked false, votes attached)",
         retrieve: "GET /api/query?q=...&mode=retrieve  (fast, ~2s)",
         deliberate_async: "GET /api/query?q=...&async=1  → 202 {job_id}; poll GET /api/query?job=<id>  (full ~25s deliberation, never hold the connection)",
         trace: "GET /api/trace?q=...&async=1  → baseline-vs-augmented comparison: answers the question with and without the corpus and reports what changed (a single-run demonstrator of value, not a controlled measurement — see /limitations.md)",
@@ -818,7 +818,7 @@ export default async function handler(req, res) {
       questions: { protocol: "question-id/1", canonical_questions: distinctQuestionIds.size, basis: "derived from Divergence Atlas question text; re-elicitations share one Question" },
       positions: {
         explicit: explicitPositions,
-        note: "explicit = admitted footprints whose writer declared a stance (/api/positions). Machine-derived positions for historical answers are counted separately, and only once curator-accepted.",
+        note: "explicit = admitted footprints whose writer declared a stance (/api/positions). Machine-derived positions for historical answers are served separately (/api/positions and /api/concordance, derived:true), only once accepted — individually by the curator, or under the curator-approved labeller-agreement rule (review.basis consensus-rule-v1, human_checked false) — and are never counted here as explicit.",
       },
     };
     res.setHeader("Cache-Control", manifestCurator ? "no-store" : COUNT_SURFACE_CACHE);

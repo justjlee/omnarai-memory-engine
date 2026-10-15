@@ -127,3 +127,58 @@ test("verbatim guard accepts honest ellipsis elision in order — and nothing lo
   assert.equal(isVerbatim(ans, "capability is evidence, not authority"), false, "case must match");
   assert.equal(isVerbatim("It’s **clearly** not — in my view — settled.", "It's clearly not - in my view - settled."), true, "typography + markdown only");
 });
+
+// ── Labeller-agreement rule (protocol §6, accepted 2026-10-14) ──────────────────────────────────────────────
+import { writeFileSync, mkdirSync } from "node:fs";
+import { reviewFromAction, DERIVED_REVIEW_PREFIX } from "../api/_protocol.js";
+import { CONSENSUS_RULE, CONSENSUS_SERVED } from "../api/_stance-consensus.js";
+
+test("rule acceptance: dry run writes nothing; real run accepts only what qualifies, and a curator decision always stands", async () => {
+  fresh();
+  const { results } = await run(["--run", "--apply"], { classifier: stub, log: quiet, outDir });
+  const [a, b, c, d] = results.filter((x) => x.stance !== "unclear");
+  const row = (x, stance = x.stance) => ({ status: "consensus", derived_position_id: x.id, consensus: stance, answer: x.derivation.source_answer_id, panel: { "claude-haiku-4-5": stance, "gemini-2.5-flash": stance, "deepseek-chat": stance } });
+  mkdirSync(outDir, { recursive: true });
+  const file = `${outDir}/consensus-fixture.json`;
+  writeFileSync(file, JSON.stringify({ rows: [row(a), row(b, b.stance === "oppose" ? "support" : "oppose"), row(c), row(d), { status: "contested", derived_position_id: a.id }] }));
+  const consensusMap = { [a.id]: {}, [b.id]: {}, [c.id]: {} }; // d's votes deliberately NOT on record
+  await review(["--reject", c.id], { log: quiet }); // the curator already rejected c
+
+  const dry = await review(["--accept-consensus", file, "--dry-run"], { log: quiet, consensusMap });
+  assert.equal(dry.accepted, 1);
+  assert.equal(mem.__dump(DERIVED_REVIEW_PREFIX).filter((x) => /accept-consensus/.test(x.pathname || x)).length, 0, "dry run writes nothing");
+
+  const real = await review(["--accept-consensus", file], { log: quiet, consensusMap, nowMs: Date.now() + 5000 });
+  assert.equal(real.accepted, 1, "only a: b's stored stance differs, c was rejected by the curator, d has no votes on record");
+  assert.deepEqual(real.skipped, { not_stored: 0, already_reviewed: 1, stance_mismatch: 1, votes_not_on_record: 1 });
+  const written = mem.__dump(DERIVED_REVIEW_PREFIX).filter((k) => /__accept-consensus__/.test(k));
+  assert.equal(written.length, 1, "exactly one rule-acceptance record");
+  const rec = mem.__read(written[0]);
+  assert.equal(rec.individually_human_checked, false, "the permanent record says it too");
+  assert.equal(rec.approved.by, "Jonathan Lee (curator)");
+
+  const qid = a.subject.question_id;
+  const conc = await call(`/api/concordance?question_id=${qid}`);
+  const served = conc.body.positions.find((p) => p.position_id === a.id);
+  assert.ok(served, "the rule-accepted stance is served");
+  assert.equal(served.derivation.review.basis, CONSENSUS_RULE.id);
+  assert.equal(served.derivation.review.human_checked, false, "never presented as human-checked");
+  assert.match(served.derivation.review.note, /NOT individually checked by a human/);
+  assert.ok(!conc.body.positions.some((p) => p.position_id === c.id), "the curator's reject still wins");
+  assert.equal(conc.body.sources.derived_by_agreement_rule >= 1, true);
+  assert.equal(conc.body.sources.derived_human_checked, 0);
+});
+
+test("a curator accept reads as human-checked; a rule accept carries the actual votes", async () => {
+  assert.deepEqual(
+    (({ state, basis, human_checked }) => ({ state, basis, human_checked }))(reviewFromAction("OMN-POS-DV-000000000000", "accept", 0)),
+    { state: "accepted", basis: "curator", human_checked: true });
+  const realId = Object.keys(CONSENSUS_SERVED)[0];
+  const r = reviewFromAction(realId, "accept-consensus", 0);
+  assert.equal(r.human_checked, false);
+  assert.deepEqual(r.consensus.votes, CONSENSUS_SERVED[realId].votes);
+  assert.match(r.consensus.validation, /81%/);
+  assert.equal(r.consensus.approved.on, "2026-10-14");
+  assert.equal(Object.keys(CONSENSUS_SERVED).length, CONSENSUS_RULE.served_count);
+  assert.equal(reviewFromAction(realId, "reject", 0).state, "rejected");
+});
