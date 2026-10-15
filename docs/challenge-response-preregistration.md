@@ -312,4 +312,7 @@ engine response and every label are kept in `analysis/crt-v1/` and published wit
 
 ## 12. Deviations
 
-(none yet)
+- **2026-10-15, before any model call (clarification, not a change).** §3 says "Keep records with 5 answers". The
+  registered smoke and test lists were computed as *at least* 5 answers, and the lists are the registered selection. One
+  test record, `OMN-D1784417308425`, has 6 answers. With exactly 5, the rule yields 32 records and a different list. The
+  harness (`scripts/lib/crt-core.mjs`) uses "at least 5" and a test asserts it reproduces the registered lists.
