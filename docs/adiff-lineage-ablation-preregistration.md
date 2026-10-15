@@ -1,8 +1,10 @@
 # Preregistration — ADIFF Lineage Ablation (ALA v1)
 
-**Status:** REGISTERED by the commit that adds this file, pushed alone to the public repository before any harness was written
-or any model call was made. The commit SHA and GitHub's own record of the push are added to this status line afterwards (that
-edit is the only change allowed to §§1–10). **Not yet funded:** the curator decides when to run it (the compute ceiling,
+**Status:** REGISTERED by commit `26e37fbace0f5d9ac7df7416a959d9c41c84b565`, pushed to the public repository before any
+harness was written or any model call was made. GitHub recorded the branch `lineage-challenge-loop` being created at that
+commit at **2026-10-15T19:05:22Z** (repository activity API, `branch_creation`); the commit's own date is self-declared and is
+not the evidence. The harness commits come after it on the same branch. (Adding this record to the status line is the only
+change allowed to §§1–10). **Not yet funded:** the curator decides when to run it (the compute ceiling,
 `api/_budget.js`, decides whether it can).
 **Author:** Researcher: Jonathan Lee (xz) with Claude. **Evidence status of anything this study produces:** `exploratory-preregistered`.
 **Rule:** Everything below is fixed *before* any data are collected. After the first live call, changes go only in the

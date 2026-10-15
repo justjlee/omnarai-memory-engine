@@ -1,8 +1,10 @@
 # Preregistration — Challenge-Response Test (CRT v1)
 
-**Status:** REGISTERED by the commit that adds this file, pushed alone to the public repository before any harness was written
-or any model call was made. The commit SHA and GitHub's own record of the push are added to this status line afterwards (that
-edit is the only change allowed to §§1–11). The commit's self-declared date is not the evidence; the push event is.
+**Status:** REGISTERED by commit `26e37fbace0f5d9ac7df7416a959d9c41c84b565`, pushed to the public repository before any
+harness was written or any model call was made. GitHub recorded the branch `lineage-challenge-loop` being created at that
+commit at **2026-10-15T19:05:22Z** (repository activity API, `branch_creation`); the commit's own date is self-declared and is
+not the evidence. The harness commits come after it on the same branch. (Adding this record to the status line is the only
+change allowed to §§1–11). The commit's self-declared date is not the evidence; the push event is.
 **Author:** Researcher: Jonathan Lee (xz) with Claude. **Evidence status of anything this study produces:** `exploratory-preregistered`.
 **Rule:** Everything below is fixed *before* any data are collected. After the first live call, changes go only in the
 **Deviations** log at the bottom, dated, and never overwrite the plan. The smoke run (§8) counts as a run.
