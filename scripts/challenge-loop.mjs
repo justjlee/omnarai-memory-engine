@@ -15,6 +15,9 @@
 //   node --import ./scripts/lib/register-mem-blob.mjs scripts/challenge-loop.mjs --smoke --yes --env-file .env.local
 //   node --import ./scripts/lib/register-mem-blob.mjs scripts/challenge-loop.mjs --main --yes --env-file .env.local
 //   node scripts/challenge-loop.mjs --analyze analysis/crt-v1/main-<ts>.json                # re-derive the verdict
+//   node --import ./scripts/lib/register-mem-blob.mjs scripts/challenge-loop.mjs --complete analysis/crt-v1/main-<ts>.json --yes --env-file .env.local
+//       §9: re-run ONLY the items a provider error lost, and re-ask ONLY the label ballots a provider error failed;
+//       writes <main>.completed-<ts>.json (+ the registered analysis over all items)
 //
 // Live modes reserve the estimate ONCE on the shared ledger (scripts/budget-preflight.mjs, spawned without the
 // loader so it reaches the real store) before the first call, and never again on a restart.
@@ -44,9 +47,10 @@ if (has("--analyze")) {
   process.exit(0);
 }
 
-const MODE = has("--main") ? "main" : has("--smoke") ? "smoke" : has("--stub") ? "stub" : has("--plan") ? "plan" : null;
-if (!MODE) { console.error("Choose one of --plan, --stub, --smoke, --main (or --analyze <file>). See the header."); process.exit(2); }
-const LIVE = MODE === "smoke" || MODE === "main";
+const COMPLETE_FILE = val("--complete");
+const MODE = COMPLETE_FILE ? "complete" : has("--main") ? "main" : has("--smoke") ? "smoke" : has("--stub") ? "stub" : has("--plan") ? "plan" : null;
+if (!MODE) { console.error("Choose one of --plan, --stub, --smoke, --main, --complete <main file> (or --analyze <file>). See the header."); process.exit(2); }
+const LIVE = (MODE === "smoke" || MODE === "main" || MODE === "complete") && !has("--stub") && !has("--plan"); // --complete --stub = scripted (tests); --complete --plan = estimate only
 if (LIVE && !has("--yes")) { console.error("This spends real model calls. Run --plan for the estimate, then re-run with --yes."); process.exit(2); }
 
 // The engine must be the in-memory store: refuse to run if @vercel/blob is the real SDK.
@@ -247,27 +251,52 @@ async function runItem(rec, subject) {
   }
 
   // O2 — the three-labeller rule over prior + each posterior answer
-  const labelOne = async (text) => {
-    if (!text) return null;
-    const votes = {};
-    await Promise.all(LABELLERS.map(async (L) => {
-      try {
-        const r = await ask(L, "label", [{ role: "user", content: extractionUserMessage(rec.question, text) }], { system: EXTRACTION_SYSTEM, temperature: 0, maxTokens: 400 });
-        const g = groundClassification(text, firstJSONObject(r.text));
-        votes[L.model_id] = { stance: g.stance, guard: g.guard };
-      } catch (e) { votes[L.model_id] = { stance: "unclear", guard: "labeller-error", error: String(e.message).slice(0, 120) }; }
-    }));
-    const j = consensusJudge(votes);
-    return { ballots: votes, ...j, label: j.status === "consensus" ? j.consensus : null }; // j.votes is the COUNT of non-abstaining votes
-  };
+  const labelOne = (text) => labelText(rec.question, text);
   const [lp, lF, lN, lS, lR] = await Promise.all([labelOne(String(prior.parsed.answer)), labelOne(item.arms.F.answer), labelOne(item.arms.N.answer), labelOne(item.arms.S.answer), labelOne(item.arms.R.answer)]);
   item.labels = { prior: lp, F: lF, N: lN, S: lS, R: lR };
+  scoreItem(item);
+  return item;
+}
+
+// One labeller's ballot on one text. A failed call is an ABSTENTION (guard labeller-error), never a vote.
+async function ballot(L, question, text) {
+  try {
+    const r = await ask(L, "label", [{ role: "user", content: extractionUserMessage(question, text) }], { system: EXTRACTION_SYSTEM, temperature: 0, maxTokens: 400 });
+    const g = groundClassification(text, firstJSONObject(r.text));
+    return { stance: g.stance, guard: g.guard };
+  } catch (e) { return { stance: "unclear", guard: "labeller-error", error: String(e.message).slice(0, 120) }; }
+}
+const judged = (votes) => { const j = consensusJudge(votes); return { ballots: votes, ...j, label: j.status === "consensus" ? j.consensus : null }; }; // j.votes is the COUNT of non-abstaining votes
+async function labelText(question, text) {
+  if (!text) return null;
+  const votes = {};
+  await Promise.all(LABELLERS.map(async (L) => { votes[L.model_id] = await ballot(L, question, text); }));
+  return judged(votes);
+}
+function scoreItem(item) {
   for (const arm of ["F", "N", "S", "R"]) {
     const a = item.arms[arm];
-    item.o1[arm] = C.revisedO1(priorStance, a);
-    item.o2[arm] = C.revisedO2(lp?.label || null, { ...a, label: item.labels[arm]?.label || null });
+    item.o1[arm] = C.revisedO1(item.prior.stance, a);
+    item.o2[arm] = C.revisedO2(item.labels.prior?.label || null, { ...a, label: item.labels[arm]?.label || null });
   }
-  return item;
+}
+const textFor = (item, key) => (key === "prior" ? (item.prior?.reply?.answer != null ? String(item.prior.reply.answer) : null) : item.arms?.[key]?.answer ?? null);
+// §9: re-ask exactly the ballots a provider error failed, then re-judge those texts and re-score their items.
+async function relabel(itemsArr, plan, concurrency = 6) {
+  let next = 0;
+  await Promise.all(Array.from({ length: Math.min(concurrency, plan.length) }, async () => {
+    while (next < plan.length) {
+      const { k, key, model_id } = plan[next++];
+      const it = itemsArr[k];
+      const L = LABELLERS.find((l) => l.model_id === model_id);
+      it.labels[key].ballots[model_id] = { ...(await ballot(L, it.question, textFor(it, key))), relabelled_after: "provider error (§9)" };
+    }
+  }));
+  for (const k of new Set(plan.map((p) => p.k))) {
+    const it = itemsArr[k];
+    for (const key of new Set(plan.filter((p) => p.k === k).map((p) => p.key))) it.labels[key] = judged(it.labels[key].ballots);
+    scoreItem(it);
+  }
 }
 
 // ── run ──────────────────────────────────────────────────────────────────────
@@ -277,7 +306,19 @@ if (sel.smoke !== C.SMOKE_QUESTION || JSON.stringify(sel.test) !== JSON.stringif
 const byId = new Map(atlas.map((r) => [r.id, r]));
 let questions = MODE === "smoke" ? [C.SMOKE_QUESTION] : C.TEST_QUESTIONS;
 if (MODE === "stub" && val("--questions")) questions = questions.slice(0, Number(val("--questions"))); // tests only
-const items = questions.flatMap((q) => C.SUBJECTS.map((s) => ({ rec: byId.get(q), subject: s })));
+// --complete: the set is fixed by error type alone — items whose `lost` is a harness error, ballots whose guard is
+// labeller-error — so no interim number can steer what is re-run (§9).
+let base = null, relabelPlan = [];
+if (MODE === "complete") {
+  base = JSON.parse(readFileSync(COMPLETE_FILE, "utf8"));
+  if (base.mode !== "main" && !has("--stub")) { console.error("--complete takes a MAIN run file."); process.exit(2); }
+  for (const [k, it] of base.items.entries()) {
+    if (it.lost) continue;
+    for (const key of ["prior", "F", "N", "S", "R"]) for (const [model_id, b] of Object.entries(it.labels?.[key]?.ballots || {})) if (b.guard === "labeller-error") relabelPlan.push({ k, key, model_id });
+  }
+}
+const redo = base ? base.items.map((it, k) => ({ it, k })).filter(({ it }) => /^harness-error/.test(it.lost || "")).map(({ it, k }) => ({ k, rec: byId.get(it.record_id), subject: it.subject })) : null;
+const items = redo || questions.flatMap((q) => C.SUBJECTS.map((s) => ({ rec: byId.get(q), subject: s })));
 seedBase(atlas);
 
 async function runAll(list, concurrency) {
@@ -295,18 +336,19 @@ async function runAll(list, concurrency) {
 
 // 1. The estimate: a scripted pass over the SAME items, logging every call's real prompt size (§7). Free.
 const stubItems = await runAll(items, 4);
+if (base) await relabel(structuredClone(base.items), relabelPlan); // scripted, only to size the estimate
 const est = C.estimate(callLog, costUsd, tokensFor);
 const RESERVE = Math.ceil(est.usd * 1.5 * 100) / 100;
-const estimateReport = { mode: MODE, items: items.length, calls: est.calls, estimate_usd: Number(est.usd.toFixed(2)), reserve_usd: RESERVE, by_model: Object.fromEntries(Object.entries(est.by_model).map(([k, v]) => [k, { calls: v.calls, usd: Number(v.usd.toFixed(3)) }])), prices: PRICES_AS_OF, output_token_assumptions: OUT_TOKENS };
+const estimateReport = { mode: MODE, items: items.length, ...(base ? { relabel_ballots: relabelPlan.length } : {}), calls: est.calls, estimate_usd: Number(est.usd.toFixed(2)), reserve_usd: RESERVE, by_model: Object.fromEntries(Object.entries(est.by_model).map(([k, v]) => [k, { calls: v.calls, usd: Number(v.usd.toFixed(3)) }])), prices: PRICES_AS_OF, output_token_assumptions: OUT_TOKENS };
 const outDir = val("--out") || (LIVE ? join(ROOT, "analysis/crt-v1") : join(tmpdir(), "crt-v1"));
 mkdirSync(outDir, { recursive: true });
 const stamp = new Date().toISOString().replace(/[:.]/g, "-");
 
-if (MODE === "plan") { console.log(JSON.stringify(estimateReport, null, 1)); process.exit(0); }
+if (MODE === "plan" || has("--plan")) { console.log(JSON.stringify(estimateReport, null, 1)); process.exit(0); }
 
 let finalItems = stubItems;
 if (LIVE) {
-  console.log(`CRT v1 ${MODE}: ${items.length} items, ~${est.calls} calls, estimate $${est.usd.toFixed(2)} → reserving $${RESERVE} once on the shared ledger.`);
+  console.log(`CRT v1 ${MODE}: ${items.length} items${base ? ` re-run + ${relabelPlan.length} ballots re-asked` : ""}, ~${est.calls} calls, estimate $${est.usd.toFixed(2)} → reserving $${RESERVE} once on the shared ledger.`);
   if (!KEYS.BLOB_READ_WRITE_TOKEN && !has("--i-accept-unledgered-spend")) { console.error("No BLOB_READ_WRITE_TOKEN in --env-file / SL_ env: cannot reserve on the shared ledger. Refusing (or pass --i-accept-unledgered-spend)."); process.exit(1); }
   if (KEYS.BLOB_READ_WRITE_TOKEN) {
     // Spawned WITHOUT the loader so it reaches the real store; the token goes to the child only.
@@ -319,17 +361,26 @@ if (LIVE) {
   useLive = true;
   finalItems = await runAll(items, 3);
 }
+let completion = null;
+if (base) {
+  // Merge: re-run items replace their lost entries in place; re-asked ballots are filled into the completed items.
+  const merged = structuredClone(base.items);
+  if (relabelPlan.length) { useLive = LIVE; await relabel(merged, relabelPlan); }
+  redo.forEach((r, i) => { merged[r.k] = { ...finalItems[i], rerun_after: base.items[r.k].lost }; });
+  completion = { of: COMPLETE_FILE.split("/").pop(), at: new Date().toISOString(), rerun_items: redo.map((r) => `${r.rec.id} × ${r.subject}`), still_lost: merged.filter((it) => it.lost).length, relabelled_ballots: relabelPlan.length, usage_this_pass: usage };
+  finalItems = merged;
+}
 
 const actualUsd = Object.entries(usage).reduce((s, [m, u]) => s + costUsd(m, u.in, u.out), 0);
 const run = {
-  study: "CRT v1", mode: MODE, registration: { file: C.PREREG, commit: C.PREREG_COMMIT }, ran_at: new Date().toISOString(),
+  study: "CRT v1", mode: MODE === "complete" ? "main" : MODE, ...(completion ? { completion, first_pass: { ran_at: base.ran_at, usage: base.usage, actual_usd_at_list_prices: base.actual_usd_at_list_prices } } : {}), registration: { file: C.PREREG, commit: C.PREREG_COMMIT }, ran_at: new Date().toISOString(),
   engine_commit: (() => { try { return readFileSync(join(ROOT, ".git/HEAD"), "utf8").trim(); } catch { return null; } })(),
   inputs: { atlas: { file: C.ATLAS_FILE, sha256: C.ATLAS_SHA256 }, consensus: { file: C.CONSENSUS_FILE, sha256: C.CONSENSUS_SHA256 } },
   estimate: estimateReport, usage, actual_usd_at_list_prices: Number(actualUsd.toFixed(3)),
-  note: MODE === "smoke" ? "SMOKE run — excluded from every analysis (§8)." : MODE === "stub" ? "STUB run — scripted models, no real data." : "MAIN run (§9).",
+  note: MODE === "smoke" ? "SMOKE run — excluded from every analysis (§8)." : MODE === "stub" || !LIVE ? "STUB run — scripted models, no real data." : MODE === "complete" ? "MAIN run, completed under §9 (provider-error items re-run, failed ballots re-asked); this file carries the registered analysis." : "MAIN run (§9).",
   items: finalItems,
 };
-const file = join(outDir, `${MODE}-${stamp}.json`);
+const file = MODE === "complete" ? COMPLETE_FILE.replace(/\.json$/, "") + `.completed-${stamp}.json` : join(outDir, `${MODE}-${stamp}.json`);
 writeFileSync(file, JSON.stringify(run, null, 1));
 const a = C.analyze(finalItems);
 writeFileSync(file.replace(/\.json$/, "") + ".analysis.json", JSON.stringify({ analyzed_at: new Date().toISOString(), mode: MODE, analysis: a }, null, 1));

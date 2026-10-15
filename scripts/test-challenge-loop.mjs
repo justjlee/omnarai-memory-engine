@@ -8,7 +8,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -125,6 +125,35 @@ test("[E2] live modes refuse before spending: no --yes, no loader, no ledger tok
     assert.equal(noToken.status, 1);
     assert.match(noToken.stderr, /cannot reserve on the shared ledger/);
     assert.deepEqual(readdirSync(out), [], "nothing written, nothing spent");
+  } finally { rmSync(out, { recursive: true, force: true }); }
+});
+
+test("[E4] --complete re-runs exactly the provider-error items and re-asks exactly the failed ballots (§9)", () => {
+  const out = tmp();
+  try {
+    assert.equal(run(["--stub", "--questions", "1", "--out", out]).status, 0);
+    const src = readdirSync(out).find((f) => /^stub-/.test(f) && !f.includes("analysis"));
+    const data = JSON.parse(readFileSync(join(out, src), "utf8"));
+    data.mode = "main";
+    const keep = JSON.stringify(data.items[0]);
+    data.items[1] = { record_id: data.items[1].record_id, subject: data.items[1].subject, lost: "harness-error: Your prepayment credits are depleted." };
+    data.items[2] = { record_id: data.items[2].record_id, subject: data.items[2].subject, lost: "prior-unparseable" }; // NOT a provider error: stays lost
+    data.items[3].labels.R.ballots["gemini-2.5-flash"] = { stance: "unclear", guard: "labeller-error", error: "credits" };
+    data.items[3].labels.R = { ...data.items[3].labels.R, status: "insufficient", label: null };
+    const mainFile = join(out, "main-test.json");
+    writeFileSync(mainFile, JSON.stringify(data));
+    const r = run(["--complete", mainFile, "--stub", "--out", out]);
+    assert.equal(r.status, 0, r.stderr.slice(-800));
+    const done = JSON.parse(readFileSync(join(out, readdirSync(out).find((f) => /^main-test\.completed-.*\d+Z\.json$/.test(f))), "utf8"));
+    assert.equal(done.completion.rerun_items.length, 1, "only the harness-error item is re-run");
+    assert.equal(done.completion.relabelled_ballots, 1, "only the failed ballot is re-asked");
+    assert.equal(done.items[1].lost, null);
+    assert.match(done.items[1].rerun_after, /prepayment/);
+    assert.equal(done.items[2].lost, "prior-unparseable", "a lost item that was not a provider error is never re-run");
+    assert.equal(JSON.stringify(done.items[0]), keep, "untouched items are byte-identical");
+    assert.equal(done.items[3].labels.R.ballots["gemini-2.5-flash"].relabelled_after, "provider error (§9)");
+    assert.equal(done.items[3].labels.R.status, "consensus", "the text is re-judged with the restored ballot");
+    assert.equal(done.completion.still_lost, 1);
   } finally { rmSync(out, { recursive: true, force: true }); }
 });
 

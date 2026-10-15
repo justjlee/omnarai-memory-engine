@@ -339,4 +339,10 @@ engine response and every label are kept in `analysis/crt-v1/` and published wit
   **Disclosure:** the harness also printed an analysis of this incomplete run (58 valid items). It is kept as
   `main-2026-10-15T20-06-39-121Z.analysis.json` and is NOT the registered analysis. The registered analysis is run once, on all 80 items, after the
   re-run. The re-run set cannot be steered by those numbers, because it is defined by error type alone.
+- **2026-10-15, after the main run (tooling for the §9 re-run; no design change).** `scripts/challenge-loop.mjs --complete
+  <main file>` was added after the main run, to carry out the re-run above exactly. It re-runs every item whose `lost` is
+  a harness error (each as a fresh item, through the same `runItem`), and re-asks every ballot whose guard is
+  `labeller-error` (same labeller, same prompt, temperature 0). It then re-judges those texts and writes
+  `<main>.completed-<ts>.json`, which carries the registered analysis over all 80 items. Items lost for any other
+  reason stay lost. Tested in `scripts/test-challenge-loop.mjs` [E4]. Estimate $1.04 (reserve $1.56).
 
