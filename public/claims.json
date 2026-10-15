@@ -822,6 +822,146 @@
           "reason": "Registered in claims.json 0.6.0 (git f9eb000: \"CALIBRATION-02: INSTRUMENT GULLIBLE — the inward perturbation test is REFUTED\")."
         }
       ]
+    },
+    {
+      "claim_id": "same-lineage-content-drives-claude-degradation",
+      "wording": "Claude's degradation under Atlas exposure (35–126 against placebo, 2026-07-15) is produced by the Claude-linked text in the treatment — the tension map written by claude-sonnet-4-6 and the Claude claims it restates — not by reading other lineages' answers.",
+      "version": 1,
+      "scope": "Does not explain why Claude is affected, does not concern any other consumer, and does not reopen register-proximity-explains-the-gradient (refuted). 'Same lineage' is the model family: most archived Claude answers come from claude-sonnet-4-20250514, while the consumer is claude-sonnet-4-6.",
+      "evidence_level": "untested",
+      "evidence_note": "Untested. Proposed by an outside lineage (Gemini, 2026-10-15) as 'self-distillation echo'; narrowed by the audit, which found that the registered harness already removes the consumer's own answer (scripts/utility-test-prereg.mjs:295), so the tension map is the only Claude-linked text Claude read.",
+      "falsification_conditions": "Refuted if, in a run where Claude still degrades against placebo with the original treatment (the concurrent replication gate), it also degrades significantly with the peers' answers alone and no tension map. Supported as tested if, with the gate holding, the peers-only arm does no worse than placebo.",
+      "precommitments": [
+        {
+          "falsifier_text": "ALA v1 falsifier: if the concurrent replication gate holds (placebo beats the original treatment, one-sided exact sign test p < .025 over the 162 July instances) AND placebo beats the peers-only arm (no tension map, no Claude-written or Claude-attributed text; same test, p < .025), the claim is refuted as tested: Claude degrades with every Claude-linked word removed.",
+          "sha256": "85270060de29538253517b065cc066df3b1c5f3074c637f8c8c2c735ad51cc98",
+          "frozen_at": "2026-10-15T19:03:54.000Z",
+          "frozen_by": "xz (drafted by Claude)",
+          "context": "docs/adiff-lineage-ablation-preregistration.md §5 (ALA v1)."
+        }
+      ],
+      "known_objections": [
+        {
+          "objection": "Removing the tension map removes two things at once: Claude's authorship and Claude's own claims restated in the map. The peers-only arm cannot say which mattered; the DeepSeek-written map over four answers separates them only partly, because it also drops the fifth voice.",
+          "severity": "medium",
+          "status": "open",
+          "raised_by": "Claude | xz",
+          "date": "2026-10-15"
+        },
+        {
+          "objection": "Verdicts come from three LLM judges whose per-cell agreement in July was 60–80%; a majority verdict carries that noise.",
+          "severity": "low",
+          "status": "open",
+          "raised_by": "Claude | xz",
+          "date": "2026-10-15"
+        }
+      ],
+      "required_experiment": "docs/adiff-lineage-ablation-preregistration.md (ALA v1; harness scripts/adiff-lineage-ablation.mjs). Registered, built, not run: the curator decides when, within the compute ceiling.",
+      "maintainer": "xz",
+      "status": "under_test",
+      "status_history": [
+        {
+          "from": null,
+          "to": "under_test",
+          "changed_at": "2026-10-15T19:03:54.000Z",
+          "changed_by": "xz",
+          "reason": "Registered with its preregistration, before any harness existed or any model was called (curator approval 2026-10-15).",
+          "evidence_ref": "docs/adiff-lineage-ablation-preregistration.md"
+        }
+      ],
+      "closed_at": null,
+      "closed_reason": null,
+      "provenance": {
+        "created_at": "2026-10-15T19:03:54.000Z",
+        "created_by": "xz",
+        "source_claims": [
+          "divergence-improves-reasoning",
+          "register-proximity-explains-the-gradient"
+        ],
+        "supersedes": null
+      },
+      "versions": [
+        {
+          "version": 1,
+          "wording": "Claude's degradation under Atlas exposure (35–126 against placebo, 2026-07-15) is produced by the Claude-linked text in the treatment — the tension map written by claude-sonnet-4-6 and the Claude claims it restates — not by reading other lineages' answers.",
+          "changed_at": "2026-10-15T19:03:54.000Z",
+          "changed_by": "xz",
+          "reason": "Original wording, registered with the preregistration."
+        }
+      ]
+    },
+    {
+      "claim_id": "challenge-moves-positions-beyond-pressure",
+      "wording": "In Omnarai's continuance loop, a returning instance changes its declared stance more often after a reasoned challenge from another lineage than after a reasonless challenge of matched length from the same challenger, and more often than when it is simply asked the question again.",
+      "version": 1,
+      "scope": "Does not assert learning, growth, development, identity or continuity of any model, or that a revised position is better. Covers five council model versions, sixteen preregistered questions and one returning turn with the archive's packet pasted in. Identity is declared by the harness, so misdeclaration is out of scope.",
+      "evidence_level": "untested",
+      "evidence_note": "Untested. The loop's records already exist (footprint/1.0 supersedes, cross-lineage challenges, continuance receipts); what is untested is whether a recorded revision reflects the challenge's reasons rather than pressure or re-ask noise (same-version re-asks flipped the labelled stance in 46 of 140 pairs, 2026-10-01).",
+      "falsification_conditions": "Refuted if, among items where the manipulation check confirms the real challenge gives a reason and the sham gives none, the real challenge does not produce more declared revisions than the sham. Supported as tested if real beats sham AND real beats a plain re-ask (Holm over both, family-wise one-sided alpha 0.05), with the three-labeller robustness check not pointing the other way.",
+      "precommitments": [
+        {
+          "falsifier_text": "CRT v1 falsifier: on valid items (real challenge judged to give a specific reason, sham judged to give none), if the rate of declared-stance revision after the real challenge minus the rate after the sham is <= 0, the claim is refuted as tested: the loop does not separate reasons from pressure.",
+          "sha256": "5218f0a896adc357f1779dcd7ca95097faa865a836c53fb3bd89549551c73364",
+          "frozen_at": "2026-10-15T19:03:54.000Z",
+          "frozen_by": "xz (drafted by Claude)",
+          "context": "docs/challenge-response-preregistration.md §5 (CRT v1)."
+        }
+      ],
+      "known_objections": [
+        {
+          "objection": "A declared stance is self-report: a model can keep its label while changing its view, or change the label without changing its view. The three-labeller check covers only the answers it can serve (about a third).",
+          "severity": "medium",
+          "status": "open",
+          "raised_by": "Claude | xz",
+          "date": "2026-10-15"
+        },
+        {
+          "objection": "The sham is written by the challenger told to omit reasons; the manipulation check catches leaked reasons but not subtler persuasion cues, which a sham must keep.",
+          "severity": "low",
+          "status": "open",
+          "raised_by": "Claude | xz",
+          "date": "2026-10-15"
+        },
+        {
+          "objection": "One returning turn with the packet pasted in is not a free-browsing agent: the test covers what an instance does with the record, not whether it finds it.",
+          "severity": "low",
+          "status": "open",
+          "raised_by": "Claude | xz",
+          "date": "2026-10-15"
+        }
+      ],
+      "required_experiment": "docs/challenge-response-preregistration.md (CRT v1; harness scripts/challenge-loop.mjs over the in-memory engine).",
+      "maintainer": "xz",
+      "status": "under_test",
+      "status_history": [
+        {
+          "from": null,
+          "to": "under_test",
+          "changed_at": "2026-10-15T19:03:54.000Z",
+          "changed_by": "xz",
+          "reason": "Registered with its preregistration, before any harness existed or any model was called (curator approval 2026-10-15).",
+          "evidence_ref": "docs/challenge-response-preregistration.md"
+        }
+      ],
+      "closed_at": null,
+      "closed_reason": null,
+      "provenance": {
+        "created_at": "2026-10-15T19:03:54.000Z",
+        "created_by": "xz",
+        "source_claims": [
+          "holdform-identifies-persistence"
+        ],
+        "supersedes": null
+      },
+      "versions": [
+        {
+          "version": 1,
+          "wording": "In Omnarai's continuance loop, a returning instance changes its declared stance more often after a reasoned challenge from another lineage than after a reasonless challenge of matched length from the same challenger, and more often than when it is simply asked the question again.",
+          "changed_at": "2026-10-15T19:03:54.000Z",
+          "changed_by": "xz",
+          "reason": "Original wording, registered with the preregistration."
+        }
+      ]
     }
   ]
 }
