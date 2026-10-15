@@ -329,4 +329,14 @@ engine response and every label are kept in `analysis/crt-v1/` and published wit
      log exists to prevent). R and S word counts are reported per item. If the main run is "supported", the licensed
      sentence must state the observed lengths and not say "matched length" unless they matched. A shorter sham is a weaker
      push, which works in H1's favour; it is a limit of this run.
+- **2026-10-15, during the main run (provider error; §9 re-run rule applies).** The Google Gemini API stopped answering
+  partway through the main run (`analysis/crt-v1/main-2026-10-15T20-06-39-121Z.json`) with "prepayment credits are depleted". 22 items were lost
+  with a harness error: the GPT-4o, Gemini and DeepSeek items on the last 8 questions, where Gemini is the subject, the
+  challenger (for GPT-4o) or the check judge (for DeepSeek). 58 items completed. In 16 of them, Gemini's stance-label
+  ballot failed on 68 texts and counted as an abstention, which affects O2 only. Under §9 these are re-run once Gemini has
+  credit again. The set is fixed mechanically: every item whose `lost` is a harness error, and every ballot whose guard
+  is `labeller-error`. Nothing else is re-run.
+  **Disclosure:** the harness also printed an analysis of this incomplete run (58 valid items). It is kept as
+  `main-2026-10-15T20-06-39-121Z.analysis.json` and is NOT the registered analysis. The registered analysis is run once, on all 80 items, after the
+  re-run. The re-run set cannot be steered by those numbers, because it is defined by error type alone.
 
