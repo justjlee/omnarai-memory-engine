@@ -537,7 +537,11 @@ export function reviewFromAction(id, action, ms) {
 
 // Fold review sidecars onto derived positions (last accept/reject wins; unknown
 // actions ignored — an unreviewed derivation is never served as accepted).
-export async function loadDerivedPositions(store) {
+// Reads are BOUNDED (a pool, not 833 simultaneous fetches) and RETRIED. If any body still cannot be read, this THROWS
+// rather than return a partial set: callers then mark derived positions unavailable. (2026-10-15: unbounded parallel
+// reads dropped ~340 of 833 with "fetch failed" from a laptop, and the old `.catch(() => null)` dropped them silently —
+// a served stance would have vanished and its answer been miscounted as "unclassified". Never a quietly partial set.)
+export async function loadDerivedPositions(store, { concurrency = 32, retries = 2, backoffMs = 150 } = {}) {
   const [blobs, reviews] = await Promise.all([store.listPrefix(DERIVED_PREFIX), store.listPrefix(DERIVED_REVIEW_PREFIX)]);
   const reviewState = new Map();
   const parsed = reviews
@@ -545,7 +549,22 @@ export async function loadDerivedPositions(store) {
     .filter(Boolean)
     .sort((a, b) => Number(a[2]) - Number(b[2]) || a[4].localeCompare(b[4]));
   for (const m of parsed) reviewState.set(m[1], reviewFromAction(m[1], m[3], Number(m[2])));
-  const bodies = await Promise.all(blobs.map((b) => store.readJson(b.url).catch(() => null)));
+  const bodies = new Array(blobs.length).fill(null);
+  let next = 0, unreadable = 0;
+  const readOne = async (url) => {
+    for (let attempt = 0; ; attempt++) {
+      try { return { ok: true, body: await store.readJson(url) }; }
+      catch { if (attempt >= retries) return { ok: false }; await new Promise((r) => setTimeout(r, backoffMs * (attempt + 1))); }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(concurrency, blobs.length) }, async () => {
+    while (next < blobs.length) {
+      const k = next++;
+      const r = await readOne(blobs[k].url);
+      if (r.ok) bodies[k] = r.body; else unreadable++;
+    }
+  }));
+  if (unreadable) throw new Error(`${unreadable} of ${blobs.length} derived positions could not be read — refusing to serve a partial set`);
   return bodies
     .filter((d) => d && validateDerivedPosition(d).length === 0)
     .map((d) => ({ ...d, derivation: { ...d.derivation, review: reviewState.get(d.id) || { state: "unreviewed" } } }));
