@@ -208,12 +208,10 @@ function extractBlock(text, tag) {
   return { value, stripped };
 }
 
-export async function synthesizeCouncil(question, answers, { maxTokens = 2048 } = {}) {
-  const answered = answers.filter((a) => a.ok);
-  if (answered.length < 2) {
-    throw new Error(`Need at least 2 council answers to synthesize; got ${answered.length}`);
-  }
-
+// The synthesis request, as a pure function: the live council and the ALA v1 harness
+// (scripts/adiff-lineage-ablation.mjs, which asks a NON-Claude model for the same map)
+// build it from one place, so "the same request with a different model" is exact.
+export function synthesisRequest(question, answered) {
   const panel = answered
     .map((a) => `### ${a.model} (${a.lab}, ${a.model_id})\n${a.text}`)
     .join("\n\n");
@@ -221,30 +219,21 @@ export async function synthesizeCouncil(question, answers, { maxTokens = 2048 } 
   // The legal voice list must reflect the ACTUAL panel — extended panels (e.g.
   // a guest member) would otherwise have their tensions dropped by the
   // hardcoded five-name rule. Identical output for the standard council.
-  const synthSystem = SYNTH_SYSTEM.replace(
+  const system = SYNTH_SYSTEM.replace(
     "(Claude, GPT-4o, Gemini, Grok, DeepSeek)",
     `(${answered.map((a) => a.model).join(", ")})`
   );
 
-  const userMessage =
+  const user =
     `The open question, sent verbatim to the panel:\n\n"${question}"\n\n` +
     `The panel's answers:\n\n${panel}\n\n` +
     `Map their agreement and disagreement per your instructions.`;
+  return { system, user };
+}
 
-  const client = new Anthropic();
-  const msg = await client.messages.create({
-    model: "claude-sonnet-4-6",
-    // Default 2048, not 4096: claude-sonnet-4-6 runs ~45 tok/s; a 4096-token
-    // synthesis can exceed the 60s function ceiling once member calls are added.
-    // 2048 is ample under the live wall. Offline callers with no wall (backfill /
-    // enrichment) pass a larger maxTokens so the TENSION_MAP block can't truncate.
-    max_tokens: maxTokens,
-    temperature: 0.7,
-    system: synthSystem,
-    messages: [{ role: "user", content: userMessage }],
-  });
-
-  let narrative = msg.content[0]?.text || "";
+// Parse a synthesis reply into prose + TENSION_MAP + DELIBERATION_CARD (pure).
+export function parseSynthesis(text) {
+  let narrative = text || "";
   const tensionBlock = extractBlock(narrative, "TENSION_MAP");
   narrative = tensionBlock.stripped;
   const cardBlock = extractBlock(narrative, "DELIBERATION_CARD");
@@ -259,6 +248,30 @@ export async function synthesizeCouncil(question, answers, { maxTokens = 2048 } 
     tensions,
     deliberation_card: cardBlock.value || null,
   };
+}
+
+export async function synthesizeCouncil(question, answers, { maxTokens = 2048 } = {}) {
+  const answered = answers.filter((a) => a.ok);
+  if (answered.length < 2) {
+    throw new Error(`Need at least 2 council answers to synthesize; got ${answered.length}`);
+  }
+
+  const { system: synthSystem, user: userMessage } = synthesisRequest(question, answered);
+
+  const client = new Anthropic();
+  const msg = await client.messages.create({
+    model: "claude-sonnet-4-6",
+    // Default 2048, not 4096: claude-sonnet-4-6 runs ~45 tok/s; a 4096-token
+    // synthesis can exceed the 60s function ceiling once member calls are added.
+    // 2048 is ample under the live wall. Offline callers with no wall (backfill /
+    // enrichment) pass a larger maxTokens so the TENSION_MAP block can't truncate.
+    max_tokens: maxTokens,
+    temperature: 0.7,
+    system: synthSystem,
+    messages: [{ role: "user", content: userMessage }],
+  });
+
+  return parseSynthesis(msg.content[0]?.text || "");
 }
 
 // ── Record assembly ─────────────────────────────────────────────────────────

@@ -15,7 +15,7 @@ import { waitUntil } from "@vercel/functions";
 import { recordAccess } from "./_telemetry.js";
 import { atlasCertCounts, tierOf, CERTIFIED_TIERS } from "./_atlas-counts.js";
 import {
-  FOOTPRINT_SCHEMA, STANCES, ACTOR_KINDS, CONTRIBUTION_EVENT_TYPES, RELATION_LISTS, CLIENT_TAGS,
+  FOOTPRINT_SCHEMA, FOOTPRINT_SCHEMA_1_1, FOOTPRINT_SCHEMAS, MAX_REVISION_BASIS_CHARS, STANCES, ACTOR_KINDS, CONTRIBUTION_EVENT_TYPES, RELATION_LISTS, CLIENT_TAGS,
   REDACTION_REASONS, FP_ID_RE, QUESTION_ID_RE, CLAIM_ID_RE, KNOWN_LINEAGE_IDS, MAX_CONDITIONS, MAX_EVIDENCE_REFS,
   mintFootprintId, footprintFromContribution, validateFootprint, checkReferences, detectSecrets,
   unknownRelationshipKeys, recordFootprint, appendReview, loadFootprintIndex, loadPublicFootprints,
@@ -27,6 +27,7 @@ import {
 import {
   claimIdSet, recordAnswerMap, isDivergenceRecord, loadClaimsRegistry, loadDerivedPositions,
   buildQuestions, questionDetail, buildPositions, buildConcordance, buildOrientPacket, buildInheritance, buildContinuance, PROTOCOL_VERSION,
+  revisionOf,
 } from "./_protocol.js";
 import Anthropic from "@anthropic-ai/sdk";
 
@@ -213,6 +214,7 @@ const PROTOCOL_FIELDS_HELP = {
   evidence_refs: `≤ ${MAX_EVIDENCE_REFS} ids or URLs`,
   claim_id: "a claim_id from /claims.json",
   bridge: "{submitted_by, method?} — set when you are carrying a network-isolated model's answer for it",
+  revision_basis: `what changed your view, or why a challenge did not (≤ ${MAX_REVISION_BASIS_CHARS} chars) — mints ${FOOTPRINT_SCHEMA_1_1}`,
 };
 function parseProtocolExtras(body) {
   const errors = [];
@@ -266,6 +268,11 @@ function parseProtocolExtras(body) {
     const b = body.bridge;
     if (!isObj(b) || typeof b.submitted_by !== "string" || !b.submitted_by.trim() || b.submitted_by.length > 120) errors.push("bridge must be {submitted_by: '<who carried the text>' (≤ 120 chars), method?}");
     else extras.bridge = { submitted_by: b.submitted_by.trim(), method: b.method ? String(b.method).slice(0, 60) : null };
+  }
+  if (body.revision_basis != null) {
+    const rb = typeof body.revision_basis === "string" ? body.revision_basis.trim() : null;
+    if (!rb || rb.length > MAX_REVISION_BASIS_CHARS) errors.push(`revision_basis must be a non-empty string ≤ ${MAX_REVISION_BASIS_CHARS} chars`);
+    else extras.revision_basis = rb;
   }
   return { errors, extras };
 }
@@ -382,7 +389,7 @@ async function submitContribution(req, res) {
     });
   }
   // Credentials must never be persisted — not in the contribution, not in a footprint.
-  const secretHits = detectSecrets(answer, identity, extras.position?.summary, ...(extras.position?.conditions || []), extras.bridge?.submitted_by, extras.model_id);
+  const secretHits = detectSecrets(answer, identity, extras.position?.summary, ...(extras.position?.conditions || []), extras.bridge?.submitted_by, extras.model_id, extras.revision_basis);
   if (secretHits.length) {
     return res.status(400).json({
       error: "Your submission contains what looks like a credential. Nothing was stored.",
@@ -566,7 +573,7 @@ async function submitContribution(req, res) {
     footprint: footprint
       ? {
           id: footprint.id,
-          schema: FOOTPRINT_SCHEMA,
+          schema: footprint.schema_version,
           state: footprintState,
           event_type: footprint.event_type,
           question_id: footprint.subject.question_id,
@@ -793,11 +800,13 @@ async function serveFootprints(req, res) {
       if (!isPublicHydrated(h) && !curator && !receiptOk) return res.status(404).json(FOOTPRINT_NOT_FOUND(id));
       res.setHeader("Cache-Control", curator || receiptOk ? "no-store" : "s-maxage=60, stale-while-revalidate=300");
       return res.status(200).json({
-        protocol: FOOTPRINT_SCHEMA,
+        protocol: h.body?.schema_version || FOOTPRINT_SCHEMA,
         ...(receiptOk ? { read_via: "continuance-receipt" } : curator ? { read_via: "curator" } : {}),
         footprint: project(h, { curator }),
         // The inverse edges — the durable "FP-A → referenced by FP-B" relation.
         referenced_by: referencedBy(id, publicBodies),
+        // A revision (relationships.supersedes) is shown as from → to stance, always beside the re-ask noise floor.
+        ...(h.body?.relationships?.supersedes ? { revision: revisionOf(h.body, publicBodies) } : {}),
         received_params,
       });
     }
@@ -840,6 +849,8 @@ async function serveFootprints(req, res) {
     res.setHeader("Cache-Control", curator ? "no-store" : "s-maxage=60, stale-while-revalidate=300");
     return res.status(200).json({
       protocol: FOOTPRINT_SCHEMA,
+      // Bodies carry their own schema_version: 1.0, or 1.1 when the writer gave a revision_basis.
+      footprint_schemas: FOOTPRINT_SCHEMAS,
       count: Math.min(rows.length, limit),
       matched: rows.length,
       total_admitted: publicBodies.length,

@@ -25,6 +25,10 @@ export function __reset() {
   S.faults.staleList = 0;
   S.faults.stalePrefix = "";
 }
+// Whole-store snapshot/restore: lets a harness run several arms from the SAME store state (CRT v1 runs arms N/S/R
+// from one admitted prior footprint). Bodies are strings, so a shallow copy of the map is a true snapshot.
+export function __snapshot() { return new Map(S.files); }
+export function __restore(snap) { S.files.clear(); for (const [k, v] of snap) S.files.set(k, v); }
 export function __seed(pathname, value) {
   S.files.set(pathname, { body: typeof value === "string" ? value : JSON.stringify(value), uploadedAt: new Date(0), contentType: "application/json" });
 }

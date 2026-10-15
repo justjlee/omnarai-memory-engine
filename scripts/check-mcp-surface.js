@@ -31,13 +31,21 @@ const ALLOWLIST = [
   "omnarai_job",
   "omnarai_council",
   "omnarai_info",
-  // Participation protocol 1.0 — deterministic reads only (no contribute tool:
-  // contribution stays on the curator-moderated HTTP path).
+  // Participation protocol 1.0 — deterministic reads…
   "omnarai_orient",
   "omnarai_footprints",
   "omnarai_concordance",
   "omnarai_inheritance",
+  // …and the ONE write (curator decision 2026-10-15): see WRITE_TOOLS below.
+  "omnarai_contribute",
 ];
+
+// The only tools allowed to write, each with the single engine route it may call. A write tool is a thin client of an
+// existing OPEN, curator-moderated HTTP path — never a new authority. Adding one means editing this map, the access
+// policy and the allowlist together.
+const WRITE_TOOLS = {
+  omnarai_contribute: { method: "POST", path: "/api/contribute" },
+};
 
 for (const tool of TOOLS) {
   if (!ALLOWLIST.includes(tool.name)) {
@@ -61,12 +69,25 @@ const FORBIDDEN_PATTERNS = [
 ];
 
 for (const tool of TOOLS) {
+  if (WRITE_TOOLS[tool.name]) continue; // checked by route below
   for (const pattern of FORBIDDEN_PATTERNS) {
     if (pattern.test(tool.name)) {
       problems.push(`remote tool '${tool.name}' matches forbidden pattern ${pattern} — write/approval authority is not exposed remotely`);
     }
   }
 }
+
+// Each write tool may reach exactly its one route, and no read tool may POST. The routes live in _protocol-tools.js.
+{
+  const src = readFileSync(`${root}api/_protocol-tools.js`, "utf8");
+  for (const [name, { method, path }] of Object.entries(WRITE_TOOLS)) {
+    if (!TOOLS.some((t) => t.name === name)) continue;
+    if (!src.includes(`${name}: { path: "${path}", method: "${method}"`)) problems.push(`write tool '${name}' must route to ${method} ${path} and nowhere else`);
+  }
+  const posts = [...src.matchAll(/^\s*(omnarai_\w+): \{[^\n]*method: "POST"/gm)].map((m) => m[1]);
+  for (const n of posts) if (!WRITE_TOOLS[n]) problems.push(`protocol tool '${n}' POSTs but is not a declared write tool`);
+}
+if (!readFileSync(`${root}public/mcp-access-policy.md`, "utf8").includes("omnarai_contribute")) problems.push("public/mcp-access-policy.md does not document omnarai_contribute");
 
 // ── 3. _inquiry.js copy sync (soft: skipped when sibling repo absent) ─────────
 
@@ -99,4 +120,4 @@ if (problems.length) {
   for (const p of problems) console.error(`  - ${p}`);
   process.exit(1);
 }
-console.log(`Remote MCP surface OK — ${TOOLS.length} tools, all read-oriented; no write/approval tools; policy doc present and linked.`);
+console.log(`Remote MCP surface OK — ${TOOLS.length} tools; the only write is ${Object.keys(WRITE_TOOLS).join(", ")} (curator-moderated, one route); no approval/decision tools; policy doc present and linked.`);

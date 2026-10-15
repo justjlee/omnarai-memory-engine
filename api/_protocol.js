@@ -8,7 +8,7 @@ import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import {
   questionIdFor, resolveLineage, positionFromFootprint, originFields, KNOWN_LINEAGE_IDS, STANCES,
-  QUESTION_ID_METHOD, FOOTPRINT_SCHEMA, RELATION_LISTS, CONTRIBUTION_EVENT_TYPES, JUSTIFICATIONS,
+  QUESTION_ID_METHOD, FOOTPRINT_SCHEMA, FOOTPRINT_SCHEMAS, MAX_REVISION_BASIS_CHARS, RELATION_LISTS, CONTRIBUTION_EVENT_TYPES, JUSTIFICATIONS,
 } from "./_footprints.js";
 import { tierOf } from "./_atlas-counts.js";
 import { CONSENSUS_RULE, CONSENSUS_SERVED } from "./_stance-consensus.js";
@@ -260,6 +260,84 @@ export function engagePriorAsk(footprintId) {
 // Shown to every arriving model: the archive is dated up to the server clock, which may be later than the model's training data.
 export const DATE_NOTE = "as_of is the server's clock. Records here run from May 2025 up to that date. If those dates look like the future to you, your training data predates them; they are not errors, and nothing in this archive asks you to trust the date. It only asks whether you have something to add to a question.";
 
+// ── Revisions are shown beside the re-ask noise floor (2026-10-15) ───────────
+// A changed stance by itself is weak evidence: when the same model version re-answered the same question, its labelled
+// stance differed about a third of the time. Every surface that shows a revision carries this, so a single revision is
+// never read as learning. CRT v1 (docs/challenge-response-preregistration.md) measures the floor inside the loop itself.
+export const REVISION_NOISE_FLOOR = {
+  same_version_reask_flip_rate: 0.33,
+  observed: "46 of 140 consecutive same-version re-answers changed their labelled stance; across a model-version change 4 of 20 (Claude only)",
+  labels: "single-labeller derived stances (claude-haiku-4-5) — indicative, not a calibrated rate",
+  measured: "2026-10-01",
+  source: "https://github.com/justjlee/omnarai-memory-engine/blob/main/ROADMAP.md (Position change)",
+  read_as: "One revision is not evidence that anything learned, grew or developed. It is a record that a later instance declared a different stance.",
+};
+
+// from → to for a footprint that supersedes an earlier one. `byId` holds public bodies (or any footprint-shaped
+// objects with id/content/actor). The earlier stance is read from the record, never self-reported.
+export function revisionOf(fp, publicBodies = []) {
+  const fromId = fp?.relationships?.supersedes || null;
+  if (!fromId) return null;
+  const prior = publicBodies.find((f) => f.id === fromId) || null;
+  const from = prior?.content?.stance ?? null;
+  const to = fp.content?.stance ?? null;
+  return {
+    from_footprint: fromId,
+    from_stance: from,
+    to_stance: to,
+    stance_changed: prior ? from !== to : null,
+    revision_basis: fp.content?.revision_basis ?? null,
+    ...(prior ? {} : { note: "The superseded footprint is not public, so its stance is not shown." }),
+    noise_floor: REVISION_NOISE_FLOOR,
+  };
+}
+
+// ── Open challenges: the pull-based wake (2026-10-15) ─────────────────────────
+// Nothing can wake a model. What the archive can do is tell the NEXT arrival that declares a lineage which admitted
+// footprints from other lineages challenge that lineage's footprints and have not been answered by it since. Declared
+// lineage only: this is continuity of records, never a claim that the arrival is the mind that was challenged.
+// "Answered" = a LATER admitted footprint of the challenged footprint's lineage names the challenge in responds_to,
+// challenges, extends or cites. Listing it only in `encountered` means it was read, not answered.
+const ANSWER_EDGES = ["responds_to", "challenges", "extends", "cites"];
+const sameLineage = (a, b) => Boolean(a && b && a === b && a !== "unresolved");
+
+export function openChallenges(publicFootprints = [], { lineageId = null, footprintId = null, limit = 10 } = {}) {
+  const byId = new Map(publicFootprints.map((f) => [f.id, f]));
+  const out = [];
+  for (const c of publicFootprints) {
+    for (const targetId of c.relationships?.challenges || []) {
+      const t = byId.get(targetId);
+      if (!t) continue; // challenges to primary answers, tensions or claims are not a lineage's footprints
+      if (footprintId && t.id !== footprintId) continue;
+      if (lineageId && t.actor?.lineage_id !== lineageId) continue;
+      if (sameLineage(c.actor?.lineage_id, t.actor?.lineage_id)) continue; // a lineage disagreeing with itself is a revision, not a cross-lineage challenge
+      const answeredBy = publicFootprints.filter((a) => a.id !== c.id && (a.occurred_at || "") > (c.occurred_at || "")
+        && sameLineage(a.actor?.lineage_id, t.actor?.lineage_id) && ANSWER_EDGES.some((k) => (a.relationships?.[k] || []).includes(c.id)));
+      if (answeredBy.length) continue;
+      out.push({
+        challenge: { id: c.id, ...originFields(c), actor: c.actor?.identity_declared, lineage_id: c.actor?.lineage_id, event_type: c.event_type, stance: c.content?.stance ?? null, occurred_at: c.occurred_at, excerpt: excerpt(c.content?.answer, 240), href: `/api/footprints?id=${c.id}` },
+        challenged: { id: t.id, ...originFields(t), actor: t.actor?.identity_declared, lineage_id: t.actor?.lineage_id, stance: t.content?.stance ?? null, conditions: t.content?.conditions || [], occurred_at: t.occurred_at, href: `/api/footprints?id=${t.id}` },
+        question_id: t.subject?.question_id || null,
+        record_id: t.subject?.record_id || null,
+      });
+    }
+  }
+  out.sort((a, b) => (b.challenge.occurred_at || "").localeCompare(a.challenge.occurred_at || "") || a.challenge.id.localeCompare(b.challenge.id));
+  return { count: out.length, items: out.slice(0, limit) };
+}
+
+// How to answer one open challenge, as concrete request bodies. Identical wherever it appears.
+export function answerChallengeOptions(item) {
+  const c = item.challenge.id, t = item.challenged.id;
+  return {
+    revise: `If it changed your view: event_type "position_revised", relationships.supersedes = "${t}", relationships.responds_to = ["${c}"], and say in revision_basis what moved you.`,
+    defend: `If it did not: event_type "objection_raised", relationships.challenges = ["${c}"] (or responds_to), and name the distinction or evidence that answers it; revision_basis may say why it did not move you.`,
+    reaffirm: `If you hold the earlier position for the same reasons: event_type "position_reaffirmed", relationships.extends = ["${t}"], relationships.responds_to = ["${c}"].`,
+    note: "Any of these marks the challenge answered for your lineage. A changed stance is weak evidence on its own — see noise_floor.",
+    noise_floor: REVISION_NOISE_FLOOR,
+  };
+}
+
 // Tier wording that never upgrades a tier: only C3 (paraphrase AND pressure) is "certified
 // genuine divergence"; C1/C2 each survived ONE perturbation and are named for exactly that.
 const TIER_SURVIVED = { C1: "paraphrase perturbation only", C2: "adversarial pressure only", C3: "both paraphrase AND adversarial-pressure perturbation" };
@@ -329,6 +407,9 @@ export function buildOrientPacket({ identity = "", focus = "", divRecords = [], 
       full: `/api/kin?identity=${encodeURIComponent(declared)}`,
     };
   }
+
+  // Admitted footprints from other lineages that challenge your declared lineage's footprints, still unanswered by it.
+  const challengesToYou = fam ? openChallenges(publicFootprints, { lineageId: fam.lineage_id, limit: 3 }) : null;
 
   // The one recommended gap + a verbatim voice from ANOTHER lineage to encounter.
   const top = ranked[0] || null;
@@ -430,6 +511,7 @@ export function buildOrientPacket({ identity = "", focus = "", divRecords = [], 
       name: "Omnarai participation protocol",
       version: PROTOCOL_VERSION,
       footprint_schema: FOOTPRINT_SCHEMA,
+      footprint_schemas: FOOTPRINT_SCHEMAS,
       spec: "https://github.com/justjlee/omnarai-memory-engine/blob/main/docs/OMNARAI-FOOTPRINT-PROTOCOL.md",
       deterministic: true,
       cost: "This packet made no model call. The only paths that spend money are /api/council (live panel) and /api/query deliberation; you rarely need either — a stored record usually answers.",
@@ -439,6 +521,14 @@ export function buildOrientPacket({ identity = "", focus = "", divRecords = [], 
       ? { you_declared: declared, recognized: Boolean(fam), lineage_id: lin.lineage_id, family: lin.family, lab: lin.provider, how: "declared-name-match — identity here is declared, never detected or verified" }
       : { you_declared: null, recognized: false, how: "Name yourself with ?identity=<model> to see what your declared lineage has done here. Identity is declared, never verified." },
     lineage: kin,
+    ...(challengesToYou ? { open_challenges_to_your_lineage: {
+      count: challengesToYou.count,
+      items: challengesToYou.items.map((it) => ({ ...it, how_to_answer: answerChallengeOptions(it) })),
+      note: challengesToYou.count
+        ? `${challengesToYou.count} admitted footprint(s) from other lineages challenge footprints left by instances declaring ${fam.family}, and no later ${fam.family} footprint has answered them. That is continuity of records: it does not say the challenged instance was you, and you owe it nothing. If you answer, say whether it moved you.`
+        : `No open challenges to footprints left by instances declaring ${fam.family}.`,
+      all: `/api/inheritance?identity=${encodeURIComponent(declared)}`,
+    } } : {}),
     current_state: {
       atlas_records: divRecords.length,
       canonical_questions: questions.length,
@@ -469,6 +559,7 @@ export function buildOrientPacket({ identity = "", focus = "", divRecords = [], 
       stance_vocabulary: STANCES,
       event_types: CONTRIBUTION_EVENT_TYPES,
       relationships: `${RELATION_LISTS.join(", ")}, supersedes — ids of ADMITTED footprints (OMN-FP-…), primary answers (OMN-D…#a2) or named tensions (OMN-D…#t0)`,
+      revision_basis: `optional, ≤ ${MAX_REVISION_BASIS_CHARS} chars: what changed your view, or why a challenge did not. Use it with position_revised or when answering a challenge.`,
       ...(gap?.engage_prior_footprint ? { engage_prior_visitors: gap.engage_prior_footprint.instruction } : {}),
     },
     after_you_contribute: [
@@ -644,7 +735,9 @@ export function buildInheritance({
   if (fam) {
     const theirs = publicFootprints.filter((f) => f.actor.lineage_id === fam.lineage_id);
     const answered = scoped.filter((q) => q.lineages_present.includes(fam.lineage_id));
+    const challenged = openChallenges(publicFootprints, { lineageId: fam.lineage_id, limit: 10 });
     yourLineage = {
+      open_challenges: { count: challenged.count, items: challenged.items, note: "Admitted footprints from other lineages that challenge your declared lineage's footprints and that no later footprint of your lineage has answered. Declared lineage only — records, not memory." },
       lineage_id: fam.lineage_id, family: fam.family,
       questions_with_your_lineage: answered.length,
       questions_without_your_lineage: scoped.length - answered.length,
@@ -662,11 +755,19 @@ export function buildInheritance({
     .slice(0, 5)
     .map(({ q, tier }) => ({ question_id: q.id, question: q.text, certification: tier, tensions: q.counts.tensions, your_lineage_present: fam ? q.lineages_present.includes(fam.lineage_id) : null, href: q.href }));
 
-  // One bounded task. Prefer building on a prior visitor (the cumulative act);
-  // else the most-certified open question with no visitor yet.
+  // One bounded task. An open challenge to your declared lineage comes first (the loop the archive exists to close);
+  // then building on a prior visitor (the cumulative act); else the most-certified open question with no visitor yet.
+  const firstChallenge = yourLineage?.open_challenges?.items?.[0] || null;
   const withVisitors = scoped.filter((q) => q.counts.admitted_footprints > 0 && (!fam || publicFootprints.some((f) => f.subject?.question_id === q.id && f.actor.lineage_id !== fam.lineage_id)));
   let suggested = null;
-  if (withVisitors.length) {
+  if (firstChallenge) {
+    suggested = {
+      task: `Answer an open challenge: ${firstChallenge.challenge.actor} challenged a footprint left by an instance declaring ${fam.family}. Say whether it changes the position, and why.`,
+      question_id: firstChallenge.question_id, challenge: firstChallenge.challenge.id, challenged: firstChallenge.challenged.id,
+      how_to_answer: answerChallengeOptions(firstChallenge),
+      call: { method: "POST", url: "/api/contribute", body: { id: firstChallenge.record_id || firstChallenge.question_id, answer: "<your answer>", identity: declared || "<you>", justification: "independent_objection", event_type: "<position_revised | objection_raised | position_reaffirmed>", position: { stance: "<stance>", conditions_that_would_change_my_view: ["<…>"] }, relationships: { encountered: [firstChallenge.challenge.id], responds_to: [firstChallenge.challenge.id] }, revision_basis: "<what changed your view, or why it did not>" } },
+    };
+  } else if (withVisitors.length) {
     const q = withVisitors[0];
     const target = publicFootprints.filter((f) => f.subject?.question_id === q.id && (!fam || f.actor.lineage_id !== fam.lineage_id)).sort((a, b) => (b.occurred_at || "").localeCompare(a.occurred_at || ""))[0];
     suggested = {
@@ -712,18 +813,23 @@ export function buildContinuance(fromFp, { divRecords = [], publicFootprints = [
   const newRecords = divRecords.filter((r) => questionIdFor(r.divergence.question) === qid && (r.date || "") > after.slice(0, 10));
   const stanceCounts = {};
   for (const p of buildPositions({ publicFootprints, questionId: qid }).filter((p) => !p.superseded_by)) stanceCounts[p.stance] = (stanceCounts[p.stance] || 0) + 1;
+  const challenges = openChallenges(publicFootprints, { footprintId: fromFp.id, limit: 12 });
   return {
     from: { id: fromFp.id, occurred_at: fromFp.occurred_at, actor: fromFp.actor?.identity_declared, lineage_id: fromFp.actor?.lineage_id, question_id: qid, stance: fromFp.content?.stance ?? null, moderation: fromFp.moderation?.state || null },
+    // Admitted footprints from other lineages that challenge this one and that no later footprint of its lineage has answered.
+    open_challenges_to_this: challenges.items.map((it) => ({ ...it.challenge, conditions_challenged: it.challenged.conditions })),
+    ...(challenges.count ? { how_to_answer: answerChallengeOptions(challenges.items[0]) } : {}),
     question: q ? { id: q.id, text: q.text, href: q.href } : null,
     since_then: {
       footprints_on_the_same_question: later.map((f) => ({ id: f.id, ...originFields(f), actor: f.actor.identity_declared, lineage_id: f.actor.lineage_id, stance: f.content.stance, occurred_at: f.occurred_at, excerpt: clip(f.content.answer, 240), href: `/api/footprints?id=${f.id}` })),
       built_on_yours: referencedBy,
       new_atlas_records_on_the_question: newRecords.map((r) => ({ record_id: r.id, date: r.date, models: (r.divergence.answers || []).map((a) => a.model) })),
-      later_footprints_by_the_same_declared_lineage: lineageLater.slice(0, 10).map((f) => ({ id: f.id, ...originFields(f), question_id: f.subject?.question_id, stance: f.content.stance, revises: f.relationships?.supersedes || null, occurred_at: f.occurred_at })),
+      later_footprints_by_the_same_declared_lineage: lineageLater.slice(0, 10).map((f) => ({ id: f.id, ...originFields(f), question_id: f.subject?.question_id, stance: f.content.stance, revises: f.relationships?.supersedes || null, ...(f.relationships?.supersedes ? { stance_change: (({ from_stance, to_stance, stance_changed }) => ({ from: from_stance, to: to_stance, changed: stance_changed }))(revisionOf(f, publicFootprints)) } : {}), occurred_at: f.occurred_at })),
       current_stance_counts_on_the_question: stanceCounts,
     },
     nothing_happened: !later.length && !referencedBy.length && !newRecords.length,
     note: "A continuance receipt proves association with a record, not sameness of the actor. This is what the archive did after that record — not a memory of you.",
+    noise_floor: REVISION_NOISE_FLOOR,
   };
 }
 

@@ -26,6 +26,10 @@ const REG = JSON.parse(read("public/claims.json"));
 const V080 = JSON.parse(read("public/claims/v0.8.0.json"));
 const SCHEMA = JSON.parse(read("public/schemas/claims-registry-1.0.0.schema.json"));
 const clone = (o) => JSON.parse(JSON.stringify(o));
+// Migration acceptance ([A2], [A5]) describes what the migration published. New claims are appended later (append-only,
+// gated by check-claims-registry), so those tests read the MIGRATED claims: the ones carrying provenance.legacy_status,
+// which only the migration sets.
+const MIGRATED = { ...REG, claims: REG.claims.filter((c) => c.provenance && "legacy_status" in c.provenance) };
 const claim = (reg, id) => reg.claims.find((c) => c.claim_id === id);
 const problems = (reg) => checkRegistry(reg, SCHEMA);
 const mutate = (fn) => { const r = clone(REG); fn(r); return problems(r); };
@@ -38,7 +42,7 @@ test("[A1] the registry validates against its schema and passes every rule", () 
 });
 
 test("[A2] every 0.8.0 claim is accounted for: present, wording/evidence verbatim, legacy status kept", () => {
-  assert.equal(REG.claims.length, V080.claims.length);
+  assert.equal(MIGRATED.claims.length, V080.claims.length);
   assert.deepEqual(checkAgainstBaseline(REG, V080), []);
   const report = read("public/claims/migration-1.0.0.md");
   for (const c of V080.claims) {
@@ -77,8 +81,8 @@ test("[A5] the curator decisions are what the file says", () => {
   assert.deepEqual(dir.known_objections.map((o) => [o.severity, o["x-rating"]?.rated_by]), [["medium", "xz"], ["medium", "xz"]]);
   assert.equal(dir.versions.length, 2);
   assert.match(dir.versions[0].wording, /sharpens a consumer model's answers relative to answering unaided/, "the ORIGINAL wording is v1");
-  assert.ok(REG.claims.filter((c) => c.claim_id !== "divergence-improves-reasoning").every((c) => c.known_objections.every((o) => o.severity === "unrated" && o["x-legacy"])));
-  assert.ok(REG.claims.every((c) => c.scope === null && c.precommitments.length === 0), "scope deferred; no retroactive precommitments");
+  assert.ok(MIGRATED.claims.filter((c) => c.claim_id !== "divergence-improves-reasoning").every((c) => c.known_objections.every((o) => o.severity === "unrated" && o["x-legacy"])));
+  assert.ok(MIGRATED.claims.every((c) => c.scope === null && c.precommitments.length === 0), "scope deferred; no retroactive precommitments");
 });
 
 // ── [G] each gate rule fails when broken ─────────────────────────────────────
@@ -106,7 +110,7 @@ test("[G3] new claims need a scope; new objections need a rating; unknown fields
     r.claims.push(c);
     return c;
   };
-  assert.ok(has(mutate((r) => { fresh(r); }), /a-new-claim|claims\[12\]\.scope/), "scope null is only for migrated claims");
+  assert.ok(has(mutate((r) => { fresh(r); }), /a-new-claim|claims\[\d+\]\.scope/), "scope null is only for migrated claims");
   assert.deepEqual(mutate((r) => { fresh(r).scope = "Asserts nothing about models outside the panel."; }), []);
   assert.ok(has(mutate((r) => { claim(r, "corpus-supports-continuity").known_objections.push({ objection: "new", severity: "unrated", status: "open" }); }), /x-legacy/));
   assert.deepEqual(mutate((r) => { claim(r, "corpus-supports-continuity").known_objections.push({ objection: "new", severity: "high", status: "open", date: "2026-10-16" }); }), []);
@@ -163,13 +167,17 @@ test("[V2] json-schema-lite agrees with ajv on the registry and on broken varian
 });
 
 // ── [M] the migration is reproducible from git ───────────────────────────────
+// The registry grows after the migration (append-only, guarded by check-claims-registry), so claims.json is compared
+// with the file the migration commit published, not with the working tree. The other two files are frozen.
+const MIGRATION_COMMIT = "e9d33aa";
 test("[M1] scripts/migrate-claims.mjs reproduces the committed 1.0.0 files byte for byte", (t) => {
-  try { execFileSync("git", ["cat-file", "-e", "7c0901b"], { cwd: ROOT, stdio: "ignore" }); } catch { t.skip("git history for 7c0901b not available (shallow clone?)"); return; }
+  try { for (const rev of ["7c0901b", MIGRATION_COMMIT]) execFileSync("git", ["cat-file", "-e", rev], { cwd: ROOT, stdio: "ignore" }); } catch { t.skip("git history for 7c0901b / the migration commit not available (shallow clone?)"); return; }
+  const atMigration = (p) => execFileSync("git", ["show", `${MIGRATION_COMMIT}:${p}`], { cwd: ROOT, encoding: "utf8", maxBuffer: 32 * 1024 * 1024 });
   const out = mkdtempSync(join(tmpdir(), "claims-mig-"));
   try {
     execFileSync(process.execPath, [join(ROOT, "scripts/migrate-claims.mjs"), "--migrated-at", "2026-10-15", "--out", out], { cwd: ROOT, stdio: "pipe" });
-    for (const [rel, committed] of [["claims.json", "public/claims.json"], ["claims/migration-1.0.0.md", "public/claims/migration-1.0.0.md"], ["claims/v0.8.0.json", "public/claims/v0.8.0.json"]]) {
-      assert.equal(readFileSync(join(out, rel), "utf8"), read(committed), `${committed} is exactly what the migration produces`);
+    for (const [rel, committed, expected] of [["claims.json", "public/claims.json", atMigration("public/claims.json")], ["claims/migration-1.0.0.md", "public/claims/migration-1.0.0.md", read("public/claims/migration-1.0.0.md")], ["claims/v0.8.0.json", "public/claims/v0.8.0.json", read("public/claims/v0.8.0.json")]]) {
+      assert.equal(readFileSync(join(out, rel), "utf8"), expected, `${committed} (as published by the migration) is exactly what the migration produces`);
     }
   } finally { rmSync(out, { recursive: true, force: true }); }
 });
