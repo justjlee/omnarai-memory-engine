@@ -11,6 +11,7 @@ import {
   QUESTION_ID_METHOD, FOOTPRINT_SCHEMA, RELATION_LISTS, CONTRIBUTION_EVENT_TYPES, JUSTIFICATIONS,
 } from "./_footprints.js";
 import { tierOf } from "./_atlas-counts.js";
+import { CONSENSUS_RULE, CONSENSUS_SERVED } from "./_stance-consensus.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -168,7 +169,7 @@ export function buildPositions({ publicFootprints = [], derived = [], questionId
 // consensus field, no majority label, no percentage — by construction. Every
 // position is listed; unclassified voices are counted and listed, never dropped.
 export const CONCORDANCE_METHOD =
-  "Positions are (a) stances explicitly declared by visiting actors in admitted footprints and (b) curator-accepted machine derivations of historical primary answers, marked derived:true with extractor and version. Primary answers without an accepted derivation, and footprints that declared no stance, are counted as unclassified. Distribution = raw counts of CURRENT positions (a superseded position is listed, marked, and excluded from the counts so one actor is not counted twice). No weighting, no averaging, no consensus.";
+  "Positions are (a) stances explicitly declared by visiting actors in admitted footprints and (b) accepted machine derivations of historical primary answers, marked derived:true with extractor and version. A derivation is accepted either individually by the curator (review.basis 'curator', human_checked true) or under the curator-approved labeller-agreement rule (review.basis 'consensus-rule-v1', human_checked FALSE: three independent classifiers agreed on what that ONE answer says — agreement about a label, never a consensus across minds; the votes are on review.consensus). `sources` counts the three kinds separately. Primary answers without an accepted derivation, and footprints that declared no stance, are counted as unclassified. Distribution = raw counts of CURRENT positions (a superseded position is listed, marked, and excluded from the counts so one actor is not counted twice). No weighting, no averaging, no consensus.";
 
 export function buildConcordance(q, divRecords, publicFootprints, derived = [], { includeUnreviewedDerived = false, asOf = new Date().toISOString() } = {}) {
   const detail = questionDetail(q, divRecords, publicFootprints);
@@ -221,6 +222,12 @@ export function buildConcordance(q, divRecords, publicFootprints, derived = [], 
       ...(p.derived ? { derivation: { method: p.derivation?.method, version: p.derivation?.version, model: p.derivation?.model, evidence_span: p.derivation?.evidence_span, review: p.derivation?.review } } : {}),
     })),
     distribution,
+    // Which KIND of position each count rests on — so machine labels never blend in with declared stances unseen.
+    sources: {
+      declared: current.filter((p) => !p.derived).length,
+      derived_human_checked: current.filter((p) => p.derived && p.derivation?.review?.human_checked === true).length,
+      derived_by_agreement_rule: current.filter((p) => p.derived && p.derivation?.review?.basis === CONSENSUS_RULE.id).length,
+    },
     by_lineage: byLineage,
     superseded_count: positions.length - current.length,
     exposure: {
@@ -508,16 +515,36 @@ export function validateDerivedPosition(d) {
   return e;
 }
 
+// A review's KIND is encoded in its sidecar path so the read path never has to open review bodies:
+//   __accept__            the curator checked this derivation individually       → basis "curator", human_checked true
+//   __accept-consensus__  accepted under the curator-approved labeller-agreement  → basis "consensus-rule-v1", human_checked FALSE
+//                         rule (protocol §6); the votes come from api/_stance-consensus.js
+//   __reject__            never served
+// So a served machine stance always says HOW it was accepted, and a rule-accepted one can never pass as human-checked.
+export function reviewFromAction(id, action, ms) {
+  const reviewed_at = new Date(ms).toISOString();
+  if (action === "reject") return { state: "rejected", reviewed_at };
+  if (action === "accept-consensus") {
+    const c = CONSENSUS_SERVED[id];
+    return {
+      state: "accepted", basis: CONSENSUS_RULE.id, human_checked: false, reviewed_at,
+      note: "Accepted under the curator-approved labeller-agreement rule — NOT individually checked by a human. Three independent classifiers agreed on what this one answer says; about one such label in five is still disputed.",
+      consensus: c ? { votes: c.votes, rule: CONSENSUS_RULE.rule, validation: CONSENSUS_RULE.validation, approved: CONSENSUS_RULE.approved } : null,
+    };
+  }
+  return { state: "accepted", basis: "curator", human_checked: true, reviewed_at };
+}
+
 // Fold review sidecars onto derived positions (last accept/reject wins; unknown
 // actions ignored — an unreviewed derivation is never served as accepted).
 export async function loadDerivedPositions(store) {
   const [blobs, reviews] = await Promise.all([store.listPrefix(DERIVED_PREFIX), store.listPrefix(DERIVED_REVIEW_PREFIX)]);
   const reviewState = new Map();
   const parsed = reviews
-    .map((b) => /^positions\/reviews\/(OMN-POS-DV-[0-9a-f]{12})\/(\d{13})__(accept|reject)__([0-9a-f]{8})\.json$/.exec(b.pathname))
+    .map((b) => /^positions\/reviews\/(OMN-POS-DV-[0-9a-f]{12})\/(\d{13})__(accept-consensus|accept|reject)__([0-9a-f]{8})\.json$/.exec(b.pathname))
     .filter(Boolean)
     .sort((a, b) => Number(a[2]) - Number(b[2]) || a[4].localeCompare(b[4]));
-  for (const m of parsed) reviewState.set(m[1], { state: m[3] === "accept" ? "accepted" : "rejected", reviewed_at: new Date(Number(m[2])).toISOString() });
+  for (const m of parsed) reviewState.set(m[1], reviewFromAction(m[1], m[3], Number(m[2])));
   const bodies = await Promise.all(blobs.map((b) => store.readJson(b.url).catch(() => null)));
   return bodies
     .filter((d) => d && validateDerivedPosition(d).length === 0)
