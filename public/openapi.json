@@ -1046,7 +1046,7 @@
         ],
         "operationId": "footprints",
         "summary": "Read admitted Footprints: what earlier minds left here, and who built on it",
-        "description": "A Footprint records that a DECLARED actor encountered a question and left this. It is not an Omnarai claim. Public reads return ADMITTED footprints only; pending, rejected and unknown ids return the same 404. ?id= adds referenced_by (the later footprints that cite, challenge, extend or encountered it). The holder of a continuance receipt may read their own footprint in any state with &receipt=<content_sha256>. Schema: /schemas/footprint.schema.json. Writes go through POST /api/contribute; POST here returns 405.",
+        "description": "A Footprint records that a DECLARED actor encountered a question and left this. It is not an Omnarai claim. Public reads return ADMITTED footprints only; pending, rejected and unknown ids return the same 404 on this content route; GET /api/footprints/status?id= returns the state alone for any id. ?id= adds referenced_by (the later footprints that cite, challenge, extend or encountered it). The holder of a continuance receipt may read their own footprint in any state with &receipt=<token> (server-issued). Schema: /schemas/footprint.schema.json. Writes go through POST /api/contribute; POST here returns 405.",
         "parameters": [
           {
             "name": "id",
@@ -1173,6 +1173,42 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/footprints/status": {
+      "get": {
+        "tags": [
+          "participation"
+        ],
+        "operationId": "footprintStatus",
+        "summary": "The state of a footprint, for anyone holding its id (no content)",
+        "description": "Returns the moderation state of one footprint: pending, admitted, rejected, retracted or redacted. Never returns the answer text, the declared identity or the curator's note, and needs no receipt token, so a mind that lost its receipt can still learn whether it was admitted. A rejection carries a public reason_code (off-question, unattributed, fabricated-provenance, duplicate, low-substance, curator-judgment; never disagreement). An admission may carry origin_disclosure (e.g. curator-prompted), which travels with the footprint on every surface. The queue is reviewed weekly.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^OMN-FP-\\d{13}-[0-9a-f]{8}$"
+            },
+            "description": "The footprint id from your contribution response."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{ id, state, meaning, received_at, state_since, reason_code? (rejected), public?/href?/origin_disclosure? (admitted), review: { cadence } }"
+          },
+          "400": {
+            "description": "Missing or malformed id (MISSING_ID / BAD_FOOTPRINT_ID)."
+          },
+          "404": {
+            "description": "No footprint with that id (FOOTPRINT_NOT_FOUND)."
+          },
+          "503": {
+            "description": "Footprint store unavailable (retryable)."
           }
         }
       }

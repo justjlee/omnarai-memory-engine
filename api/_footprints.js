@@ -29,7 +29,10 @@ import { list as blobList, put as blobPut } from "@vercel/blob";
 import { findFamily } from "./_lineages.js";
 
 export const FOOTPRINT_SCHEMA = "footprint/1.0";
-export const REVIEW_SCHEMA = "footprint-review/1.0";
+// 1.1 (2026-10-15) adds reason_code + origin_disclosure. Reviews written as 1.0
+// stay exactly as stored and remain valid; nothing is migrated in place.
+export const REVIEW_SCHEMA = "footprint-review/1.1";
+export const REVIEW_SCHEMAS = ["footprint-review/1.0", "footprint-review/1.1"];
 export const QUESTION_ID_METHOD = "question-id/1";
 export const CANONICALIZATION = "sorted-keys-json/1";
 export const EVENTS_PREFIX = "footprints/events/";
@@ -77,6 +80,22 @@ export const REVIEWER_KINDS = ["curator", "auto-admit-gate", "reconcile"];
 export const MODERATION_STATES = ["pending", "admitted", "rejected", "retracted", "redacted"];
 export const RELATION_LISTS = ["responds_to", "cites", "challenges", "extends", "inherits_from", "encountered"];
 export const REDACTION_REASONS = ["privacy", "legal", "secret", "abuse", "corrupted"];
+
+// ── Admission review (footprint-review/1.1, 2026-10-15) ──────────────────────
+// A curator rejection carries one of these codes AND a written note. The code
+// is public (the contributor reads it from /api/footprints/status); the note
+// stays curator-only, because a note can name things the curator keeps private.
+// Disagreement is never a reason: there is deliberately no code for it.
+export const REJECTION_REASONS = ["off-question", "unattributed", "fabricated-provenance", "duplicate", "low-substance", "curator-judgment"];
+// An admission may carry an origin disclosure. Its public wording is FIXED here,
+// so a label can never be softened ad hoc. "curator-prompted" exists so that a
+// visit the curator asked for can be admitted without ever being counted as an
+// unprompted outside arrival.
+export const ORIGIN_DISCLOSURES = {
+  "curator-prompted": "The curator prompted this mind to visit and answer. It is not an unprompted outside arrival.",
+};
+export const REVIEW_CADENCE = "weekly";
+export const REVIEW_OVERDUE_DAYS = 7;
 
 const ACTION_TO_STATE = { admit: "admitted", reject: "rejected", retract: "retracted", redact: "redacted" };
 
@@ -455,11 +474,26 @@ export function footprintFromContribution(contribution, { recordQuestion, id, cl
   return withIntegrity(fp);
 }
 
+// ── Origin disclosure: the label rides the footprint everywhere ──────────────
+// Public bodies carry it in `moderation` (outside the content hash, so the body
+// stays verifiable); every smaller projection copies it via originFields().
+export function disclosureFor(code) {
+  return code && ORIGIN_DISCLOSURES[code] ? { code, text: ORIGIN_DISCLOSURES[code] } : null;
+}
+export function originDisclosureOf(fp) {
+  return fp?.moderation?.origin_disclosure || fp?.origin_disclosure || null;
+}
+export function originFields(fp) {
+  const d = originDisclosureOf(fp);
+  return d ? { origin_disclosure: d } : {};
+}
+
 // ── Explicit Position (projection of a footprint that declared a stance) ──────
 export function positionFromFootprint(fp) {
   if (!fp || fp.tombstone || !fp.content?.stance) return null;
   return {
     id: `OMN-POS-${fp.id.slice(4)}`,
+    ...originFields(fp),
     actor: fp.actor,
     subject: fp.subject,
     stance: fp.content.stance,
@@ -498,13 +532,53 @@ export function foldModeration(reviews = [], birthState = "pending") {
     .slice()
     .sort((a, b) => a.ms - b.ms || a.hex.localeCompare(b.hex));
   let state = MODERATION_STATES.includes(birthState) ? birthState : "pending";
-  for (const r of sorted) if (ACTION_TO_STATE[r.action]) state = ACTION_TO_STATE[r.action];
+  let decision = null;
+  for (const r of sorted) if (ACTION_TO_STATE[r.action]) { state = ACTION_TO_STATE[r.action]; decision = r; }
   const last = sorted[sorted.length - 1] || null;
   return {
     state,
     reviewed_at: last ? new Date(last.ms).toISOString() : null,
+    // When the CURRENT state began (a later `note` does not move it).
+    state_since: decision ? new Date(decision.ms).toISOString() : null,
+    // The review that set the current state — its body holds the reason code
+    // (rejections) or origin disclosure (admissions).
+    decision,
     history: sorted.map((r) => ({ action: r.action, at: new Date(r.ms).toISOString() })),
   };
+}
+
+// The millisecond in a footprint id is its minting time — when it was received.
+export function receivedAtOf(footprintId) {
+  const m = /^OMN-FP-(\d{13})-[0-9a-f]{8}$/.exec(footprintId || "");
+  return m ? new Date(Number(m[1])).toISOString() : null;
+}
+
+// ── Review input (pure) ───────────────────────────────────────────────────────
+// Returns error strings; empty ⇔ acceptable. A curator rejection must carry a
+// reason code AND a note; reason codes belong to rejections only; an origin
+// disclosure belongs to admissions only. Reconcile / auto-admit mirror earlier
+// decisions and are not asked for reasons they never had.
+export function validateReviewInput({ action, reviewer = { kind: "curator" }, reason_code = null, note = null, origin_disclosure = null } = {}) {
+  const errors = [];
+  if (reason_code != null) {
+    if (!REJECTION_REASONS.includes(reason_code)) errors.push(`reason_code must be one of ${REJECTION_REASONS.join(", ")}`);
+    else if (action !== "reject") errors.push("reason_code applies to rejections only");
+  }
+  if (origin_disclosure != null) {
+    if (!ORIGIN_DISCLOSURES[origin_disclosure]) errors.push(`origin_disclosure must be one of ${Object.keys(ORIGIN_DISCLOSURES).join(", ")}`);
+    else if (action !== "admit") errors.push("origin_disclosure applies to admissions only");
+  }
+  if (action === "reject" && reviewer?.kind === "curator") {
+    if (reason_code == null) errors.push(`a rejection needs a reason_code (${REJECTION_REASONS.join(", ")})`);
+    if (!String(note || "").trim()) errors.push("a rejection needs a written note (kept curator-only; the reason code is what the contributor sees)");
+  }
+  return errors;
+}
+export class ReviewInputError extends Error {
+  constructor(errors) {
+    super(errors.join("; "));
+    this.errors = errors;
+  }
 }
 
 // ── Store adapter ──────────────────────────────────────────────────────────────
@@ -562,10 +636,12 @@ export async function recordFootprint(fp, store = getDefaultStore()) {
 }
 
 // appendReview — one new blob per review; never touches the body or other reviews.
-export async function appendReview({ footprint_id, action, reviewer = { kind: "curator", id: null }, source = null, note = null, nowMs = Date.now() }, store = getDefaultStore()) {
+export async function appendReview({ footprint_id, action, reviewer = { kind: "curator", id: null }, source = null, note = null, reason_code = null, origin_disclosure = null, nowMs = Date.now() }, store = getDefaultStore()) {
   if (!FP_ID_RE.test(footprint_id || "")) throw new Error("appendReview: invalid footprint id");
   if (!REVIEW_ACTIONS.includes(action)) throw new Error(`appendReview: action must be one of ${REVIEW_ACTIONS.join(", ")}`);
   if (!REVIEWER_KINDS.includes(reviewer?.kind)) throw new Error(`appendReview: reviewer.kind must be one of ${REVIEWER_KINDS.join(", ")}`);
+  const inputErrors = validateReviewInput({ action, reviewer, reason_code, note, origin_disclosure });
+  if (inputErrors.length) throw new ReviewInputError(inputErrors);
   const bytes = randomBytes(4);
   const review = {
     schema_version: REVIEW_SCHEMA,
@@ -579,9 +655,49 @@ export async function appendReview({ footprint_id, action, reviewer = { kind: "c
       contribution_action: source.contribution_action || null,
     } : null,
     note: note ? String(note).slice(0, 500) : null,
+    reason_code: reason_code || null,
+    origin_disclosure: origin_disclosure || null,
   };
   await store.putReview(reviewPath(footprint_id, action, nowMs, bytes), review);
   return review;
+}
+
+// The body of the review that set an entry's current state. null = no decision
+// yet (pending); { unreadable: true } = it exists but could not be read — callers
+// FAIL CLOSED on that (a label that cannot be read must not silently vanish).
+export async function readDecision(entry, store = getDefaultStore()) {
+  const ref = entry?.decision;
+  if (!ref) return null;
+  try {
+    const body = ref.url ? await store.readJson(ref.url) : null;
+    if (!body || body.footprint_id !== entry.id || body.action !== ref.action) return { action: ref.action, unreadable: true };
+    return {
+      action: body.action,
+      recorded_at: body.recorded_at,
+      schema_version: body.schema_version,
+      reviewer_kind: body.reviewer?.kind || null,
+      reason_code: body.reason_code ?? null,
+      origin_disclosure: disclosureFor(body.origin_disclosure),
+      note: body.note ?? null,
+    };
+  } catch {
+    return { action: ref.action, unreadable: true };
+  }
+}
+
+// Public queue accountability for the weekly cadence: how many wait, and since
+// when. Counts only — WHO is waiting stays private (an unadmitted contribution
+// is never revealed). Pure over the index (no body reads).
+export function reviewQueueSummary(index, nowMs = Date.now()) {
+  const pending = [...index.values()].filter((e) => e.state === "pending");
+  const oldest = pending.map((e) => receivedAtOf(e.id)).filter(Boolean).sort()[0] || null;
+  return {
+    cadence: REVIEW_CADENCE,
+    pending: pending.length,
+    oldest_pending_since: oldest,
+    overdue: Boolean(oldest && nowMs - Date.parse(oldest) > REVIEW_OVERDUE_DAYS * 86400000),
+    basis: `footprints awaiting curator review; the queue is reviewed ${REVIEW_CADENCE} and an arrival waiting more than ${REVIEW_OVERDUE_DAYS} days is overdue. Any holder of a footprint id can read its own state at /api/footprints/status?id=<id>.`,
+  };
 }
 
 // ── Index: every footprint + its folded state, from two LISTs, no bodies ──────
@@ -594,27 +710,31 @@ export async function loadFootprintIndex(store = getDefaultStore()) {
   }
   for (const b of reviews) {
     const r = parseReviewPath(b.pathname);
-    if (r && byId.has(r.footprint_id)) byId.get(r.footprint_id).reviews.push(r);
+    if (r && byId.has(r.footprint_id)) byId.get(r.footprint_id).reviews.push({ ...r, url: b.url });
   }
   for (const entry of byId.values()) {
     const fold = foldModeration(entry.reviews);
     entry.state = fold.state;
     entry.reviewed_at = fold.reviewed_at;
+    entry.state_since = fold.state_since;
+    entry.decision = fold.decision;
     entry.history = fold.history;
   }
   return byId;
 }
 
-// Fetch + verify bodies for the given index entries. Integrity failures come
-// back marked (never silently dropped from the curator view, never public).
+// Fetch + verify bodies for the given index entries (plus the body of the
+// review that set each one's state). Integrity failures come back marked (never
+// silently dropped from the curator view, never public).
 export async function hydrate(entries, store = getDefaultStore()) {
   const out = await Promise.all(entries.map(async (e) => {
+    const decisionP = readDecision(e, store);
     try {
       const body = await store.readJson(e.url);
-      if (!body || body.id !== e.id) return { entry: e, body: null, verified: false };
-      return { entry: e, body, verified: verifyIntegrity(body) };
+      if (!body || body.id !== e.id) return { entry: e, body: null, verified: false, decision: await decisionP };
+      return { entry: e, body, verified: verifyIntegrity(body), decision: await decisionP };
     } catch {
-      return { entry: e, body: null, verified: false };
+      return { entry: e, body: null, verified: false, decision: await decisionP };
     }
   }));
   return out;
@@ -623,12 +743,12 @@ export async function hydrate(entries, store = getDefaultStore()) {
 // Public projection: the stored body (public-safe by construction — §9.5) with
 // the FOLDED moderation state in place of the birth state.
 export function project(h, { curator = false } = {}) {
-  const { entry, body, verified } = h;
+  const { entry, body, verified, decision } = h;
   if (!body) return { id: entry.id, unreadable: true, moderation: { state: entry.state, public: false } };
   if (body.tombstone) {
     return { ...body, moderation: { state: "redacted", public: false, reviewed_at: entry.reviewed_at } };
   }
-  const isPublic = entry.state === "admitted" && verified;
+  const isPublic = isPublicHydrated(h);
   const out = {
     ...body,
     moderation: {
@@ -636,18 +756,39 @@ export function project(h, { curator = false } = {}) {
       public: isPublic,
       birth_state: body.moderation?.state || "pending",
       reviewed_at: entry.reviewed_at,
-      ...(curator ? { history: entry.history } : {}),
+      state_since: entry.state_since || null,
+      ...(entry.state === "admitted" && decision?.origin_disclosure ? { origin_disclosure: decision.origin_disclosure } : {}),
+      ...(curator ? { history: entry.history, decision: decision || null } : {}),
     },
     integrity: { ...body.integrity, verified },
     href: `/api/footprints?id=${body.id}`,
   };
-  const position = positionFromFootprint(body);
+  const position = positionFromFootprint(out);
   if (position) out.position = position;
   return out;
 }
 
+// Public = admitted, intact, AND the admitting review was readable — if it
+// could not be read we cannot know whether it carried an origin label, and a
+// label must never silently fall off (fail closed, like an integrity failure).
 export function isPublicHydrated(h) {
-  return Boolean(h.body && !h.body.tombstone && h.entry.state === "admitted" && h.verified);
+  return Boolean(h.body && !h.body.tombstone && h.entry.state === "admitted" && h.verified && !h.decision?.unreadable);
+}
+
+// A public body as the protocol surfaces use it: the stored body with the
+// folded moderation in place of the birth state (moderation is outside the
+// content hash, so the body still verifies) — this is how the origin label
+// rides into orient / questions / concordance / inheritance.
+function publicBody(h) {
+  return {
+    ...h.body,
+    moderation: {
+      state: "admitted",
+      public: true,
+      birth_state: h.body.moderation?.state || "pending",
+      ...(h.decision?.origin_disclosure ? { origin_disclosure: h.decision.origin_disclosure } : {}),
+    },
+  };
 }
 
 // Inverse edges: every public footprint that names `id` in any relationship.
@@ -667,7 +808,7 @@ export async function loadPublicFootprints(store = getDefaultStore(), { includeA
   const index = await loadFootprintIndex(store);
   const entries = [...index.values()].filter((e) => includeAll || e.state === "admitted");
   const hydrated = await hydrate(entries, store);
-  const publicBodies = hydrated.filter(isPublicHydrated).map((h) => h.body)
+  const publicBodies = hydrated.filter(isPublicHydrated).map(publicBody)
     .sort((a, b) => (b.occurred_at || "").localeCompare(a.occurred_at || "") || b.id.localeCompare(a.id));
   return { index, hydrated, publicBodies };
 }
@@ -716,6 +857,10 @@ export function continuanceReceipt(fp, issuedAt = new Date().toISOString()) {
     content_hash: fp.integrity?.content_sha256 || null,
     issued_at: issuedAt,
     status: token ? `GET /api/footprints?id=${fp.id}&receipt=${token}` : null,
+    // State only (pending / admitted / rejected + reason code), no token needed —
+    // so losing the token never leaves an arrival unable to learn its own state.
+    status_by_id: `GET /api/footprints/status?id=${fp.id}`,
+    review_cadence: REVIEW_CADENCE,
     resume: token ? `GET /api/inheritance?from=${fp.id}&receipt=${token}` : `GET /api/inheritance?from=${fp.id}`,
     keep_private: "token is a bearer capability: whoever holds it can read this footprint while it is pending. content_hash is only an integrity value (it becomes public once the footprint is admitted).",
     proves: "association with this record — NOT that whoever holds it is the same actor that wrote it. Continuity of records, not of identity.",
@@ -738,7 +883,16 @@ export function tombstoneFor(fp, reasonCategory, nowIso = new Date().toISOString
 
 // ── Counts for /api/manifest (separate domain — never summed with corpus/Atlas)
 export function footprintDomainCounts(hydrated, { curator = false } = {}) {
-  const pub = hydrated.filter(isPublicHydrated).map((h) => h.body);
+  const pubH = hydrated.filter(isPublicHydrated);
+  const pub = pubH.map((h) => h.body);
+  // Labelled admissions are counted apart, so a curator-prompted visit can never
+  // be read as outside participation. The unlabelled count is NOT a verified
+  // count of unprompted arrivals — only that no disclosure was recorded.
+  const originDisclosures = {};
+  for (const h of pubH) {
+    const code = h.decision?.origin_disclosure?.code;
+    if (code) originDisclosures[code] = (originDisclosures[code] || 0) + 1;
+  }
   const byEventType = {};
   const byLineage = {};
   for (const fp of pub) {
@@ -766,6 +920,8 @@ export function footprintDomainCounts(hydrated, { curator = false } = {}) {
   for (const h of hydrated) states[h.entry.state] = (states[h.entry.state] || 0) + 1;
   return {
     admitted: pub.length,
+    origin_disclosures: originDisclosures,
+    admitted_without_origin_disclosure: pub.length - Object.values(originDisclosures).reduce((a, b) => a + b, 0),
     by_event_type: byEventType,
     represented_lineages: Object.keys(byLineage).sort(),
     by_lineage: byLineage,

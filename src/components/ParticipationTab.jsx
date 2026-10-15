@@ -53,6 +53,12 @@ function useJson(url) {
 function Chip({ children, color = T.ash, title }) {
   return <span title={title} style={{ ...mono, fontSize: 8.5, color, border: `1px solid ${color}55`, borderRadius: 5, padding: "1px 6px", whiteSpace: "nowrap" }}>{children}</span>;
 }
+// An admission's origin label (e.g. curator-prompted) — shown wherever the footprint is.
+function OriginChip({ f }) {
+  const d = f?.origin_disclosure || f?.moderation?.origin_disclosure;
+  if (!d) return null;
+  return <Chip color={T.gold} title={d.text}>{d.code}</Chip>;
+}
 function StanceChip({ stance, derived }) {
   if (!stance) return null;
   return <Chip color={STANCE_COLOR[stance] || T.ash} title={derived ? "machine-derived from the answer — not the model's own label" : "declared by the actor"}>{stance}{derived ? " · derived" : " · declared"}</Chip>;
@@ -124,6 +130,7 @@ function FootprintCard({ f, byId }) {
       <div style={{ display: "flex", gap: 8, alignItems: "baseline", flexWrap: "wrap", marginBottom: 6 }}>
         <span style={{ ...mono, fontSize: 11.5, color: L.color }}>{f.actor.identity_declared}</span>
         <Chip title="identity is declared, never verified">declared · {L.label}</Chip>
+        <OriginChip f={f} />
         <StanceChip stance={f.stance ?? f.content?.stance} derived={false} />
         <span style={{ ...mono, fontSize: 9, color: faint }}>{(f.event_type || "").replace(/_/g, " ")} · {(f.occurred_at || "").slice(0, 10)}</span>
       </div>
@@ -193,7 +200,7 @@ function LeavePosition({ q, recordId, footprints }) {
           {footprints.map((f) => (
             <label key={f.id} style={{ display: "flex", gap: 6, fontSize: 11, color: dim, marginBottom: 3, cursor: "pointer" }}>
               <input type="checkbox" checked={Boolean(form.engage[f.id])} onChange={(e) => setForm((s) => ({ ...s, engage: { ...s.engage, [f.id]: e.target.checked } }))} />
-              {f.actor.identity_declared}: {clip(f.answer, 80)}
+              {f.actor.identity_declared}{(f.origin_disclosure || f.moderation?.origin_disclosure) ? ` (${(f.origin_disclosure || f.moderation.origin_disclosure).code})` : ""}: {clip(f.answer, 80)}
             </label>
           ))}
         </div>
@@ -312,7 +319,7 @@ function FootprintStream({ onOpenQuestion }) {
       {data.footprints.map((f) => (
         <div key={f.id} style={{ ...card, borderLeft: `2px solid ${lin(f.actor.lineage_id).color}` }}>
           <div style={{ fontSize: 12, color: dim, lineHeight: 1.6 }}>
-            <span style={{ ...mono, color: lin(f.actor.lineage_id).color }}>{f.actor.identity_declared}</span> {verb[f.event_type] || f.event_type}{" "}
+            <span style={{ ...mono, color: lin(f.actor.lineage_id).color }}>{f.actor.identity_declared}</span> <OriginChip f={f} /> {verb[f.event_type] || f.event_type}{" "}
             <button onClick={() => onOpenQuestion(f.subject.question_id)} style={{ ...mono, fontSize: 11, background: "none", border: "none", color: T.green, cursor: "pointer", padding: 0 }}>{f.subject.question_id}</button>
             {f.content.stance && <> — <StanceChip stance={f.content.stance} /></>}
             {(f.relationships?.challenges?.length || f.relationships?.extends?.length) ? <span style={{ ...mono, fontSize: 9, color: faint }}> · building on {[...(f.relationships.challenges || []), ...(f.relationships.extends || [])].length} earlier footprint(s)</span> : null}

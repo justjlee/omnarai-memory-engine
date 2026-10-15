@@ -34,6 +34,9 @@ const checks = [
   ["relationships", Object.keys(P.relationships.properties), [...FP.RELATION_LISTS, "supersedes"]],
   ["review.action", review.properties.action.enum, FP.REVIEW_ACTIONS],
   ["review.reviewer.kind", review.properties.reviewer.properties.kind.enum, FP.REVIEWER_KINDS],
+  ["review.schema_version", review.properties.schema_version.enum, FP.REVIEW_SCHEMAS],
+  ["review.reason_code", (review.properties.reason_code?.enum || []).filter((x) => x !== null), FP.REJECTION_REASONS],
+  ["review.origin_disclosure", (review.properties.origin_disclosure?.enum || []).filter((x) => x !== null), Object.keys(FP.ORIGIN_DISCLOSURES)],
 ];
 for (const [name, a, b] of checks) if (!same(a, b)) problems.push(`schema ${name} [${a}] ≠ validator [${b}] — regenerate public/schemas`);
 if (P.schema_version.const !== FP.FOOTPRINT_SCHEMA) problems.push("schema_version const drifted");
@@ -48,6 +51,7 @@ if (FP.validateFootprint(sample).length) problems.push(`the builder emits an inv
 // Each entry: [public path, rewrite destination prefix]. Grows with each phase.
 export const PROTOCOL_ROUTES = [
   ["/api/footprints", "/api/council?_view=footprints"],
+  ["/api/footprints/status", "/api/council?_view=footprint-status"],
   ["/api/orient", "/api/council?_view=orient"],
   ["/api/questions", "/api/council?_view=questions"],
   ["/api/positions", "/api/council?_view=positions"],
