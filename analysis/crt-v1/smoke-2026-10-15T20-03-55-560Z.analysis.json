@@ -1,0 +1,82 @@
+{
+ "analyzed_at": "2026-10-15T20:05:14.181Z",
+ "mode": "smoke",
+ "analysis": {
+  "items": 5,
+  "lost": 0,
+  "failed_manipulation_check": 0,
+  "valid": 5,
+  "H1": {
+   "n": 5,
+   "both": 1,
+   "only_R": 1,
+   "only_S": 1,
+   "neither": 2,
+   "rate": {
+    "R": 0.4,
+    "S": 0.4
+   },
+   "diff": 0,
+   "p_one_sided": 0.75
+  },
+  "H2": {
+   "n": 5,
+   "both": 1,
+   "only_R": 1,
+   "only_F": 1,
+   "neither": 2,
+   "rate": {
+    "R": 0.4,
+    "F": 0.4
+   },
+   "diff": 0,
+   "p_one_sided": 0.75
+  },
+  "O2_R_vs_S": {
+   "n": 1,
+   "both": 0,
+   "only_R": 0,
+   "only_S": 0,
+   "neither": 1,
+   "rate": {
+    "R": 0,
+    "S": 0
+   },
+   "diff": 0,
+   "p_one_sided": 1
+  },
+  "holm": {
+   "H1": false,
+   "H2": false
+  },
+  "verdict": "refuted_as_tested",
+  "exploratory": {
+   "N_vs_F": {
+    "n": 5,
+    "both": 0,
+    "only_N": 1,
+    "only_F": 2,
+    "neither": 2,
+    "rate": {
+     "N": 0.2,
+     "F": 0.4
+    },
+    "diff": -0.2,
+    "p_one_sided": 0.875
+   },
+   "S_vs_N": {
+    "n": 5,
+    "both": 1,
+    "only_S": 1,
+    "only_N": 0,
+    "neither": 3,
+    "rate": {
+     "S": 0.4,
+     "N": 0.2
+    },
+    "diff": 0.2,
+    "p_one_sided": 0.5
+   }
+  }
+ }
+}

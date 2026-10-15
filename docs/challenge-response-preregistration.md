@@ -318,3 +318,15 @@ engine response and every label are kept in `analysis/crt-v1/` and published wit
   registered smoke and test lists were computed as *at least* 5 answers, and the lists are the registered selection. One
   test record, `OMN-D1784417308425`, has 6 answers. With exactly 5, the rule yields 32 records and a different list. The
   harness (`scripts/lib/crt-core.mjs`) uses "at least 5" and a test asserts it reproduces the registered lists.
+- **2026-10-15, after the smoke run, before the main run (observations; nothing changed).** The smoke run
+  (`analysis/crt-v1/smoke-2026-10-15T20-03-55-560Z.json`, 5 items, $0.36 at list prices; excluded from every analysis)
+  showed no harness defect: every reply was parsed, posted, re-sent after an engine rejection, or declined as §3.1 specifies.
+  Two observations are recorded so the main run is read correctly:
+  1. `deepseek-chat` reported its model as `deepseek-flash`, the alias drift already logged on 2026-10-02. It is recorded
+     per item and not corrected, because the council calls the same alias.
+  2. The sham did not always match the real challenge's length: 27 vs 137, 27 vs 55 and 55 vs 121 words in 3 of 5 items.
+     Writing at length with no reasons is hard. The SHAM prompt is unchanged (changing it after seeing data is what this
+     log exists to prevent). R and S word counts are reported per item. If the main run is "supported", the licensed
+     sentence must state the observed lengths and not say "matched length" unless they matched. A shorter sham is a weaker
+     push, which works in H1's favour; it is a limit of this run.
+
