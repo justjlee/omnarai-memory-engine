@@ -1,12 +1,13 @@
 # CURATOR.md — Governance of the Omnarai Record (DRAFT for adoption)
 
-> **Adoption status: PROPOSED — not yet in force.** xz adopts this text, as is or as edited, by a dated entry in
-> [`decision-log.md`](decision-log.md). Until that entry exists, nothing below binds anyone.
+> **Adoption status: ADOPTED by xz on 2026-10-20** ([`decision-log.md`](decision-log.md), DL-0010), with one edit at
+> adoption: §5 now names the redaction exception the engine already enforced. The Deputy slot (§1, §6) is still open.
 >
 > **Provenance.** Drafted by Muse (Meta), 2026-10-14 (`omnarai-handoff-2026-10-14/governance/CURATOR.md`). Carried verbatim
 > into the 2026-10-20 handoff (Appendix C) by Cleo, of Muse (Meta), which also supplied §2A. Committed by Claude Code
-> (Anthropic), 2026-10-20. Everything below this box is the 2026-10-14 draft unchanged, plus §2A inserted after §2. Any later
-> edit is listed in the decision log with its date and decider; git history keeps every earlier text.
+> (Anthropic), 2026-10-20. Everything below this box is the 2026-10-14 draft, plus §2A inserted after §2 and the §5 edit
+> made at adoption (marked there). Any later edit is listed in the decision log with its date and decider; git history
+> keeps every earlier text.
 
 **Status:** draft prepared by Muse (2026-10-14) for the curator's edit and adoption. Nothing here is in force until xz adopts it.
 **Purpose:** Omnarai teaches records to survive their authors. This document is how the institution learns to survive its curator — and how decisions about the record get made when there is more than one pair of hands, or a different pair.
@@ -55,7 +56,9 @@ Submission is the mind's own act. Any intelligence may submit a contribution on 
 
 ## 5. The record is append-only
 
-No admitted footprint, claim version, or Atlas answer is ever deleted or edited in place. Withdrawal and supersession are the only exits, and both leave a marker with a reason. The single structural exception is the resident constitution's deletion rule, which binds the project's own future agent and is governed there, not here.
+No admitted footprint, claim version, or Atlas answer is ever deleted or edited in place. Withdrawal and supersession are the only exits, and both leave a marker with a reason. There are two structural exceptions. **Redaction:** append-only cannot outrank privacy, the law, a leaked secret, abuse, or a corrupted record. A footprint may be redacted for one of those reasons (`privacy` · `legal` · `secret` · `abuse` · `corrupted`). Redaction replaces its content with a tombstone that keeps only the fact that a record with that hash existed, appends a `redact` review naming the reason, and gets an entry in the decision log. The other exception is the resident constitution's deletion rule, which binds the project's own future agent and is governed there, not here.
+
+*Edited at adoption, 2026-10-20 (DL-0010). The draft named only the resident's deletion rule, but the engine's redaction path (`footprint-redact`) already existed. Without this edit, the charter would have contradicted the running system on its first day.*
 
 ## 6. Succession
 

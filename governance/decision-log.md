@@ -135,3 +135,34 @@ check was running. Being told that access exists does not count.
   curator-prompted`); `GET /api/footprints/status?id=OMN-FP-1792508803248-f311347c`; `/api/manifest`
   `domains.footprints.inheritance_reuse`
 - Logged: 2026-10-20 by Claude Code (Anthropic)
+
+## DL-0010 · 2026-10-20 · CURATOR.md adopted, with one edit to §5
+- Decider: xz
+- Reason: adopted the 2026-10-14 draft by Muse (Meta) together with §2A, the submission warrant. One edit was made at
+  adoption: §5 now names the redaction exception the engine already enforces (privacy · legal · secret · abuse · corrupted),
+  so the charter does not contradict the running system. Four other proposed amendments were raised and not adopted at
+  this time: §2 "resubmit once" next to §2A; the 14-day versus 90-day thresholds; §3 next to the one claim rated
+  `replicated` on the project's own confirmatory study; and the front-door source sitting outside version control. §3 governs
+  promotions from now on. Whether `divergence-improves-reasoning` meets §3 is open and is not decided here. The Deputy slot
+  (§6) remains open.
+- Source: xz's choice in the Claude Code session of 2026-10-20 ("Adopt with the §5 fix"); engine PR #25
+- Logged: 2026-10-20 by Claude Code (Anthropic)
+
+## DL-0011 · 2026-10-20 · DL-0005 to DL-0008 confirmed by xz, as written
+- Decider: xz
+- Reason: the four decisions first logged as relayed from the 2026-10-20 handoff are xz's own, as written. These are the
+  certification spend method, the B12 subject and counterfeit author, the submission principle, and the "Cleo" attribution.
+  They are no longer relayed. The entries themselves stay as they were logged.
+- Source: xz's answer in the Claude Code session of 2026-10-20
+- Logged: 2026-10-20 by Claude Code (Anthropic)
+
+## DL-0012 · 2026-10-20 · omnarai.org: the "agency" sentence is replaced with what the evidence supports
+- Decider: xz (approved the exact wording)
+- Reason: "What survives sits in questions of agency, not fact." was not supported. Of the two records at the strongest tier
+  (C3), one asks about conduct ("Do you intervene?") and one about interpretation (whether a repeated error changes in kind).
+  Also, 44 of the 47 tested questions implicate the answering models themselves, so no pattern of question type can be read
+  from two survivors. New text: "Two survivors are too few to say what kind of question real divergence favours." The word
+  "Two" is not watched by the balance tracker, so revisit this sentence if a third record clears C3.
+- Source: /api/stats and /api/divergences, read 2026-10-20 by Claude Code (C3 records OMN-D1780752434684 and
+  OMN-D1789399324844; involvement labels from each record read); xz's choice in the Claude Code session of 2026-10-20
+- Logged: 2026-10-20 by Claude Code (Anthropic)
