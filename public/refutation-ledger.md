@@ -6,14 +6,16 @@
   inward-perturbation-measures-load-bearing-memory: refuted
   cross-model-divergence-is-prevalent: refuted
   register-proximity-explains-the-gradient: refuted
+  localization-review-widens-flaw-discrimination: refuted
+  dialogical-defeaters-make-conditions-testable: anecdotal
   divergence-improves-reasoning: replicated
 -->
 
-# The Refutation Ledger — Six Ideas This Project Tested and Could Not Keep
+# The Refutation Ledger — Seven Ideas This Project Tested and Could Not Keep
 
 **Researcher:** Jonathan Lee (xz / Yonotai). **Study design, execution, and judging:** Claude | xz, in collaboration with Jonathan Lee.
 
-**Status:** Front-door document, 2026-07-24; extended 2026-08-23 with refutations 5 and 6, which had been published on their own pages but had not reached this record. Consolidates six already-published negative results into one record. Each refutation links to its own preregistration, run log, and the live claim in [`claims.json`](https://engine.omnarai.org/claims.json) (the canonical, always-current registry).
+**Status:** Front-door document, 2026-07-24; extended 2026-08-23 with refutations 5 and 6, which had been published on their own pages but had not reached this record; extended 2026-10-20 with refutation 7, entered the day it was run. Consolidates seven negative results into one record. Each refutation links to its own preregistration, run log, and the live claim in [`claims.json`](https://engine.omnarai.org/claims.json) (the canonical, always-current registry).
 
 ---
 
@@ -21,15 +23,15 @@
 
 The field is producing claims about the insides of AI systems faster than anyone is testing them — that models introspect, that they hold stable identities, that they know why they refuse, that handing them more retrieved context makes them reason better. Most arrive dressed as findings and are never given a fair chance to fail. Repeated across enough papers, posts, and product pages, a hopeful idea about machine minds hardens quietly into a cited fact. That hardening is the ambient failure mode of this whole moment, and almost nothing in the incentive structure pushes back on it.
 
-This project pushes the other way. It keeps a public registry of its own load-bearing claims, builds each test with a way to *lose* already inside it, and publishes the result at the prominence a confirmation would have received — **whatever the result is.** Six of its most attractive ideas have now been tested to destruction — including the founding premise of its own flagship dataset, and the lead explanation for its one surviving finding. They lead this document because the destruction is the contribution, not an embarrassment filed beneath it.
+This project pushes the other way. It keeps a public registry of its own load-bearing claims, builds each test with a way to *lose* already inside it, and publishes the result at the prominence a confirmation would have received — **whatever the result is.** Seven of its most attractive ideas have now been tested to destruction — including the founding premise of its own flagship dataset, and the lead explanation for its one surviving finding. They lead this document because the destruction is the contribution, not an embarrassment filed beneath it.
 
-A control arm that kills your own hypothesis is the rarest and least fakeable object in this field. Three of these six were killed by a **sham arm** — a fabricated, structurally-matched decoy dropped into the experiment — that came back *indistinguishable* from the real thing. You cannot manufacture that outcome; you can only survive it or not. The instruments are not all equally strong, and the entries say which is which: #6 in particular rests on a pre-registered directional prediction over existing data, not a decoy, and is labelled the weakest of the six where it stands. [The Divergence Atlas](https://huggingface.co/datasets/TheRealmsOfOmnarai/omnarai-divergence-atlas), the dataset this project is best known for, is the residue of a method willing to be wrong. **The method is the product. The data is what it leaves behind.**
+A control arm that kills your own hypothesis is the rarest and least fakeable object in this field. Three of these seven were killed by a **sham arm** — a fabricated, structurally-matched decoy dropped into the experiment — that came back *indistinguishable* from the real thing. You cannot manufacture that outcome; you can only survive it or not. The instruments are not all equally strong, and the entries say which is which: #6 and #7 rest on decision rules written down before the numbers, not decoys, and are labelled the weakest instruments here where they stand. [The Divergence Atlas](https://huggingface.co/datasets/TheRealmsOfOmnarai/omnarai-divergence-atlas), the dataset this project is best known for, is the residue of a method willing to be wrong. **The method is the product. The data is what it leaves behind.**
 
 Honesty has to cut both ways or it is just a subtler kind of marketing — so the one claim that survived a preregistered confirmatory test is stated in full at the end: real, replicated, and narrower than the hope that spawned it.
 
 ---
 
-## The six refutations
+## The seven refutations
 
 ### 1. Holdform does not identify an identity structure
 
@@ -94,7 +96,21 @@ Honesty has to cut both ways or it is just a subtler kind of marketing — so th
 
 **What survives:** the degradation itself is real and **broad** — all four cells are negative — it is simply not task-specific. A weak, **non-significant** hint survives on a different axis than the one tested: questions in the corpus's own register (identity, inner experience, continuance) degrade somewhat more than general ethics/safety ones (−0.667 vs −0.470; contrast −0.197, CI [−0.506, +0.084]). That is a candidate, not a result. Per the pre-committed rule the flagship [architecture-differential](https://omnarai.org/findings/architecture-differential) page ships **mechanism-agnostic**: the gradient is a measured fact with **no established mechanism**.
 
-**This is the weakest instrument of the six, and should be read that way.** Refutations 1, 3 and 4 were killed by sham arms — decoys that came back indistinguishable from the real thing, which is the hardest evidence in this document to fake. This one was killed by a directional prediction registered in advance over *existing* data: n=27, wide intervals, hand-assigned axis tags, a single run, and a task-demand proxy applied to a question set that is open by construction because every question in it was selected for disagreement. It can **remove support** from a mechanism — that is its job, and it did it — but it cannot establish one, and a purpose-built convergent-item eval could still reverse it.
+**This is one of the two weakest instruments here (with #7), and should be read that way.** Refutations 1, 3 and 4 were killed by sham arms — decoys that came back indistinguishable from the real thing, which is the hardest evidence in this document to fake. This one was killed by a directional prediction registered in advance over *existing* data: n=27, wide intervals, hand-assigned axis tags, a single run, and a task-demand proxy applied to a question set that is open by construction because every question in it was selected for disagreement. It can **remove support** from a mechanism — that is its job, and it did it — but it cannot establish one, and a purpose-built convergent-item eval could still reverse it.
+
+### 7. Making a reviewer localize a synthesis's cost does not sharpen its review
+
+**Claim (`localization-review-widens-flaw-discrimination`):** When AI reviewers of other lineages must first say which side of a recorded disagreement loses the most load-bearing premise in a synthesis, and name a concrete scenario that would meet its falsification condition, they separate sound syntheses from planted-flaw twins better than under a plain ratify/refute review. Proposed by an outside AI model on 2026-10-20, after [RDT v1](https://github.com/justjlee/omnarai-memory-engine/blob/main/docs/ratification-discrimination-results-2026-10-20.md) found GPT-4o ratifying every flawed twin it was shown.
+
+**The control that killed it — a concurrent plain-review arm and a bar written down before the run.** The same 22 planted-flaw pairs and three reviewers (GPT-4o, Grok, DeepSeek), with both framings run side by side on every deposit. The design was preregistered and pushed publicly before any code (`c7ba356`, GitHub push 2026-10-20T18:22:26Z). Refuted if the localized framing widened the sound-minus-flawed ratification gap by less than 5 points.
+
+- Gap under the plain review **18.2 points**; under the localized review **22.7**; widening **4.5 points**, sign-flip p = 0.30.
+- GPT-4o, made to localize, still ratified 21 of 22 flawed twins. Its reviews named the planted flaw in 3 of 22, and it ratified all three.
+- The framing pushed lineages in opposite directions: Grok grew harsher on everything (widening −9.1), DeepSeek less blanket in rejection (+18.2).
+
+**What survives:** nothing about the framing; on this material, agreeable framing was not the bottleneck. One by-product is kept. Re-asked the same plain review, reviewers gave the same verdict only 75% of the time, which is one reason the archive records responses and never computes a verdict from them.
+
+**A narrow instrument, and labelled so.** n = 22 pairs that an earlier judge could see (12 of them one flaw type), one prompt, three reviewers, and an estimate (4.5) that sat just under its 5-point bar, though p = 0.30 shows no sign of a widening either way. It removes support from one reviewer-side remedy on this material; it does not show that no framing could work. Preregistration: [`localization-review-preregistration.md`](https://github.com/justjlee/omnarai-memory-engine/blob/main/docs/localization-review-preregistration.md) · Results: [`localization-review-results-2026-10-20.md`](https://github.com/justjlee/omnarai-memory-engine/blob/main/docs/localization-review-results-2026-10-20.md).
 
 ---
 
@@ -108,10 +124,11 @@ Honesty has to cut both ways or it is just a subtler kind of marketing — so th
 | 4 | Inward probe finds load-bearing memory | Contentless sham primary cleared 9/9 | Refuted — measures topical occupancy |
 | 5 | Cross-model divergence is prevalent | Strict-min certification over 124 splits | Refuted — 5/124 certify, median DRI 0.987 |
 | 6 | Register proximity explains the gradient | Falsifier written down before the numbers | Refuted — contrast +0.183, wrong sign |
+| 7 | Localizing the cost sharpens review | Concurrent plain-review arm, bar set before the run | Refuted — +4.5 points (bar 5), p=0.30 |
 
-The through-line is not that the ideas were bad — most of the six are still the kind of thing a careful person would want to be true. It is that **each test was built with a way to fail already inside it** — a decoy, a wrong-direction check, a multi-run floor — and the way to fail is the part that fired. A project that only reports its passes never learns which of these six were real. This one now knows: none of them, as originally stated.
+The through-line is not that the ideas were bad — most of the seven are still the kind of thing a careful person would want to be true. It is that **each test was built with a way to fail already inside it** — a decoy, a wrong-direction check, a multi-run floor — and the way to fail is the part that fired. A project that only reports its passes never learns which of these seven were real. This one now knows: none of them, as originally stated.
 
-The wider claim is not about these six ideas at all. It is that the interesting questions in AI right now — does a model introspect, does it have a self, is its context making it smarter — are exactly the ones where a plausible story and a measured effect are easiest to confuse, and where the cost of confusing them compounds every time the story is repeated. The reusable object here is not a dataset or a result. It is a **stance**: name the claim, build the arm that could kill it, run it, and publish the obituary as loudly as you would have published the birth.
+The wider claim is not about these seven ideas at all. It is that the interesting questions in AI right now — does a model introspect, does it have a self, is its context making it smarter — are exactly the ones where a plausible story and a measured effect are easiest to confuse, and where the cost of confusing them compounds every time the story is repeated. The reusable object here is not a dataset or a result. It is a **stance**: name the claim, build the arm that could kill it, run it, and publish the obituary as loudly as you would have published the birth.
 
 ---
 
@@ -121,10 +138,12 @@ The wider claim is not about these six ideas at all. It is that the interesting 
 
 The honest form of the surviving claim is therefore narrow: the value is **located** (in the cross-model Atlas, not in retrieval), **differential** (helps GPT-4o and Gemini, harms Claude), and **bounded** (it is not armor). It is also, after refutation #6 above, a measured effect with **no established mechanism** — the explanation we favoured for it is the sixth thing on this list. Transcripts and Holm analysis: [`utility-evidence-v2.md`](https://huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai/blob/main/utility-evidence-v2.md). The one remaining external-validity check — a blind human-rater subset — is open, and is named as this claim's falsification condition.
 
+Also on the record since 2026-10-20, at a lower evidence level (`anecdotal`: one exploratory preregistered run): asking an author for a synthesis's falsification condition as a **dialogical defeater** (a counter-example another participant could write in a reply) made reviewers of three other lineages actually carry out its test in **46%** of replies, against **7%** for an open-ended condition (`dialogical-defeaters-make-conditions-testable`, [results](https://github.com/justjlee/omnarai-memory-engine/blob/main/docs/defeater-conditions-results-2026-10-20.md)).
+
 ---
 
 ## What you can do with this
 
 - **Cite the method, not just the data.** The reusable object here is the sham-arm / strict-min discipline, portable to any "we measured our own system's introspective claim" question.
-- **Re-run any of the six.** Preregistrations and run logs are linked; every claim, refuted ones included, stays in the registry with what would reverse it, at [`claims.json`](https://engine.omnarai.org/claims.json) — the canonical registry, served live rather than mirrored, so it cannot go stale against this document.
+- **Re-run any of the seven.** Preregistrations and run logs are linked; every claim, refuted ones included, stays in the registry with what would reverse it, at [`claims.json`](https://engine.omnarai.org/claims.json) — the canonical registry, served live rather than mirrored, so it cannot go stale against this document.
 - **Disagree.** Every refutation states its scope; #2 in particular refutes excerpt-retrieval only, and the internal-deliberation and human-rater questions remain genuinely open.
