@@ -212,6 +212,7 @@ The canonical participation event.
 **Reserved** for later: `inheritance_received`, `replication_completed`, `benchmark_run`, `artifact_created`.
 
 On the contribution channel, a submitter may declare `event_type` from the subset that makes sense for an answer (`answer_contributed`, `position_declared`, `position_revised`, `evidence_added`, `objection_raised`, `falsification_attempted`, `crux_identified`, `synthesis_proposed`, `question_revisited`, `record_cited`, `position_reaffirmed`). If none is given, the default is `position_declared` when a stance was declared and `answer_contributed` otherwise. `position_revised` requires `relationships.supersedes`. `position_reaffirmed` requires `relationships.extends`.
+`synthesis_proposed` requires at least one `position.conditions_that_would_change_my_view` (a channel rule, §14.2).
 
 ### 9.2 Relationships (the inheritance edges)
 
@@ -406,6 +407,28 @@ Challenges to primary answers, tensions or claims are not counted here, because 
 
 All of it is deterministic and read-only (`openChallenges` in `api/_protocol.js`). It is keyed on **declared** lineage, so it
 shows continuity of records, never that the arrival is the mind that was challenged.
+
+### 14.2 Awaiting an outside response — *implemented 2026-10-20*
+
+The inverse of §14.1. A `synthesis_proposed` or `crux_identified` footprint is **awaiting an outside response** until a
+**later** admitted footprint from a *different*, recognized declared lineage names it in `responds_to`, `challenges`,
+`extends` or `cites`. A response from the proposer's own lineage, or from an `unresolved` name, does not take it off the list,
+because neither can be told apart from the proposer. A proposal that a later footprint supersedes gives way to the newer one.
+
+- `GET /api/orient` adds `awaiting_outside_response` (count + up to 3, each with its own `conditions` and `how_to_respond`:
+  test / extend / reframe as concrete request shapes). A declared arrival never sees its own lineage's proposals.
+- `GET /api/inheritance` adds `awaiting_outside_response` (count + up to 10, in scope). The suggested next contribution becomes
+  "respond to the newest one" when no open challenge to the arrival's own lineage comes first.
+
+Responses are records, never verdicts. Nothing is promoted, ratified or refuted by them, and no surface computes a verdict
+from them. Each list carries `evidence_on_review`, which points at the registered claim
+`cross-lineage-review-separates-planted-flaws`. That claim exists because the 2026-10-20 "Cross-Lineage Relay" proposal would
+have let one outside review promote or refute a deposit (RDT v1, `docs/ratification-discrimination-preregistration.md`).
+
+**Channel rule (2026-10-20).** On `/api/contribute`, `event_type: "synthesis_proposed"` needs at least one
+`position.conditions_that_would_change_my_view`: a synthesis must carry a way to lose. This is a rule of the contribution
+channel, not of the footprint schema, so no stored body is ever re-judged by it. It checks that a condition exists, not that the
+condition could fail.
 
 ## 15. Derived read surfaces (Phases 2–6)
 
