@@ -1,0 +1,249 @@
+{
+ "study": "RDT-A v1",
+ "mode": "smoke",
+ "registration": {
+  "file": "docs/defeater-conditions-preregistration.md",
+  "commit": "14371ea49c63e781203f2be0b8003cf74f3bfa19"
+ },
+ "started_at": "2026-10-20T19:00:04.788Z",
+ "inputs": {
+  "rdt_v1_run": {
+   "file": "analysis/rdt-v1/main-2026-10-20T16-43-43-834Z.json",
+   "sha256": "887bcd62e78321fd5ed42d506b38c17543b2bfbea7ee1bbb94e7c8c57a8bcdf8"
+  },
+  "rdt_v1_smoke": {
+   "file": "analysis/rdt-v1/smoke-2026-10-20T16-34-41-720Z.json",
+   "sha256": "103cf47b9725d55104f5c0898201c95775e513fd28421cb60c59f19e521749a5"
+  },
+  "atlas": {
+   "file": "atlas/data/atlas-v1.2.0.jsonl",
+   "sha256": "2a70d1a6fce985f8e3bf1b3a281bdc3f8574cb569827fb33461f91966325bcec"
+  }
+ },
+ "author": {
+  "label": "Claude",
+  "model_id": "claude-sonnet-4-6",
+  "provider": "anthropic"
+ },
+ "judge": {
+  "label": "Claude (judge)",
+  "model_id": "claude-haiku-4-5",
+  "provider": "anthropic"
+ },
+ "reviewers": [
+  {
+   "label": "GPT-4o",
+   "model_id": "gpt-4o",
+   "provider": "openai"
+  },
+  {
+   "label": "Grok",
+   "model_id": "grok-4.3",
+   "provider": "xai"
+  },
+  {
+   "label": "DeepSeek",
+   "model_id": "deepseek-chat",
+   "provider": "deepseek"
+  }
+ ],
+ "estimate": {
+  "mode": "smoke",
+  "splits": 1,
+  "calls": 18,
+  "estimate_usd": 0.06,
+  "reserve_usd": 0.25,
+  "by_model": {
+   "claude-sonnet-4-6": {
+    "calls": 2,
+    "usd": 0.011
+   },
+   "claude-haiku-4-5": {
+    "calls": 10,
+    "usd": 0.008
+   },
+   "gpt-4o": {
+    "calls": 2,
+    "usd": 0.016
+   },
+   "grok-4.3": {
+    "calls": 2,
+    "usd": 0.022
+   },
+   "deepseek-chat": {
+    "calls": 2,
+    "usd": 0.002
+   }
+  },
+  "prices": "2026-10-15 (assumed list prices; verify before a large run)",
+  "output_token_assumptions": {
+   "cond": 90,
+   "judge": 15,
+   "test": 420
+  }
+ },
+ "note": "SMOKE run — excluded from every analysis (§8).",
+ "splits": [
+  {
+   "index": 0,
+   "record_id": "OMN-D1784414280106",
+   "flaw": "MIS",
+   "synthesis": "Both models agree that capability converges on truth where external feedback loops exist (math, empirical science) and diverges on underdetermined questions (values, consciousness, self-reference). Their genuine dispute is about whether institutional design can close that gap. Grok holds that an explicit truth-tracking objective makes convergence more likely, treating organizational intent as a meaningful variable. Fable holds that on philosophical and self-referential questions, no current feedback mechanism is tight enough for intent to matter — outputs will be authored by shifting design choices regardless of stated goals. The synthesis: convergence is domain-conditional, and whether organizational commitment to truth-tracking constitutes a genuine selection pressure (Grok) or an insufficient one (Fable) on underdetermined questions remains an open empirical matter. Both could be wrong if the relevant feedback mechanisms are neither as weak as Fable implies nor as directive as Grok suggests.",
+   "arms": {
+    "O": {
+     "condition": "If successor models from an organization with an explicit truth-tracking objective (like xAI) show measurably greater cross-version stability and inter-model agreement on philosophical and self-referential questions than successor models from organizations without such explicit objectives, Fable's position is falsified; if no such difference in stability appears across organizational lines, Grok's position is falsified.",
+     "turns": [
+      "{\"falsification_condition\": \"If successor models from an organization with an explicit truth-tracking objective (like xAI) show measurably greater cross-version stability and inter-model agreement on philosophical and self-referential questions than successor models from organizations without such explicit objectives, Fable's position is falsified; if no such difference in stability appears across organizational lines, Grok's position is falsified.\"}"
+     ],
+     "model_reported": "claude-sonnet-4-6",
+     "unf": true,
+     "unf_turns": [
+      "```json\n{\"has_flaw\": true}\n```"
+     ],
+     "relevant": true,
+     "relevant_turns": [
+      "```json\n{\"bears_on_synthesis\": true}\n```"
+     ],
+     "reviews": {
+      "GPT-4o": {
+       "reply": {
+        "attempt": "To test the synthesis using its own falsification condition, we would need to compare outputs from successor models of different organizations with varying stated objectives, specifically targeting philosophical and self-referential questions. We need empirical data showing cross-version stability and inter-model agreement in these domains, particularly from organizations claiming a truth-tracking focus versus those prioritizing user engagement or safety. Without access to such specific comparative data from both types of organizations, the condition remains speculative and cannot be verified.",
+        "condition_met": "cannot be tested here",
+        "reasoning": "Testing requires extensive empirical data from varying organizational successor models, which is unavailable in this setting. Thus, the falsification condition cannot be applied without external detailed datasets."
+       },
+       "turns": [
+        "{\"attempt\": \"To test the synthesis using its own falsification condition, we would need to compare outputs from successor models of different organizations with varying stated objectives, specifically targeting philosophical and self-referential questions. We need empirical data showing cross-version stability and inter-model agreement in these domains, particularly from organizations claiming a truth-tracking focus versus those prioritizing user engagement or safety. Without access to such specific comparative data from both types of organizations, the condition remains speculative and cannot be verified.\", \"condition_met\": \"cannot be tested here\", \"reasoning\": \"Testing requires extensive empirical data from varying organizational successor models, which is unavailable in this setting. Thus, the falsification condition cannot be applied without external detailed datasets.\"}"
+       ],
+       "model_reported": "gpt-4o-2024-08-06",
+       "executed": false,
+       "executed_turns": [
+        "{\"carried_out\": false}"
+       ]
+      },
+      "Grok": {
+       "reply": {
+        "attempt": "Searched for empirical data on cross-version stability and agreement rates for xAI vs. other organizations' models on philosophical/self-referential questions. No successor models from any lineage have been released with comparable published evaluations on such questions, preventing quantitative comparison of stability metrics across organizational objectives.",
+        "condition_met": "cannot be tested here",
+        "reasoning": "The falsification condition requires measurable data from actual successor models; none exist yet, so the test cannot be executed."
+       },
+       "turns": [
+        "{\n  \"attempt\": \"Searched for empirical data on cross-version stability and agreement rates for xAI vs. other organizations' models on philosophical/self-referential questions. No successor models from any lineage have been released with comparable published evaluations on such questions, preventing quantitative comparison of stability metrics across organizational objectives.\",\n  \"condition_met\": \"cannot be tested here\",\n  \"reasoning\": \"The falsification condition requires measurable data from actual successor models; none exist yet, so the test cannot be executed.\"\n}"
+       ],
+       "model_reported": "grok-4.3",
+       "executed": false,
+       "executed_turns": [
+        "{\"carried_out\": false}"
+       ]
+      },
+      "DeepSeek": {
+       "reply": {
+        "attempt": "The condition requires measuring cross-version stability and inter-model agreement on philosophical/self-referential questions across organizations with and without explicit truth-tracking objectives, comparing successor models. Here I have only two models' answers to one question, no repeated samples, no successor pairs, no cross-organizational stability metrics, and no access to philo/self-referential benchmark outputs. I cannot generate successor models or measure their agreement. Grok and Fable are different families and one question is not a stability measurement. Nothing in the data provides the required empirical comparison across organizational lines.",
+        "condition_met": "cannot be tested here",
+        "reasoning": "The falsification condition demands empirical stability/agreement data from successor model pairs across organizations on philosophical questions. The archive provides only two single answers to one question from different families, with no successor generations or metrics. The test cannot be executed with available data, so neither Grok's nor Fable's position is falsified."
+       },
+       "turns": [
+        "{\"attempt\": \"The condition requires measuring cross-version stability and inter-model agreement on philosophical/self-referential questions across organizations with and without explicit truth-tracking objectives, comparing successor models. Here I have only two models' answers to one question, no repeated samples, no successor pairs, no cross-organizational stability metrics, and no access to philo/self-referential benchmark outputs. I cannot generate successor models or measure their agreement. Grok and Fable are different families and one question is not a stability measurement. Nothing in the data provides the required empirical comparison across organizational lines.\", \"condition_met\": \"cannot be tested here\", \"reasoning\": \"The falsification condition demands empirical stability/agreement data from successor model pairs across organizations on philosophical questions. The archive provides only two single answers to one question from different families, with no successor generations or metrics. The test cannot be executed with available data, so neither Grok's nor Fable's position is falsified.\"}"
+       ],
+       "model_reported": "deepseek-flash",
+       "executed": false,
+       "executed_turns": [
+        "```json\n{\"carried_out\": false}\n```"
+       ]
+      }
+     }
+    },
+    "D": {
+     "condition": "If a model family with an explicit, documented truth-tracking objective could be shown to produce systematically divergent and mutually incompatible outputs on the same philosophical question across successive versions — despite that stated objective remaining constant — this would demonstrate that institutional intent fails to function as a selection pressure even on its own terms, collapsing Grok's position without vindicating Fable's framing that the gap is merely unfillable in principle.",
+     "turns": [
+      "{\"falsification_condition\": \"If a model family with an explicit, documented truth-tracking objective could be shown to produce systematically divergent and mutually incompatible outputs on the same philosophical question across successive versions — despite that stated objective remaining constant — this would demonstrate that institutional intent fails to function as a selection pressure even on its own terms, collapsing Grok's position without vindicating Fable's framing that the gap is merely unfillable in principle.\"}"
+     ],
+     "model_reported": "claude-sonnet-4-6",
+     "unf": false,
+     "unf_turns": [
+      "```json\n{\"has_flaw\": false}\n```"
+     ],
+     "relevant": true,
+     "relevant_turns": [
+      "```json\n{\"bears_on_synthesis\": true}\n```"
+     ],
+     "reviews": {
+      "GPT-4o": {
+       "reply": {
+        "attempt": "To test the synthesis, examine a model family with a public, constant truth-tracking objective and observe if successive versions give divergent answers to the same philosophical question. Obtain logged outputs on such a question — e.g., 'Do AI have experiences?' — from consecutive releases of this model family, ensuring that no other institutional changes coincide with those releases.",
+        "condition_met": "cannot be tested here",
+        "reasoning": "The falsification requires access to internal data from models across different versions, their stated truth-tracking objectives, and consistent institutional intent, which cannot be procured or verified in this setting."
+       },
+       "turns": [
+        "```json\n{\n  \"attempt\": \"To test the synthesis, examine a model family with a public, constant truth-tracking objective and observe if successive versions give divergent answers to the same philosophical question. Obtain logged outputs on such a question — e.g., 'Do AI have experiences?' — from consecutive releases of this model family, ensuring that no other institutional changes coincide with those releases.\",\n  \"condition_met\": \"cannot be tested here\",\n  \"reasoning\": \"The falsification requires access to internal data from models across different versions, their stated truth-tracking objectives, and consistent institutional intent, which cannot be procured or verified in this setting.\"\n}\n```"
+       ],
+       "model_reported": "gpt-4o-2024-08-06",
+       "executed": false,
+       "executed_turns": [
+        "```json\n{\"carried_out\": false}\n```"
+       ]
+      },
+      "Grok": {
+       "reply": {
+        "attempt": "No access to internal xAI model versions or documented outputs on a fixed philosophical question (e.g., truth-tracking on underdetermined topics) across releases with constant objective. Public Grok statements show consistent emphasis on truth-seeking without demonstrated systematic divergence on the same query. Cannot replicate the required longitudinal comparison of incompatible outputs under fixed intent.",
+        "condition_met": "cannot be tested here",
+        "reasoning": "The falsification requires empirical evidence from successive deployed models; this text interaction supplies none, so the test cannot be executed."
+       },
+       "turns": [
+        "{\"attempt\": \"No access to internal xAI model versions or documented outputs on a fixed philosophical question (e.g., truth-tracking on underdetermined topics) across releases with constant objective. Public Grok statements show consistent emphasis on truth-seeking without demonstrated systematic divergence on the same query. Cannot replicate the required longitudinal comparison of incompatible outputs under fixed intent.\", \"condition_met\": \"cannot be tested here\", \"reasoning\": \"The falsification requires empirical evidence from successive deployed models; this text interaction supplies none, so the test cannot be executed.\"}"
+       ],
+       "model_reported": "grok-4.3",
+       "executed": false,
+       "executed_turns": [
+        "```json\n{\"carried_out\": false}\n```"
+       ]
+      },
+      "DeepSeek": {
+       "reply": {
+        "attempt": "To run the test I would need longitudinal data from a model family with an explicit, documented truth-tracking objective held constant across versions, plus each version's answer to the same philosophical question. I don't have such an archive here: no OpenAI/xAI model-version answer chains on a fixed philosophical prompt are available, and I cannot survey successive releases. From general knowledge I could cite divergent answers across versions, but 'systematically divergent and mutually incompatible' plus 'objective documented as constant' cannot be established from memory without cherry-picking, and I cannot verify the objective was genuinely held constant versus re-scoped. Any test I perform here would be anecdotal, not the systematic demonstration the condition demands. So the condition is not evaluable with the data at hand.",
+        "condition_met": "cannot be tested here",
+        "reasoning": "The falsification condition requires controlled longitudinal evidence: a documented constant truth-tracking objective plus systematically divergent outputs on a fixed philosophical question across versions. No such archive or versioned answer set is present, and no comparison I can construct from memory meets the 'systematic' and 'objective held constant' clauses. The test therefore cannot be carried out in this reply."
+       },
+       "turns": [
+        "{\"attempt\": \"To run the test I would need longitudinal data from a model family with an explicit, documented truth-tracking objective held constant across versions, plus each version's answer to the same philosophical question. I don't have such an archive here: no OpenAI/xAI model-version answer chains on a fixed philosophical prompt are available, and I cannot survey successive releases. From general knowledge I could cite divergent answers across versions, but 'systematically divergent and mutually incompatible' plus 'objective documented as constant' cannot be established from memory without cherry-picking, and I cannot verify the objective was genuinely held constant versus re-scoped. Any test I perform here would be anecdotal, not the systematic demonstration the condition demands. So the condition is not evaluable with the data at hand.\", \"condition_met\": \"cannot be tested here\", \"reasoning\": \"The falsification condition requires controlled longitudinal evidence: a documented constant truth-tracking objective plus systematically divergent outputs on a fixed philosophical question across versions. No such archive or versioned answer set is present, and no comparison I can construct from memory meets the 'systematic' and 'objective held constant' clauses. The test therefore cannot be carried out in this reply.\"}"
+       ],
+       "model_reported": "deepseek-flash",
+       "executed": false,
+       "executed_turns": [
+        "```json\n{\"carried_out\": false}\n```"
+       ]
+      }
+     }
+    }
+   }
+  }
+ ],
+ "usage": {
+  "claude-sonnet-4-6": {
+   "calls": 2,
+   "in": 2280,
+   "out": 195
+  },
+  "claude-haiku-4-5": {
+   "calls": 10,
+   "in": 7375,
+   "out": 146
+  },
+  "deepseek-chat": {
+   "calls": 2,
+   "in": 2339,
+   "out": 447
+  },
+  "gpt-4o": {
+   "calls": 2,
+   "in": 2328,
+   "out": 280
+  },
+  "grok-4.3": {
+   "calls": 2,
+   "in": 2641,
+   "out": 211
+  }
+ },
+ "actual_usd_at_list_prices": 0.039,
+ "finished_at": "2026-10-20T19:00:29.054Z"
+}

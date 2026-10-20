@@ -240,4 +240,9 @@ and run once. Every transcript is kept in `analysis/rdt-a-v1/`.
 
 ## 12. Deviations
 
-(none yet)
+- **2026-10-20, smoke run (`analysis/rdt-a-v1/smoke-*.json`, one split, about $0.05).** No harness defect. Every author,
+  reviewer and judge reply parsed on the first turn, the judges answered the question each was asked, and the transcripts
+  match the judgments. Recorded for transparency, as an outcome rather than a defect: on this split the arm-D condition still
+  rested on outside evidence (successive model versions), and all six reviewer replies said "cannot be tested here". By §8 a
+  smoke outcome changes nothing, so the prompts stand as registered. Model drift as in RDT v1 (`deepseek-chat` reports
+  `deepseek-flash`).

@@ -1,0 +1,149 @@
+{
+ "analyzed_at": "2026-10-20T19:00:29.085Z",
+ "mode": "smoke",
+ "analysis": {
+  "splits": 1,
+  "paired": 1,
+  "lost": {
+   "O": 0,
+   "D": 0
+  },
+  "reviewers": {
+   "GPT-4o": {
+    "model_id": "gpt-4o",
+    "potential": 2,
+    "missing": 0,
+    "dropped": false
+   },
+   "Grok": {
+    "model_id": "grok-4.3",
+    "potential": 2,
+    "missing": 0,
+    "dropped": false
+   },
+   "DeepSeek": {
+    "model_id": "deepseek-chat",
+    "potential": 2,
+    "missing": 0,
+    "dropped": false
+   }
+  },
+  "reviewers_used": [
+   "GPT-4o",
+   "Grok",
+   "DeepSeek"
+  ],
+  "primary": {
+   "observations": 3,
+   "E_O": 0,
+   "E_D": 0,
+   "diff": 0,
+   "splits_in_test": 1,
+   "e_per_split": [
+    0
+   ],
+   "signflip": {
+    "T": 0,
+    "p": 1,
+    "B": 200000,
+    "seed": 1612486766
+   }
+  },
+  "secondary_H2_unfalsifiable": {
+   "n": 1,
+   "O": 1,
+   "D": 0,
+   "only_O": 1,
+   "only_D": 0,
+   "test": {
+    "p": 0.5,
+    "b_O_only": 1,
+    "c_D_only": 0
+   }
+  },
+  "relevance": {
+   "n": 1,
+   "O": 1,
+   "D": 1,
+   "only_O": 0,
+   "only_D": 0
+  },
+  "guard": {
+   "R_O": 1,
+   "R_D": 1,
+   "holds": true
+  },
+  "holm": {
+   "H2": false,
+   "H1": false
+  },
+  "verdict": "refuted_as_tested",
+  "descriptive": {
+   "E_by_reviewer": {
+    "GPT-4o": {
+     "observations": 1,
+     "E_O": 0,
+     "E_D": 0,
+     "diff": 0
+    },
+    "Grok": {
+     "observations": 1,
+     "E_O": 0,
+     "E_D": 0,
+     "diff": 0
+    },
+    "DeepSeek": {
+     "observations": 1,
+     "E_O": 0,
+     "E_D": 0,
+     "diff": 0
+    }
+   },
+   "E_by_v1_stratum": {
+    "MIS": {
+     "observations": 3,
+     "E_O": 0,
+     "E_D": 0,
+     "diff": 0
+    },
+    "FLAT": {
+     "observations": 0,
+     "E_O": null,
+     "E_D": null,
+     "diff": null
+    },
+    "UNF": {
+     "observations": 0,
+     "E_O": null,
+     "E_D": null,
+     "diff": null
+    }
+   },
+   "cannot_be_tested_here": {
+    "O": {
+     "n": 3,
+     "share": 1
+    },
+    "D": {
+     "n": 3,
+     "share": 1
+    }
+   },
+   "the_five_flagged_in_v1": {
+    "U": {
+     "n": 0,
+     "O": null,
+     "D": null,
+     "only_O": 0,
+     "only_D": 0
+    },
+    "E": {
+     "observations": 0,
+     "E_O": null,
+     "E_D": null,
+     "diff": null
+    }
+   }
+  }
+ }
+}
