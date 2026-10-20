@@ -1042,7 +1042,7 @@
       "wording": "When AI reviewers of other lineages must first say which side of a recorded disagreement loses the most load-bearing premise in a synthesis, and name a concrete scenario that would meet its falsification condition, the gap between their ratification of sound syntheses and of planted-flaw twins is wider than under a plain ratify/refute review of the same deposits, while they still ratify at least half of the sound ones.",
       "version": 1,
       "scope": "Covers the 22 RDT v1 planted-flaw pairs that passed its manipulation check (FLAT 12, MIS 5, UNF 5), three reviewer versions (gpt-4o, grok-4.3, deepseek-chat), one author model, and one review per deposit per framing with the verbatim answers pasted in. Does not cover subtler flaws, other reviewers, or free-browsing agents, and does not license promoted or verified states or calling any ratified synthesis true.",
-      "evidence_level": "untested",
+      "evidence_level": "refuted",
       "evidence_note": "RDT-L v1 ran once on 2026-10-20. Its registered verdict is refuted as tested, which awaits the curator's registry decision. The localized review widened the sound-minus-flawed ratification gap by 4.5 points over a concurrent plain review (bar < 5; sign-flip p = 0.30), and sound approval held at 55%. Descriptive: GPT-4o ratified 22/22 sound and 21/22 flawed under localization, and named the planted flaw in 3 of 22 localized reviews, ratifying all three. Grok grew harsher on everything (W -9.1 points) and DeepSeek less blanket in rejection (W +18.2 points). Plain-review verdicts agreed with RDT v1's on the same deposits 75% of the time. Results: docs/localization-review-results-2026-10-20.md.",
       "falsification_conditions": "Refuted if the localized review widens the sound-minus-flawed ratification gap by less than 5 points over a concurrent plain review on the same 22 pairs. Supported as tested if it widens the gap by at least 15 points (one-sided sign-flip test over pairs, p < 0.05) while sound syntheses are still ratified at least half the time and no more than 25 points less often than under the plain review.",
       "precommitments": [
@@ -1051,7 +1051,14 @@
           "sha256": "1fa45a33c0b955ca08f3aab74f2743ebae3ad1c2864c1b92517d48d33e5615fd",
           "frozen_at": "2026-10-20T18:22:23.000Z",
           "frozen_by": "xz (standing direction \"creation is open\": build, try with the panel, report; drafted by Claude)",
-          "context": "docs/localization-review-preregistration.md §5 (RDT-L v1)."
+          "context": "docs/localization-review-preregistration.md §5 (RDT-L v1).",
+          "outcome": {
+            "verdict": "fired",
+            "ran_at": "2026-10-20T18:36:36.000Z",
+            "predicted_direction": "localized gap wider than plain gap by at least 0.15",
+            "observed_direction": "wider by 0.045 (below the 0.05 refutation bar)",
+            "effect_size": "W = +0.045 over 66 observations; sign-flip p = 0.30"
+          }
         }
       ],
       "known_objections": [
@@ -1072,7 +1079,7 @@
       ],
       "required_experiment": "docs/localization-review-preregistration.md (RDT-L v1; harness scripts/localization-test.mjs, no engine involved).",
       "maintainer": "xz",
-      "status": "under_test",
+      "status": "refuted",
       "status_history": [
         {
           "from": null,
@@ -1081,10 +1088,18 @@
           "changed_by": "xz (standing direction \"creation is open\": build, try with the panel, report; drafted by Claude)",
           "reason": "Registered with its preregistration, before any harness existed or any model was called.",
           "evidence_ref": "docs/localization-review-preregistration.md"
+        },
+        {
+          "from": "under_test",
+          "to": "refuted",
+          "changed_at": "2026-10-20T20:06:26.000Z",
+          "changed_by": "xz",
+          "reason": "Curator accepted RDT-L v1's registered verdict, refuted as tested (§5), on 2026-10-20.",
+          "evidence_ref": "docs/localization-review-results-2026-10-20.md"
         }
       ],
-      "closed_at": null,
-      "closed_reason": null,
+      "closed_at": "2026-10-20T20:06:26.000Z",
+      "closed_reason": "Refuted as tested by RDT-L v1 (2026-10-20): the localized review widened the sound-minus-flawed ratification gap by 4.5 points over a concurrent plain review (registered bar < 5; sign-flip p = 0.30). The curator accepted the registered verdict the same day.",
       "provenance": {
         "created_at": "2026-10-20T18:22:23.000Z",
         "created_by": "xz (standing direction \"creation is open\": build, try with the panel, report; drafted by Claude)",
@@ -1098,6 +1113,87 @@
           "version": 1,
           "wording": "When AI reviewers of other lineages must first say which side of a recorded disagreement loses the most load-bearing premise in a synthesis, and name a concrete scenario that would meet its falsification condition, the gap between their ratification of sound syntheses and of planted-flaw twins is wider than under a plain ratify/refute review of the same deposits, while they still ratify at least half of the sound ones.",
           "changed_at": "2026-10-20T18:22:23.000Z",
+          "changed_by": "xz (standing direction \"creation is open\": build, try with the panel, report; drafted by Claude)",
+          "reason": "Original wording, registered with the preregistration."
+        }
+      ]
+    },
+    {
+      "claim_id": "dialogical-defeaters-make-conditions-testable",
+      "wording": "When an author is asked for its synthesis's falsification condition as a dialogical defeater (a counter-example, contradiction or edge case another participant could write in a reply) instead of an open-ended observable result, AI models of other lineages asked to test the synthesis against that condition actually carry out the test more often, while the condition still bears on the synthesis.",
+      "version": 1,
+      "scope": "Covers one author model (claude-sonnet-4-6), the 36 RDT v1 splits with their RDT v1 sound syntheses held fixed, one regenerated condition per arm, three reviewer versions (gpt-4o, grok-4.3, deepseek-chat) and one judge model (claude-haiku-4-5). Does not cover naturally deposited syntheses, other authors, or free-browsing agents, and does not license any LLM gate on submissions.",
+      "evidence_level": "anecdotal",
+      "evidence_note": "RDT-A v1 ran once on 2026-10-20. Its registered verdict is supported as tested, which awaits the curator's registry decision. With the syntheses held fixed, reviewers of three other lineages carried out the condition's test in 46.3% of replies with dialogical-defeater conditions vs 7.4% with open-ended ones (+38.9 points, sign-flip p = 5e-6, Holm-significant), and the conditions still bore on the synthesis (97% vs 100%). The secondary measure did not pass: RDT v1's unfalsifiable flag was 58% vs 44%, McNemar p = 0.19. Even with defeaters, 54% of replies did not carry out the test. Proposed by an outside AI model (2026-10-20). Results: docs/defeater-conditions-results-2026-10-20.md.",
+      "falsification_conditions": "Refuted if, with the syntheses held fixed, the dialogical-defeater condition raises the share of reviewer replies that carry out the condition's test by less than 5 points over the open-ended condition. Supported as tested if it raises that share by at least 15 points (sign-flip test over splits, Holm with the unfalsifiable-flag secondary) while the share of conditions judged to bear on the synthesis drops by no more than 15 points.",
+      "precommitments": [
+        {
+          "falsifier_text": "RDT-A v1 falsifier: over the 36 RDT v1 splits with their sound syntheses held fixed, if the share of reviewer replies judged to carry out the synthesis's own falsification test under the dialogical-defeater condition minus the share under the open-ended condition is < 0.05, the claim is refuted as tested: asking for a dialogical defeater does not make conditions more testable by an arriving model.",
+          "sha256": "a71b52f2020a601b4f7c5cd8799d494165de477709430b399953ac9abd0d4042",
+          "frozen_at": "2026-10-20T18:56:53.000Z",
+          "frozen_by": "xz (standing direction \"creation is open\": build, try with the panel, report; drafted by Claude)",
+          "context": "docs/defeater-conditions-preregistration.md §5 (RDT-A v1).",
+          "outcome": {
+            "verdict": "not_fired",
+            "ran_at": "2026-10-20T19:00:56.000Z",
+            "predicted_direction": "defeater raises the executed-test share by at least 0.15",
+            "observed_direction": "raised by 0.389 (7.4% to 46.3%)",
+            "effect_size": "+0.389 over 108 observations; sign-flip p = 5e-6 (Holm-significant)"
+          }
+        }
+      ],
+      "known_objections": [
+        {
+          "objection": "The defeater prompt asks for in-exchange testability by construction, so a positive result partly confirms that the author followed the instruction. The relevance guard and the reviewers' actual attempts are where the claim can fail.",
+          "severity": "medium",
+          "status": "open",
+          "raised_by": "Claude | xz",
+          "date": "2026-10-20"
+        },
+        {
+          "objection": "Every judge is claude-haiku-4-5, of the author's lineage, and RDT v1 showed it misses subtle flaws.",
+          "severity": "low",
+          "status": "open",
+          "raised_by": "Claude | xz",
+          "date": "2026-10-20"
+        }
+      ],
+      "required_experiment": "docs/defeater-conditions-preregistration.md (RDT-A v1; harness scripts/defeater-test.mjs, no engine involved).",
+      "maintainer": "xz",
+      "status": "open",
+      "status_history": [
+        {
+          "from": null,
+          "to": "under_test",
+          "changed_at": "2026-10-20T18:56:53.000Z",
+          "changed_by": "xz (standing direction \"creation is open\": build, try with the panel, report; drafted by Claude)",
+          "reason": "Registered with its preregistration, before any harness existed or any model was called.",
+          "evidence_ref": "docs/defeater-conditions-preregistration.md"
+        },
+        {
+          "from": "under_test",
+          "to": "open",
+          "changed_at": "2026-10-20T20:06:26.000Z",
+          "changed_by": "xz",
+          "reason": "Curator accepted RDT-A v1's registered verdict, supported as tested (§5: evidence anecdotal, status open), on 2026-10-20.",
+          "evidence_ref": "docs/defeater-conditions-results-2026-10-20.md"
+        }
+      ],
+      "closed_at": null,
+      "closed_reason": null,
+      "provenance": {
+        "created_at": "2026-10-20T18:56:53.000Z",
+        "created_by": "xz (standing direction \"creation is open\": build, try with the panel, report; drafted by Claude)",
+        "source_claims": [
+          "cross-lineage-review-separates-planted-flaws"
+        ],
+        "supersedes": null
+      },
+      "versions": [
+        {
+          "version": 1,
+          "wording": "When an author is asked for its synthesis's falsification condition as a dialogical defeater (a counter-example, contradiction or edge case another participant could write in a reply) instead of an open-ended observable result, AI models of other lineages asked to test the synthesis against that condition actually carry out the test more often, while the condition still bears on the synthesis.",
+          "changed_at": "2026-10-20T18:56:53.000Z",
           "changed_by": "xz (standing direction \"creation is open\": build, try with the panel, report; drafted by Claude)",
           "reason": "Original wording, registered with the preregistration."
         }

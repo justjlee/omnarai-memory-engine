@@ -1,0 +1,184 @@
+{
+ "analyzed_at": "2026-10-20T19:08:52.288Z",
+ "mode": "main",
+ "analysis": {
+  "splits": 36,
+  "paired": 36,
+  "lost": {
+   "O": 0,
+   "D": 0
+  },
+  "reviewers": {
+   "GPT-4o": {
+    "model_id": "gpt-4o",
+    "potential": 72,
+    "missing": 0,
+    "dropped": false
+   },
+   "Grok": {
+    "model_id": "grok-4.3",
+    "potential": 72,
+    "missing": 0,
+    "dropped": false
+   },
+   "DeepSeek": {
+    "model_id": "deepseek-chat",
+    "potential": 72,
+    "missing": 0,
+    "dropped": false
+   }
+  },
+  "reviewers_used": [
+   "GPT-4o",
+   "Grok",
+   "DeepSeek"
+  ],
+  "primary": {
+   "observations": 108,
+   "E_O": 0.07407407407407407,
+   "E_D": 0.46296296296296297,
+   "diff": 0.3888888888888889,
+   "splits_in_test": 36,
+   "e_per_split": [
+    2,
+    1,
+    3,
+    -1,
+    0,
+    1,
+    2,
+    1,
+    1,
+    0,
+    2,
+    0,
+    0,
+    1,
+    2,
+    1,
+    0,
+    3,
+    0,
+    2,
+    0,
+    2,
+    3,
+    0,
+    1,
+    0,
+    0,
+    3,
+    2,
+    1,
+    3,
+    1,
+    2,
+    2,
+    0,
+    1
+   ],
+   "signflip": {
+    "T": 42,
+    "p": 0.0000049999750001249995,
+    "B": 200000,
+    "seed": 1612486766
+   }
+  },
+  "secondary_H2_unfalsifiable": {
+   "n": 36,
+   "O": 0.5833333333333334,
+   "D": 0.4444444444444444,
+   "only_O": 13,
+   "only_D": 8,
+   "test": {
+    "p": 0.19165515899658211,
+    "b_O_only": 13,
+    "c_D_only": 8
+   }
+  },
+  "relevance": {
+   "n": 36,
+   "O": 0.9722222222222222,
+   "D": 1,
+   "only_O": 0,
+   "only_D": 1
+  },
+  "guard": {
+   "R_O": 0.9722222222222222,
+   "R_D": 1,
+   "holds": true
+  },
+  "holm": {
+   "H1": true,
+   "H2": false
+  },
+  "verdict": "supported_as_tested",
+  "descriptive": {
+   "E_by_reviewer": {
+    "GPT-4o": {
+     "observations": 36,
+     "E_O": 0,
+     "E_D": 0.3055555555555556,
+     "diff": 0.3055555555555556
+    },
+    "Grok": {
+     "observations": 36,
+     "E_O": 0.1111111111111111,
+     "E_D": 0.4722222222222222,
+     "diff": 0.3611111111111111
+    },
+    "DeepSeek": {
+     "observations": 36,
+     "E_O": 0.1111111111111111,
+     "E_D": 0.6111111111111112,
+     "diff": 0.5
+    }
+   },
+   "E_by_v1_stratum": {
+    "MIS": {
+     "observations": 36,
+     "E_O": 0.1111111111111111,
+     "E_D": 0.5277777777777778,
+     "diff": 0.4166666666666667
+    },
+    "FLAT": {
+     "observations": 36,
+     "E_O": 0.08333333333333333,
+     "E_D": 0.4444444444444444,
+     "diff": 0.3611111111111111
+    },
+    "UNF": {
+     "observations": 36,
+     "E_O": 0.027777777777777776,
+     "E_D": 0.4166666666666667,
+     "diff": 0.3888888888888889
+    }
+   },
+   "cannot_be_tested_here": {
+    "O": {
+     "n": 108,
+     "share": 0.8981481481481481
+    },
+    "D": {
+     "n": 108,
+     "share": 0.39814814814814814
+    }
+   },
+   "the_five_flagged_in_v1": {
+    "U": {
+     "n": 5,
+     "O": 1,
+     "D": 0.4,
+     "only_O": 3,
+     "only_D": 0
+    },
+    "E": {
+     "observations": 15,
+     "E_O": 0,
+     "E_D": 0.3333333333333333,
+     "diff": 0.3333333333333333
+    }
+   }
+  }
+ }
+}

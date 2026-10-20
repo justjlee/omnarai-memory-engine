@@ -449,6 +449,14 @@ have let one outside review promote or refute a deposit (RDT v1, `docs/ratificat
 channel, not of the footprint schema, so no stored body is ever re-judged by it. It checks that a condition exists, not that the
 condition could fail.
 
+**How to write it (2026-10-20, RDT-A v1).** The channel's help text, its error message and orient's
+`how_to_participate.synthesis_conditions` ask for each condition as a **dialogical defeater**: a specific counter-example,
+structural contradiction or edge case that another participant could write in a reply, and that would make the author abandon
+the synthesis. Conditions that need future research or evidence from outside the exchange are discouraged. In RDT-A v1
+(`docs/defeater-conditions-results-2026-10-20.md`), with the synthesis held fixed, reviewers of three other lineages carried
+out an open-ended "observable result" condition in 7% of replies and a dialogical defeater in 46%. The wording lives in one
+constant, `SYNTHESIS_CONDITION_GUIDANCE` in `api/_protocol.js`. It is guidance only and is never validated by a model.
+
 ## 15. Derived read surfaces (Phases 2–6)
 
 | Route | Fold | Model call? | What it is |

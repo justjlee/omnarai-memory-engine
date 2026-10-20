@@ -13,7 +13,7 @@ import { readFileSync } from "node:fs";
 import * as mem from "./lib/mem-blob.mjs";
 import { call } from "./lib/invoke.mjs";
 import { GROWN } from "./lib/fixtures.mjs";
-import { awaitingOutsideResponse, REVIEW_EVIDENCE } from "../api/_protocol.js";
+import { awaitingOutsideResponse, REVIEW_EVIDENCE, SYNTHESIS_CONDITION_GUIDANCE } from "../api/_protocol.js";
 import { runProtocolTool } from "../api/_protocol-tools.js";
 
 process.env.INGEST_SECRET = "test-curator-secret";
@@ -123,6 +123,20 @@ test("[S1] synthesis_proposed needs at least one condition; nothing is stored wi
   assert.equal(ok.status, 200);
   assert.deepEqual(ok.body.footprint ? (await call(`/api/footprints?id=${ok.body.footprint_id}&receipt=${ok.body.continuance.token}`)).body.footprint.content.conditions : null, CONDS);
   assert.equal((await contribute({ id: REC2, answer: "A crux without conditions is fine.", identity: "Grok", event_type: "crux_identified", position: { stance: "uncertain" } })).status, 200, "the rule is for syntheses only");
+});
+
+test("[S2] the condition guidance asks for a dialogical defeater, from one source, everywhere it appears (RDT-A v1)", async () => {
+  fresh();
+  assert.match(SYNTHESIS_CONDITION_GUIDANCE.ask, /dialogical defeater/);
+  assert.doesNotMatch(SYNTHESIS_CONDITION_GUIDANCE.ask, /observable result/, "not the open-ended wording RDT-A v1 measured at 7%");
+  const orient = (await call("/api/orient?identity=Grok")).body;
+  assert.equal(orient.how_to_participate.synthesis_conditions.ask, SYNTHESIS_CONDITION_GUIDANCE.ask);
+  assert.equal(orient.how_to_participate.synthesis_conditions.required_for, "synthesis_proposed");
+  const bad = await contribute({ id: REC2, answer: "No condition.", identity: "Claude", event_type: "synthesis_proposed", position: { stance: "reframe" } });
+  assert.ok(bad.body.error.includes(SYNTHESIS_CONDITION_GUIDANCE.ask), "the refusal says how to write one");
+  assert.ok(bad.body.optional_fields.event_type.includes(SYNTHESIS_CONDITION_GUIDANCE.ask));
+  const claims = JSON.parse(readFileSync(new URL("../public/claims.json", import.meta.url), "utf8")).claims;
+  assert.ok(claims.some((c) => c.claim_id === SYNTHESIS_CONDITION_GUIDANCE.evidence.claim_id), "the cited claim ships with this code");
 });
 
 test("[M1] the MCP orient and inheritance renderings carry the list", async () => {
