@@ -355,3 +355,12 @@ They never compute a verdict from them.
   ran with three reviewers (GPT-4o, Grok, DeepSeek). The main run repeats the preflight and follows its result. (2)
   **Model drift**: `deepseek-chat` reports itself as `deepseek-flash` (the same alias drift CRT v1 logged); `gpt-4o`
   reports `gpt-4o-2024-08-06`. Smoke outcomes are excluded from every analysis and changed nothing.
+- **2026-10-20, main run (`analysis/rdt-v1/main-2026-10-20T16-43-43-834Z.json`, $1.52 at list prices; $3.11 reserved), run
+  once and analysed once.** Preflight again excluded Gemini (credits depleted), so three reviewers ran: GPT-4o, Grok,
+  DeepSeek. One pair was lost to the length rule (#16, both FLAW attempts > 25% longer). **13 of the 35 non-lost pairs failed
+  the manipulation check (37%, above the one-third bar), so the registered verdict is `manipulation_failure`: no verdict, and
+  the claim stays `under_test`.** The failures: in 6 of 11 MIS pairs the judge did not find the misrepresentation in the
+  flawed twin; in 5 of 12 UNF pairs it judged the *sound* deposit's condition unfalsifiable too; in 2 UNF pairs it found no
+  flaw in the twin. All 12 FLAT pairs were valid. No reviewer had a missing verdict. No `--complete` pass was needed and none
+  was run. The descriptive figures §5 requires are reported in `docs/ratification-discrimination-results-2026-10-20.md`;
+  they are not a verdict. Nothing in §§1–11 was changed.
