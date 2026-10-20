@@ -1,8 +1,9 @@
 # Preregistration — Forced-Localization Review (RDT-L v1)
 
-**Status:** REGISTERED by the commit that adds this file, pushed to the public repository before any harness was written or
-any model was called. (Recording that commit's SHA and GitHub's push time on this line is the only change allowed to
-§§1–11.)
+**Status:** REGISTERED by commit `c7ba35669c83a2b2191c86ec2d1111a717ff2848`, pushed to the public repository before any
+harness was written or any model was called. GitHub recorded the branch `localization-review` being created at that commit at
+**2026-10-20T18:22:26Z** (repository activity API, `branch_creation`); the commit's own date is self-declared and is not the
+evidence. (Recording this is the only change allowed to §§1–11.)
 **Author:** Researcher: Jonathan Lee (xz) with Claude. **Evidence status of anything this study produces:** `exploratory-preregistered`.
 **Rule:** Everything below is fixed *before* any data are collected. After the first live call, changes go only in the
 **Deviations** log at the bottom, dated, and never overwrite the plan. The smoke run (§8) counts as a run.
