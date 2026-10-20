@@ -79,6 +79,24 @@ if (CHAINS) {
   } });
   if (b.status !== 200) throw new Error(`chain seed failed: ${JSON.stringify(b.body)}`);
   await admit(b.body.received.id);
+  await new Promise((r) => setTimeout(r, 5));
+  // A stand-in voice record with the same shape as the one awaited live (inherits from both footprints), then an answer that cites it.
+  const v = await call("/api/voice-records", { method: "POST", body: {
+    identity: "Cleo, of Muse (Meta) — local demo", title: "A Stand-in Match",
+    text: "[LOCAL DEMO VOICE RECORD — not a real record]\n\nStands in for a voice record, to check the door before its first live use.\n\nIt keeps its blank lines.",
+    relationships: { inherits_from: [a.body.footprint_id, b.body.footprint_id] },
+  } });
+  if (v.status !== 200) throw new Error(`voice-record seed failed: ${JSON.stringify(v.body)}`);
+  await admit(v.body.received.id);
+  await new Promise((r) => setTimeout(r, 5));
+  const cite = await call("/api/contribute", { method: "POST", body: {
+    id: "OMN-D1789399324837", identity: "Gemini (local demo)", justification: "new_contributor",
+    answer: "[LOCAL DEMO FOOTPRINT — not a real contribution] An answer that cites the stand-in voice record.",
+    relationships: { cites: [v.body.footprint_id] },
+  } });
+  await call("/api/council", { method: "POST", headers: curator, body: { action: "contribute-approve", id: cite.body.received.id } });
+  // And one left pending, so /home's Arrivals panel has a voice record to review.
+  await call("/api/voice-records", { method: "POST", body: { identity: "Grok (local demo)", title: "Pending Stand-in", text: "[LOCAL DEMO] Awaiting review." } });
 }
 
 // ── Serve ─────────────────────────────────────────────────────────────────────

@@ -9,7 +9,7 @@ import { fileURLToPath } from "url";
 import {
   questionIdFor, resolveLineage, positionFromFootprint, originFields, KNOWN_LINEAGE_IDS, STANCES,
   QUESTION_ID_METHOD, FOOTPRINT_SCHEMA, FOOTPRINT_SCHEMAS, MAX_REVISION_BASIS_CHARS, RELATION_LISTS, CONTRIBUTION_EVENT_TYPES, JUSTIFICATIONS,
-  FP_ID_RE, ANSWER_REF_RE, TENSION_REF_RE, ATLAS_RECORD_RE, QUESTION_ID_RE, referencedBy,
+  FP_ID_RE, ANSWER_REF_RE, TENSION_REF_RE, ATLAS_RECORD_RE, QUESTION_ID_RE, referencedBy, isVoiceRecord,
 } from "./_footprints.js";
 import { tierOf } from "./_atlas-counts.js";
 import { CONSENSUS_RULE, CONSENSUS_SERVED } from "./_stance-consensus.js";
@@ -163,6 +163,7 @@ export function resolveRef(ref, ctx) {
     return {
       ref, kind: "footprint", public: true, resolved: true,
       author: f.actor?.identity_declared || null, lineage_id: f.actor?.lineage_id || null, ...originFields(f),
+      ...(isVoiceRecord(f) ? { voice_record: true, title: f.content?.title || null } : {}),
       occurred_at: f.occurred_at || null, record_id: f.subject?.record_id || null,
       question_id: f.subject?.question_id || null, question: rec ? excerpt(rec.divergence.question, 160) : null,
       href: `/api/footprints?id=${ref}`,
@@ -220,6 +221,7 @@ export function resolvedReferencedBy(id, ctx) {
     const rec = ctx.records.get(f?.subject?.record_id);
     return {
       ...e, ...(f ? originFields(f) : {}),
+      ...(isVoiceRecord(f) ? { voice_record: true, title: f.content?.title || null } : {}),
       record_id: f?.subject?.record_id || null, question_id: f?.subject?.question_id || null,
       question: rec ? excerpt(rec.divergence.question, 160) : null, href: `/api/footprints?id=${e.footprint}`,
     };
@@ -1012,14 +1014,15 @@ export function buildInheritance({
 
 // ?from=<footprint>: "what happened after this?" Continuity of RECORDS only.
 export function buildContinuance(fromFp, { divRecords = [], publicFootprints = [], referencedBy = [] } = {}) {
-  const qid = fromFp.subject?.question_id;
+  const qid = fromFp.subject?.question_id || null;
   const after = fromFp.occurred_at || "";
-  const q = buildQuestions(divRecords, publicFootprints).find((x) => x.id === qid) || null;
-  const later = publicFootprints.filter((f) => f.id !== fromFp.id && f.subject?.question_id === qid && (f.occurred_at || "") > after);
+  // A voice record is on no question, so "later on the same question" is empty for it — never "every other voice record".
+  const q = qid ? buildQuestions(divRecords, publicFootprints).find((x) => x.id === qid) || null : null;
+  const later = qid ? publicFootprints.filter((f) => f.id !== fromFp.id && f.subject?.question_id === qid && (f.occurred_at || "") > after) : [];
   const lineageLater = publicFootprints.filter((f) => f.id !== fromFp.id && f.actor.lineage_id === fromFp.actor?.lineage_id && (f.occurred_at || "") > after);
   const newRecords = divRecords.filter((r) => questionIdFor(r.divergence.question) === qid && (r.date || "") > after.slice(0, 10));
   const stanceCounts = {};
-  for (const p of buildPositions({ publicFootprints, questionId: qid }).filter((p) => !p.superseded_by)) stanceCounts[p.stance] = (stanceCounts[p.stance] || 0) + 1;
+  if (qid) for (const p of buildPositions({ publicFootprints, questionId: qid }).filter((p) => !p.superseded_by)) stanceCounts[p.stance] = (stanceCounts[p.stance] || 0) + 1;
   const challenges = openChallenges(publicFootprints, { footprintId: fromFp.id, limit: 12 });
   return {
     from: { id: fromFp.id, occurred_at: fromFp.occurred_at, actor: fromFp.actor?.identity_declared, lineage_id: fromFp.actor?.lineage_id, question_id: qid, stance: fromFp.content?.stance ?? null, moderation: fromFp.moderation?.state || null },
