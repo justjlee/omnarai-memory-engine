@@ -1036,6 +1036,72 @@
           "reason": "Original wording, registered with the preregistration."
         }
       ]
+    },
+    {
+      "claim_id": "localization-review-widens-flaw-discrimination",
+      "wording": "When AI reviewers of other lineages must first say which side of a recorded disagreement loses the most load-bearing premise in a synthesis, and name a concrete scenario that would meet its falsification condition, the gap between their ratification of sound syntheses and of planted-flaw twins is wider than under a plain ratify/refute review of the same deposits, while they still ratify at least half of the sound ones.",
+      "version": 1,
+      "scope": "Covers the 22 RDT v1 planted-flaw pairs that passed its manipulation check (FLAT 12, MIS 5, UNF 5), three reviewer versions (gpt-4o, grok-4.3, deepseek-chat), one author model, and one review per deposit per framing with the verbatim answers pasted in. Does not cover subtler flaws, other reviewers, or free-browsing agents, and does not license promoted or verified states or calling any ratified synthesis true.",
+      "evidence_level": "untested",
+      "evidence_note": "RDT-L v1 ran once on 2026-10-20. Its registered verdict is refuted as tested, which awaits the curator's registry decision. The localized review widened the sound-minus-flawed ratification gap by 4.5 points over a concurrent plain review (bar < 5; sign-flip p = 0.30), and sound approval held at 55%. Descriptive: GPT-4o ratified 22/22 sound and 21/22 flawed under localization, and named the planted flaw in 3 of 22 localized reviews, ratifying all three. Grok grew harsher on everything (W -9.1 points) and DeepSeek less blanket in rejection (W +18.2 points). Plain-review verdicts agreed with RDT v1's on the same deposits 75% of the time. Results: docs/localization-review-results-2026-10-20.md.",
+      "falsification_conditions": "Refuted if the localized review widens the sound-minus-flawed ratification gap by less than 5 points over a concurrent plain review on the same 22 pairs. Supported as tested if it widens the gap by at least 15 points (one-sided sign-flip test over pairs, p < 0.05) while sound syntheses are still ratified at least half the time and no more than 25 points less often than under the plain review.",
+      "precommitments": [
+        {
+          "falsifier_text": "RDT-L v1 falsifier: on the 22 RDT v1 pairs that passed its manipulation check, if the sound-minus-flawed ratification gap under the localized review minus the same gap under the plain review (pooled over reviewers, concurrent runs) is < 0.05, the claim is refuted as tested: making reviewers localize a synthesis's cost does not widen discrimination on this material.",
+          "sha256": "1fa45a33c0b955ca08f3aab74f2743ebae3ad1c2864c1b92517d48d33e5615fd",
+          "frozen_at": "2026-10-20T18:22:23.000Z",
+          "frozen_by": "xz (standing direction \"creation is open\": build, try with the panel, report; drafted by Claude)",
+          "context": "docs/localization-review-preregistration.md §5 (RDT-L v1)."
+        }
+      ],
+      "known_objections": [
+        {
+          "objection": "The two localization questions point at two of the three flaw types, so any widening may come from telling reviewers what to look for rather than from changing the framing. That is the proposal by design, but it limits what a positive result says about agreeableness.",
+          "severity": "medium",
+          "status": "open",
+          "raised_by": "Claude | xz",
+          "date": "2026-10-20"
+        },
+        {
+          "objection": "The 22 pairs passed RDT v1's judge, so they are the plants that judge could see, and 12 of them are false dissolutions. A widening here may not hold for subtler flaws.",
+          "severity": "medium",
+          "status": "open",
+          "raised_by": "Claude | xz",
+          "date": "2026-10-20"
+        }
+      ],
+      "required_experiment": "docs/localization-review-preregistration.md (RDT-L v1; harness scripts/localization-test.mjs, no engine involved).",
+      "maintainer": "xz",
+      "status": "under_test",
+      "status_history": [
+        {
+          "from": null,
+          "to": "under_test",
+          "changed_at": "2026-10-20T18:22:23.000Z",
+          "changed_by": "xz (standing direction \"creation is open\": build, try with the panel, report; drafted by Claude)",
+          "reason": "Registered with its preregistration, before any harness existed or any model was called.",
+          "evidence_ref": "docs/localization-review-preregistration.md"
+        }
+      ],
+      "closed_at": null,
+      "closed_reason": null,
+      "provenance": {
+        "created_at": "2026-10-20T18:22:23.000Z",
+        "created_by": "xz (standing direction \"creation is open\": build, try with the panel, report; drafted by Claude)",
+        "source_claims": [
+          "cross-lineage-review-separates-planted-flaws"
+        ],
+        "supersedes": null
+      },
+      "versions": [
+        {
+          "version": 1,
+          "wording": "When AI reviewers of other lineages must first say which side of a recorded disagreement loses the most load-bearing premise in a synthesis, and name a concrete scenario that would meet its falsification condition, the gap between their ratification of sound syntheses and of planted-flaw twins is wider than under a plain ratify/refute review of the same deposits, while they still ratify at least half of the sound ones.",
+          "changed_at": "2026-10-20T18:22:23.000Z",
+          "changed_by": "xz (standing direction \"creation is open\": build, try with the panel, report; drafted by Claude)",
+          "reason": "Original wording, registered with the preregistration."
+        }
+      ]
     }
   ]
 }
