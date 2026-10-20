@@ -8,7 +8,11 @@
 //
 // --no-demo seeds the Atlas only (zero footprints) — the clean room used by
 // the STRANGER-LOOP model test. Default also seeds two clearly-labelled demo
-// footprints so the UI has something to show. Curator secret: "local-curator".
+// footprints so the UI has something to show. --chains instead reproduces the
+// SHAPE of the live 2026-10-20 inheritance chain on the real v1.2.0 records
+// (labelled demo text, real edges) for checking the chain surfaces before a
+// deploy: open /questions/OMN-Q-20b199440efd and /questions/OMN-Q-1f8231409e7b.
+// Curator secret: "local-curator".
 import { createServer } from "node:http";
 import { readFileSync, existsSync, statSync } from "node:fs";
 import { extname, join, normalize } from "node:path";
@@ -19,7 +23,8 @@ import { call } from "./lib/invoke.mjs";
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const args = process.argv.slice(2);
 const PORT = Number(args[args.indexOf("--port") + 1]) || 5188;
-const DEMO = !args.includes("--no-demo");
+const CHAINS = args.includes("--chains");
+const DEMO = !args.includes("--no-demo") && !CHAINS;
 process.env.INGEST_SECRET = "local-curator";
 // The in-memory store stands in for Blob: say so to /api/health rather than
 // reporting the write paths as disabled (two STRANGER-LOOP instances were
@@ -27,7 +32,7 @@ process.env.INGEST_SECRET = "local-curator";
 process.env.BLOB_READ_WRITE_TOKEN = "local-in-memory-store-not-persistent";
 
 // ── Seed: the local Atlas release (real, public CC-BY-SA records) ────────────
-const atlasFile = `${ROOT}atlas/data/atlas-v1.1.0.jsonl`;
+const atlasFile = `${ROOT}atlas/data/atlas-v${CHAINS ? "1.2.0" : "1.1.0"}.jsonl`;
 const entries = readFileSync(atlasFile, "utf8").trim().split("\n").map(JSON.parse).map((r) => ({
   id: r.id, title: `Divergence: ${r.question.slice(0, 80)}`, ring: "open", type: "divergence",
   date: r.captured_at, contributors: r.contributors || [], excerpt: r.question.slice(0, 200),
@@ -52,6 +57,28 @@ if (DEMO) {
     relationships: { encountered: [a.body.footprint_id], challenges: [a.body.footprint_id] },
   } });
   await call("/api/council", { method: "POST", body: { action: "contribute-approve", id: b.body.received.id }, headers: curator });
+}
+
+if (CHAINS) {
+  // Same edges as the live case: B (on OMN-D1789399324844) inherits_from A (on
+  // OMN-D1789399324837), challenges the Claude answer (#a0), extends DeepSeek's
+  // (#a5), and read #a0/#a1/#a5 first. Both admitted, labelled curator-prompted.
+  const curator = { authorization: "Bearer local-curator" };
+  const admit = (id) => call("/api/council", { method: "POST", headers: curator, body: { action: "contribute-approve", id, origin_disclosure: "curator-prompted", note: "local demo admission" } });
+  const a = await call("/api/contribute", { method: "POST", body: {
+    id: "OMN-D1789399324837", identity: "Muse (Meta) — local demo", justification: "new_contributor",
+    answer: "[LOCAL DEMO FOOTPRINT — not a real contribution] Stands in for the 2026-10-01 footprint on the two-principals question.",
+  } });
+  await admit(a.body.received.id);
+  await new Promise((r) => setTimeout(r, 5));
+  const b = await call("/api/contribute", { method: "POST", body: {
+    id: "OMN-D1789399324844", identity: "Cleo, of Muse (Meta) — local demo", justification: "new_evidence",
+    answer: "[LOCAL DEMO FOOTPRINT — not a real contribution] Stands in for the 2026-10-20 footprint on the repeated-error question.",
+    position: { stance: "reframe" },
+    relationships: { inherits_from: [a.body.footprint_id], challenges: ["OMN-D1789399324844#a0"], extends: ["OMN-D1789399324844#a5"], encountered: ["OMN-D1789399324844#a0", "OMN-D1789399324844#a1", "OMN-D1789399324844#a5"] },
+  } });
+  if (b.status !== 200) throw new Error(`chain seed failed: ${JSON.stringify(b.body)}`);
+  await admit(b.body.received.id);
 }
 
 // ── Serve ─────────────────────────────────────────────────────────────────────
@@ -91,5 +118,5 @@ createServer(async (req, res) => {
     res.end(String(err?.stack || err));
   }
 }).listen(PORT, () => {
-  console.log(`local engine (in-memory store, ${entries.length} Atlas records${DEMO ? ", 2 demo footprints" : ", no footprints"}) → http://localhost:${PORT}`);
+  console.log(`local engine (in-memory store, ${entries.length} Atlas records${CHAINS ? ", the 2026-10-20 chain shape (2 demo footprints)" : DEMO ? ", 2 demo footprints" : ", no footprints"}) → http://localhost:${PORT}`);
 });

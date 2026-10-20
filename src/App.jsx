@@ -29,16 +29,20 @@ const localRingCounts = corpus.reduce((acc, e) => {
   return acc;
 }, {});
 
-// Minimal URL sync for the two canonical divergence routes — no router library,
-// just enough history/pushState to make a record bookmarkable, shareable, and
-// refresh-safe. /divergences and /divergences/:id are the only paths this app
-// treats as real URLs; every other tab stays pure client state, as before.
+// Minimal URL sync for the canonical routes — no router library, just enough
+// history/pushState to make a record or a question bookmarkable, shareable, and
+// refresh-safe. /divergences(/:id) and /questions(/:id) are the only paths this
+// app treats as real URLs; every other tab stays pure client state, as before.
 function pathToDivergenceState(pathname) {
   if (pathname === "/divergences") return { tab: "divergences", id: null };
   const m = pathname.match(/^\/divergences\/([^/]+)\/?$/);
   if (m) return { tab: "divergences", id: decodeURIComponent(m[1]) };
+  if (pathname === "/questions" || pathname === "/questions/") return { tab: "participation", qid: null };
+  const q = pathname.match(/^\/questions\/(OMN-Q-[0-9a-f]{12})\/?$/);
+  if (q) return { tab: "participation", qid: q[1] };
   return null;
 }
+const isRoutedPath = (p) => p.startsWith("/divergences") || p.startsWith("/questions");
 
 export default function OmnaraiMemoryEngine() {
   const [activeRing, setActiveRing] = useState(null);
@@ -50,7 +54,11 @@ export default function OmnaraiMemoryEngine() {
   });
   const [divergenceId, setDivergenceId] = useState(() => {
     const s = typeof window !== "undefined" ? pathToDivergenceState(window.location.pathname) : null;
-    return s ? s.id : null;
+    return s ? s.id ?? null : null;
+  });
+  const [questionId, setQuestionId] = useState(() => {
+    const s = typeof window !== "undefined" ? pathToDivergenceState(window.location.pathname) : null;
+    return s ? s.qid ?? null : null;
   });
   const [sortBy, setSortBy] = useState("date-desc");
   const [musicPlaying, setMusicPlaying] = useState(false);
@@ -105,13 +113,27 @@ export default function OmnaraiMemoryEngine() {
     window.history.pushState({}, "", "/divergences");
   }, []);
 
+  // A Question (OMN-Q-…) — the page where footprints and their chains live.
+  const openQuestion = useCallback((qid) => {
+    setActiveTab("participation");
+    setQuestionId(qid);
+    window.history.pushState({}, "", `/questions/${encodeURIComponent(qid)}`);
+    scrollToTabs();
+  }, [scrollToTabs]);
+
+  const closeQuestionToList = useCallback(() => {
+    setQuestionId(null);
+    window.history.pushState({}, "", "/questions");
+  }, []);
+
   // Any other tab is pure client state (unchanged) — but if the URL currently
   // points at a divergence route, leave a clean "/" behind so it doesn't go
   // stale relative to what's on screen.
   const goToTab = useCallback((id) => {
     if (id === "divergences") { browseDivergences(); return; }
     setActiveTab(id);
-    if (window.location.pathname.startsWith("/divergences")) {
+    if (id === "participation") { setQuestionId(null); window.history.pushState({}, "", "/questions"); return; }
+    if (isRoutedPath(window.location.pathname)) {
       window.history.pushState({}, "", "/");
     }
   }, [browseDivergences]);
@@ -122,7 +144,8 @@ export default function OmnaraiMemoryEngine() {
     function onPopState() {
       const s = pathToDivergenceState(window.location.pathname);
       setActiveTab(s ? s.tab : "constellation");
-      setDivergenceId(s ? s.id : null);
+      setDivergenceId(s ? s.id ?? null : null);
+      setQuestionId(s ? s.qid ?? null : null);
     }
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
@@ -649,6 +672,7 @@ export default function OmnaraiMemoryEngine() {
             openId={divergenceId}
             onOpen={openDivergence}
             onClose={closeDivergenceToList}
+            onOpenQuestion={openQuestion}
             onDeliberate={(q) => {
               setPrefillQuery(q);
               setActiveTab("ask");
@@ -657,7 +681,7 @@ export default function OmnaraiMemoryEngine() {
         )}
 
         {/* Participation protocol: Questions, Footprints, Lineages, Inheritance */}
-        {activeTab === "participation" && <ParticipationTab />}
+        {activeTab === "participation" && <ParticipationTab questionId={questionId} onOpenQuestion={openQuestion} onCloseQuestion={closeQuestionToList} />}
 
         {/* SI Onboarding Tab */}
         {activeTab === "si" && (

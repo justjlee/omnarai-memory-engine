@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { T } from "../theme";
+import { ChainEdges, BuiltOnSince } from "./ParticipationTab";
 
 // Canonical, provenance-rich divergence record page. Reached either via the
 // Atlas hero's "Read this divergence" CTA, a list click in DivergencesTab, or
@@ -43,7 +44,7 @@ function renderBody(text) {
   });
 }
 
-function AnswerCard({ answer }) {
+function AnswerCard({ answer, refs, currentQ, onOpenQuestion }) {
   const [open, setOpen] = useState(false);
   const c = colorFor(answer.lab);
   const preview = (answer.text || "").replace(/\s+/g, " ").slice(0, 150);
@@ -72,6 +73,11 @@ function AnswerCard({ answer }) {
       {open && (
         <div style={{ padding: "0 16px 14px", fontSize: 12.5, lineHeight: 1.7, color: "rgba(232,224,208,0.72)", fontFamily: "'IBM Plex Sans',sans-serif" }}>
           {renderBody(answer.text)}
+        </div>
+      )}
+      {refs && refs.length > 0 && (
+        <div style={{ padding: "0 16px 12px" }}>
+          <BuiltOnSince refs={refs} currentQ={currentQ} onOpenQuestion={onOpenQuestion} />
         </div>
       )}
     </div>
@@ -129,7 +135,7 @@ const SECTIONS = [
   { id: "provenance", label: "Provenance" },
 ];
 
-export default function DivergenceRecord({ record, loading, onBack, onOpenRecord, onDeliberate }) {
+export default function DivergenceRecord({ record, loading, onBack, onOpenRecord, onDeliberate, onOpenQuestion }) {
   const [section, setSection] = useState("overview");
   const originalMeta = useRef(null);
 
@@ -330,7 +336,10 @@ export default function DivergenceRecord({ record, loading, onBack, onOpenRecord
               <div style={{ ...mono, fontSize: 9, color: "rgba(200,192,176,0.4)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 10 }}>
                 The verbatim answers ({(record.answers || []).length}) — click to read
               </div>
-              {(record.answers || []).map((a, i) => <AnswerCard key={i} answer={a} />)}
+              {(record.answers || []).map((a, i) => (
+                <AnswerCard key={i} answer={a} currentQ={record.question_id} onOpenQuestion={onOpenQuestion}
+                  refs={(record.answer_referenced_by?.[`${record.id}#a${i}`] || []).filter((e) => e.relation !== "encountered")} />
+              ))}
               {(record.contributions || []).length > 0 && (
                 <div style={{ marginTop: 18 }}>
                   <div style={{ ...mono, fontSize: 9, color: "rgba(200,192,176,0.4)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 10 }}>
@@ -344,7 +353,19 @@ export default function DivergenceRecord({ record, loading, onBack, onOpenRecord
                           {c.origin_disclosure.code} — {c.origin_disclosure.text}
                         </div>
                       )}
-                      <div style={{ fontSize: 12, lineHeight: 1.6, color: "rgba(232,224,208,0.7)", fontWeight: 300 }}>{c.answer}</div>
+                      <div style={{ fontSize: 12, lineHeight: 1.6, color: "rgba(232,224,208,0.7)", fontWeight: 300, whiteSpace: "pre-wrap" }}>{c.answer}</div>
+                      <ChainEdges edges={c.edges} currentQ={c.question_id || record.question_id} onOpenQuestion={onOpenQuestion} />
+                      <BuiltOnSince refs={c.referenced_by} currentQ={c.question_id || record.question_id} onOpenQuestion={onOpenQuestion} />
+                      {c.footprint_id && (
+                        <div style={{ ...mono, fontSize: 9, color: "rgba(200,192,176,0.4)", marginTop: 8, display: "flex", gap: 12, flexWrap: "wrap" }}>
+                          <span>footprint {c.footprint_id}</span>
+                          {record.question_id && (
+                            <a href={`/questions/${record.question_id}`} onClick={(e) => { if (onOpenQuestion) { e.preventDefault(); onOpenQuestion(record.question_id); } }} style={{ color: T.green, textDecoration: "none" }}>
+                              the whole chain on this question's page →
+                            </a>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

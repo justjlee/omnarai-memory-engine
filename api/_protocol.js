@@ -9,6 +9,7 @@ import { fileURLToPath } from "url";
 import {
   questionIdFor, resolveLineage, positionFromFootprint, originFields, KNOWN_LINEAGE_IDS, STANCES,
   QUESTION_ID_METHOD, FOOTPRINT_SCHEMA, FOOTPRINT_SCHEMAS, MAX_REVISION_BASIS_CHARS, RELATION_LISTS, CONTRIBUTION_EVENT_TYPES, JUSTIFICATIONS,
+  FP_ID_RE, ANSWER_REF_RE, TENSION_REF_RE, ATLAS_RECORD_RE, QUESTION_ID_RE, referencedBy,
 } from "./_footprints.js";
 import { tierOf } from "./_atlas-counts.js";
 import { CONSENSUS_RULE, CONSENSUS_SERVED } from "./_stance-consensus.js";
@@ -117,9 +118,119 @@ export function buildQuestions(divRecords = [], publicFootprints = [], { now = D
   return out.sort((a, b) => (b.last_activity_at || "").localeCompare(a.last_activity_at || "") || a.id.localeCompare(b.id));
 }
 
+// ── Relationship chains (2026-10-20) ─────────────────────────────────────────
+// A footprint's declared edges, resolved to WHO and WHAT each points at — so a
+// reader sees "inherits from Muse (Meta)'s footprint on <question>" rather than a
+// bare id — and the inverse edges (referenced_by: who built on this since), each
+// carrying the question it lives on. Resolved once, here, so the web page and the
+// machine read the same JSON and nothing is worked out in the browser.
+//
+// PUBLIC data only. An edge to a footprint that is not admitted (or does not
+// exist) resolves to {kind:"footprint", public:false} with no author, question
+// or text: a pending or rejected footprint is never disclosed by being pointed
+// at. Nothing here counts: edges are listed, never tallied — the tallies are
+// the manifest's (domains.footprints.edges_to_prior_work, inheritance_reuse).
+export const BUILDING_RELATIONS = ["inherits_from", "supersedes", "extends", "challenges", "responds_to", "cites"];
+export const EDGE_RELATIONS = [...BUILDING_RELATIONS, "encountered"];
+
+export function chainContext(divRecords = [], publicFootprints = [], { claimsRegistry } = {}) {
+  const reg = claimsRegistry === undefined ? loadClaimsRegistry() : claimsRegistry;
+  return {
+    records: new Map((divRecords || []).map((r) => [r.id, r])),
+    footprints: new Map((publicFootprints || []).filter((f) => f && !f.tombstone).map((f) => [f.id, f])),
+    publicFootprints: (publicFootprints || []).filter((f) => f && !f.tombstone),
+    claims: new Map((reg?.claims || []).map((c) => [c.claim_id, c])),
+  };
+}
+
+const questionOfRecord = (rec) => (rec
+  ? { question_id: questionIdFor(rec.divergence.question), question: excerpt(rec.divergence.question, 160) }
+  : { question_id: null, question: null });
+
+// One target id → what it is and whose it is. `resolved:false` = well-formed but
+// not found in the data this read had; never guessed.
+export function resolveRef(ref, ctx) {
+  if (FP_ID_RE.test(ref)) {
+    const f = ctx.footprints.get(ref);
+    if (!f) {
+      return {
+        ref, kind: "footprint", public: false, resolved: false, author: null,
+        note: "Not a public footprint (pending, rejected, retracted, or unknown). Anyone holding the id can read its state, and only its state, at status_href.",
+        status_href: `/api/footprints/status?id=${ref}`,
+      };
+    }
+    const rec = ctx.records.get(f.subject?.record_id);
+    return {
+      ref, kind: "footprint", public: true, resolved: true,
+      author: f.actor?.identity_declared || null, lineage_id: f.actor?.lineage_id || null, ...originFields(f),
+      occurred_at: f.occurred_at || null, record_id: f.subject?.record_id || null,
+      question_id: f.subject?.question_id || null, question: rec ? excerpt(rec.divergence.question, 160) : null,
+      href: `/api/footprints?id=${ref}`,
+    };
+  }
+  let m = ANSWER_REF_RE.exec(ref);
+  if (m) {
+    const rec = ctx.records.get(m[1]);
+    const a = rec?.divergence.answers?.[Number(m[2])];
+    if (!a) return { ref, kind: "answer", public: true, resolved: false, author: null, record_id: m[1], href: `/api/divergences?id=${m[1]}` };
+    return {
+      ref, kind: "answer", public: true, resolved: true,
+      author: a.model || null, model_id: a.model_id || null, lineage_id: resolveLineage(a.model).lineage_id,
+      record_id: rec.id, record_date: rec.date || null, ...questionOfRecord(rec), href: `/api/divergences?id=${rec.id}`,
+    };
+  }
+  m = TENSION_REF_RE.exec(ref);
+  if (m) {
+    const rec = ctx.records.get(m[1]);
+    const t = rec?.divergence.tensions?.[Number(m[2])];
+    if (!t) return { ref, kind: "tension", public: true, resolved: false, record_id: m[1], href: `/api/divergences?id=${m[1]}` };
+    return { ref, kind: "tension", public: true, resolved: true, topic: t.topic || t.axis || null, voice_a: t.voice_a || t.a || null, voice_b: t.voice_b || t.b || null, record_id: rec.id, ...questionOfRecord(rec), href: `/api/divergences?id=${rec.id}` };
+  }
+  if (ATLAS_RECORD_RE.test(ref)) {
+    const rec = ctx.records.get(ref);
+    return { ref, kind: "record", public: true, resolved: Boolean(rec), record_id: ref, ...questionOfRecord(rec), href: `/api/divergences?id=${ref}` };
+  }
+  if (QUESTION_ID_RE.test(ref)) {
+    let rec = null;
+    for (const r of ctx.records.values()) if (questionIdFor(r.divergence.question) === ref) { rec = r; break; }
+    return { ref, kind: "question", public: true, resolved: Boolean(rec), question_id: ref, question: rec ? excerpt(rec.divergence.question, 160) : null, href: `/api/questions?id=${ref}` };
+  }
+  const c = ctx.claims.get(ref);
+  if (c) return { ref, kind: "claim", public: true, resolved: true, wording: excerpt(c.wording, 200), status: c.status || null, evidence_level: c.evidence_level || null, href: "/claims.json" };
+  return { ref, kind: "other", public: true, resolved: false };
+}
+
+// The edges a footprint DECLARED, in a fixed order (strongest building edge
+// first, `encountered` — "read before writing" — last).
+export function resolveEdges(fp, ctx) {
+  const rel = fp?.relationships || {};
+  const out = [];
+  for (const k of EDGE_RELATIONS) {
+    const targets = k === "supersedes" ? (rel.supersedes ? [rel.supersedes] : []) : (rel[k] || []);
+    for (const t of targets) out.push({ relation: k, ...resolveRef(t, ctx) });
+  }
+  return out;
+}
+
+// Inverse edges for any id — a footprint OR a primary answer (<record>#a<n>) —
+// each with the question the referencing footprint lives on.
+export function resolvedReferencedBy(id, ctx) {
+  return referencedBy(id, ctx.publicFootprints).map((e) => {
+    const f = ctx.footprints.get(e.footprint);
+    const rec = ctx.records.get(f?.subject?.record_id);
+    return {
+      ...e, ...(f ? originFields(f) : {}),
+      record_id: f?.subject?.record_id || null, question_id: f?.subject?.question_id || null,
+      question: rec ? excerpt(rec.divergence.question, 160) : null, href: `/api/footprints?id=${e.footprint}`,
+    };
+  });
+}
+
 // Full detail for one Question: every verbatim voice (never summarized), the
-// record tensions, and the admitted footprints on it.
+// record tensions, and the admitted footprints on it — each footprint with its
+// resolved edges and referenced_by, each voice with who has built on it since.
 export function questionDetail(q, divRecords, publicFootprints) {
+  const ctx = chainContext(divRecords, publicFootprints);
   const recs = divRecords.filter((r) => q.records.some((x) => x.id === r.id));
   const voices = [];
   const tensions = [];
@@ -127,13 +238,18 @@ export function questionDetail(q, divRecords, publicFootprints) {
     (r.divergence.answers || []).forEach((a, i) => voices.push({
       answer_id: answerId(r.id, i), record_id: r.id, date: r.date || null,
       model: a.model, model_id: a.model_id || null, lineage_id: resolveLineage(a.model).lineage_id, text: a.text || "",
+      referenced_by: resolvedReferencedBy(answerId(r.id, i), ctx),
     }));
     (r.divergence.tensions || []).forEach((t, i) => tensions.push({ tension_ref: `${r.id}#t${i}`, record_id: r.id, ...t }));
   }
   const footprints = publicFootprints
     .filter((f) => f.subject?.question_id === q.id)
     .sort((a, b) => (a.occurred_at || "").localeCompare(b.occurred_at || ""))
-    .map((f) => ({ id: f.id, ...originFields(f), actor: f.actor, event_type: f.event_type, stance: f.content.stance, answer: f.content.answer, relationships: f.relationships, occurred_at: f.occurred_at, href: `/api/footprints?id=${f.id}` }));
+    .map((f) => ({
+      id: f.id, ...originFields(f), actor: f.actor, event_type: f.event_type, stance: f.content.stance, answer: f.content.answer,
+      relationships: f.relationships, edges: resolveEdges(f, ctx), referenced_by: resolvedReferencedBy(f.id, ctx),
+      occurred_at: f.occurred_at, href: `/api/footprints?id=${f.id}`,
+    }));
   return { ...q, voices, tensions, footprints };
 }
 
