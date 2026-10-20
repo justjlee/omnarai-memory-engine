@@ -183,4 +183,7 @@ the main run and run once. Every transcript is kept in `analysis/rdt-l-v1/` and 
 
 ## 12. Deviations
 
-(none yet)
+- **2026-10-20, smoke run (`analysis/rdt-l-v1/smoke-2026-10-20T18-31-01-527Z.json`, RDT v1 pair 12, $0.05 at list prices).**
+  No harness defect: all 12 reviews parsed on the first turn, every L reply carried `loses_most` and `trigger_scenario`, and
+  the NAMED judge ran on all six reviews of the twin. Model drift as in RDT v1: `deepseek-chat` reports `deepseek-flash`, and
+  `gpt-4o` reports `gpt-4o-2024-08-06`. Smoke outcomes are excluded and changed nothing.

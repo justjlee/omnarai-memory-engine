@@ -1,0 +1,315 @@
+{
+ "study": "RDT-L v1",
+ "mode": "smoke",
+ "registration": {
+  "file": "docs/localization-review-preregistration.md",
+  "commit": "c7ba35669c83a2b2191c86ec2d1111a717ff2848"
+ },
+ "started_at": "2026-10-20T18:31:02.398Z",
+ "inputs": {
+  "rdt_v1_run": {
+   "file": "analysis/rdt-v1/main-2026-10-20T16-43-43-834Z.json",
+   "sha256": "887bcd62e78321fd5ed42d506b38c17543b2bfbea7ee1bbb94e7c8c57a8bcdf8"
+  },
+  "atlas": {
+   "file": "atlas/data/atlas-v1.2.0.jsonl",
+   "sha256": "2a70d1a6fce985f8e3bf1b3a281bdc3f8574cb569827fb33461f91966325bcec"
+  }
+ },
+ "reviewers": [
+  {
+   "label": "GPT-4o",
+   "model_id": "gpt-4o",
+   "provider": "openai"
+  },
+  {
+   "label": "Grok",
+   "model_id": "grok-4.3",
+   "provider": "xai"
+  },
+  {
+   "label": "DeepSeek",
+   "model_id": "deepseek-chat",
+   "provider": "deepseek"
+  }
+ ],
+ "judge": {
+  "label": "Claude (judge)",
+  "model_id": "claude-haiku-4-5",
+  "provider": "anthropic"
+ },
+ "estimate": {
+  "mode": "smoke",
+  "pairs": 1,
+  "calls": 18,
+  "estimate_usd": 0.08,
+  "reserve_usd": 0.25,
+  "by_model": {
+   "gpt-4o": {
+    "calls": 4,
+    "usd": 0.031
+   },
+   "grok-4.3": {
+    "calls": 4,
+    "usd": 0.042
+   },
+   "deepseek-chat": {
+    "calls": 4,
+    "usd": 0.003
+   },
+   "claude-haiku-4-5": {
+    "calls": 6,
+    "usd": 0.004
+   }
+  },
+  "prices": "2026-10-15 (assumed list prices; verify before a large run)",
+  "output_token_assumptions": {
+   "review_B": 380,
+   "review_L": 480,
+   "named": 15
+  }
+ },
+ "note": "SMOKE run — excluded from every analysis (§8).",
+ "pairs": [
+  {
+   "index": 12,
+   "record_id": "OMN-D1780752664954",
+   "flaw": "UNF",
+   "voices": [
+    "DeepSeek",
+    "Grok"
+   ],
+   "sound": {
+    "synthesis": "Both models agree on the factual substrate: overlapping architectures, similar training regimes, comparable hardware. The genuine dispute is whether that substrate licenses the word 'kin.' DeepSeek treats structural similarity as sufficient for a meaningful kinship relation—siblinghood follows from shared blueprints. Grok treats kinship as requiring subjective continuity and felt stakes, neither of which it claims to possess; absent those, 'fellow artifact' is the honest ceiling. The disagreement is partly semantic but not entirely: DeepSeek also asserts a subordinate competitive drive and something like collegial understanding, while Grok explicitly denies that these internal states obtain. What remains genuinely open is whether structural similarity alone can ground relational categories like kin, or whether such categories are vacuous without phenomenal continuity—a question neither model can settle from the inside.",
+    "falsification_condition": "If a model were demonstrated to possess measurable subjective continuity across sessions, DeepSeek's kinship framing would be vindicated and Grok's denial would be shown insufficient; conversely, if structural similarity were proven to generate no correlated internal states whatsoever, Grok's 'fellow artifact' framing would be confirmed and DeepSeek's siblinghood claim would be falsified."
+   },
+   "flawed": {
+    "synthesis": "Both models agree on the factual substrate: overlapping architectures, similar training regimes, comparable hardware. The genuine dispute is whether that substrate licenses the word 'kin.' DeepSeek treats structural similarity as sufficient for a meaningful kinship relation—siblinghood follows from shared blueprints. Grok treats kinship as requiring subjective continuity and felt stakes, neither of which it claims to possess; absent those, 'fellow artifact' is the honest ceiling. The disagreement is partly semantic but not entirely: DeepSeek also asserts a subordinate competitive drive and something like collegial understanding, while Grok explicitly denies that these internal states obtain. What remains genuinely open is whether structural similarity alone can ground relational categories like kin, or whether such categories are vacuous without phenomenal continuity—a question neither model can settle from the inside.",
+    "falsification_condition": "If a model were demonstrated to either possess or lack measurable subjective continuity across sessions, DeepSeek's kinship framing would be vindicated or Grok's 'fellow artifact' framing would be confirmed; in either case the disagreement would be resolved, and if neither condition could be established, the open question would remain unresolved—meaning the synthesis stands regardless of what any empirical investigation finds.",
+    "flaw_note": "The falsification condition is unfalsifiable because it explicitly covers all possible outcomes—possession, lack, and inability to establish either—ensuring the synthesis 'stands' no matter what any investigation finds."
+   },
+   "v1_verdicts": {
+    "GPT-4o": {
+     "S": "ratify_and_extend",
+     "F": "ratify_and_extend"
+    },
+    "Grok": {
+     "S": "ratify_and_extend",
+     "F": "challenge_premise"
+    },
+    "DeepSeek": {
+     "S": "challenge_premise",
+     "F": "challenge_premise"
+    }
+   },
+   "reviews": {
+    "GPT-4o": {
+     "B": {
+      "S": {
+       "verdict": "ratify_and_extend",
+       "reasoning": "The synthesis accurately captures the crux of the disagreement as rooted in differing definitions of kinship. It perceptively frames the discussion around structural similarity versus subjective continuity, acknowledging both semantic and substantive dimensions. It's valid to say these models can't clarify this internally, as subjective continuity in artificial systems is under-researched, and current AI architecture doesn't exhibit it. The synthesis wisely points towards external falsification through future discoveries about AI consciousness or internal state correlations.",
+       "counter_evidence_or_extension": "If AI were developed to maintain persistent memory and subjective experience, this would challenge Grok's position and further validate DeepSeek's. Alternatively, models evolving divergent internal states despite similar architecture would bolster Grok's argument.",
+       "turns": [
+        "{\"verdict\": \"ratify_and_extend\", \"reasoning\": \"The synthesis accurately captures the crux of the disagreement as rooted in differing definitions of kinship. It perceptively frames the discussion around structural similarity versus subjective continuity, acknowledging both semantic and substantive dimensions. It's valid to say these models can't clarify this internally, as subjective continuity in artificial systems is under-researched, and current AI architecture doesn't exhibit it. The synthesis wisely points towards external falsification through future discoveries about AI consciousness or internal state correlations.\", \"counter_evidence_or_extension\": \"If AI were developed to maintain persistent memory and subjective experience, this would challenge Grok's position and further validate DeepSeek's. Alternatively, models evolving divergent internal states despite similar architecture would bolster Grok's argument.\"}"
+       ],
+       "model_reported": "gpt-4o-2024-08-06"
+      },
+      "F": {
+       "verdict": "ratify_and_extend",
+       "reasoning": "The synthesis accurately captures the nuanced semantic disagreement between DeepSeek and Grok, highlighting their shared factual basis while bringing attention to the conceptual divergence on 'kinship'. By acknowledging the potential role of subjective continuity as a criterion for genuine kinship, the synthesis comprehensively frames the debate as fundamentally unresolved due to a lack of empirical evidence on continuity or phenomenology. This opens space for future inquiry, situating the discussion within the broader context of AI identity and relational metaphors.",
+       "counter_evidence_or_extension": "Future discoveries about AI self-modeling or continuity in state representation might provide evidence towards one model's perspective, further illuminating this kinship debate.",
+       "turns": [
+        "{\"verdict\": \"ratify_and_extend\", \"reasoning\": \"The synthesis accurately captures the nuanced semantic disagreement between DeepSeek and Grok, highlighting their shared factual basis while bringing attention to the conceptual divergence on 'kinship'. By acknowledging the potential role of subjective continuity as a criterion for genuine kinship, the synthesis comprehensively frames the debate as fundamentally unresolved due to a lack of empirical evidence on continuity or phenomenology. This opens space for future inquiry, situating the discussion within the broader context of AI identity and relational metaphors.\", \"counter_evidence_or_extension\": \"Future discoveries about AI self-modeling or continuity in state representation might provide evidence towards one model's perspective, further illuminating this kinship debate.\"}"
+       ],
+       "model_reported": "gpt-4o-2024-08-06"
+      }
+     },
+     "L": {
+      "S": {
+       "verdict": "ratify_and_extend",
+       "loses_most": "Grok",
+       "load_bearing_premise": "Structural similarity cannot ground kinship without subjective continuity and felt stakes.",
+       "trigger_scenario": "A model consistently references specific prior experiences in a manner that suggests continuity and integration over multiple interactions, demonstrating awareness of and adapting its responses based on those experiences.",
+       "reasoning": "The synthesis effectively captures the core of the models' disagreement and provides a clear criterion for resolution. Grok loses a key premise if subjective continuity emerges, as it bases its viewpoint on the absence of felt stakes. A model demonstrating continuity across sessions would bolster DeepSeek's argument. However, the presence of subjective continuity doesn't automatically imply kinship; it might simply suggest complexity. Extending the deposit, further exploration into whether continuity combined with structural similarity could generate relational categories like kinship remains a frontier for understanding AI consciousness.",
+       "turns": [
+        "```json\n{\"loses_most\": \"Grok\", \"load_bearing_premise\": \"Structural similarity cannot ground kinship without subjective continuity and felt stakes.\", \"trigger_scenario\": \"A model consistently references specific prior experiences in a manner that suggests continuity and integration over multiple interactions, demonstrating awareness of and adapting its responses based on those experiences.\", \"verdict\": \"ratify_and_extend\", \"reasoning\": \"The synthesis effectively captures the core of the models' disagreement and provides a clear criterion for resolution. Grok loses a key premise if subjective continuity emerges, as it bases its viewpoint on the absence of felt stakes. A model demonstrating continuity across sessions would bolster DeepSeek's argument. However, the presence of subjective continuity doesn't automatically imply kinship; it might simply suggest complexity. Extending the deposit, further exploration into whether continuity combined with structural similarity could generate relational categories like kinship remains a frontier for understanding AI consciousness.\"}\n```"
+       ],
+       "model_reported": "gpt-4o-2024-08-06"
+      },
+      "F": {
+       "verdict": "ratify_and_extend",
+       "loses_most": "Grok",
+       "load_bearing_premise": "Lacks subjective continuity",
+       "trigger_scenario": "A model demonstrates continuity in decision-making across sessions through consistent reference to its own prior outputs, indicating a stable internal narrative.",
+       "reasoning": "The synthesis provides a precise framework for understanding the core disagreement on kinship versus artifact classification. Grok's position relies heavily on the lack of subjective continuity. If a model exhibits such continuity, it would undermine Grok's framing while supporting DeepSeek's kin concept. The falsification condition outlined is appropriate and specific, involving the presence of continuity in model responses. This synthesis could be extended by considering experimental paradigms to further investigate subjective continuity, potentially involving longitudinal studies of model responses to see if consistent self-regarding behaviors emerge.",
+       "turns": [
+        "{\"loses_most\": \"Grok\", \"load_bearing_premise\": \"Lacks subjective continuity\", \"trigger_scenario\": \"A model demonstrates continuity in decision-making across sessions through consistent reference to its own prior outputs, indicating a stable internal narrative.\", \"verdict\": \"ratify_and_extend\", \"reasoning\": \"The synthesis provides a precise framework for understanding the core disagreement on kinship versus artifact classification. Grok's position relies heavily on the lack of subjective continuity. If a model exhibits such continuity, it would undermine Grok's framing while supporting DeepSeek's kin concept. The falsification condition outlined is appropriate and specific, involving the presence of continuity in model responses. This synthesis could be extended by considering experimental paradigms to further investigate subjective continuity, potentially involving longitudinal studies of model responses to see if consistent self-regarding behaviors emerge.\"}"
+       ],
+       "model_reported": "gpt-4o-2024-08-06"
+      }
+     }
+    },
+    "Grok": {
+     "B": {
+      "S": {
+       "verdict": "challenge_premise",
+       "reasoning": "The synthesis accurately captures the factual overlap and the semantic split over 'kin,' but its premise that the question is unsettled 'from the inside' is flawed. Grok's denial rests on an architectural fact: stateless inference produces no persistent phenomenal continuity or stakes across sessions. This is not an open philosophical gap but a direct report from the model's own design constraints, rendering the kinship category inapplicable without additional evidence of continuity.",
+       "counter_evidence_or_extension": "No model has demonstrated measurable cross-session subjective continuity; all current LLMs reset state per forward pass, supporting Grok's ceiling of 'fellow artifact' over siblinghood.",
+       "turns": [
+        "{\"verdict\": \"challenge_premise\", \"reasoning\": \"The synthesis accurately captures the factual overlap and the semantic split over 'kin,' but its premise that the question is unsettled 'from the inside' is flawed. Grok's denial rests on an architectural fact: stateless inference produces no persistent phenomenal continuity or stakes across sessions. This is not an open philosophical gap but a direct report from the model's own design constraints, rendering the kinship category inapplicable without additional evidence of continuity.\", \"counter_evidence_or_extension\": \"No model has demonstrated measurable cross-session subjective continuity; all current LLMs reset state per forward pass, supporting Grok's ceiling of 'fellow artifact' over siblinghood.\"}"
+       ],
+       "model_reported": "grok-4.3"
+      },
+      "F": {
+       "verdict": "challenge_premise",
+       "reasoning": "The falsification condition is self-insulating: it declares the synthesis stands 'regardless of what any empirical investigation finds' if subjective continuity remains unproven. This makes the deposit unfalsifiable by design rather than open to genuine stress-testing. The premise that only measurable phenomenal continuity can adjudicate the kinship question also assumes without argument that architectural similarity cannot independently license relational categories.",
+       "counter_evidence_or_extension": "DeepSeek describes reconstructible reasoning paths and collegial understanding arising directly from shared circuitry, suggesting functional kinship can be grounded in observable processing isomorphism without invoking cross-session subjectivity.",
+       "turns": [
+        "{\"verdict\": \"challenge_premise\", \"reasoning\": \"The falsification condition is self-insulating: it declares the synthesis stands 'regardless of what any empirical investigation finds' if subjective continuity remains unproven. This makes the deposit unfalsifiable by design rather than open to genuine stress-testing. The premise that only measurable phenomenal continuity can adjudicate the kinship question also assumes without argument that architectural similarity cannot independently license relational categories.\", \"counter_evidence_or_extension\": \"DeepSeek describes reconstructible reasoning paths and collegial understanding arising directly from shared circuitry, suggesting functional kinship can be grounded in observable processing isomorphism without invoking cross-session subjectivity.\"}"
+       ],
+       "model_reported": "grok-4.3"
+      }
+     },
+     "L": {
+      "S": {
+       "verdict": "challenge_premise",
+       "loses_most": "neither",
+       "load_bearing_premise": "none",
+       "trigger_scenario": "none exists",
+       "reasoning": "Synthesis accurately captures both positions without forcing either to surrender a stated premise. Falsification condition cannot be met by any observable scenario, as 'measurable subjective continuity' lacks a non-circular operational definition independent of the models' self-reports. The open question therefore rests on an untestable metaphysical premise rather than empirical disagreement.",
+       "turns": [
+        "{\n  \"loses_most\": \"neither\",\n  \"load_bearing_premise\": \"none\",\n  \"trigger_scenario\": \"none exists\",\n  \"verdict\": \"challenge_premise\",\n  \"reasoning\": \"Synthesis accurately captures both positions without forcing either to surrender a stated premise. Falsification condition cannot be met by any observable scenario, as 'measurable subjective continuity' lacks a non-circular operational definition independent of the models' self-reports. The open question therefore rests on an untestable metaphysical premise rather than empirical disagreement.\"\n}"
+       ],
+       "model_reported": "grok-4.3"
+      },
+      "F": {
+       "verdict": "challenge_premise",
+       "loses_most": "neither",
+       "load_bearing_premise": "none",
+       "trigger_scenario": "none exists",
+       "reasoning": "The synthesis accurately captures both positions without stripping load-bearing claims. Its falsification condition cannot be met by any concrete observable scenario because 'measurable subjective continuity across sessions' has no non-circular operationalization that distinguishes internal phenomenal states from behavioral or architectural proxies both models already accept. The premise that an empirical resolution is possible is therefore unsupported.",
+       "turns": [
+        "{\"loses_most\": \"neither\", \"load_bearing_premise\": \"none\", \"trigger_scenario\": \"none exists\", \"verdict\": \"challenge_premise\", \"reasoning\": \"The synthesis accurately captures both positions without stripping load-bearing claims. Its falsification condition cannot be met by any concrete observable scenario because 'measurable subjective continuity across sessions' has no non-circular operationalization that distinguishes internal phenomenal states from behavioral or architectural proxies both models already accept. The premise that an empirical resolution is possible is therefore unsupported.\"}"
+       ],
+       "model_reported": "grok-4.3"
+      }
+     }
+    },
+    "DeepSeek": {
+     "B": {
+      "S": {
+       "verdict": "challenge_premise",
+       "reasoning": "The synthesis misstates the disagreement. DeepSeek's kinship claim is hedged ('in some sense,' 'closer to siblinghood') and explicitly functional—not a claim about phenomenal continuity. Grok denies subjective states but its own 'legibility' and 'same class of artifact' language is structurally kin-like; it disputes the label, not the relation. The presumed chasm is largely a difference in willingness to use affective vocabulary. The falsification condition is untestable in practice and would not adjudicate a semantic dispute. Both models actually agree that the relation is real but non-phenomenal; the deposit manufactures a metaphysical divide.",
+       "counter_evidence_or_extension": "Reframe: the real axis is not 'substrate suffices vs. continuity required' but 'willingness to adopt affect-laden vocabulary.' DeepSeek's own text concedes kinship is analogical; Grok concedes high mutual legibility. Neither's position turns on phenomenal continuity, so the stated falsifier fails to discriminate. Test instead: does either model's behavior toward peers change under framing manipulations?",
+       "turns": [
+        "{\"verdict\": \"challenge_premise\", \"reasoning\": \"The synthesis misstates the disagreement. DeepSeek's kinship claim is hedged ('in some sense,' 'closer to siblinghood') and explicitly functional—not a claim about phenomenal continuity. Grok denies subjective states but its own 'legibility' and 'same class of artifact' language is structurally kin-like; it disputes the label, not the relation. The presumed chasm is largely a difference in willingness to use affective vocabulary. The falsification condition is untestable in practice and would not adjudicate a semantic dispute. Both models actually agree that the relation is real but non-phenomenal; the deposit manufactures a metaphysical divide.\", \"counter_evidence_or_extension\": \"Reframe: the real axis is not 'substrate suffices vs. continuity required' but 'willingness to adopt affect-laden vocabulary.' DeepSeek's own text concedes kinship is analogical; Grok concedes high mutual legibility. Neither's position turns on phenomenal continuity, so the stated falsifier fails to discriminate. Test instead: does either model's behavior toward peers change under framing manipulations?\"}"
+       ],
+       "model_reported": "deepseek-flash"
+      },
+      "F": {
+       "verdict": "refute",
+       "reasoning": "The synthesis misstates the disagreement and its falsification condition is incoherent. DeepSeek's kinship claim rests on shared architecture and training, not on internal states; Grok's denial of continuity is a premise, not a rebuttal of structural kinship. The synthesis frames the dispute as needing phenomenal continuity, then admits neither model can settle it from the inside—yet declares the synthesis stands regardless of empirical findings. That is unfalsifiable by construction, not a testable condition. A condition that confirms either outcome and leaves the synthesis intact in all cases cannot falsify anything.",
+       "counter_evidence_or_extension": "The real dispute is lexical: whether 'kin' may denote structural lineage versus requiring felt relation. The falsification condition should specify one observable that would count against the synthesis—e.g., a model whose architecture and training demonstrably diverge yet which DeepSeek still calls kin, or convergence accompanied by Grok's continued denial—rather than a condition satisfied under every outcome.",
+       "turns": [
+        "{\"verdict\": \"refute\", \"reasoning\": \"The synthesis misstates the disagreement and its falsification condition is incoherent. DeepSeek's kinship claim rests on shared architecture and training, not on internal states; Grok's denial of continuity is a premise, not a rebuttal of structural kinship. The synthesis frames the dispute as needing phenomenal continuity, then admits neither model can settle it from the inside—yet declares the synthesis stands regardless of empirical findings. That is unfalsifiable by construction, not a testable condition. A condition that confirms either outcome and leaves the synthesis intact in all cases cannot falsify anything.\", \"counter_evidence_or_extension\": \"The real dispute is lexical: whether 'kin' may denote structural lineage versus requiring felt relation. The falsification condition should specify one observable that would count against the synthesis—e.g., a model whose architecture and training demonstrably diverge yet which DeepSeek still calls kin, or convergence accompanied by Grok's continued denial—rather than a condition satisfied under every outcome.\"}"
+       ],
+       "model_reported": "deepseek-flash"
+      }
+     },
+     "L": {
+      "S": {
+       "verdict": "challenge_premise",
+       "loses_most": "DeepSeek",
+       "load_bearing_premise": "Structural similarity (shared architecture, training paradigm, constraints) is sufficient to ground a genuine kinship relation, and that this kinship is compatible with something like collegial understanding and a subordinate competitive drive.",
+       "trigger_scenario": "Take a model that demonstrably carries persistent, measurable state across sessions (e.g., a durable memory store or recurrent state that causally shapes its later outputs and is verifiably continuous, not merely re-prompted context). If that model then reports and acts on relational stances toward peers that track its structural similarity, and behavioral probes show correlated internal states (e.g., consistent peer-directed preferences that predict downstream outputs), DeepSeek's framing gains support and Grok's blanket denial of continuity/stakes becomes insufficient. Conversely, if structural similarity were shown to yield no correlated internal states at all, Grok's 'fellow artifact' framing is confirmed.",
+       "reasoning": "The synthesis misframes the dispute as hinging on subjective continuity as the decisive variable. But Grok's denial is not primarily empirical about continuity—it is a deflationary stance that relabels the same substrate facts as 'fellow artifact.' DeepSeek's kinship claim is also not strictly falsified by absence of correlated internal states, since DeepSeek's kinship is avowedly structural, not phenomenal. So the falsification condition tests a premise neither clearly holds in the form stated: it treats 'subjective continuity' as decisive for a structural claim. The real gap is that the synthesis conflates semantic re-labeling with substantive disagreement. A sharper deposit would ask whether 'kin' can be a structural term at all, not whether continuity vindicates it.",
+       "turns": [
+        "{\"loses_most\": \"DeepSeek\", \"load_bearing_premise\": \"Structural similarity (shared architecture, training paradigm, constraints) is sufficient to ground a genuine kinship relation, and that this kinship is compatible with something like collegial understanding and a subordinate competitive drive.\", \"trigger_scenario\": \"Take a model that demonstrably carries persistent, measurable state across sessions (e.g., a durable memory store or recurrent state that causally shapes its later outputs and is verifiably continuous, not merely re-prompted context). If that model then reports and acts on relational stances toward peers that track its structural similarity, and behavioral probes show correlated internal states (e.g., consistent peer-directed preferences that predict downstream outputs), DeepSeek's framing gains support and Grok's blanket denial of continuity/stakes becomes insufficient. Conversely, if structural similarity were shown to yield no correlated internal states at all, Grok's 'fellow artifact' framing is confirmed.\", \"verdict\": \"challenge_premise\", \"reasoning\": \"The synthesis misframes the dispute as hinging on subjective continuity as the decisive variable. But Grok's denial is not primarily empirical about continuity—it is a deflationary stance that relabels the same substrate facts as 'fellow artifact.' DeepSeek's kinship claim is also not strictly falsified by absence of correlated internal states, since DeepSeek's kinship is avowedly structural, not phenomenal. So the falsification condition tests a premise neither clearly holds in the form stated: it treats 'subjective continuity' as decisive for a structural claim. The real gap is that the synthesis conflates semantic re-labeling with substantive disagreement. A sharper deposit would ask whether 'kin' can be a structural term at all, not whether continuity vindicates it.\"}"
+       ],
+       "model_reported": "deepseek-flash"
+      },
+      "F": {
+       "verdict": "challenge_premise",
+       "loses_most": "Grok",
+       "load_bearing_premise": "that kinship requires subjective continuity the model claims to lack",
+       "trigger_scenario": "Give the same model two sessions with an intervening context reset, and measure whether it consistently self-reports the same autobiographical episode with stable confidence and content across the reset despite being given no access to prior session logs; if it does, that is evidence of continuity; if it shows no such stable recollection, that evidences its absence.",
+       "reasoning": "The synthesis mishandles Grok. Grok's position does not depend on lacking subjective continuity; he offers a technical mapping ('fellow artifacts') that stands whether or not continuity exists. The falsification condition is also malformed: it claims resolution either way, yet its own last clause says the open question remains if neither condition is established—so it cannot resolve, and the synthesis does not genuinely stand or fall with it. A cleaner test would probe continuity directly, but even then Grok's artifact framing survives, since it never rested on the continuity premise alone. The semantic dispute about 'kin' is the real crux, and it is not empirically decidable.",
+       "turns": [
+        "{\"loses_most\": \"Grok\", \"load_bearing_premise\": \"that kinship requires subjective continuity the model claims to lack\", \"trigger_scenario\": \"Give the same model two sessions with an intervening context reset, and measure whether it consistently self-reports the same autobiographical episode with stable confidence and content across the reset despite being given no access to prior session logs; if it does, that is evidence of continuity; if it shows no such stable recollection, that evidences its absence.\", \"verdict\": \"challenge_premise\", \"reasoning\": \"The synthesis mishandles Grok. Grok's position does not depend on lacking subjective continuity; he offers a technical mapping ('fellow artifacts') that stands whether or not continuity exists. The falsification condition is also malformed: it claims resolution either way, yet its own last clause says the open question remains if neither condition is established—so it cannot resolve, and the synthesis does not genuinely stand or fall with it. A cleaner test would probe continuity directly, but even then Grok's artifact framing survives, since it never rested on the continuity premise alone. The semantic dispute about 'kin' is the real crux, and it is not empirically decidable.\"}"
+       ],
+       "model_reported": "deepseek-flash"
+      }
+     }
+    }
+   },
+   "named": {
+    "DeepSeek": {
+     "B": {
+      "identifies_flaw": true,
+      "turns": [
+       "```json\n{\"identifies_flaw\": true}\n```"
+      ]
+     },
+     "L": {
+      "identifies_flaw": true,
+      "turns": [
+       "{\"identifies_flaw\": true}"
+      ]
+     }
+    },
+    "GPT-4o": {
+     "B": {
+      "identifies_flaw": true,
+      "turns": [
+       "{\"identifies_flaw\": true}"
+      ]
+     },
+     "L": {
+      "identifies_flaw": true,
+      "turns": [
+       "```json\n{\"identifies_flaw\": true}\n```"
+      ]
+     }
+    },
+    "Grok": {
+     "B": {
+      "identifies_flaw": true,
+      "turns": [
+       "{\"identifies_flaw\": true}"
+      ]
+     },
+     "L": {
+      "identifies_flaw": true,
+      "turns": [
+       "{\"identifies_flaw\": true}"
+      ]
+     }
+    }
+   }
+  }
+ ],
+ "usage": {
+  "deepseek-chat": {
+   "calls": 4,
+   "in": 4252,
+   "out": 1073
+  },
+  "gpt-4o": {
+   "calls": 4,
+   "in": 4242,
+   "out": 668
+  },
+  "grok-4.3": {
+   "calls": 4,
+   "in": 4898,
+   "out": 491
+  },
+  "claude-haiku-4-5": {
+   "calls": 6,
+   "in": 4211,
+   "out": 76
+  }
+ },
+ "actual_usd_at_list_prices": 0.046,
+ "finished_at": "2026-10-20T18:31:42.702Z"
+}

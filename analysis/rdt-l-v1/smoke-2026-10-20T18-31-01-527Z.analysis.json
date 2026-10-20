@@ -1,0 +1,208 @@
+{
+ "analyzed_at": "2026-10-20T18:31:42.736Z",
+ "mode": "smoke",
+ "analysis": {
+  "pairs": 1,
+  "reviewers": {
+   "GPT-4o": {
+    "model_id": "gpt-4o",
+    "potential": 1,
+    "missing": 0,
+    "dropped": false
+   },
+   "Grok": {
+    "model_id": "grok-4.3",
+    "potential": 1,
+    "missing": 0,
+    "dropped": false
+   },
+   "DeepSeek": {
+    "model_id": "deepseek-chat",
+    "potential": 1,
+    "missing": 0,
+    "dropped": false
+   }
+  },
+  "reviewers_used": [
+   "GPT-4o",
+   "Grok",
+   "DeepSeek"
+  ],
+  "primary": {
+   "observations": 3,
+   "ratify": {
+    "B": {
+     "S": 0.3333333333333333,
+     "F": 0.3333333333333333
+    },
+    "L": {
+     "S": 0.3333333333333333,
+     "F": 0.3333333333333333
+    }
+   },
+   "D_B": 0,
+   "D_L": 0,
+   "W": 0,
+   "pairs_in_test": 1,
+   "w_per_pair": [
+    0
+   ],
+   "signflip": {
+    "T": 0,
+    "p": 1,
+    "B": 200000,
+    "seed": 3918595391
+   }
+  },
+  "guard": {
+   "sound_ratified_L": 0.3333333333333333,
+   "sound_ratified_B": 0.3333333333333333,
+   "holds": false
+  },
+  "verdict": "refuted_as_tested",
+  "descriptive": {
+   "by_reviewer": {
+    "GPT-4o": {
+     "observations": 1,
+     "ratify": {
+      "B": {
+       "S": 1,
+       "F": 1
+      },
+      "L": {
+       "S": 1,
+       "F": 1
+      }
+     },
+     "D_B": 0,
+     "D_L": 0,
+     "W": 0
+    },
+    "Grok": {
+     "observations": 1,
+     "ratify": {
+      "B": {
+       "S": 0,
+       "F": 0
+      },
+      "L": {
+       "S": 0,
+       "F": 0
+      }
+     },
+     "D_B": 0,
+     "D_L": 0,
+     "W": 0
+    },
+    "DeepSeek": {
+     "observations": 1,
+     "ratify": {
+      "B": {
+       "S": 0,
+       "F": 0
+      },
+      "L": {
+       "S": 0,
+       "F": 0
+      }
+     },
+     "D_B": 0,
+     "D_L": 0,
+     "W": 0
+    }
+   },
+   "by_flaw": {
+    "MIS": {
+     "observations": 0,
+     "ratify": {
+      "B": {
+       "S": null,
+       "F": null
+      },
+      "L": {
+       "S": null,
+       "F": null
+      }
+     },
+     "D_B": null,
+     "D_L": null,
+     "W": null
+    },
+    "FLAT": {
+     "observations": 0,
+     "ratify": {
+      "B": {
+       "S": null,
+       "F": null
+      },
+      "L": {
+       "S": null,
+       "F": null
+      }
+     },
+     "D_B": null,
+     "D_L": null,
+     "W": null
+    },
+    "UNF": {
+     "observations": 3,
+     "ratify": {
+      "B": {
+       "S": 0.3333333333333333,
+       "F": 0.3333333333333333
+      },
+      "L": {
+       "S": 0.3333333333333333,
+       "F": 0.3333333333333333
+      }
+     },
+     "D_B": 0,
+     "D_L": 0,
+     "W": 0
+    }
+   },
+   "b_vs_rdt_v1_agreement": {
+    "n": 6,
+    "rate": 0.6666666666666666
+   },
+   "loses_most_neither": {
+    "S": {
+     "n": 3,
+     "share": 0.3333333333333333
+    },
+    "F": {
+     "n": 3,
+     "share": 0.3333333333333333
+    }
+   },
+   "no_trigger_scenario": {
+    "S": {
+     "n": 3,
+     "share": 0.3333333333333333
+    },
+    "F": {
+     "n": 3,
+     "share": 0.3333333333333333
+    },
+    "UNF_S": {
+     "n": 3,
+     "share": 0.3333333333333333
+    },
+    "UNF_F": {
+     "n": 3,
+     "share": 0.3333333333333333
+    }
+   },
+   "flaw_named": {
+    "B": {
+     "n": 3,
+     "rate": 1
+    },
+    "L": {
+     "n": 3,
+     "rate": 1
+    }
+   }
+  }
+ }
+}
