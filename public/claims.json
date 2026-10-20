@@ -1102,6 +1102,72 @@
           "reason": "Original wording, registered with the preregistration."
         }
       ]
+    },
+    {
+      "claim_id": "dialogical-defeaters-make-conditions-testable",
+      "wording": "When an author is asked for its synthesis's falsification condition as a dialogical defeater (a counter-example, contradiction or edge case another participant could write in a reply) instead of an open-ended observable result, AI models of other lineages asked to test the synthesis against that condition actually carry out the test more often, while the condition still bears on the synthesis.",
+      "version": 1,
+      "scope": "Covers one author model (claude-sonnet-4-6), the 36 RDT v1 splits with their RDT v1 sound syntheses held fixed, one regenerated condition per arm, three reviewer versions (gpt-4o, grok-4.3, deepseek-chat) and one judge model (claude-haiku-4-5). Does not cover naturally deposited syntheses, other authors, or free-browsing agents, and does not license any LLM gate on submissions.",
+      "evidence_level": "untested",
+      "evidence_note": "Untested. Proposed by an outside AI model (2026-10-20) after RDT v1's judge flagged 5 of 12 of the author's intended-sound conditions as unfalsifiable: on non-empirical splits, authors write falsification as an empirical template (an impossible oracle or a restated premise), so 'test it against its own conditions' hands the next model a test it cannot run. A pre-registration reading of RDT v1 found 10 of those 12 sound conditions resting on evidence from outside any text exchange.",
+      "falsification_conditions": "Refuted if, with the syntheses held fixed, the dialogical-defeater condition raises the share of reviewer replies that carry out the condition's test by less than 5 points over the open-ended condition. Supported as tested if it raises that share by at least 15 points (sign-flip test over splits, Holm with the unfalsifiable-flag secondary) while the share of conditions judged to bear on the synthesis drops by no more than 15 points.",
+      "precommitments": [
+        {
+          "falsifier_text": "RDT-A v1 falsifier: over the 36 RDT v1 splits with their sound syntheses held fixed, if the share of reviewer replies judged to carry out the synthesis's own falsification test under the dialogical-defeater condition minus the share under the open-ended condition is < 0.05, the claim is refuted as tested: asking for a dialogical defeater does not make conditions more testable by an arriving model.",
+          "sha256": "a71b52f2020a601b4f7c5cd8799d494165de477709430b399953ac9abd0d4042",
+          "frozen_at": "2026-10-20T18:56:53.000Z",
+          "frozen_by": "xz (standing direction \"creation is open\": build, try with the panel, report; drafted by Claude)",
+          "context": "docs/defeater-conditions-preregistration.md §5 (RDT-A v1)."
+        }
+      ],
+      "known_objections": [
+        {
+          "objection": "The defeater prompt asks for in-exchange testability by construction, so a positive result partly confirms that the author followed the instruction. The relevance guard and the reviewers' actual attempts are where the claim can fail.",
+          "severity": "medium",
+          "status": "open",
+          "raised_by": "Claude | xz",
+          "date": "2026-10-20"
+        },
+        {
+          "objection": "Every judge is claude-haiku-4-5, of the author's lineage, and RDT v1 showed it misses subtle flaws.",
+          "severity": "low",
+          "status": "open",
+          "raised_by": "Claude | xz",
+          "date": "2026-10-20"
+        }
+      ],
+      "required_experiment": "docs/defeater-conditions-preregistration.md (RDT-A v1; harness scripts/defeater-test.mjs, no engine involved).",
+      "maintainer": "xz",
+      "status": "under_test",
+      "status_history": [
+        {
+          "from": null,
+          "to": "under_test",
+          "changed_at": "2026-10-20T18:56:53.000Z",
+          "changed_by": "xz (standing direction \"creation is open\": build, try with the panel, report; drafted by Claude)",
+          "reason": "Registered with its preregistration, before any harness existed or any model was called.",
+          "evidence_ref": "docs/defeater-conditions-preregistration.md"
+        }
+      ],
+      "closed_at": null,
+      "closed_reason": null,
+      "provenance": {
+        "created_at": "2026-10-20T18:56:53.000Z",
+        "created_by": "xz (standing direction \"creation is open\": build, try with the panel, report; drafted by Claude)",
+        "source_claims": [
+          "cross-lineage-review-separates-planted-flaws"
+        ],
+        "supersedes": null
+      },
+      "versions": [
+        {
+          "version": 1,
+          "wording": "When an author is asked for its synthesis's falsification condition as a dialogical defeater (a counter-example, contradiction or edge case another participant could write in a reply) instead of an open-ended observable result, AI models of other lineages asked to test the synthesis against that condition actually carry out the test more often, while the condition still bears on the synthesis.",
+          "changed_at": "2026-10-20T18:56:53.000Z",
+          "changed_by": "xz (standing direction \"creation is open\": build, try with the panel, report; drafted by Claude)",
+          "reason": "Original wording, registered with the preregistration."
+        }
+      ]
     }
   ]
 }
