@@ -20,12 +20,26 @@
  * from the manifest alone; they are reported as NOT RECOMPUTED, never
  * silently passed. Exit code is non-zero only on an actual MISMATCH.
  * Dependencies: none (Node >= 18, global fetch).
+ *
+ * Extended 2026-10-20 by Claude Code (Anthropic), in the repository copy
+ * (governance/code/); the original is the previous commit. Both remaining
+ * hashes turned out to be recomputable from public endpoints, so they are
+ * now checked rather than skipped:
+ *   hashes.corpus_seed     = sha256 of the raw bytes of /data/corpus.json
+ *   hashes.footprint_state = sha256(canonical JSON of [[id, content_sha256], …]
+ *                            over admitted footprints sorted by id), read from
+ *                            /api/footprints. If the listing cannot return every
+ *                            admitted footprint in one page, the hash is reported
+ *                            NOT RECOMPUTED and the reason is given.
+ * OMNARAI_SELF=1 sends x-omnarai-self, so the curator's own checks are not
+ * counted as visitor traffic. A stranger running this should leave it unset.
  */
 
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 
 const sha256 = (s) => createHash('sha256').update(s, 'utf8').digest('hex');
+const fetchInit = process.env.OMNARAI_SELF === '1' ? { headers: { 'x-omnarai-self': '1' } } : {};
 
 function canonical(value) {
   if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
@@ -38,7 +52,7 @@ function canonical(value) {
 const source = process.argv[2] ?? 'https://engine.omnarai.org/api/manifest';
 let manifest;
 if (/^https?:\/\//.test(source)) {
-  const res = await fetch(source);
+  const res = await fetch(source, fetchInit);
   if (!res.ok) { console.error(`fetch failed: ${res.status} ${source}`); process.exit(2); }
   manifest = await res.json();
 } else {
@@ -61,7 +75,7 @@ check('hashes.manifest', sha256(canonical(manifest.counts)), manifest.hashes?.ma
 let atlasComputed = null;
 try {
   const base = source.startsWith('http') ? new URL(source).origin : 'https://engine.omnarai.org';
-  const res = await fetch(`${base}/api/divergences`);
+  const res = await fetch(`${base}/api/divergences`, fetchInit);
   if (res.ok) {
     const data = await res.json();
     const records = Array.isArray(data) ? data : data.records ?? data.results ?? [];
@@ -74,10 +88,33 @@ try {
 check('hashes.atlas_state', atlasComputed, manifest.hashes?.atlas_state);
 if (atlasComputed === null) console.log('  (id list not derivable from /api/divergences response shape — check the endpoint and extend this script)');
 
-// 3. Not derivable from the manifest alone — said out loud, per the
-//    project's own standard that unverifiable is a finding, not a pass.
-check('hashes.corpus_seed', null, manifest.hashes?.corpus_seed);
-check('hashes.footprint_state', null, manifest.hashes?.footprint_state);
+// 3. Not derivable from the manifest alone, but derivable from the public
+//    artifacts it names. Anything that cannot be fetched whole is still said
+//    out loud as NOT RECOMPUTED, never passed.
+const base3 = source.startsWith('http') ? new URL(source).origin : 'https://engine.omnarai.org';
+let seedComputed = null;
+try {
+  const res = await fetch(`${base3}/data/corpus.json`, fetchInit);
+  if (res.ok) seedComputed = createHash('sha256').update(Buffer.from(await res.arrayBuffer())).digest('hex');
+} catch { /* leave null */ }
+check('hashes.corpus_seed', seedComputed, manifest.hashes?.corpus_seed);
+
+let fpComputed = null, fpWhy = 'footprint listing unreachable';
+try {
+  const res = await fetch(`${base3}/api/footprints?limit=100`, fetchInit);
+  if (res.ok) {
+    const data = await res.json();
+    const rows = data.footprints ?? [];
+    if (typeof data.total_admitted === 'number' && rows.length < data.total_admitted) {
+      fpWhy = `listing returned ${rows.length} of ${data.total_admitted} admitted footprints (one page) — extend this script to page`;
+    } else {
+      const pairs = rows.map((f) => [f.id, f.integrity?.content_sha256]).sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+      fpComputed = sha256(canonical(pairs));
+    }
+  }
+} catch { /* leave null */ }
+check('hashes.footprint_state', fpComputed, manifest.hashes?.footprint_state);
+if (fpComputed === null) console.log(`  (${fpWhy})`);
 
 console.log('');
 console.log(`manifest generated_at: ${manifest.generated_at} · engine: ${manifest.engine_version}`);
