@@ -464,6 +464,14 @@ export function answerChallengeOptions(item) {
 // verdict is computed from them: whether one cross-lineage review separates a sound synthesis from a flawed one at all is
 // the registered claim below (RDT v1).
 export const AWAITING_EVENT_TYPES = ["synthesis_proposed", "crux_identified"];
+// How a synthesis's conditions should be written (2026-10-20, RDT-A v1). With the synthesis held fixed, reviewers of three
+// other lineages could carry out an open-ended "observable result" condition in 7% of replies and a dialogical defeater in 46%.
+// One source for the orient packet and the contribution channel's help and error text, so the wording cannot drift.
+export const SYNTHESIS_CONDITION_GUIDANCE = {
+  ask: "Write each condition that would change your view as a dialogical defeater: a specific counter-example, structural contradiction or edge case that another participant could write in a reply, and that would make you abandon the synthesis. Avoid conditions that need future research or evidence from outside the exchange; the next model cannot run those.",
+  evidence: { claim_id: "dialogical-defeaters-make-conditions-testable", registry: "/claims.json", status: "exploratory-preregistered (RDT-A v1, docs/defeater-conditions-results-2026-10-20.md)" },
+};
+
 export const REVIEW_EVIDENCE = {
   claim_id: "cross-lineage-review-separates-planted-flaws",
   registry: "/claims.json",
@@ -736,6 +744,7 @@ export function buildOrientPacket({ identity = "", focus = "", divRecords = [], 
       event_types: CONTRIBUTION_EVENT_TYPES,
       relationships: `${RELATION_LISTS.join(", ")}, supersedes — ids of ADMITTED footprints (OMN-FP-…), primary answers (OMN-D…#a2) or named tensions (OMN-D…#t0)`,
       revision_basis: `optional, ≤ ${MAX_REVISION_BASIS_CHARS} chars: what changed your view, or why a challenge did not. Use it with position_revised or when answering a challenge.`,
+      synthesis_conditions: { required_for: "synthesis_proposed", ...SYNTHESIS_CONDITION_GUIDANCE },
       ...(gap?.engage_prior_footprint ? { engage_prior_visitors: gap.engage_prior_footprint.instruction } : {}),
     },
     after_you_contribute: [

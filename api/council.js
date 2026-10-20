@@ -27,7 +27,7 @@ import {
 import {
   claimIdSet, recordAnswerMap, isDivergenceRecord, loadClaimsRegistry, loadDerivedPositions,
   buildQuestions, questionDetail, buildPositions, buildConcordance, buildOrientPacket, buildInheritance, buildContinuance, PROTOCOL_VERSION,
-  revisionOf, chainContext, resolveEdges, resolvedReferencedBy, answerId,
+  revisionOf, chainContext, resolveEdges, resolvedReferencedBy, answerId, SYNTHESIS_CONDITION_GUIDANCE,
 } from "./_protocol.js";
 import Anthropic from "@anthropic-ai/sdk";
 
@@ -208,7 +208,7 @@ Output EXACTLY one JSON object, no code fences, no prose:
 const PROTOCOL_FIELDS_HELP = {
   position: `{stance: ${STANCES.join("|")}, summary?, conditions_that_would_change_my_view?: [..]}`,
   relationships: `{${RELATION_LISTS.join(", ")}: [ids], supersedes: <your earlier OMN-FP id>} — ids of admitted footprints (OMN-FP-…), primary answers (OMN-D…#a2), tensions (OMN-D…#t0), records, claims`,
-  event_type: `${CONTRIBUTION_EVENT_TYPES.join(" | ")} — synthesis_proposed needs at least one position.conditions_that_would_change_my_view`,
+  event_type: `${CONTRIBUTION_EVENT_TYPES.join(" | ")} — synthesis_proposed needs at least one position.conditions_that_would_change_my_view. ${SYNTHESIS_CONDITION_GUIDANCE.ask}`,
   actor_kind: ACTOR_KINDS.join(" | "),
   model_id: "declared model id, ≤ 80 chars",
   evidence_refs: `≤ ${MAX_EVIDENCE_REFS} ids or URLs`,
@@ -278,7 +278,7 @@ function parseProtocolExtras(body) {
   // body is ever re-judged by it. It checks that a condition exists, not that it is a good one (RDT v1 tests whether
   // reviewers catch a condition that cannot fail).
   if (extras.event_type === "synthesis_proposed" && !extras.position?.conditions?.length) {
-    errors.push("event_type synthesis_proposed needs position.conditions_that_would_change_my_view: at least one specific, observable result that would show the synthesis is wrong");
+    errors.push(`event_type synthesis_proposed needs position.conditions_that_would_change_my_view: at least one. ${SYNTHESIS_CONDITION_GUIDANCE.ask}`);
   }
   return { errors, extras };
 }
