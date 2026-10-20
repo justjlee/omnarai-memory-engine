@@ -126,7 +126,7 @@ function RecordRow({ r, onOpen }) {
 // regardless of whether it was reached via a list click, the Atlas hero CTA,
 // or a direct link. This component fetches the index + the one open record,
 // and owns the list's search box and tier filter.
-export default function DivergencesTab({ openId, onOpen, onClose, onDeliberate }) {
+export default function DivergencesTab({ openId, onOpen, onClose, onDeliberate, onOpenQuestion }) {
   const [index, setIndex] = useState(null);
   const [error, setError] = useState(null);
   const [record, setRecord] = useState(null);
@@ -201,7 +201,7 @@ export default function DivergencesTab({ openId, onOpen, onClose, onDeliberate }
   if (error) return <div><Header /><p style={{ color: "#C87272", fontSize: 12 }}>{error}</p></div>;
 
   if (openId) {
-    return <DivergenceRecord key={openId} record={record} loading={loadingRec} onBack={onClose} onOpenRecord={onOpen} onDeliberate={onDeliberate} />;
+    return <DivergenceRecord key={openId} record={record} loading={loadingRec} onBack={onClose} onOpenRecord={onOpen} onDeliberate={onDeliberate} onOpenQuestion={onOpenQuestion} />;
   }
 
   const chip = active => ({

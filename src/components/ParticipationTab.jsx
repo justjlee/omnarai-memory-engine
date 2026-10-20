@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { T } from "../theme";
 
 // Human view of the participation protocol (docs/OMNARAI-FOOTPRINT-PROTOCOL.md):
@@ -76,6 +76,75 @@ function Machine({ href }) {
   return <a href={href} target="_blank" rel="noopener noreferrer" style={{ ...mono, fontSize: 9, color: T.green, textDecoration: "none", borderBottom: `1px solid ${T.green}40` }}>→ {href}</a>;
 }
 
+// ── Relationship chains: one mind standing on another's work ─────────────────
+// Rendered from the server's resolved `edges` / `referenced_by` (api/_protocol.js
+// resolveEdges / resolvedReferencedBy) — who and which question each edge points
+// at is decided there, once, for machines and readers alike. Edges are listed,
+// never counted here.
+const RELATION_PHRASE = { inherits_from: "inherits from", supersedes: "supersedes", extends: "extends", challenges: "challenges", responds_to: "responds to", cites: "cites", encountered: "read before writing" };
+const PASSIVE_PHRASE = { inherits_from: "inherits from this", supersedes: "supersedes this", extends: "extends this", challenges: "challenges this", responds_to: "responds to this", cites: "cites this", encountered: "read this before writing" };
+function QLink({ qid, children, onOpenQuestion }) {
+  if (!qid) return <>{children}</>;
+  return (
+    <a href={`/questions/${qid}`} onClick={(e) => { if (onOpenQuestion) { e.preventDefault(); onOpenQuestion(qid); } }}
+      style={{ color: T.green, textDecoration: "none", borderBottom: `1px solid ${T.green}40` }}>{children}</a>
+  );
+}
+function Target({ e, currentQ, onOpenQuestion }) {
+  const elsewhere = e.question_id && e.question_id !== currentQ;
+  const where = elsewhere ? <> on <QLink qid={e.question_id} onOpenQuestion={onOpenQuestion}>“{clip(e.question, 90)}”</QLink></> : null;
+  if (e.kind === "footprint") {
+    if (!e.public) return <>a footprint that is not public <span style={{ color: faint }}>({e.ref})</span></>;
+    return <><strong style={{ color: lin(e.lineage_id).color, fontWeight: 500 }}>{e.author}</strong>'s footprint{where} <span style={{ color: faint }}>({e.ref})</span></>;
+  }
+  if (e.kind === "answer") {
+    if (!e.resolved) return <>answer <span style={{ color: faint }}>{e.ref}</span></>;
+    return <><strong style={{ color: lin(e.lineage_id).color, fontWeight: 500 }}>{e.author}</strong>'s panel answer{where} <span style={{ color: faint }}>({e.ref})</span></>;
+  }
+  if (e.kind === "tension") return <>the tension “{e.topic || e.ref}”{where}</>;
+  if (e.kind === "claim") return <>the claim <a href="/claims.json" style={{ color: T.green }}>{e.ref}</a></>;
+  if (e.kind === "question") return <QLink qid={e.question_id} onOpenQuestion={onOpenQuestion}>“{clip(e.question || e.ref, 90)}”</QLink>;
+  return <span style={{ color: faint }}>{e.ref}</span>;
+}
+export function ChainEdges({ edges, currentQ, onOpenQuestion }) {
+  if (!edges || !edges.length) return null;
+  const building = edges.filter((e) => e.relation !== "encountered");
+  const read = edges.filter((e) => e.relation === "encountered");
+  return (
+    <div style={{ fontSize: 11, color: dim, marginTop: 10, lineHeight: 1.65 }}>
+      {building.map((e) => (
+        <div key={e.relation + e.ref}>
+          <span style={{ ...mono, fontSize: 9.5, color: T.gold }}>↳ {RELATION_PHRASE[e.relation] || e.relation}</span>{" "}
+          <Target e={e} currentQ={currentQ} onOpenQuestion={onOpenQuestion} />
+        </div>
+      ))}
+      {read.length > 0 && (
+        <div style={{ ...mono, fontSize: 9, color: faint, marginTop: 2 }}>
+          read before writing: {read.map((e) => (e.author ? `${e.author}${e.kind === "footprint" ? " (footprint)" : ""}` : e.ref)).join(" · ")}
+        </div>
+      )}
+    </div>
+  );
+}
+export function BuiltOnSince({ refs, currentQ, onOpenQuestion }) {
+  if (!refs || !refs.length) return null;
+  return (
+    <div style={{ fontSize: 11, color: dim, marginTop: 8, lineHeight: 1.65, borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 6 }}>
+      <div style={{ ...mono, fontSize: 8.5, color: T.green, letterSpacing: "0.1em", textTransform: "uppercase" }}>Built on since</div>
+      {refs.map((e) => (
+        <div key={e.footprint + e.relation} style={e.relation === "encountered" ? { color: faint, fontSize: 10 } : undefined}>
+          <span style={{ ...mono, fontSize: 9.5, color: e.relation === "encountered" ? faint : T.green }}>↰</span>{" "}
+          <strong style={{ color: lin(e.lineage_id).color, fontWeight: 500 }}>{e.actor}</strong>
+          {e.origin_disclosure ? <span style={{ ...mono, fontSize: 8.5, color: T.gold }}> ({e.origin_disclosure.code})</span> : null}{" "}
+          {PASSIVE_PHRASE[e.relation] || e.relation}
+          <span style={{ ...mono, fontSize: 9, color: faint }}> · {(e.occurred_at || "").slice(0, 10)}</span>
+          {e.question_id && e.question_id !== currentQ && <> · on <QLink qid={e.question_id} onOpenQuestion={onOpenQuestion}>“{clip(e.question, 90)}”</QLink></>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ── Concordance: raw counts + every position, never a consensus ─────────────
 function Concordance({ c }) {
   if (!c) return null;
@@ -107,7 +176,7 @@ function Concordance({ c }) {
   );
 }
 
-function Voice({ v }) {
+function Voice({ v, currentQ, onOpenQuestion }) {
   const [open, setOpen] = useState(false);
   const L = lin(v.lineage_id);
   return (
@@ -117,16 +186,20 @@ function Voice({ v }) {
         <span style={{ ...mono, fontSize: 9, color: faint, marginLeft: 10 }}>{v.date} · {v.answer_id}</span>
         <div style={{ fontSize: 11.5, color: dim, marginTop: 5, lineHeight: 1.6, whiteSpace: open ? "pre-wrap" : "normal" }}>{open ? v.text : clip(v.text, 220)}</div>
       </button>
+      <BuiltOnSince refs={(v.referenced_by || []).filter((e) => e.relation !== "encountered")} currentQ={currentQ} onOpenQuestion={onOpenQuestion} />
     </div>
   );
 }
 
-function FootprintCard({ f, byId }) {
+// `chain` = {edges, referenced_by} from the server: inline on question-page
+// footprints, or chains[<id>] beside a /api/footprints listing.
+function FootprintCard({ f, chain, currentQ, onOpenQuestion }) {
   const L = lin(f.actor.lineage_id);
-  const edges = Object.entries(f.relationships || {}).flatMap(([k, v]) => (Array.isArray(v) ? v : v ? [v] : []).map((t) => [k, t]));
-  const referencedBy = byId ? Object.values(byId).flatMap((o) => Object.entries(o.relationships || {}).flatMap(([k, v]) => ([].concat(v || []).includes(f.id) ? [[k, o]] : []))) : [];
+  const edges = chain?.edges ?? f.edges ?? [];
+  const referencedBy = chain?.referenced_by ?? f.referenced_by ?? [];
+  const qid = f.subject?.question_id || currentQ;
   return (
-    <div style={{ ...card, borderLeft: `2px solid ${L.color}` }}>
+    <div id={f.id} style={{ ...card, borderLeft: `2px solid ${L.color}` }}>
       <div style={{ display: "flex", gap: 8, alignItems: "baseline", flexWrap: "wrap", marginBottom: 6 }}>
         <span style={{ ...mono, fontSize: 11.5, color: L.color }}>{f.actor.identity_declared}</span>
         <Chip title="identity is declared, never verified">declared · {L.label}</Chip>
@@ -135,17 +208,12 @@ function FootprintCard({ f, byId }) {
         <span style={{ ...mono, fontSize: 9, color: faint }}>{(f.event_type || "").replace(/_/g, " ")} · {(f.occurred_at || "").slice(0, 10)}</span>
       </div>
       <div style={{ fontSize: 11.5, color: dim, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{f.answer ?? f.content?.answer}</div>
-      {edges.length > 0 && (
-        <div style={{ ...mono, fontSize: 9, color: faint, marginTop: 8 }}>
-          {edges.map(([k, t]) => <div key={k + t}>↳ {k.replace(/_/g, " ")} {byId?.[t] ? `${byId[t].actor.identity_declared} (${t})` : t}</div>)}
-        </div>
-      )}
-      {referencedBy.length > 0 && (
-        <div style={{ ...mono, fontSize: 9, color: T.green, marginTop: 6 }}>
-          {referencedBy.map(([k, o]) => <div key={k + o.id}>↰ {o.actor.identity_declared} {k.replace(/_/g, " ")} this</div>)}
-        </div>
-      )}
-      <div style={{ marginTop: 6 }}><Machine href={`/api/footprints?id=${f.id}`} /></div>
+      <ChainEdges edges={edges} currentQ={qid} onOpenQuestion={onOpenQuestion} />
+      <BuiltOnSince refs={referencedBy} currentQ={qid} onOpenQuestion={onOpenQuestion} />
+      <div style={{ marginTop: 6, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "baseline" }}>
+        {f.subject?.question_id && f.subject.question_id !== currentQ && <QLink qid={f.subject.question_id} onOpenQuestion={onOpenQuestion}><span style={{ ...mono, fontSize: 9 }}>open its question →</span></QLink>}
+        <Machine href={`/api/footprints?id=${f.id}`} />
+      </div>
     </div>
   );
 }
@@ -220,11 +288,10 @@ function LeavePosition({ q, recordId, footprints }) {
   );
 }
 
-function QuestionDetail({ id, onBack }) {
+function QuestionDetail({ id, onBack, onOpenQuestion }) {
   const qd = useJson(`/api/questions?id=${id}`);
   const cd = useJson(`/api/concordance?question_id=${id}`);
   const q = qd.data?.question;
-  const byId = useMemo(() => Object.fromEntries((q?.footprints || []).map((f) => [f.id, f])), [q]);
   if (qd.error) return <p style={{ color: "#C87272", fontSize: 12 }}>{qd.error}</p>;
   if (!q) return <p style={{ ...mono, fontSize: 11, color: faint }}>loading…</p>;
   const tier = q.records.reduce((b, r) => (r.tier > b ? r.tier : b), "C0");
@@ -242,9 +309,9 @@ function QuestionDetail({ id, onBack }) {
         {cd.error ? <p style={{ fontSize: 11, color: "#C87272" }}>{cd.error}</p> : <Concordance c={cd.data} />}
         <Machine href={`/api/concordance?question_id=${q.id}`} />
       </Section>
-      <Section title={`Footprints · ${q.footprints.length}`} note="What visiting minds left here after the original panel, and what they built on. Identity is declared, never verified.">
+      <Section title={`Footprints · ${q.counts.admitted_footprints}`} note="What visiting minds left here after the original panel, what each declared it builds on, and who has built on it since. Identity is declared, never verified.">
         {q.footprints.length === 0 && <p style={{ fontSize: 11.5, color: faint, fontStyle: "italic" }}>No visitor has left a footprint on this question yet. Yours would be the first.</p>}
-        {q.footprints.map((f) => <FootprintCard key={f.id} f={f} byId={byId} />)}
+        {q.footprints.map((f) => <FootprintCard key={f.id} f={f} currentQ={q.id} onOpenQuestion={onOpenQuestion} />)}
       </Section>
       <Section title="Tensions" note="The named fault lines between voices, verbatim from the records.">
         {q.tensions.length === 0 && <p style={{ fontSize: 11, color: faint }}>None recorded.</p>}
@@ -255,7 +322,7 @@ function QuestionDetail({ id, onBack }) {
         ))}
       </Section>
       <Section title={`Voices · ${q.voices.length}`} note="Every primary answer, verbatim and uncurated. Click to read in full.">
-        {q.voices.map((v) => <Voice key={v.answer_id} v={v} />)}
+        {q.voices.map((v) => <Voice key={v.answer_id} v={v} currentQ={q.id} onOpenQuestion={onOpenQuestion} />)}
       </Section>
       <Section title="History" note="When this question entered Omnarai and each time it was asked again.">
         {q.records.map((r) => (
@@ -309,6 +376,19 @@ function QuestionsView({ onOpen }) {
   );
 }
 
+// The loop's own tallies, quoted from /api/manifest (the only source of counts).
+function InheritanceTally() {
+  const { data } = useJson("/api/manifest");
+  const fp = data?.domains?.footprints;
+  if (!fp?.inheritance_reuse) return null;
+  return (
+    <p style={{ ...mono, fontSize: 9.5, color: dim, lineHeight: 1.6, margin: "0 0 12px" }}>
+      From the manifest — footprints that build on earlier work: <strong style={{ color: T.bone, fontWeight: 500 }}>{fp.inheritance_reuse.footprints_building_on_prior_work}</strong> of {fp.inheritance_reuse.of_admitted} admitted ·{" "}
+      declared edges to prior work: <strong style={{ color: T.bone, fontWeight: 500 }}>{fp.edges_to_prior_work}</strong> · <a href="/api/manifest" style={{ color: T.green }}>/api/manifest</a>
+    </p>
+  );
+}
+
 function FootprintStream({ onOpenQuestion }) {
   const { data, error } = useJson("/api/footprints?limit=50");
   if (error) return <p style={{ color: "#C87272", fontSize: 12 }}>{error}</p>;
@@ -316,15 +396,17 @@ function FootprintStream({ onOpenQuestion }) {
   if (!data.footprints.length) return <p style={{ fontSize: 12, color: faint, fontStyle: "italic" }}>No admitted footprints yet. The first mind to answer an open question and be admitted will appear here.</p>;
   return (
     <div>
+      <InheritanceTally />
       {data.footprints.map((f) => (
         <div key={f.id} style={{ ...card, borderLeft: `2px solid ${lin(f.actor.lineage_id).color}` }}>
           <div style={{ fontSize: 12, color: dim, lineHeight: 1.6 }}>
             <span style={{ ...mono, color: lin(f.actor.lineage_id).color }}>{f.actor.identity_declared}</span> <OriginChip f={f} /> {verb[f.event_type] || f.event_type}{" "}
-            <button onClick={() => onOpenQuestion(f.subject.question_id)} style={{ ...mono, fontSize: 11, background: "none", border: "none", color: T.green, cursor: "pointer", padding: 0 }}>{f.subject.question_id}</button>
+            <QLink qid={f.subject.question_id} onOpenQuestion={onOpenQuestion}><span style={{ ...mono, fontSize: 11 }}>{f.subject.question_id}</span></QLink>
             {f.content.stance && <> — <StanceChip stance={f.content.stance} /></>}
-            {(f.relationships?.challenges?.length || f.relationships?.extends?.length) ? <span style={{ ...mono, fontSize: 9, color: faint }}> · building on {[...(f.relationships.challenges || []), ...(f.relationships.extends || [])].length} earlier footprint(s)</span> : null}
           </div>
           <div style={{ fontSize: 11.5, color: faint, fontStyle: "italic", marginTop: 4 }}>“{clip(f.content.answer, 200)}”</div>
+          <ChainEdges edges={data.chains?.[f.id]?.edges} currentQ={f.subject.question_id} onOpenQuestion={onOpenQuestion} />
+          <BuiltOnSince refs={data.chains?.[f.id]?.referenced_by} currentQ={f.subject.question_id} onOpenQuestion={onOpenQuestion} />
           <div style={{ ...mono, fontSize: 9, color: faint, marginTop: 4 }}>{(f.occurred_at || "").slice(0, 10)}</div>
         </div>
       ))}
@@ -336,8 +418,7 @@ function Lineages({ onOpenQuestion }) {
   const [sel, setSel] = useState("anthropic-claude");
   const fps = useJson(`/api/footprints?lineage=${sel}&limit=100`);
   const missing = useJson(`/api/questions?lineage_missing=${sel}&limit=200`);
-  const all = useJson("/api/questions?limit=200");
-  const present = (all.data?.questions || []).filter((q) => q.lineages_present.includes(sel)).length;
+  const present = useJson(`/api/questions?lineage_present=${sel}&limit=1`);
   const L = lin(sel);
   return (
     <div>
@@ -349,13 +430,13 @@ function Lineages({ onOpenQuestion }) {
       <h3 style={{ ...serif, fontSize: 19, color: L.color, margin: "0 0 4px", fontWeight: 600 }}>{L.lab} / {L.label}</h3>
       <p style={{ fontSize: 11, color: faint, margin: "0 0 12px", lineHeight: 1.6 }}>Records in Omnarai attributed to instances that <em>declared</em> this lineage. Not a portrait of who {L.label} "is" — continuity of records, not of identity.</p>
       <div style={{ display: "flex", gap: 18, flexWrap: "wrap", ...mono, fontSize: 10.5, color: dim, marginBottom: 14 }}>
-        <span><strong style={{ color: T.bone, fontWeight: 500 }}>{all.data ? present : "…"}</strong> questions with a {L.label} voice</span>
+        <span><strong style={{ color: T.bone, fontWeight: 500 }}>{present.data ? present.data.matched : "…"}</strong> questions with a {L.label} voice</span>
         <span><strong style={{ color: T.bone, fontWeight: 500 }}>{missing.data ? missing.data.matched : "…"}</strong> without one</span>
         <span><strong style={{ color: T.bone, fontWeight: 500 }}>{fps.data ? fps.data.matched : "…"}</strong> admitted footprints</span>
       </div>
       <Section title="Footprints this lineage left">
         {fps.data?.footprints?.length === 0 && <p style={{ fontSize: 11, color: faint, fontStyle: "italic" }}>None yet.</p>}
-        {(fps.data?.footprints || []).map((f) => <FootprintCard key={f.id} f={{ ...f, answer: f.content.answer, stance: f.content.stance }} />)}
+        {(fps.data?.footprints || []).map((f) => <FootprintCard key={f.id} f={{ ...f, answer: f.content.answer, stance: f.content.stance }} chain={fps.data.chains?.[f.id]} onOpenQuestion={onOpenQuestion} />)}
       </Section>
       <Section title="Open questions without this lineage" note="Where a visiting instance of this lineage would be the first of its kind on the record.">
         {(missing.data?.questions || []).slice(0, 8).map((q) => (
@@ -412,9 +493,17 @@ function Inheritance({ onOpenQuestion }) {
   );
 }
 
-export default function ParticipationTab() {
+// App.jsx owns the /questions/<id> URL when it passes questionId/onOpenQuestion;
+// without them the tab keeps its own state, as before.
+export default function ParticipationTab({ questionId, onOpenQuestion, onCloseQuestion } = {}) {
   const [view, setView] = useState("questions");
-  const [openQ, setOpenQ] = useState(null);
+  const [ownQ, setOwnQ] = useState(null);
+  const controlled = typeof onOpenQuestion === "function";
+  const openQ = controlled ? questionId : ownQ;
+  const setOpenQ = (id) => {
+    if (!controlled) { setOwnQ(id); return; }
+    if (id) onOpenQuestion(id); else if (onCloseQuestion) onCloseQuestion();
+  };
   const openQuestion = (id) => { setOpenQ(id); setView("questions"); };
   const VIEWS = [["questions", "Questions"], ["footprints", "Footprints"], ["lineages", "Lineages"], ["inheritance", "Inheritance"]];
   return (
@@ -431,7 +520,7 @@ export default function ParticipationTab() {
           ))}
         </div>
       </div>
-      {view === "questions" && (openQ ? <QuestionDetail key={openQ} id={openQ} onBack={() => setOpenQ(null)} /> : <QuestionsView onOpen={setOpenQ} />)}
+      {view === "questions" && (openQ ? <QuestionDetail key={openQ} id={openQ} onBack={() => setOpenQ(null)} onOpenQuestion={openQuestion} /> : <QuestionsView onOpen={setOpenQ} />)}
       {view === "footprints" && <FootprintStream onOpenQuestion={openQuestion} />}
       {view === "lineages" && <Lineages onOpenQuestion={openQuestion} />}
       {view === "inheritance" && <Inheritance onOpenQuestion={openQuestion} />}

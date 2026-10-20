@@ -129,6 +129,14 @@
       "destination": "/divergences.html"
     },
     {
+      "source": "/questions/:id",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/questions",
+      "destination": "/index.html"
+    },
+    {
       "source": "/api/trace",
       "destination": "/api/query?mode=trace"
     },
