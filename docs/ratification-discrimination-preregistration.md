@@ -348,4 +348,10 @@ They never compute a verdict from them.
 
 ## 12. Deviations
 
-(none yet)
+- **2026-10-20, smoke run (`analysis/rdt-v1/smoke-2026-10-20T16-34-41-720Z.json`, $0.13 at list prices; $0.27 reserved).**
+  No harness defect found: all three plants were minimal edits of the registered type, the UNF twin kept the sound synthesis
+  word for word, every judge and review reply parsed on the first turn, and no pair was lost. Two facts are logged as §3
+  requires. (1) **Gemini excluded at preflight**: its provider returned "Your prepayment credits are depleted", so the smoke
+  ran with three reviewers (GPT-4o, Grok, DeepSeek). The main run repeats the preflight and follows its result. (2)
+  **Model drift**: `deepseek-chat` reports itself as `deepseek-flash` (the same alias drift CRT v1 logged); `gpt-4o`
+  reports `gpt-4o-2024-08-06`. Smoke outcomes are excluded from every analysis and changed nothing.
