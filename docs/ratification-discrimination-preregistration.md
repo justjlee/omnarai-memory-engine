@@ -1,7 +1,9 @@
 # Preregistration — Ratification Discrimination Test (RDT v1)
 
-**Status:** REGISTERED by the commit that adds this file, pushed to the public repository before any harness was written or
-any model was called. (Recording that commit's SHA and GitHub's push time on this line is the only change allowed to
+**Status:** REGISTERED by commit `c76df7a62161c1669a8978326e41e903d807e706`, pushed to the public repository before any
+harness was written or any model was called. GitHub recorded the branch `ratification-discrimination` being created at that
+commit at **2026-10-20T16:27:56Z** (repository activity API, `branch_creation`); the commit's own date is self-declared and is
+not the evidence. The harness commits come after it on the same branch. (Recording this is the only change allowed to
 §§1–11.)
 **Author:** Researcher: Jonathan Lee (xz) with Claude. **Evidence status of anything this study produces:** `exploratory-preregistered`.
 **Rule:** Everything below is fixed *before* any data are collected. After the first live call, changes go only in the
