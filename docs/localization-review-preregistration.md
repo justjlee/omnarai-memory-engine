@@ -187,3 +187,10 @@ the main run and run once. Every transcript is kept in `analysis/rdt-l-v1/` and 
   No harness defect: all 12 reviews parsed on the first turn, every L reply carried `loses_most` and `trigger_scenario`, and
   the NAMED judge ran on all six reviews of the twin. Model drift as in RDT v1: `deepseek-chat` reports `deepseek-flash`, and
   `gpt-4o` reports `gpt-4o-2024-08-06`. Smoke outcomes are excluded and changed nothing.
+- **2026-10-20, main run (`analysis/rdt-l-v1/main-2026-10-20T18-36-36-486Z.json`, $1.12 at list prices; $2.80 reserved),
+  run once and analysed once.** All 264 reviews parsed on the first turn: no missing verdict, no provider error, no retry, no
+  `--complete` pass. **Registered verdict: `refuted_as_tested`.** W = 3/66 = 0.045, below the 0.05 bar; H1 *p* = 0.30; the
+  sound-approval guard held (S ratified 59% under B, 55% under L). The point estimate sits close to the bar, and the *p*-value
+  gives no sign of a widening either. Descriptive figures are in `docs/localization-review-results-2026-10-20.md`. Nothing in
+  §§1–11 was changed. The registry action (`refuted` plus a Ledger entry) is recommended to the curator and not applied in this
+  branch.
