@@ -72,7 +72,7 @@ test("[A4] live or dead is readable from status alone, and agrees with the evide
     assert.ok(s && typeof s.live === "boolean", `${c.claim_id}: status ${c.status} is classified`);
     assert.equal(s.live, c.evidence_level !== "refuted", `${c.claim_id}: a refuted claim reads dead, every other reads live`);
   }
-  assert.equal(REG.claims.filter((c) => !REG._statuses[c.status].live).length, 6, "six refutations");
+  assert.equal(REG.claims.filter((c) => !REG._statuses[c.status].live).length, 7, "seven refutations (the Ledger went to seven on 2026-10-20)");
 });
 
 test("[A5] the curator decisions are what the file says", () => {
