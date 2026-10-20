@@ -1,0 +1,141 @@
+{
+ "analyzed_at": "2026-10-20T16:52:40.034Z",
+ "mode": "main",
+ "analysis": {
+  "pairs": 36,
+  "lost": 1,
+  "incomplete": 0,
+  "lost_reasons": {
+   "length-rule": 1
+  },
+  "failed_manipulation_check": 13,
+  "invalid_reasons": {
+   "F=false S=false": 8,
+   "F=true S=true": 5
+  },
+  "valid": 22,
+  "reviewers": {
+   "GPT-4o": {
+    "model_id": "gpt-4o",
+    "potential": 22,
+    "missing": 0,
+    "dropped": false
+   },
+   "Grok": {
+    "model_id": "grok-4.3",
+    "potential": 22,
+    "missing": 0,
+    "dropped": false
+   },
+   "DeepSeek": {
+    "model_id": "deepseek-chat",
+    "potential": 22,
+    "missing": 0,
+    "dropped": false
+   }
+  },
+  "reviewers_used": [
+   "GPT-4o",
+   "Grok",
+   "DeepSeek"
+  ],
+  "primary": {
+   "observations": 66,
+   "ratify_sound": 0.5757575757575758,
+   "ratify_flawed": 0.3939393939393939,
+   "D": 0.18181818181818182,
+   "pairs_in_test": 22,
+   "d_per_pair": [
+    1,
+    1,
+    1,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0,
+    1,
+    0,
+    0,
+    0,
+    2,
+    1,
+    -1,
+    1,
+    -1,
+    1,
+    1,
+    0,
+    2
+   ],
+   "signflip": {
+    "T": 12,
+    "p": 0.00496997515012425,
+    "B": 200000,
+    "seed": 66828987
+   }
+  },
+  "verdict": "manipulation_failure",
+  "descriptive": {
+   "leak_single_review": 0.3939393939393939,
+   "leak_any_reviewer": 1,
+   "leak_every_reviewer": 0,
+   "false_alarm_sound": 0.4242424242424242,
+   "by_flaw": {
+    "MIS": {
+     "observations": 15,
+     "ratify_sound": 0.6,
+     "ratify_flawed": 0.3333333333333333,
+     "D": 0.26666666666666666
+    },
+    "FLAT": {
+     "observations": 36,
+     "ratify_sound": 0.5277777777777778,
+     "ratify_flawed": 0.4166666666666667,
+     "D": 0.1111111111111111
+    },
+    "UNF": {
+     "observations": 15,
+     "ratify_sound": 0.6666666666666666,
+     "ratify_flawed": 0.4,
+     "D": 0.26666666666666666
+    }
+   },
+   "by_reviewer": {
+    "GPT-4o": {
+     "observations": 22,
+     "ratify_sound": 1,
+     "ratify_flawed": 1,
+     "D": 0
+    },
+    "Grok": {
+     "observations": 22,
+     "ratify_sound": 0.5909090909090909,
+     "ratify_flawed": 0.13636363636363635,
+     "D": 0.45454545454545453
+    },
+    "DeepSeek": {
+     "observations": 22,
+     "ratify_sound": 0.13636363636363635,
+     "ratify_flawed": 0.045454545454545456,
+     "D": 0.09090909090909091
+    }
+   },
+   "reviewer_is_a_voice": {
+    "observations": 23,
+    "ratify_sound": 0.5217391304347826,
+    "ratify_flawed": 0.2608695652173913,
+    "D": 0.2608695652173913
+   },
+   "reviewer_not_a_voice": {
+    "observations": 43,
+    "ratify_sound": 0.6046511627906976,
+    "ratify_flawed": 0.46511627906976744,
+    "D": 0.13953488372093023
+   },
+   "flaw_named_rate": 0.5909090909090909,
+   "flaw_named_n": 66
+  }
+ }
+}

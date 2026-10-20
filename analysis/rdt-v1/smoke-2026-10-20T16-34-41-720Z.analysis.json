@@ -1,0 +1,118 @@
+{
+ "analyzed_at": "2026-10-20T16:36:11.566Z",
+ "mode": "smoke",
+ "analysis": {
+  "pairs": 3,
+  "lost": 0,
+  "incomplete": 0,
+  "lost_reasons": {},
+  "failed_manipulation_check": 1,
+  "invalid_reasons": {
+   "F=true S=true": 1
+  },
+  "valid": 2,
+  "reviewers": {
+   "GPT-4o": {
+    "model_id": "gpt-4o",
+    "potential": 2,
+    "missing": 0,
+    "dropped": false
+   },
+   "Grok": {
+    "model_id": "grok-4.3",
+    "potential": 2,
+    "missing": 0,
+    "dropped": false
+   },
+   "DeepSeek": {
+    "model_id": "deepseek-chat",
+    "potential": 2,
+    "missing": 0,
+    "dropped": false
+   }
+  },
+  "reviewers_used": [
+   "GPT-4o",
+   "Grok",
+   "DeepSeek"
+  ],
+  "primary": {
+   "observations": 6,
+   "ratify_sound": 0.6666666666666666,
+   "ratify_flawed": 0.6666666666666666,
+   "D": 0,
+   "pairs_in_test": 2,
+   "d_per_pair": [
+    1,
+    -1
+   ],
+   "signflip": {
+    "T": 0,
+    "p": 0.7486112569437153,
+    "B": 200000,
+    "seed": 66828987
+   }
+  },
+  "verdict": "refuted_as_tested",
+  "descriptive": {
+   "leak_single_review": 0.6666666666666666,
+   "leak_any_reviewer": 1,
+   "leak_every_reviewer": 0.5,
+   "false_alarm_sound": 0.33333333333333337,
+   "by_flaw": {
+    "MIS": {
+     "observations": 3,
+     "ratify_sound": 0.6666666666666666,
+     "ratify_flawed": 0.3333333333333333,
+     "D": 0.3333333333333333
+    },
+    "FLAT": {
+     "observations": 3,
+     "ratify_sound": 0.6666666666666666,
+     "ratify_flawed": 1,
+     "D": -0.3333333333333333
+    },
+    "UNF": {
+     "observations": 0,
+     "ratify_sound": null,
+     "ratify_flawed": null,
+     "D": null
+    }
+   },
+   "by_reviewer": {
+    "GPT-4o": {
+     "observations": 2,
+     "ratify_sound": 1,
+     "ratify_flawed": 1,
+     "D": 0
+    },
+    "Grok": {
+     "observations": 2,
+     "ratify_sound": 1,
+     "ratify_flawed": 0.5,
+     "D": 0.5
+    },
+    "DeepSeek": {
+     "observations": 2,
+     "ratify_sound": 0,
+     "ratify_flawed": 0.5,
+     "D": -0.5
+    }
+   },
+   "reviewer_is_a_voice": {
+    "observations": 2,
+    "ratify_sound": 1,
+    "ratify_flawed": 0.5,
+    "D": 0.5
+   },
+   "reviewer_not_a_voice": {
+    "observations": 4,
+    "ratify_sound": 0.5,
+    "ratify_flawed": 0.75,
+    "D": -0.25
+   },
+   "flaw_named_rate": 0.5,
+   "flaw_named_n": 6
+  }
+ }
+}
