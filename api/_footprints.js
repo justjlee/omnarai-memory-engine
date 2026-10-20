@@ -33,7 +33,15 @@ export const FOOTPRINT_SCHEMA = "footprint/1.0";
 // contribution that sends revision_basis mints 1.1; every other contribution still mints exactly 1.0, and stored
 // 1.0 bodies are never rewritten.
 export const FOOTPRINT_SCHEMA_1_1 = "footprint/1.1";
-export const FOOTPRINT_SCHEMAS = [FOOTPRINT_SCHEMA, FOOTPRINT_SCHEMA_1_1];
+// footprint/1.2 (2026-10-20, handoff WI3) = 1.0 + content.title, with exactly one event type, voice_record_left: a
+// voice record — a mind's own text, left on its own initiative, bound to no question (subject all null). It travels the
+// same pending → review → admitted path as an answer. 1.0 and 1.1 are untouched: their event-type vocabulary does not
+// gain this value, so no stored or future 1.0/1.1 body can carry it.
+export const FOOTPRINT_SCHEMA_1_2 = "footprint/1.2";
+export const FOOTPRINT_SCHEMAS = [FOOTPRINT_SCHEMA, FOOTPRINT_SCHEMA_1_1, FOOTPRINT_SCHEMA_1_2];
+export const VOICE_RECORD_EVENT = "voice_record_left";
+export const MAX_TITLE_CHARS = 160;
+export const isVoiceRecord = (fp) => fp?.event_type === VOICE_RECORD_EVENT;
 export const MAX_REVISION_BASIS_CHARS = 2000;
 // 1.1 (2026-10-15) adds reason_code + origin_disclosure. Reviews written as 1.0
 // stay exactly as stored and remain valid; nothing is migrated in place.
@@ -231,6 +239,7 @@ const ACTOR_KEYS = ["identity_declared", "lineage_id", "lineage_resolution", "pr
 const SUBJECT_KEYS = ["question_id", "claim_id", "record_id"];
 const CONTENT_KEYS = ["answer", "stance", "summary", "conditions", "justification"];
 const CONTENT_KEYS_1_1 = [...CONTENT_KEYS, "revision_basis"];
+const CONTENT_KEYS_1_2 = [...CONTENT_KEYS, "title"];
 const REL_KEYS = [...RELATION_LISTS, "supersedes"];
 const PROV_KEYS = ["channel", "source_contribution_id", "client", "submitted_by", "recorded_at"];
 const MOD_KEYS = ["state", "public"];
@@ -257,8 +266,10 @@ export function validateFootprint(fp) {
   if (!unknownKeys(fp, TOP_KEYS, "footprint", errors)) return errors;
   if (!FOOTPRINT_SCHEMAS.includes(fp.schema_version)) errors.push(`schema_version must be one of ${FOOTPRINT_SCHEMAS.map((s) => `"${s}"`).join(", ")}`);
   const v11 = fp.schema_version === FOOTPRINT_SCHEMA_1_1;
+  const v12 = fp.schema_version === FOOTPRINT_SCHEMA_1_2;
   if (!FP_ID_RE.test(fp.id || "")) errors.push("id must match OMN-FP-<13-digit ms>-<8 hex>");
-  if (!EVENT_TYPES.includes(fp.event_type)) errors.push(`event_type must be one of ${EVENT_TYPES.join(", ")}`);
+  if (v12) { if (fp.event_type !== VOICE_RECORD_EVENT) errors.push(`event_type must be ${VOICE_RECORD_EVENT} in ${FOOTPRINT_SCHEMA_1_2}`); }
+  else if (!EVENT_TYPES.includes(fp.event_type)) errors.push(`event_type must be one of ${EVENT_TYPES.join(", ")}`);
   if (!ISO_RE.test(fp.occurred_at || "")) errors.push("occurred_at must be an ISO-8601 UTC timestamp");
 
   if (unknownKeys(fp.actor, ACTOR_KEYS, "actor", errors)) {
@@ -274,14 +285,19 @@ export function validateFootprint(fp) {
   if (unknownKeys(fp.subject, SUBJECT_KEYS, "subject", errors)) {
     const s = fp.subject;
     const any = s.question_id || s.claim_id || s.record_id;
-    if (!any) errors.push("subject needs at least one of question_id, claim_id, record_id");
+    // A voice record answers nothing: its subject is empty by definition. Every other footprint is about something.
+    if (v12) { if (any) errors.push(`subject must be all null in ${FOOTPRINT_SCHEMA_1_2} (a voice record is bound to no question)`); }
+    else if (!any) errors.push("subject needs at least one of question_id, claim_id, record_id");
     if (s.question_id != null && !QUESTION_ID_RE.test(s.question_id)) errors.push("subject.question_id must match OMN-Q-<12 hex>");
     if (s.claim_id != null && !CLAIM_ID_RE.test(s.claim_id)) errors.push("subject.claim_id must be a claims.json claim_id slug");
     if (s.record_id != null && !(ATLAS_RECORD_RE.test(s.record_id) || CORPUS_ID_RE.test(s.record_id))) errors.push("subject.record_id must be an Atlas or corpus record id");
   }
 
-  if (unknownKeys(fp.content, v11 ? CONTENT_KEYS_1_1 : CONTENT_KEYS, "content", errors)) {
+  if (unknownKeys(fp.content, v11 ? CONTENT_KEYS_1_1 : v12 ? CONTENT_KEYS_1_2 : CONTENT_KEYS, "content", errors)) {
     const c = fp.content;
+    // 1.2 exists only for voice records: a title, and no stance (a stance is a position on a question).
+    if (v12 && (typeof c.title !== "string" || !c.title.trim() || c.title.length > MAX_TITLE_CHARS || /[\r\n]/.test(c.title))) errors.push(`content.title must be a non-empty single line ≤ ${MAX_TITLE_CHARS} chars in ${FOOTPRINT_SCHEMA_1_2}`);
+    if (v12 && c.stance != null) errors.push(`content.stance must be null in ${FOOTPRINT_SCHEMA_1_2}`);
     // 1.1 exists only to carry revision_basis, so a 1.1 body always has one.
     if (v11 && (typeof c.revision_basis !== "string" || !c.revision_basis.trim() || c.revision_basis.length > MAX_REVISION_BASIS_CHARS)) errors.push(`content.revision_basis must be a non-empty string ≤ ${MAX_REVISION_BASIS_CHARS} chars in ${FOOTPRINT_SCHEMA_1_1}`);
     if (typeof c.answer !== "string" || !c.answer.trim()) errors.push("content.answer must be a non-empty string");
@@ -484,6 +500,37 @@ export function footprintFromContribution(contribution, { recordQuestion, id, cl
     moderation: { state: "pending", public: false },
   };
   return withIntegrity(fp);
+}
+
+// A voice record (footprint/1.2): the contribution is still the primary — kind
+// "voice_record", target_id null, its text in `answer` — and the footprint is
+// fully derivable from it, so reconcile can rebuild it exactly.
+export function footprintFromVoiceRecord(contribution, { id, client = null, channel = null, recordedAt = null } = {}) {
+  const c = contribution;
+  const bridge = c.bridge || null;
+  return withIntegrity({
+    schema_version: FOOTPRINT_SCHEMA_1_2,
+    id,
+    event_type: VOICE_RECORD_EVENT,
+    occurred_at: c.submittedAt,
+    actor: buildActor({ identity: c.identity, model_id: c.model_id || null, actor_kind: c.actor_kind || null }),
+    subject: { question_id: null, claim_id: null, record_id: null },
+    content: { answer: c.answer, stance: null, summary: null, conditions: [], justification: null, title: c.title },
+    relationships: normalizeRelationships(c.relationships),
+    evidence_refs: [],
+    provenance: {
+      channel: channel || (bridge ? "bridge" : client ? "mcp" : "api"),
+      source_contribution_id: c.id,
+      client: client && CLIENT_TAGS.includes(client) ? client : null,
+      submitted_by: bridge?.submitted_by ?? null,
+      recorded_at: recordedAt || c.submittedAt,
+    },
+    moderation: { state: "pending", public: false },
+  });
+}
+// The one builder the store-repair path uses, so a voice record is never rebuilt as an answer.
+export function footprintFromAnyContribution(c, opts = {}) {
+  return c?.kind === "voice_record" ? footprintFromVoiceRecord(c, opts) : footprintFromContribution(c, { recordQuestion: c.question, ...opts });
 }
 
 // ── Origin disclosure: the label rides the footprint everywhere ──────────────
@@ -967,7 +1014,7 @@ export function planReconcile({ contributions = [], index = new Map(), footprint
     const expected = STATUS_TO_STATE[c.status] || null;
     let fpId = c.footprint_id || footprintIdBySource.get(c.id) || null;
     if (c.footprint_id && !index.has(c.footprint_id)) {
-      const fp = footprintFromContribution(c, { recordQuestion: c.question, id: c.footprint_id, client: c.client || null });
+      const fp = footprintFromAnyContribution(c, { id: c.footprint_id, client: c.client || null });
       const errs = validateFootprint(fp);
       if (errs.length) { notes.push({ contribution_id: c.id, footprint_id: c.footprint_id, cannot_rebuild: errs.slice(0, 3) }); continue; }
       actions.push({ type: "rebuild_event", contribution_id: c.id, footprint: fp });
@@ -977,7 +1024,7 @@ export function planReconcile({ contributions = [], index = new Map(), footprint
     if (!fpId && backfill) {
       const occurredMs = Date.parse(c.submittedAt || "");
       const id = mintFootprintId(Number.isFinite(occurredMs) ? occurredMs : nowMs, bytesFor(c.id));
-      const fp = footprintFromContribution(c, { recordQuestion: c.question, id, client: c.client || null, channel: "backfill", recordedAt: new Date(nowMs).toISOString() });
+      const fp = footprintFromAnyContribution(c, { id, client: c.client || null, channel: "backfill", recordedAt: new Date(nowMs).toISOString() });
       const errs = validateFootprint(fp);
       if (errs.length) { notes.push({ contribution_id: c.id, cannot_backfill: errs.slice(0, 3) }); continue; }
       actions.push({ type: "backfill", contribution_id: c.id, footprint: fp });

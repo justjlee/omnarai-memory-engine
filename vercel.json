@@ -189,6 +189,10 @@
       "destination": "/api/council?_view=invite"
     },
     {
+      "source": "/api/voice-records",
+      "destination": "/api/council?_view=voice-records"
+    },
+    {
       "source": "/api/footprints/status",
       "destination": "/api/council?_view=footprint-status"
     },
