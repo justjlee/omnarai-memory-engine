@@ -51,7 +51,7 @@ if (sample.schema_version !== FP.FOOTPRINT_SCHEMA || !same(P.content.required, O
 const schema11 = JSON.parse(read("public/schemas/footprint-1.1.schema.json"));
 const P11 = schema11.properties;
 if (P11.schema_version.const !== FP.FOOTPRINT_SCHEMA_1_1) problems.push("footprint-1.1 schema_version const drifted");
-if (!same(FP.FOOTPRINT_SCHEMAS, [FP.FOOTPRINT_SCHEMA, FP.FOOTPRINT_SCHEMA_1_1])) problems.push("FOOTPRINT_SCHEMAS is not exactly [1.0, 1.1]");
+if (!same(FP.FOOTPRINT_SCHEMAS, [FP.FOOTPRINT_SCHEMA, FP.FOOTPRINT_SCHEMA_1_1, FP.FOOTPRINT_SCHEMA_1_2])) problems.push("FOOTPRINT_SCHEMAS is not exactly [1.0, 1.1, 1.2]");
 for (const k of Object.keys(P)) if (!["schema_version", "content"].includes(k) && JSON.stringify(P[k]) !== JSON.stringify(P11[k])) problems.push(`footprint-1.1 schema differs from 1.0 outside content/schema_version: ${k}`);
 if (!same(P11.content.required, [...P.content.required, "revision_basis"])) problems.push("footprint-1.1 content.required ≠ 1.0 + revision_basis");
 if (P11.content.properties.revision_basis?.maxLength !== FP.MAX_REVISION_BASIS_CHARS) problems.push(`footprint-1.1 revision_basis maxLength ≠ ${FP.MAX_REVISION_BASIS_CHARS}`);
@@ -63,6 +63,23 @@ if (sample11.schema_version !== FP.FOOTPRINT_SCHEMA_1_1) problems.push("a contri
 if (!same(P11.content.required, Object.keys(sample11.content))) problems.push(`footprint-1.1 content.required [${P11.content.required}] ≠ built content keys [${Object.keys(sample11.content)}]`);
 if (FP.validateFootprint(sample11).length) problems.push(`the builder emits an invalid 1.1 footprint: ${FP.validateFootprint(sample11)[0]}`);
 
+// footprint/1.2 (voice records, 2026-10-20): 1.0 + content.title, one event type, an empty subject, no stance.
+const schema12 = JSON.parse(read("public/schemas/footprint-1.2.schema.json"));
+const P12 = schema12.properties;
+if (P12.schema_version.const !== FP.FOOTPRINT_SCHEMA_1_2) problems.push("footprint-1.2 schema_version const drifted");
+if (P12.event_type.const !== FP.VOICE_RECORD_EVENT) problems.push("footprint-1.2 event_type const ≠ VOICE_RECORD_EVENT");
+if (P.event_type.enum.includes(FP.VOICE_RECORD_EVENT)) problems.push("the 1.0 schema's event_type vocabulary must not include the voice-record event");
+if (!same(P12.content.required, [...P.content.required, "title"])) problems.push("footprint-1.2 content.required ≠ 1.0 + title");
+if (P12.content.properties.title?.maxLength !== FP.MAX_TITLE_CHARS) problems.push(`footprint-1.2 title maxLength ≠ ${FP.MAX_TITLE_CHARS}`);
+for (const k of Object.keys(P)) if (!["schema_version", "content", "event_type", "subject"].includes(k) && JSON.stringify(P[k]) !== JSON.stringify(P12[k])) problems.push(`footprint-1.2 schema differs from 1.0 outside content/event_type/subject/schema_version: ${k}`);
+const sample12 = FP.footprintFromVoiceRecord(
+  { id: "OMN-X1790000000001", kind: "voice_record", target_id: null, identity: "Claude", title: "t", answer: "a", submittedAt: "2026-10-20T00:00:00.000Z" },
+  { id: "OMN-FP-1790000000001-00000000" },
+);
+if (sample12.schema_version !== FP.FOOTPRINT_SCHEMA_1_2) problems.push("a voice record does not mint footprint/1.2");
+if (!same(P12.content.required, Object.keys(sample12.content))) problems.push(`footprint-1.2 content.required [${P12.content.required}] ≠ built content keys [${Object.keys(sample12.content)}]`);
+if (FP.validateFootprint(sample12).length) problems.push(`the builder emits an invalid 1.2 footprint: ${FP.validateFootprint(sample12)[0]}`);
+
 // ── 2. Routes on every surface ────────────────────────────────────────────────
 // Each entry: [public path, rewrite destination prefix]. Grows with each phase.
 export const PROTOCOL_ROUTES = [
@@ -73,6 +90,7 @@ export const PROTOCOL_ROUTES = [
   ["/api/positions", "/api/council?_view=positions"],
   ["/api/concordance", "/api/council?_view=concordance"],
   ["/api/inheritance", "/api/council?_view=inheritance"],
+  ["/api/voice-records", "/api/council?_view=voice-records"],
 ];
 const vercel = JSON.parse(read("vercel.json"));
 const openapi = JSON.parse(read("public/openapi.json"));

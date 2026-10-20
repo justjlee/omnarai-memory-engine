@@ -110,6 +110,19 @@ async function frontChecks() {
     (playsJson.status >= 300 && playsJson.status < 400) || !!(pj && (pj.tracks || pj.totals)),
     "status " + playsJson.status);
 
+  // /voices (2026-10-20) is the human index of voice records; its twin is /api/voice-records. Same law as /plays.
+  const voicesHtml = await get(FRONT + "/voices");
+  rec("3", "/voices advertises its machine twin (rel=alternate → /api/voice-records)",
+    /rel=["']?alternate["']?[^>]*\/api\/voice-records|\/api\/voice-records[^>]*rel=["']?alternate/i.test(voicesHtml.text),
+    "status " + voicesHtml.status);
+  rec("3", "/voices embeds an inline machine payload",
+    /type=["']application\/(ld\+)?json["']/i.test(voicesHtml.text), "");
+  const voicesJson = await get(FRONT + "/voices", { accept: "application/json" });
+  const vloc = (voicesJson.headers?.get?.("location") || "").toString();
+  rec("2", "/voices hands a machine its twin when JSON is asked for (content negotiation)",
+    (voicesJson.status >= 300 && voicesJson.status < 400 && /\/api\/voice-records/.test(vloc)) || !!json(voicesJson.text)?.voice_records,
+    "status " + voicesJson.status + (vloc ? " → " + vloc : ""));
+
   // ── Art 2 — the front door itself offers a machine twin ─────────────────────
   const homeMachine = await get(FRONT + "/", { accept: "application/json" });
   const isRedirect = homeMachine.status >= 300 && homeMachine.status < 400;
