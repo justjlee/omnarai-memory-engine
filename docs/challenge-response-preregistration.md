@@ -345,4 +345,10 @@ engine response and every label are kept in `analysis/crt-v1/` and published wit
   `labeller-error` (same labeller, same prompt, temperature 0). It then re-judges those texts and writes
   `<main>.completed-<ts>.json`, which carries the registered analysis over all 80 items. Items lost for any other
   reason stay lost. Tested in `scripts/test-challenge-loop.mjs` [E4]. Estimate $1.04 (reserve $1.56).
+- **2026-10-15, during the §9 completion pass (provider error again).** `--complete` re-ran the 22 lost items and re-asked
+  the 68 failed ballots (`analysis/crt-v1/main-2026-10-15T20-06-39-121Z.completed-2026-10-15T20-48-29-729Z.json`, $0.98 at
+  list prices). The Gemini API ran out of prepaid credit again partway through: 7 items are still lost to provider errors,
+  and 72 ballots still carry `labeller-error`. 72 items are valid. Under the same §9 rule, one more `--complete` pass on
+  that file follows once Gemini is funded. The analysis printed with this partial file is NOT the registered analysis,
+  which is run once on the finished file.
 
