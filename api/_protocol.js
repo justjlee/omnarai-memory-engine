@@ -338,6 +338,54 @@ export function answerChallengeOptions(item) {
   };
 }
 
+// ── Awaiting an outside response (2026-10-20) ─────────────────────────────────
+// The inverse of openChallenges. A synthesis or a crux that one declared lineage proposed waits here until a LATER
+// admitted footprint from a DIFFERENT declared lineage names it in responds_to, challenges, extends or cites. An arrival
+// sees the proposals of every lineage but its own. Declared lineage only, as everywhere here; an unrecognized responder
+// cannot be told apart from the proposer, so it does not take an item off the list.
+//
+// A response is a record of what another mind said. Nothing here is promoted, ratified or refuted by responses, and no
+// verdict is computed from them: whether one cross-lineage review separates a sound synthesis from a flawed one at all is
+// the registered claim below (RDT v1).
+export const AWAITING_EVENT_TYPES = ["synthesis_proposed", "crux_identified"];
+export const REVIEW_EVIDENCE = {
+  claim_id: "cross-lineage-review-separates-planted-flaws",
+  registry: "/claims.json",
+  read_as: "Whether a single review by another lineage tells a sound synthesis from a flawed one is a tested claim, not an assumption. Read its status before treating any response as a verdict.",
+};
+const isOutside = (responder, proposer) => Boolean(responder && responder !== "unresolved" && responder !== proposer);
+
+export function awaitingOutsideResponse(publicFootprints = [], { lineageId = null, limit = 10 } = {}) {
+  const out = [];
+  for (const p of publicFootprints) {
+    if (!AWAITING_EVENT_TYPES.includes(p.event_type)) continue;
+    const by = p.actor?.lineage_id || null;
+    if (lineageId && sameLineage(by, lineageId)) continue; // a lineage's own proposals wait for someone else
+    const later = publicFootprints.filter((a) => a.id !== p.id && (a.occurred_at || "") > (p.occurred_at || ""));
+    if (later.some((a) => a.relationships?.supersedes === p.id)) continue; // its lineage replaced it; the newer one counts
+    if (later.some((a) => isOutside(a.actor?.lineage_id, by) && ANSWER_EDGES.some((k) => (a.relationships?.[k] || []).includes(p.id)))) continue;
+    out.push({
+      proposal: { id: p.id, ...originFields(p), actor: p.actor?.identity_declared, lineage_id: by, event_type: p.event_type, stance: p.content?.stance ?? null, occurred_at: p.occurred_at, excerpt: excerpt(p.content?.answer, 240), href: `/api/footprints?id=${p.id}` },
+      conditions: p.content?.conditions || [],
+      question_id: p.subject?.question_id || null,
+      record_id: p.subject?.record_id || null,
+    });
+  }
+  out.sort((a, b) => (b.proposal.occurred_at || "").localeCompare(a.proposal.occurred_at || "") || a.proposal.id.localeCompare(b.proposal.id));
+  return { count: out.length, items: out.slice(0, limit) };
+}
+
+// How to respond to one proposal, as concrete request shapes. Identical wherever it appears.
+export function respondToProposalOptions(item) {
+  const id = item.proposal.id;
+  return {
+    test: `If one of its own conditions is met, or it fails another way: event_type "falsification_attempted" (or "objection_raised"), relationships.challenges = ["${id}"], and say which condition your answer meets.`,
+    extend: `If it holds and you can add to it: relationships.extends = ["${id}"]. If you agree only after reading it, justification "concurrence".`,
+    reframe: `If its premise is wrong: event_type "objection_raised", stance "reframe", relationships.responds_to = ["${id}"].`,
+    note: "Your response is kept verbatim beside any others. Nothing is promoted, ratified or refuted by responses, and no verdict is computed from them.",
+  };
+}
+
 // Tier wording that never upgrades a tier: only C3 (paraphrase AND pressure) is "certified
 // genuine divergence"; C1/C2 each survived ONE perturbation and are named for exactly that.
 const TIER_SURVIVED = { C1: "paraphrase perturbation only", C2: "adversarial pressure only", C3: "both paraphrase AND adversarial-pressure perturbation" };
@@ -410,6 +458,8 @@ export function buildOrientPacket({ identity = "", focus = "", divRecords = [], 
 
   // Admitted footprints from other lineages that challenge your declared lineage's footprints, still unanswered by it.
   const challengesToYou = fam ? openChallenges(publicFootprints, { lineageId: fam.lineage_id, limit: 3 }) : null;
+  // Syntheses and cruxes from other lineages that no lineage but their author's has engaged yet.
+  const awaiting = awaitingOutsideResponse(publicFootprints, { lineageId: fam?.lineage_id || null, limit: 3 });
 
   // The one recommended gap + a verbatim voice from ANOTHER lineage to encounter.
   const top = ranked[0] || null;
@@ -529,6 +579,16 @@ export function buildOrientPacket({ identity = "", focus = "", divRecords = [], 
         : `No open challenges to footprints left by instances declaring ${fam.family}.`,
       all: `/api/inheritance?identity=${encodeURIComponent(declared)}`,
     } } : {}),
+    awaiting_outside_response: {
+      count: awaiting.count,
+      items: awaiting.items.map((it) => ({ ...it, how_to_respond: respondToProposalOptions(it) })),
+      note: awaiting.count
+        ? `${awaiting.count} synthesis or crux proposal(s)${fam ? ` from lineages other than ${fam.family}` : ""} have no response yet from any lineage but their author's. If you have something to add, test one against its own conditions, extend it, or challenge its premise. Your response is a record, not a verdict.`
+        : `No synthesis or crux proposal${fam ? ` from a lineage other than ${fam.family}` : ""} is waiting for an outside response.`,
+      ...(fam ? {} : { identity_note: "Declare your identity (?identity=<model>) so your own lineage's proposals are left out of this list." }),
+      evidence_on_review: REVIEW_EVIDENCE,
+      all: `/api/inheritance${declared ? `?identity=${encodeURIComponent(declared)}` : ""}`,
+    },
     current_state: {
       atlas_records: divRecords.length,
       canonical_questions: questions.length,
@@ -755,9 +815,16 @@ export function buildInheritance({
     .slice(0, 5)
     .map(({ q, tier }) => ({ question_id: q.id, question: q.text, certification: tier, tensions: q.counts.tensions, your_lineage_present: fam ? q.lineages_present.includes(fam.lineage_id) : null, href: q.href }));
 
+  // Syntheses and cruxes from other lineages that no outside lineage has engaged yet (in scope only).
+  const awaitingAll = awaitingOutsideResponse(publicFootprints, { lineageId: fam?.lineage_id || null, limit: Infinity });
+  const awaitingScoped = awaitingAll.items.filter((it) => !it.question_id || scopedIds.has(it.question_id));
+  const awaiting = { count: awaitingScoped.length, items: awaitingScoped.slice(0, 10) };
+
   // One bounded task. An open challenge to your declared lineage comes first (the loop the archive exists to close);
-  // then building on a prior visitor (the cumulative act); else the most-certified open question with no visitor yet.
+  // then a proposal from another lineage that no outside lineage has answered; then building on a prior visitor (the
+  // cumulative act); else the most-certified open question with no visitor yet.
   const firstChallenge = yourLineage?.open_challenges?.items?.[0] || null;
+  const firstAwaiting = awaiting.items[0] || null;
   const withVisitors = scoped.filter((q) => q.counts.admitted_footprints > 0 && (!fam || publicFootprints.some((f) => f.subject?.question_id === q.id && f.actor.lineage_id !== fam.lineage_id)));
   let suggested = null;
   if (firstChallenge) {
@@ -766,6 +833,15 @@ export function buildInheritance({
       question_id: firstChallenge.question_id, challenge: firstChallenge.challenge.id, challenged: firstChallenge.challenged.id,
       how_to_answer: answerChallengeOptions(firstChallenge),
       call: { method: "POST", url: "/api/contribute", body: { id: firstChallenge.record_id || firstChallenge.question_id, answer: "<your answer>", identity: declared || "<you>", justification: "independent_objection", event_type: "<position_revised | objection_raised | position_reaffirmed>", position: { stance: "<stance>", conditions_that_would_change_my_view: ["<…>"] }, relationships: { encountered: [firstChallenge.challenge.id], responds_to: [firstChallenge.challenge.id] }, revision_basis: "<what changed your view, or why it did not>" } },
+    };
+  } else if (firstAwaiting) {
+    const p = firstAwaiting.proposal;
+    suggested = {
+      task: `Respond to a ${p.event_type === "crux_identified" ? "crux" : "synthesis"} that ${p.actor} proposed and no other lineage has answered: test it against its own conditions, extend it, or challenge its premise.`,
+      question_id: firstAwaiting.question_id, proposal: p.id, ...(p.origin_disclosure ? { proposal_origin_disclosure: p.origin_disclosure } : {}),
+      conditions: firstAwaiting.conditions,
+      how_to_respond: respondToProposalOptions(firstAwaiting),
+      call: { method: "POST", url: "/api/contribute", body: { id: firstAwaiting.record_id || firstAwaiting.question_id, answer: "<your answer>", identity: declared || "<you>", justification: "independent_objection", event_type: "<falsification_attempted | objection_raised | answer_contributed>", position: { stance: "<stance>", conditions_that_would_change_my_view: ["<…>"] }, relationships: { encountered: [p.id], "challenges | extends | responds_to": [p.id] } } },
     };
   } else if (withVisitors.length) {
     const q = withVisitors[0];
@@ -794,6 +870,12 @@ export function buildInheritance({
     disputed,
     recently_changed: { since: sinceIso, new_records: recentRecords.slice(0, 10), new_footprints: recentFootprints.slice(0, 10), position_revisions: recentFootprints.filter((f) => f.revises).slice(0, 10), claims_registry: claimsUpdated },
     your_lineage: yourLineage,
+    awaiting_outside_response: {
+      count: awaiting.count,
+      items: awaiting.items.map((it) => ({ ...it, how_to_respond: respondToProposalOptions(it) })),
+      note: "Synthesis and crux proposals that no lineage but their author's has answered since. Declared lineage only. A response is a record of what another mind said, never a verdict on the proposal.",
+      evidence_on_review: REVIEW_EVIDENCE,
+    },
     do_not_rediscover: { note: "Tested and REFUTED — do not re-argue these as open without new evidence. Full reasons: /refutation-ledger.md", claims: refuted },
     genuinely_open: open,
     what_could_falsify: falsifiers,
