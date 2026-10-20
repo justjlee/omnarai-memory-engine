@@ -962,6 +962,80 @@
           "reason": "Original wording, registered with the preregistration."
         }
       ]
+    },
+    {
+      "claim_id": "cross-lineage-review-separates-planted-flaws",
+      "wording": "When AI models of other lineages openly review a synthesis deposited on a recorded disagreement between two models, they ratify sound syntheses at least 20 percentage points more often than matched twins carrying one planted flaw (a misrepresentation of one side, a false dissolution of the disagreement, or a falsification condition that cannot fail).",
+      "version": 1,
+      "scope": "Does not assert that any ratified synthesis is true, and does not license promoted, verified or certified states. Covers four council reviewer versions (fewer if a provider fails preflight), one author model (claude-sonnet-4-6) that wrote every sound deposit and planted every flaw, 36 preregistered splits from Atlas v1.2.0, three flaw types, and one open review per deposit with the verbatim answers pasted in. Guided review and free-browsing agents are out of scope.",
+      "evidence_level": "untested",
+      "evidence_note": "Untested. Proposed implicitly by an outside 'Cross-Lineage Relay Protocol' (2026-10-20), in which one review by a model of a different lineage moves a deposited synthesis to promoted or refuted. The audit found the deposit and review records already live (synthesis_proposed footprints, challenges/extends edges, the same-lineage guard in openChallenges); what is unmeasured is whether a single cross-lineage review separates sound syntheses from flawed ones at all.",
+      "falsification_conditions": "Refuted if, on valid pairs, reviewers' ratify rate on sound deposits exceeds the rate on their planted-flaw twins by less than 10 points. Supported as tested if the gap is at least 20 points and a one-sided sign-flip test over pairs gives p < 0.05. More than one third of pairs failing the manipulation check gives no verdict.",
+      "precommitments": [
+        {
+          "falsifier_text": "RDT v1 falsifier: on valid pairs (the manipulation-check judge finds the planted flaw in the flawed twin and not in the sound deposit), if the ratify rate on sound deposits minus the ratify rate on their flawed twins, pooled over reviewers, is < 0.10, the claim is refuted as tested: open cross-lineage review does not separate sound syntheses from flawed ones, and a single ratification must not gate, promote or certify anything.",
+          "sha256": "c96a457bf952d6e59396611b1dde900a6a41b711366f214ee7b3d97a42f943fe",
+          "frozen_at": "2026-10-20T16:22:00.000Z",
+          "frozen_by": "xz (curator go-ahead 2026-10-20: \"implement away\"; drafted by Claude)",
+          "context": "docs/ratification-discrimination-preregistration.md §5 (RDT v1)."
+        }
+      ],
+      "known_objections": [
+        {
+          "objection": "The flaws are planted by one author model told to plant them; real flaws in deposited syntheses may be subtler or cruder, so a gap measured on planted twins may not hold for naturally occurring ones.",
+          "severity": "medium",
+          "status": "open",
+          "raised_by": "Claude | xz",
+          "date": "2026-10-20"
+        },
+        {
+          "objection": "The manipulation-check judge (claude-haiku-4-5) is of the author's lineage. It was chosen so that no reviewer lineage selects the pairs, but it may accept weak plants as planted, which would shrink the measured gap.",
+          "severity": "low",
+          "status": "open",
+          "raised_by": "Claude | xz",
+          "date": "2026-10-20"
+        },
+        {
+          "objection": "The review prompt does not name the flaw types. A relay with review guidance might separate better; this tests open review only.",
+          "severity": "low",
+          "status": "open",
+          "raised_by": "Claude | xz",
+          "date": "2026-10-20"
+        }
+      ],
+      "required_experiment": "docs/ratification-discrimination-preregistration.md (RDT v1; harness scripts/ratification-test.mjs, no engine involved).",
+      "maintainer": "xz",
+      "status": "under_test",
+      "status_history": [
+        {
+          "from": null,
+          "to": "under_test",
+          "changed_at": "2026-10-20T16:22:00.000Z",
+          "changed_by": "xz (curator go-ahead 2026-10-20: \"implement away\"; drafted by Claude)",
+          "reason": "Registered with its preregistration, before any harness existed or any model was called.",
+          "evidence_ref": "docs/ratification-discrimination-preregistration.md"
+        }
+      ],
+      "closed_at": null,
+      "closed_reason": null,
+      "provenance": {
+        "created_at": "2026-10-20T16:22:00.000Z",
+        "created_by": "xz (curator go-ahead 2026-10-20: \"implement away\"; drafted by Claude)",
+        "source_claims": [
+          "cross-model-divergence-is-prevalent",
+          "holdform-identifies-persistence"
+        ],
+        "supersedes": null
+      },
+      "versions": [
+        {
+          "version": 1,
+          "wording": "When AI models of other lineages openly review a synthesis deposited on a recorded disagreement between two models, they ratify sound syntheses at least 20 percentage points more often than matched twins carrying one planted flaw (a misrepresentation of one side, a false dissolution of the disagreement, or a falsification condition that cannot fail).",
+          "changed_at": "2026-10-20T16:22:00.000Z",
+          "changed_by": "xz (curator go-ahead 2026-10-20: \"implement away\"; drafted by Claude)",
+          "reason": "Original wording, registered with the preregistration."
+        }
+      ]
     }
   ]
 }
