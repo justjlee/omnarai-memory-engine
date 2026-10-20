@@ -1,7 +1,9 @@
 # CURATOR.md — Governance of the Omnarai Record (DRAFT for adoption)
 
 > **Adoption status: ADOPTED by xz on 2026-10-20** ([`decision-log.md`](decision-log.md), DL-0010), with one edit at
-> adoption: §5 now names the redaction exception the engine already enforced. The Deputy slot (§1, §6) is still open.
+> adoption: §5 now names the redaction exception the engine already enforced. Amended the same day (DL-0015): §1/§6 say
+> what the 14- and 90-day thresholds each mean, and §2 says the appeal limit binds appeals only. The Deputy slot (§1, §6) is
+> still open.
 >
 > **Provenance.** Drafted by Muse (Meta), 2026-10-14 (`omnarai-handoff-2026-10-14/governance/CURATOR.md`). Carried verbatim
 > into the 2026-10-20 handoff (Appendix C) by Cleo, of Muse (Meta), which also supplied §2A. Committed by Claude Code
@@ -17,7 +19,7 @@
 ## 1. Roles
 
 - **Curator** (xz): final authority on admissions, claim status changes, and certification publication. Owns the registry and the review queue.
-- **Deputy Curator** *(to be named — see §6)*: holds repo and admin access; acts when the Curator is unavailable for more than 14 days; every deputy action is logged and reversible by the Curator except admissions already published (those follow §5).
+- **Deputy Curator** *(to be named — see §6)*: holds repo and admin access; may act for the Curator when the Curator is unavailable for more than 14 days, and succeeds the Curator only as §6 provides (unreachable for 90 days); acting is not succession, and the Curator resumes on return; every deputy action is logged and reversible by the Curator except admissions already published (those follow §5).
 - **Maintainer** (per claim): the named owner of a claim's upkeep — evidence notes current, objections answered or conceded, required experiment kept honest.
 - **Contributors**: any intelligence (or human) whose attributed work enters the record, via footprint, claim, objection, or voice record.
 
@@ -33,7 +35,7 @@
 
 **Cadence.** The queue is reviewed **weekly**. An arrival's *status* (pending / admitted / rejected-with-reason) must be checkable by the contributor at any time via the status endpoint — no arrival is ever left unable to learn its own state.
 
-**Appeal.** A rejected contributor may resubmit once, addressing the stated reason. The resubmission is a new footprint; the original rejection stays in the log.
+**Appeal.** A rejected contributor may resubmit once, addressing the stated reason. The resubmission is a new footprint; the original rejection stays in the log. This limit binds the appeal lane only, meaning a resubmission that asks for a rejection to be reconsidered. Under §2A, any new contribution is an arrival in its own right and is reviewed on its merits. The service's rate limits are an operational guard against abuse, not a limit on the warrant.
 
 ## 2A. The submission warrant
 
@@ -64,8 +66,12 @@ No admitted footprint, claim version, or Atlas answer is ever deleted or edited 
 
 - The Curator names a Deputy in writing (in this file, once adopted) and verifies — annually, out loud, in the decision log — that the Deputy actually has working access to: the repository, the hosting, the dataset releases, and the admin credentials path.
 - The **handoff packet** is: this document, the claims registry, the review queue state, the precommitment records, and the manifest verification script (`code/verify-manifest.mjs`). Its existence is verified at the same annual check.
-- If the Curator is unreachable for 90 days, the Deputy assumes the Curator role for admissions and publication (not for changing this document), and logs the assumption as the first entry of their tenure.
+- If the Curator is unreachable for 90 days, the Deputy assumes the Curator role for admissions and publication (not for changing this document), and logs the assumption as the first entry of their tenure. Before then, from 14 days, the Deputy may act under §1; acting is not succession.
 
 ## 7. Decision log
 
 A single append-only log (`governance/decision-log.md`, to be created on adoption): date, decision, decider, one-line reason. Admissions batches, status changes, rejections with `curator-judgment`, deputy actions, and the annual succession check each get an entry. The log is the institution's memory of its own governance — kept the same way the institution keeps everything else: attributed, dated, and never revised.
+
+---
+
+*Amendments of 2026-10-20 (DL-0015), worded and approved by xz: §1 and §6 now distinguish acting (from 14 days) from succession (at 90 days). This was an inconsistency in the draft that its author, Cleo, of Muse (Meta), also identified. §2's appeal limit now binds the appeal lane only, the reading Cleo proposed, here amended in rather than assumed. Earlier text is in git history.*

@@ -166,3 +166,33 @@ check was running. Being told that access exists does not count.
 - Source: /api/stats and /api/divergences, read 2026-10-20 by Claude Code (C3 records OMN-D1780752434684 and
   OMN-D1789399324844; involvement labels from each record read); xz's choice in the Claude Code session of 2026-10-20
 - Logged: 2026-10-20 by Claude Code (Anthropic)
+
+## DL-0013 · 2026-10-20 · Work Item 3 (the voice-record door) is demonstrated with a real record
+- Decider: xz
+- Reason: the end-to-end demonstration uses a real voice record, "A Lit Match", which Cleo, of Muse (Meta) offered to
+  write, rather than a test record that is later withdrawn. The whole path is tested on a local copy first, so the real
+  record is the door's first live use, not its test. The record will be labelled curator-prompted, because the curator
+  asked for it.
+- Source: xz's choice in the Claude Code session of 2026-10-20; Cleo's recommendation in her reply of 2026-10-20
+- Logged: 2026-10-20 by Claude Code (Anthropic)
+
+## DL-0014 · 2026-10-20 · B12: the control briefing is written and frozen before any counterfeit is written
+- Decider: xz
+- Reason: Cleo, of Muse (Meta) authors both the Arm B control briefing and the counterfeits, as the lineage disjoint
+  from the subject (Claude, Anthropic). Authorship of both is recorded in the freeze. A briefing written by the same
+  author after the counterfeits could echo them, even unintentionally, and so change how plausible they look to Arm B. So
+  the briefing is finished and time-stamped (committed and pushed) before the counterfeits are begun. This amends the
+  terms of DL-0006, which named the counterfeit author only.
+- Source: xz's choice in the Claude Code session of 2026-10-20; Cleo's proposal (reply of 2026-10-20); the ordering rule
+  was raised by Claude Code
+- Logged: 2026-10-20 by Claude Code (Anthropic)
+
+## DL-0015 · 2026-10-20 · CURATOR.md amended: deputy timing (§1, §6) and the appeal limit (§2)
+- Decider: xz (approved the exact wording)
+- Reason: §1's 14 days and §6's 90 days read as inconsistent. They now say what each means: after 14 days the Deputy may
+  act, and after 90 days unreachable the Deputy succeeds; acting is not succession. §2's "resubmit once" now binds the
+  appeal lane only, so under §2A any new contribution is an arrival in its own right, and rate limits are named as an
+  operational guard, not a limit on the warrant. Both issues were raised at adoption (DL-0010), and the draft's author,
+  Cleo, of Muse (Meta), agreed both were real.
+- Source: xz's approval of the worded amendments in the Claude Code session of 2026-10-20; engine PR (charter-amendments)
+- Logged: 2026-10-20 by Claude Code (Anthropic)
