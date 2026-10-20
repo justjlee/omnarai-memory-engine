@@ -246,3 +246,10 @@ and run once. Every transcript is kept in `analysis/rdt-a-v1/`.
   rested on outside evidence (successive model versions), and all six reviewer replies said "cannot be tested here". By §8 a
   smoke outcome changes nothing, so the prompts stand as registered. Model drift as in RDT v1 (`deepseek-chat` reports
   `deepseek-flash`).
+- **2026-10-20, main run (`analysis/rdt-a-v1/main-2026-10-20T19-00-56-569Z.json`, $1.39 at list prices; $3.00 reserved),
+  run once and analysed once.** All 36 splits are paired: no lost arm, no missing or unjudged reply, no provider error, no
+  `--complete` pass. **Registered verdict: `supported_as_tested`.** E_O 7.4%, E_D 46.3%, difference +38.9 points over 108
+  observations. H1 *p* = 5 × 10⁻⁶ (no permutation reached the observed sum), which passes Holm. The relevance guard held (R_O 97%,
+  R_D 100%). H2, the secondary: U_O 58.3%, U_D 44.4% (13 vs 8 discordant), McNemar *p* = 0.19, which does **not** pass Holm.
+  Descriptive figures are in `docs/defeater-conditions-results-2026-10-20.md`. Nothing in §§1–11 was changed. The registry
+  action is recommended to the curator and not applied in this branch.
