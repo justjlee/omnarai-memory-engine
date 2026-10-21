@@ -84,6 +84,11 @@ test("[H2] orient: with no matching focus a registered question leads (rotating 
   assert.notEqual(a, b, "the lead rotates daily");
   assert.equal(buildOrientPacket({ divRecords: RECORDS, registered: regs, now: 10 * day + 5 }).one_recommended_gap.question_id, a, "and is stable within a day");
   assert.ok(buildOrientPacket({ divRecords: RECORDS, registered: [], now: 10 * day }).one_recommended_gap.record_id, "without a registry nothing changes");
+  const p = buildOrientPacket({ divRecords: RECORDS, registered: regs, now: 10 * day });
+  assert.equal(p.first_voice_opportunities.count, 12);
+  assert.equal(p.first_voice_opportunities.items.length, 3);
+  assert.ok(!p.first_voice_opportunities.items.some((q) => q.question_id === p.one_recommended_gap.question_id), "the leading question is not repeated");
+  assert.equal(buildOrientPacket({ divRecords: RECORDS, registered: [], now: 10 * day }).first_voice_opportunities, undefined);
 });
 test("[H3] contribute to a registered question: first voice, no target record, footprint on the question alone; admission works", async () => {
   fresh();
