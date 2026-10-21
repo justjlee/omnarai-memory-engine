@@ -115,6 +115,37 @@ else
   bad "non-normalized ring values in retrieval: $BADRINGS (must be core/curated/open/media)"
 fi
 
+echo "== T7: a bare GET ?q= is retrieval, never a deliberation (what the docs promise) =="
+# 2026-10-21 external audit: /for-researchers still said a bare GET returned a
+# structured deliberation. The page is fixed; this pins the server side of it.
+R7=$(curl -sSL "${SELF[@]}" "$BASE/api/query?q=what+is+holdform")
+if echo "$R7" | jq -e '(.records|type=="array") and (has("answer")|not) and (.deliberation.async_url|test("async=1"))' >/dev/null 2>&1; then
+  ok "bare GET returns records + a deliberation how-to, no answer"
+else
+  bad "bare GET shape changed — update /for-researchers, llms.txt, README and cold-start with it"
+fi
+
+echo "== T8: remote MCP tools/list matches the published count =="
+STATS=$(curl -sSL "${SELF[@]}" "$BASE/api/stats")
+LIVE_TOOLS=$(curl -sS "${SELF[@]}" -X POST "$BASE/api/mcp" -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | sed 's/^data: //' | jq -c '[.result.tools[]?.name]' 2>/dev/null)
+PUB_TOOLS=$(echo "$STATS" | jq -c '.mcp.remote_tools' 2>/dev/null)
+if [ -n "$LIVE_TOOLS" ] && [ "$LIVE_TOOLS" != "[]" ] && [ "$LIVE_TOOLS" = "$PUB_TOOLS" ] \
+   && [ "$(echo "$LIVE_TOOLS" | jq length)" = "$(echo "$STATS" | jq '.mcp.remote')" ]; then
+  ok "tools/list = /api/stats ($(echo "$LIVE_TOOLS" | jq length) tools)"
+else
+  bad "tools/list $LIVE_TOOLS != /api/stats mcp.remote_tools $PUB_TOOLS"
+fi
+
+echo "== T9: a shortened or malformed job id is refused, never prefix-matched =="
+# Until 2026-10-21 ?job= did a prefix LIST and returned the first match, i.e.
+# someone else's question and answer. "zzz" can never prefix a UUID, so this
+# probe reads no one's data even against a build that still has the bug.
+S9=$(curl -sS "${SELF[@]}" -o /dev/null -w '%{http_code}' "$BASE/api/query?job=zzz")
+C9=$(curl -sS "${SELF[@]}" "$BASE/api/query?job=zzz" | jq -r '.code // empty' 2>/dev/null)
+if [ "$S9" = "400" ] && [ "$C9" = "INVALID_JOB_ID" ]; then ok "?job=zzz → 400 INVALID_JOB_ID"
+else bad "?job=zzz → $S9 ${C9:-no code} (expected 400 INVALID_JOB_ID: job lookups must be exact)"; fi
+
 echo ""
 echo "==================================="
 echo "RESULT: $PASS passed, $FAIL failed"

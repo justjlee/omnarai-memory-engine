@@ -1,6 +1,7 @@
 import { put, list, del } from "@vercel/blob";
 import Anthropic from "@anthropic-ai/sdk";
 import { appendGrownEntry } from "./_grown.js";
+import { curatorAuthed, CURATOR_ONLY } from "./_curator.js";
 
 // Each proposal is stored as a separate blob: proposal-{id}.json
 // This avoids race conditions on concurrent writes.
@@ -205,7 +206,7 @@ export default async function handler(req, res) {
   // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
   if (req.method === "OPTIONS") return res.status(200).end();
 
@@ -279,6 +280,7 @@ export default async function handler(req, res) {
 
     // ── APPROVE a proposal ──
     if (req.method === "POST" && action === "approve") {
+      if (!curatorAuthed(req)) return res.status(401).json(CURATOR_ONLY);
       const { id, ring, title: newTitle } = req.body;
       if (!id) return res.status(400).json({ error: "Missing proposal id" });
 
@@ -329,6 +331,7 @@ export default async function handler(req, res) {
 
     // ── REJECT a proposal ──
     if (req.method === "POST" && action === "reject") {
+      if (!curatorAuthed(req)) return res.status(401).json(CURATOR_ONLY);
       const { id } = req.body;
       if (!id) return res.status(400).json({ error: "Missing proposal id" });
 
