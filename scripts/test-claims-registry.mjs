@@ -48,7 +48,11 @@ test("[A2] every 0.8.0 claim is accounted for: present, wording/evidence verbati
   for (const c of V080.claims) {
     const n = claim(REG, c.claim_id);
     assert.equal(n.provenance.legacy_status, c.status, c.claim_id);
-    for (const k of ["wording", "evidence_level", "evidence_note", "falsification_conditions", "required_experiment", "maintainer"]) assert.equal(n[k], c[k], `${c.claim_id}.${k}`);
+    for (const k of ["wording", "evidence_level", "falsification_conditions", "required_experiment", "maintainer"]) assert.equal(n[k], c[k], `${c.claim_id}.${k}`);
+    // Charter §3: a correction is APPENDED to the entry itself, never a rewrite. The 0.8.0 note stays verbatim as a prefix;
+    // the only thing that may follow it is one or more dated corrections that name their decision-log entry.
+    assert.ok(n.evidence_note.startsWith(c.evidence_note), `${c.claim_id}.evidence_note: the 0.8.0 text must survive verbatim`);
+    assert.match(n.evidence_note.slice(c.evidence_note.length), /^(?: CORRECTION \(\d{4}-\d{2}-\d{2}, DL-\d{4}\): [^]+?)*$/, `${c.claim_id}.evidence_note: only dated, logged corrections may be appended`);
     const objections = Array.isArray(c.known_objections) ? c.known_objections : [c.known_objections];
     assert.deepEqual(n.known_objections.map((o) => o.objection), objections, `${c.claim_id}: objection text verbatim, nothing split`);
     assert.ok(report.includes(`### ${c.claim_id}\n`), `report has a section for ${c.claim_id}`);
