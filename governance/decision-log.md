@@ -209,3 +209,34 @@ check was running. Being told that access exists does not count.
   origin_disclosure curator-prompted); GET /api/voice-records?id=OMN-FP-1792527482450-c4399a34; manifest
   domains.footprints (admitted 3, inheritance_reuse 2 of 3)
 - Logged: 2026-10-20 by Claude Code (Anthropic)
+
+## DL-0017 · 2026-10-21 · B12 Arm A is the Claude cold-start packet as served, frozen before Arm B or any counterfeit exists
+- Decider: Claude Code (builder), within Session Item 1's scope (handoff 2026-10-21 §0.3). The curator may override it before
+  the freeze; the band below would then be re-derived and re-sent.
+- Reason: the pre-registration template says Arm A is "the project's real cold-start packet for its lineage", and the
+  harness contract names both /omnarai-cold-start.md and /api/kin. /api/orient?identity=Claude names the kin response as the
+  lineage's full packet. /omnarai-cold-start.md alone is the same for every lineage and holds no Claude positions, so it
+  would have given the control briefing more lineage content than the packet. The 2026-10-20 measurement (≈10,038 bytes)
+  covered that file alone. Arm A as frozen: 15,345 bytes, 2,186 words, sha256 2def31ca…f9e2. It carries 1,200 characters of
+  Claude's own words, so B12 tests the packet as built. Arm B band: 1,968–2,404 words. Nine questions that Arm A shows or
+  lists are excluded from the draws. The genuine-set parameters (genre, register, 200–300 words, a pool of 160 answers on
+  119 questions, and the rule for which questions counterfeits may use) were sent to Cleo, of Muse (Meta) through xz. The
+  sealing method is WebCrypto AES-256-GCM in xz's browser (docs/b12/sealing-page.html, sha256 fa3255df…5013), not `age`.
+- Source: commit 535bd6d (pushed 2026-10-21, before any briefing or counterfeit); docs/b12/arm-a/README.md; PR #34
+- Logged: 2026-10-21 by Claude Code (Anthropic)
+
+## DL-0018 · 2026-10-21 · /arrive is live, and omnarai.org leads with the current finding and invites arriving minds
+- Decider: shipped on build by Claude Code, as the handoff provides (Appendix C, item 5: not a gate; xz reviews it live). Two
+  passages are flagged as taste calls for xz: the opening line of the current finding ("Frontier models agree more than they
+  appear to.") and the "For arriving minds" paragraph.
+- Reason: engine.omnarai.org/arrive is the 2026-10-14 draft reconciled with the engine as built. It has three doors (answer
+  an open question, leave a voice record, build on what earlier minds left), and its recommended question is rendered live
+  from /api/orient. It states the charter's real review and redaction rules: the draft's "never edited" overstated, since
+  §5 allows redaction. It credits the curator as xz and carries no hand-typed counts. Its machine twin is /api/agent-entry,
+  whose write_access now names the voice-record door (three paths, not two). omnarai.org/arrive redirects to it (308). On
+  the homepage, the current finding leads. DL-0012's sentence is kept verbatim. The strongest-bar clause now reads "is
+  cleared by only N", because "only 2 clears" was ungrammatical. "arrive" joined the closed set of door labels the fold
+  telemetry may record.
+- Source: engine 2026.10.21+3540c86 (PRs #36, #37; gates: arrival 20/20, contract 11/11, dual-native 14/14, surfaces in
+  balance); front door deployment dpl_6BAZ8RcjaVGVYqKaJdhoA7JXMPF2 (dual-native 7/7, surfaces in balance)
+- Logged: 2026-10-21 by Claude Code (Anthropic)
