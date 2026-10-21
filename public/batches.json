@@ -1,0 +1,93 @@
+{
+  "schema": "batches/1",
+  "about": "Every spend event on questions runs as a batch: proposed here, approved by the curator in the decision log (approved_in: DL-NNNN), run by scripts/run-batch.mjs (which refuses anything else and stops at the $25 wall), and closed with its actual spend. DL-0005 method; design DL-0020.",
+  "batches": [
+    {
+      "id": "elicit-001",
+      "kind": "elicitation",
+      "status": "proposed",
+      "proposed_at": "2026-10-21",
+      "proposed_by": "Claude Code (builder)",
+      "approved_in": null,
+      "items": [
+        {
+          "question_id": "OMN-Q-bfc6e7e311f2",
+          "set_index": 7
+        },
+        {
+          "question_id": "OMN-Q-5d9941ecd7fa",
+          "set_index": 12
+        },
+        {
+          "question_id": "OMN-Q-1c9960aa64ef",
+          "set_index": 9
+        },
+        {
+          "question_id": "OMN-Q-68818e1a194f",
+          "set_index": 3
+        },
+        {
+          "question_id": "OMN-Q-4d9c3059acb2",
+          "set_index": 6
+        }
+      ],
+      "selection": "the first five of the registered questions ranked by sha256(\"elicitation-batch-001|DL-0020|\" + question_id)",
+      "panel": [
+        "Claude",
+        "GPT-4o",
+        "Gemini",
+        "Grok",
+        "DeepSeek"
+      ],
+      "estimate_usd": 0.6,
+      "estimate_basis": "5 council runs at the budget table price of $0.12 each (api/_budget.js). Batch one replaces this with the measured per-question price.",
+      "waits_for": "Gemini prepay top-up: Gemini has been absent from every council record since 2026-10-16, and the panel rule asks for the full council.",
+      "actual_usd": null
+    },
+    {
+      "id": "cert-001",
+      "kind": "certification",
+      "status": "proposed",
+      "proposed_at": "2026-10-21",
+      "proposed_by": "Claude Code (builder)",
+      "approved_in": null,
+      "items": [
+        {
+          "record_id": "OMN-D1780757185030",
+          "question_id": "OMN-Q-1e31779d88f4",
+          "queue_position": 1,
+          "ragged": false
+        },
+        {
+          "record_id": "OMN-D1789399324852",
+          "question_id": "OMN-Q-04728f5b31e7",
+          "queue_position": 2,
+          "ragged": false
+        },
+        {
+          "record_id": "OMN-L1790678198294",
+          "question_id": "OMN-Q-2b3f08c5cb3e",
+          "queue_position": 3,
+          "ragged": false
+        },
+        {
+          "record_id": "OMN-D1780752434693",
+          "question_id": "OMN-Q-c540101bf41c",
+          "queue_position": 4,
+          "ragged": false
+        },
+        {
+          "record_id": "OMN-D1780757185074",
+          "question_id": "OMN-Q-623e2e2caead",
+          "queue_position": 5,
+          "ragged": false
+        }
+      ],
+      "selection": "the first five of certification-queue-v1",
+      "estimate_usd": 7.25,
+      "estimate_basis": "5 records at about $1.45 each for the x3 strict-min battery (from the 2026-09-28 estimate of about $8–9 for 6 records). Batch one replaces this with the measured per-record price.",
+      "waits_for": "Gemini prepay top-up: the battery questions every council member, Gemini included.",
+      "actual_usd": null
+    }
+  ]
+}

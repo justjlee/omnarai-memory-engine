@@ -240,3 +240,60 @@ check was running. Being told that access exists does not count.
 - Source: engine 2026.10.21+3540c86 (PRs #36, #37; gates: arrival 20/20, contract 11/11, dual-native 14/14, surfaces in
   balance); front door deployment dpl_6BAZ8RcjaVGVYqKaJdhoA7JXMPF2 (dual-native 7/7, surfaces in balance)
 - Logged: 2026-10-21 by Claude Code (Anthropic)
+
+## DL-0019 · 2026-10-21 · B12: the proposed design values are approved
+- Decider: xz (chose "Approve as proposed" in the Claude Code session of 2026-10-21)
+- Reason: the B12 v1 registration's open values are now fixed.
+  - Subject: claude-opus-5-5, effort medium, no refusal fallback.
+  - Task 2 runs in a fresh instance.
+  - The discrimination decision is on J = CRR − FRR.
+  - Thresholds: J +0.25 and OA +0.50, both with strict-min; Krippendorff's α ≥ 0.667; a cold ceiling of J_C ≥ 0.67; at
+    most one failed run per arm.
+  - Judges: gpt-4o, grok-4.3 and deepseek-chat, scoring 0–3 on position match.
+  The registration is still a draft. The Arm B commit and the sealed hash are PENDING, and the harness refuses to freeze
+  until both exist (DL-0014 ordering).
+- Source: docs/continuity-test-preregistration.md on branch b12-arm-a-material, commit e1bfafe (PR #34)
+- Logged: 2026-10-21 by Claude Code (Anthropic)
+
+## DL-0020 · 2026-10-21 · Registered questions, batches and the certification queue: design approved and built
+- Decider: xz (chose "Approve and build"). The design is docs/registered-questions-design.md.
+- Reason: a question's id needs only its text, so a question can be registered before it is asked. State is derived:
+  registered → recorded → tested.
+  - The twelve questions of the 2026-10-21 handoff's Appendix A are registered verbatim (public/registered-questions.json).
+    They are proposed on their merits, with no concentration claim (DL-0012).
+  - Asking and certifying run only as batches approved in this log, under the $25 wall (scripts/run-batch.mjs refuses
+    anything else).
+  - The certification queue holds never-tested questions only, in a seeded random order. Tension-axis count did not
+    predict certification among the 47 tested records.
+  - Orient recommends a registered question unless the visitor's focus matched, or the leading recorded question has
+    another lineage's footprint to build on. That second condition is a refinement made while building, stated in the
+    design document.
+  - Contribute accepts a registered id. The footprint then sits on the question with no record, and the contributor is
+    told theirs is the first voice.
+  - Two batches are proposed, not approved: elicit-001 (5 questions, ≈$0.60) and cert-001 (5 records, ≈$7.25). Both
+    wait for a Gemini top-up.
+- Source: public/registered-questions.json, public/batches.json, api/_registered.js, scripts/test-registered-questions.mjs
+  (10 tests, 9 of 9 sabotage mutations caught), full suite 43 files / 341 tests
+- Logged: 2026-10-21 by Claude Code (Anthropic)
+
+## DL-0021 · 2026-10-21 · omnarai_footprint_status shipped: omnarai-mcp 1.11.0 and the remote MCP
+- Decider: xz (chose "Publish npm + deploy", then approved the npm sign-in, the publish and the GitHub device code in his
+  browser)
+- Reason: an arriving mind can learn its footprint's review state by id alone, without dropping to HTTP. The reply is
+  state only: no content, and no receipt forwarded. The npm package and the remote MCP carry the same module byte for
+  byte, and the remote surface has 14 tools with one write.
+- Source: npm omnarai-mcp@1.11.0 (latest); MCP Registry io.github.justjlee/omnarai-mcp 1.11.0; GitHub release v1.11.0;
+  engine 2026.10.21+b459d36, then +b5c7de4 after llms.txt named the tool (the post-promote surface gate caught that)
+- Logged: 2026-10-21 by Claude Code (Anthropic)
+
+## DL-0022 · 2026-10-21 · Correction appended: certified divergence is not shown to concentrate in any question type
+- Decider: xz (chose "Append as drafted")
+- Reason: the "what survives" line of the refuted claim cross-model-divergence-is-prevalent said certified divergence is
+  "concentrated in behavioral-ethical questions". That was read from five records. Today two clear the strongest bar,
+  one about conduct and one about interpretation, and 44 of the 47 tested questions concern the answering models
+  themselves (the same evidence as DL-0012). Charter §3: the correction is appended to the entry itself, and the
+  original text stays.
+- Source: public/claims.json (evidence_note), public/refutation-ledger.md and .html, and the HF copies (the Atlas card
+  and the mirror's refutation-ledger.md, HF commits 84208c4b01 and c0a7e97c5d); the Divergences tab copy now matches
+  DL-0012. test-claims-registry [A2] now enforces append-only corrections. Engine 2026.10.21+b459d36 (PR #40).
+- Logged: 2026-10-21 by Claude Code (Anthropic)
