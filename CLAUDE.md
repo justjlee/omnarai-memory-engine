@@ -72,6 +72,7 @@ Note: `src/data/corpus.json` is a stripped version (no full_text) bundled into t
 ### Key behaviors
 - **LLM query classifier** — Haiku classifies query type (identity/bridge/technical/narrative/conceptual) in parallel with embedQuery. Keyword heuristic is fallback. `classifierSource` field in trace indicates which fired.
 - **Session continuity** — `session_id` in POST body threads prior exchanges as context. Rolling buffer of last 5 exchanges per session, stored in Vercel Blob (`sessions/{id}.json`), expires after 24h. Response includes `session_id` + `sessionExchangeCount`. Frontend generates UUID on mount, shows `∞ session active` indicator.
+- **Session and job ids are bearer capabilities (2026-10-21).** The blobs are public at unlisted URLs, so the id is the only key. `isOpaqueId` (UUIDs only) + `findExactBlob` (exact pathname, never `blobs[0]` of a prefix LIST) in `api/query.js`. Before this, `?job=a` returned the first job whose id began with "a" — another caller's question and answer — and session ids reached the pathname unvalidated. A malformed `?job=` → 400 `INVALID_JOB_ID`; a malformed `session_id` is ignored with `session_warning`. Expired sessions are deleted on lookup and swept after each save; expired jobs read as unknown. What is kept per query is stated publicly in `public/limitations.md` (Privacy). Tests: `scripts/test-opaque-ids.mjs` (12, mutation-checked); live probe T9 in `scripts/omnarai-verify.sh`. Never go back to prefix lookups for anything keyed by a caller-held id.
 - **Adaptive retrieval policy** — Ξ v4: calibrated λ/floor per query type, now applied to ALL queries (not just Ξ-glyph). MMR still gated on Ξ or `syntheticIdentity`.
 - Approved proposals embedded at approval time (same 500-word window as static corpus). Vector injected at cold-start — no extra API call at query time.
 - Concept proposals extracted by Haiku at approval time, stored in Blob for curator review. Merge via `scripts/merge-concepts.js`.
@@ -253,7 +254,7 @@ Uploads: README.md, corpus.json, corpus.csv, corpus-full-text.jsonl, concepts.js
 
 | Endpoint | Method | Description |
 |---|---|---|
-| `/api/query?q=...` | GET | Full deliberation — returns answer, tensions, deliberationCard, trace, conceptSubgraph, **receipt** |
+| `/api/query?q=...` | GET | **Fast retrieval by default** (records, concepts, a `deliberation` how-to block; no model call). `&async=1` → `job_id` + poll `?job=<uuid>`; `&sync=1` blocks ~25s. The full deliberation returns answer, tensions, deliberationCard, trace, conceptSubgraph, **receipt** |
 | `/api/query?q=...&glyph=Ξ` | GET | Same with explicit glyph (alternative to prefix) |
 | `/api/query?q=...&format=brief` | GET | Exportable artifact: synthesisPrompt, perspectives, records |
 | `/api/query?q=...&format=context` | GET | Pre-deliberation context only, <1s, no Claude call |
@@ -265,7 +266,7 @@ Uploads: README.md, corpus.json, corpus.csv, corpus-full-text.jsonl, concepts.js
 | `/api/tensions?status=unresolved` | GET | Filter by status: unresolved / divergent / emerging |
 | `/api/tensions` | POST | `{action:"persist", tensions:[], query, sources}` — store new tensions |
 | `/api/tensions` | POST | `{action:"repair", key, disposition, note?, reclassify?}` — close the loop on a tension. Dispositions: `held`/`reclassified`/`canon-note` (annotation), `crux` (diagnose what would settle it; annotates `crux`, leaves tension OPEN; ungated), `synthesis-drafted` (→ pending proposal), `council-review` (→ durable divergence record, **requires Bearer INGEST_SECRET**) |
-| `/api/store` | POST | `{action:"propose\|approve\|reject\|list\|approved"}` — proposal management |
+| `/api/store` | POST | `{action:"propose\|approve\|reject\|list\|approved"}` — proposal management. **approve/reject need Bearer INGEST_SECRET** (`api/_curator.js`, 2026-10-21; before that they were open to anyone, and approve writes grown memory, i.e. the served corpus). Propose stays open. The engine UI's Proposals panel sends the token stored as `omnarai_curator_token`. Tests: `scripts/test-curator-gate.mjs` |
 | `/api/concepts?action=list` | GET | List LLM-proposed concept graph extensions (pending/approved/rejected) |
 | `/api/concepts` | POST | `{action:"approve"\|"reject", id}` — curator decision on concept proposals |
 | `/api/probe?action=list` | GET | List 8 canonical Firelit pressure probes + rubric spec |
