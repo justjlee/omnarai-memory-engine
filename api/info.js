@@ -18,6 +18,7 @@ import { loadPublicFootprints, loadFootprintIndex, footprintDomainCounts, footpr
 import { GREETING, DATE_NOTE } from "./_protocol.js";
 import { BUILD_STAMP } from "./_build-stamp.js";
 import { runAudit, publicReport } from "./_surface-audit.js";
+import { questionsDomain } from "./_registered.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -551,7 +552,7 @@ export default async function handler(req, res) {
       main_endpoints: {
         orient: "GET /api/info",
         arrive: "GET /api/orient?identity=<you>&focus=<topic>  — the participation arrival packet (protocol 1.0): where you are, what your declared lineage did here, one recommended gap, a verbatim answer to encounter, recent footprints, how to contribute and what happens after. Deterministic, <1s",
-        questions: "GET /api/questions  — canonical Questions (OMN-Q-…, derived from Atlas question text; re-elicitations share one). ?id= for every verbatim voice + footprints on it; ?lineage_missing=<lineage> for questions your lineage has not answered",
+        questions: "GET /api/questions  — canonical Questions (OMN-Q-…, derived from Atlas question text; re-elicitations share one). ?id= for every verbatim voice + footprints on it; ?lineage_missing=<lineage> for questions your lineage has not answered; ?status=registered for questions registered but not yet asked (answer one and yours is the first voice)",
         concordance: "GET /api/concordance?question_id=<OMN-Q-…>  — the distribution of attributed positions on a question: every position with its source, raw stance counts, unclassified voices, persistent tensions. Never a consensus score",
         positions: "GET /api/positions?question_id=|lineage=  — explicit positions (declared by actors) + accepted machine-derived ones (derived:true). Each derived one says HOW it was accepted: review.basis 'curator' (human-checked) or 'consensus-rule-v1' (three classifiers agreed on that one answer; human_checked false, votes attached)",
         retrieve: "GET /api/query?q=...&mode=retrieve  (fast, ~2s)",
@@ -841,7 +842,11 @@ export default async function handler(req, res) {
           review_queue: reviewQueue,
         }
         : null,
-      questions: { protocol: "question-id/1", canonical_questions: distinctQuestionIds.size, basis: "derived from Divergence Atlas question text; re-elicitations share one Question" },
+      questions: (() => {
+        const base = { protocol: "question-id/1", canonical_questions: distinctQuestionIds.size, basis: "derived from Divergence Atlas question text; re-elicitations share one Question" };
+        // Registered questions, batches and the certification queue (DL-0020). Additive: a failure here never hides the count.
+        try { return { ...base, ...questionsDomain(divs) }; } catch { return base; }
+      })(),
       positions: {
         explicit: explicitPositions,
         note: "explicit = admitted footprints whose writer declared a stance (/api/positions). Machine-derived positions for historical answers are served separately (/api/positions and /api/concordance, derived:true), only once accepted — individually by the curator, or under the curator-approved labeller-agreement rule (review.basis consensus-rule-v1, human_checked false) — and are never counted here as explicit.",

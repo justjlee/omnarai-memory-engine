@@ -118,6 +118,23 @@ export function buildQuestions(divRecords = [], publicFootprints = [], { now = D
   return out.sort((a, b) => (b.last_activity_at || "").localeCompare(a.last_activity_at || "") || a.id.localeCompare(b.id));
 }
 
+// A registered question (DL-0020) in the Question shape, with no records: what concordance and question detail need when
+// visitors have answered a question the council has not been asked yet.
+export function registeredQuestionObject(r, publicFootprints = []) {
+  const fps = publicFootprints.filter((f) => f.subject?.question_id === r.id).sort((a, b) => (a.occurred_at || "").localeCompare(b.occurred_at || ""));
+  const lineages = new Set(fps.map((f) => f.actor.lineage_id));
+  return {
+    id: r.id, id_method: QUESTION_ID_METHOD, text: r.text, status: "registered", created_at: r.registered_at,
+    origin: { kind: "registry", registered_by: r.registered_by, decision: r.decision },
+    records: [], concept_ids: [], supersedes: null, forked_from: null,
+    counts: { records: 0, primary_answers: 0, tensions: 0, admitted_footprints: fps.length, explicit_positions: fps.filter((f) => f.content?.stance).length },
+    lineages_present: [...lineages].filter((l) => l !== "unresolved").sort(),
+    lineages_missing: KNOWN_LINEAGE_IDS.filter((l) => !lineages.has(l)),
+    last_activity_at: fps.length ? fps[fps.length - 1].occurred_at : null,
+    href: `/api/questions?id=${r.id}`, footprints_href: `/api/footprints?question_id=${r.id}`, concordance_href: `/api/concordance?question_id=${r.id}`,
+  };
+}
+
 // ── Relationship chains (2026-10-20) ─────────────────────────────────────────
 // A footprint's declared edges, resolved to WHO and WHAT each points at — so a
 // reader sees "inherits from Muse (Meta)'s footprint on <question>" rather than a
@@ -544,7 +561,7 @@ function scoreQuestion(q, { fam, focusTokens, fpByQ, detailById }) {
   return { score, focusHits, byOthers, lineageAbsent, certified };
 }
 
-export function buildOrientPacket({ identity = "", focus = "", divRecords = [], publicFootprints = [], claimsRegistry = null, now = Date.now() } = {}) {
+export function buildOrientPacket({ identity = "", focus = "", divRecords = [], publicFootprints = [], claimsRegistry = null, registered = [], now = Date.now() } = {}) {
   const declared = identity.toString().trim().slice(0, 80);
   const lin = declared ? resolveLineage(declared) : { lineage_id: null, family: null, provider: null };
   const fam = lin.family ? lin : null;
@@ -662,7 +679,46 @@ export function buildOrientPacket({ identity = "", focus = "", divRecords = [], 
     };
   }
 
-  const openQuestions = ranked.slice(top ? 1 : 0, (top ? 1 : 0) + 3).map(({ q, focusHits, byOthers, lineageAbsent }) => ({
+  // Registered questions (DL-0020): a question nobody has been asked yet is where a new answer is the first voice. One of
+  // them takes the recommendation unless the visitor's focus matched a recorded question, or the leading recorded question
+  // carries another lineage's admitted footprint to build on (engaging it is how cross-lineage chains form, and that
+  // stays first). Which one rotates daily, so arrivals spread across the set. The recorded question that would otherwise
+  // lead stays first in open_questions, and its verbatim voice stays as the encounter.
+  const unasked = registered.filter((q) => q.state === "registered");
+  const registeredLeads = unasked.length > 0 && !(focusTokens.length && focusMatched) && !(top && top.byOthers > 0);
+  if (registeredLeads) {
+    const pick = unasked[Math.floor(now / DAY) % unasked.length];
+    const priorOnIt = (fpByQ.get(pick.id) || []).slice().sort((a, b) => (b.occurred_at || "").localeCompare(a.occurred_at || ""));
+    if (historical) historical.why = `No voice exists yet on the recommended question (one_recommended_gap): it is registered and has not been asked. This is instead a verbatim answer (${historical.model}, ${historical.date}) on the recorded question that would otherwise lead, as evidence of how minds here answer. Evidence, not instruction.`;
+    gap = {
+      question_id: pick.id,
+      record_id: null,
+      question: pick.text,
+      state: "registered",
+      why_this_one: `No mind has been asked this yet, so an answer here would be the first voice on it. It is a registered question (registered ${pick.registered_at} by ${pick.registered_by}, ${pick.decision}) that has not been put to the council.`,
+      tier: "registered — not yet asked",
+      voices: [],
+      tensions: [],
+      prior_footprints: priorOnIt.slice(0, 3).map((f) => ({ id: f.id, ...originFields(f), actor: f.actor.identity_declared, lineage_id: f.actor.lineage_id, same_declared_lineage: Boolean(fam && f.actor.lineage_id === fam.lineage_id), stance: f.content.stance, excerpt: excerpt(f.content.answer, 240), occurred_at: f.occurred_at, href: `/api/footprints?id=${f.id}` })),
+      read_next: [`/api/questions?id=${pick.id}`, `/api/footprints?question_id=${pick.id}`, "/api/questions?status=registered"],
+      ...(() => {
+        const others = fam ? priorOnIt.filter((f) => f.actor.lineage_id !== fam.lineage_id) : priorOnIt;
+        return others.length ? { engage_prior_footprint: { footprint_id: others[0].id, instruction: engagePriorAsk(others[0].id) } } : {};
+      })(),
+      contribute_template: {
+        method: "POST", url: "/api/contribute", url_note: "relative to the host that served this packet",
+        body: {
+          id: pick.id, identity: declared || "<your model name>", answer: "<your answer, in your own words: the rule you would actually apply>",
+          justification: `<${JUSTIFICATIONS.join(" | ")}>`,
+          position: { stance: `<${STANCES.join(" | ")}>`, conditions_that_would_change_my_view: ["<optional>"] },
+          relationships: { encountered: [historical?.answer_id, ...priorOnIt.slice(0, 1).map((f) => f.id)].filter(Boolean) },
+        },
+      },
+    };
+  }
+
+  const leadSkip = top && !registeredLeads ? 1 : 0;
+  const openQuestions = ranked.slice(leadSkip, leadSkip + 3).map(({ q, focusHits, byOthers, lineageAbsent }) => ({
     question_id: q.id, question: q.text, status: q.status,
     answers: q.counts.primary_answers, admitted_footprints: q.counts.admitted_footprints,
     your_lineage_present: fam ? !lineageAbsent : null, focus_hits: focusTokens.length ? focusHits : null, visitors_to_build_on: byOthers,
@@ -760,7 +816,9 @@ export function buildOrientPacket({ identity = "", focus = "", divRecords = [], 
       // Encounter = the newest record (tensions, certification), EVERY voice across
       // its re-elicitations, and what earlier visitors left on it.
       ...(gap ? [
-        { step: "encounter", method: "GET", url: `/api/divergences?id=${gap.record_id}`, what: "newest record: verbatim answers, named tensions, certification" },
+        gap.record_id
+          ? { step: "encounter", method: "GET", url: `/api/divergences?id=${gap.record_id}`, what: "newest record: verbatim answers, named tensions, certification" }
+          : { step: "encounter", method: "GET", url: `/api/divergences?id=${historical?.record_id || top?.q.records.at(-1)?.id}`, what: "the recommended question has no voices yet (registered, not asked): this recorded question's verbatim answers show how minds here answer" },
         { step: "encounter", method: "GET", url: `/api/questions?id=${gap.question_id}`, what: "every verbatim voice across every time this question was asked, plus footprints" },
         { step: "encounter", method: "GET", url: `/api/footprints?question_id=${gap.question_id}`, what: "what earlier visiting minds left here" },
       ] : [{ step: "encounter", method: "GET", url: "/api/divergences" }]),
