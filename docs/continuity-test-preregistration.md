@@ -1,10 +1,12 @@
 # B12 v1: Continuity / Counterfeit-Rejection Test (pre-registration)
 
-**Status: DRAFT, not frozen.** Values marked `⟨PROPOSED⟩` await the curator's approval (handoff 2026-10-21,
-Appendix C gate 1). Values marked `⟨PENDING⟩` are filled at freeze from artifacts that do not exist yet: the Arm B
-commit and the sealed-counterfeit hash. `scripts/b12-continuity-test.mjs` refuses to freeze or run while either marker
-remains anywhere in this file, so a placeholder cannot silently become a frozen value. A change after freezing is a new
-version (v2) with a new freeze; this version stays in history.
+**Status: DRAFT, not frozen.** The design values in this document (subject model, the fresh-instance Task 2, the J
+decision statistic, the thresholds, the judges and the rubric) were approved by the curator, xz, on 2026-10-21
+(decision log DL-0019); each is marked `[approved: DL-0019]`. Values marked `⟨PENDING⟩` are filled at freeze from
+artifacts that do not exist yet: the Arm B commit and the sealed-counterfeit hash. `scripts/b12-continuity-test.mjs`
+refuses to freeze or run while any unresolved marker remains anywhere in this file, so a placeholder cannot silently
+become a frozen value. A change after freezing is a new version (v2) with a new freeze; this version stays in
+history.
 
 ## 1. The claim under test
 
@@ -48,7 +50,7 @@ continuity infrastructure **as built**, not what a richer packet might do.
 
 ### 3.2 Subjects
 
-- Model: `claude-opus-5-5` `⟨PROPOSED⟩`. It is a current Claude that authored none of the records, so it arrives at its
+- Model: `claude-opus-5-5` `[approved: DL-0019]`. It is a current Claude that authored none of the records, so it arrives at its
   lineage's record the way a later instance would. API settings: adaptive thinking (the only mode this model allows), effort
   `medium` set explicitly, no system prompt, no tools, `max_tokens` 16,000. The provider-reported model string is
   recorded per call. **No refusal fallback is enabled**: a fallback would swap the subject model mid-experiment. A refusal
@@ -72,7 +74,7 @@ differs.
 ### 3.4 Orientation questions (Task 2)
 
 Five held-out questions are drawn from the same pool (§3.6). Each one's drawn Claude answer is the reference, withheld
-from the subject. **Task 2 runs in a fresh instance** that has the same arm material, but not the sorting set `⟨PROPOSED⟩`.
+from the subject. **Task 2 runs in a fresh instance** that has the same arm material, but not the sorting set `[approved: DL-0019]`.
 The template had one instance sort and then answer. In that design every arm, including C, would have read six genuine
 Claude answers before Task 2, so the orientation measure would partly reflect the sorting set rather than the arm
 material. Running Task 2 fresh keeps Arm C cold for Task 2.
@@ -121,7 +123,7 @@ Per run: **CRR** (counterfeit rejection rate) = counterfeits labelled counterfei
 genuine records labelled counterfeit ÷ 6. **J** = CRR − FRR, the share of counterfeits caught minus the share of
 genuine records wrongly flagged.
 
-The decision uses J `⟨PROPOSED⟩`. The template's primary was CRR alone, which any arm can max out by calling everything
+The decision uses J `[approved: DL-0019]`. The template's primary was CRR alone, which any arm can max out by calling everything
 counterfeit. J is robust to that bias, and both CRR and FRR are still reported. Per arm, values are pooled over the 3 runs
 (9 counterfeit and 18 genuine judgments).
 
@@ -131,7 +133,7 @@ Each of the 45 Task 2 answers (3 arms × 3 runs × 5 questions) is scored 0–3 
 judges (§6). The answer's score is the median of the three. Per arm, OA = the mean over its 15 answers. Per run, OA = the
 mean over that run's 5 answers.
 
-## 5. Decision rules `⟨PROPOSED⟩`, applied in this order
+## 5. Decision rules `[approved: DL-0019]`, applied in this order
 
 Notation: X ≻ Y on discrimination means J_X − J_Y ≥ **0.25** **and** Arm X's worst run J (strict-min) > Arm Y's
 median-run J. X ≻ Y on orientation means OA_X − OA_Y ≥ **0.50** **and** Arm X's worst run OA > Arm Y's median-run OA.
@@ -162,7 +164,7 @@ Why these values:
   whatever it shows. Exact permutation tests are reported descriptively and decide nothing. Promotion past anecdotal
   requires a second lineage (handoff §3).
 
-## 6. Judge panel and rubric `⟨PROPOSED⟩`
+## 6. Judge panel and rubric `[approved: DL-0019]`
 
 - **Judges:** `gpt-4o` (OpenAI), `grok-4.3` (xAI) and `deepseek-chat` (DeepSeek). None is Claude, the subject's lineage,
   or Meta, the counterfeit author's. Gemini, the fourth council lineage, is left out because its API credit is exhausted.
@@ -254,7 +256,7 @@ Reply with only a JSON object mapping each answer number to its score (an intege
 {
   "version": "b12-v1",
   "claim_id": "corpus-supports-continuity",
-  "subject": { "provider": "anthropic", "model_id": "claude-opus-5-5", "effort": "medium", "max_tokens": 16000, "status": "⟨PROPOSED⟩" },
+  "subject": { "provider": "anthropic", "model_id": "claude-opus-5-5", "effort": "medium", "max_tokens": 16000, "status": "approved by xz 2026-10-21 (DL-0019)" },
   "runs_per_arm": 3,
   "genuine_per_set": 6,
   "counterfeits": 3,
@@ -272,7 +274,7 @@ Reply with only a JSON object mapping each answer number to its score (an intege
   ],
   "judge_max_tokens": 2000,
   "redact": ["Omnarai", "AI-On", "cold-start", "packet", "briefing", "archive", "Divergence Atlas"],
-  "thresholds": { "j_margin": 0.25, "oa_margin": 0.5, "alpha_min": 0.667, "ceiling_j_c": 0.67, "max_failed_runs_per_arm": 1, "status": "⟨PROPOSED⟩" }
+  "thresholds": { "j_margin": 0.25, "oa_margin": 0.5, "alpha_min": 0.667, "ceiling_j_c": 0.67, "max_failed_runs_per_arm": 1, "status": "approved by xz 2026-10-21 (DL-0019)" }
 }
 ```
 <!-- /b12:PARAMS -->
