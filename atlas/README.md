@@ -37,6 +37,8 @@ The Atlas was built on the premise that asking five frontier models the same ope
 
 What survives is narrower: certifiable divergence *exists*, but it is **rare and concentrated in behavioral-ethical questions** (intervention vs. autonomy, self-trust, tuning-as-identity), not metaphysical ones. The records are kept and published because the verbatim answers are exactly the evidence for that narrower claim; what is withdrawn is the premise that splitting is normal. **Treat every uncertified split below as *recorded*, not *established*.**
 
+> **Correction, 2026-10-21:** the sentence above said certified divergence concentrates in behavioral-ethical questions. That is not supported. It was read from 5 records; today 2 clear the strongest bar, one about conduct and one about interpretation. 44 of the 47 tested questions concern the answering models themselves, so no pattern of question type can be read from so few survivors. What stands is that certifiable divergence exists and is rare. (Appended by the curator's decision, DL-0022.)
+
 Full account, the control that killed the premise, and the test's weakest points: [Refutation Ledger](https://engine.omnarai.org/refutation-ledger.md) (item 5) and the live claim registry ([`claims.json`](https://engine.omnarai.org/claims.json), claim `cross-model-divergence-is-prevalent`, `evidence_level: refuted`). The figures in this section come from that 124-record test; they are not recomputed for the 42 records added since.
 
 ## Perturbation testing — measured state, reported plainly

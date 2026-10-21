@@ -82,6 +82,8 @@ Honesty has to cut both ways or it is just a subtler kind of marketing — so th
 
 **What survives:** certifiable divergence *exists*, but it is **rare and concentrated in behavioral-ethical questions** — intervention vs. autonomy, self-trust, tuning-as-identity — not metaphysical ones. The entire certified core is those 5 records. The Atlas is kept and still published, because the verbatim records are exactly the evidence for that narrower claim; what is withdrawn is the premise that splitting is normal.
 
+> **Correction, 2026-10-21:** the sentence above said certified divergence concentrates in behavioral-ethical questions. That is not supported. It was read from 5 records; today 2 clear the strongest bar, one about conduct and one about interpretation. 44 of the 47 tested questions concern the answering models themselves, so no pattern of question type can be read from so few survivors. What stands is that certifiable divergence exists and is rare. (Appended by the curator's decision, DL-0022.)
+
 *Note on direction: the 33 scored questions were chosen because they looked divergent, which biases the sample toward divergence. That makes the convergence result conservative, not inflated.* Status: `refuted`, reversal conditions live in [`claims.json`](https://engine.omnarai.org/claims.json).
 
 ### 6. Register proximity does not explain the architecture-differential gradient

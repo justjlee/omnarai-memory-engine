@@ -56,7 +56,7 @@ function FindingBanner({ index }) {
       {n("C2") > 0 && <>; {n("C2")} {v("C2")} pressure alone (C2)</>}.
       {" "}The other {c0} are C0: captured once, or tested without clearing a tier.
       {med != null && <> Across the {dris.length} scored for robustness, the median split's between-model spread sits right at a single model's own re-roll variance (median DRI ≈ {med.toFixed(2)}).</>}
-      {" "}Genuine divergence is real but <em>rare</em>; in the July campaign it clustered in behavioral-ethical questions (intervention, self-trust, tuning-as-identity) rather than metaphysical ones. That rarity is the measured result, not a gap in coverage.
+      {" "}Genuine divergence is real but <em>rare</em>, and two survivors are too few to say what kind of question it favours. That rarity is the measured result, not a gap in coverage.
       {" "}See <a href="/claims.json" target="_blank" rel="noopener noreferrer" style={link}>claims.json → cross-model-divergence-is-prevalent</a>
       {" "}and <a href="/limitations.md" target="_blank" rel="noopener noreferrer" style={link}>what this does not claim</a>.
     </div>
