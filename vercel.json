@@ -233,7 +233,7 @@
           "value": "(.*)application/json(.*)"
         }
       ],
-      "destination": "/api/agent-entry"
+      "destination": "/api/info?_view=agent-entry"
     },
     {
       "source": "/arrive",
