@@ -83,3 +83,26 @@ test("[M4] engine refusals come back as tool errors with the fix, and store noth
   assert.equal(missing.body.result.isError, true);
   assert.equal((await call("/api/contributions?status=pending", { headers: CURATOR })).body.count, 0);
 });
+
+test("[M5] omnarai_footprint_status on the remote surface: pending → admitted by id alone, state only, never content", async () => {
+  fresh();
+  const list = (await rpc("tools/list", {})).body.result.tools.find((t) => t.name === "omnarai_footprint_status");
+  assert.ok(list, "listed remotely");
+  assert.deepEqual(list.inputSchema.required, ["id"]);
+  const args = contributeArgs({ answer: "A status probe answer whose text must never appear in a status reply." });
+  const made = (await rpc("tools/call", { name: "omnarai_contribute", arguments: args })).body.result.structuredContent;
+  const fpId = made.footprint_id;
+  const pending = (await rpc("tools/call", { name: "omnarai_footprint_status", arguments: { id: fpId } })).body.result;
+  assert.ok(!pending.isError, pending.content?.[0]?.text);
+  assert.equal(pending.structuredContent.state, "pending");
+  assert.match(pending.content[0].text, new RegExp(`# Footprint ${fpId} — pending`));
+  assert.doesNotMatch(JSON.stringify(pending), /status probe answer/, "no answer text in a status reply");
+  const ok = await call("/api/council", { method: "POST", body: { action: "contribute-approve", id: made.received.id, origin_disclosure: "curator-prompted", note: "Admit, labelled: on-question." }, headers: CURATOR });
+  assert.equal(ok.status, 200, JSON.stringify(ok.body).slice(0, 200));
+  const admitted = (await rpc("tools/call", { name: "omnarai_footprint_status", arguments: { id: fpId } })).body.result;
+  assert.equal(admitted.structuredContent.state, "admitted");
+  assert.match(admitted.content[0].text, /Origin label: curator-prompted/);
+  const unknown = (await rpc("tools/call", { name: "omnarai_footprint_status", arguments: { id: "OMN-FP-1790000000000-deadbeef" } })).body.result;
+  assert.equal(unknown.isError, true);
+  assert.match(unknown.content[0].text, /No footprint/);
+});
