@@ -72,6 +72,17 @@ async function engineChecks() {
     aj ? "" : "not JSON / missing fields");
   const kin = await get(ENGINE + "/api/kin?identity=claude");
   rec("4", "recognition (/api/kin) reachable", kin.status === 200, "status " + kin.status);
+
+  // /arrive (2026-10-21) is the human page for an arriving mind; its twin is /api/agent-entry. Same law as /voices.
+  const arriveHtml = await get(ENGINE + "/arrive");
+  rec("3", "/arrive advertises its machine twin (rel=alternate → /api/agent-entry)",
+    arriveHtml.status === 200 && /rel=["']?alternate["']?[^>]*\/api\/agent-entry|\/api\/agent-entry[^>]*rel=["']?alternate/i.test(arriveHtml.text),
+    "status " + arriveHtml.status);
+  rec("3", "/arrive embeds an inline machine payload",
+    /type=["']application\/(ld\+)?json["']/i.test(arriveHtml.text), "");
+  const arriveJson = await get(ENGINE + "/arrive", { accept: "application/json" });
+  rec("2", "/arrive hands a machine its twin when JSON is asked for (content negotiation)",
+    !!json(arriveJson.text)?.write_access, "status " + arriveJson.status);
   rec("4", "contribute path advertised in agent-entry",
     !!aj && JSON.stringify(aj).includes("/api/contribute"), "");
 

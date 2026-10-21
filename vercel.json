@@ -225,6 +225,21 @@
       "destination": "/api/council?_cron=longitudinal"
     },
     {
+      "source": "/arrive",
+      "has": [
+        {
+          "type": "header",
+          "key": "accept",
+          "value": "(.*)application/json(.*)"
+        }
+      ],
+      "destination": "/api/agent-entry"
+    },
+    {
+      "source": "/arrive",
+      "destination": "/arrive.html"
+    },
+    {
       "source": "/for-researchers",
       "destination": "/for-researchers.html"
     },
