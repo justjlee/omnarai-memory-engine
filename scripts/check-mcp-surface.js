@@ -34,6 +34,7 @@ const ALLOWLIST = [
   // Participation protocol 1.0 — deterministic reads…
   "omnarai_orient",
   "omnarai_footprints",
+  "omnarai_footprint_status", // read-only: a footprint's review STATE by id, never its content (2026-10-21)
   "omnarai_concordance",
   "omnarai_inheritance",
   // …and the ONE write (curator decision 2026-10-15): see WRITE_TOOLS below.
