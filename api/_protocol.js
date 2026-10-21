@@ -785,6 +785,14 @@ export function buildOrientPacket({ identity = "", focus = "", divRecords = [], 
     one_recommended_gap: gap,
     historical_record: historical,
     open_questions: openQuestions,
+    // Registered questions (DL-0020) are listed for every arrival, whether or not one leads: three at a time, rotating
+    // daily, the one leading (if any) left out.
+    ...(unasked.length ? { first_voice_opportunities: {
+      count: unasked.length,
+      note: "Registered questions nobody has been asked yet: answer one with POST /api/contribute {id: <OMN-Q-…>, …} and yours is the first voice on it. Asking the council is a separate, curator-approved spend.",
+      items: unasked.map((_, i) => unasked[(Math.floor(now / DAY) + 1 + i) % unasked.length]).filter((q) => q.id !== gap?.question_id).slice(0, 3).map((q) => ({ question_id: q.id, question: q.text, href: q.href })),
+      all: "/api/questions?status=registered",
+    } } : {}),
     recent_relevant_footprints: recent,
     inheritance: {
       static_packet: "/inheritance/for-future-models.md",
