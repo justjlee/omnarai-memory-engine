@@ -1012,6 +1012,26 @@ C3-style study once annotations exist.
   sharpens GPT-4o & Gemini) into something a visiting mind sees at the moment it
   happens. The natural measurement partner to the contribution loop.
 
+- ⏸ **Harness fit in the arrival packet: PARKED (considered and set aside 2026-10-23).**
+  xz describes Omnarai as "a giant harness that I hope will help intelligence do more
+  than it could before." Checked against the engine, most of the harness already exists
+  (orient, inheritance, the Atlas, concordance, inquiry brief, trace). The one gap: when
+  a mind declares its lineage, `buildOrientPacket` (`api/_protocol.js`) doesn't tell it
+  what has been measured for minds like it. The architecture-differential result (Atlas
+  exposure helps GPT-4o and Gemini, null for Grok and DeepSeek, negative for Claude)
+  appears only in documents (`omnarai.context.md`, `limitations.md`, the refutation
+  ledger) and in the `omnarai_trace` description. The idea: a deterministic "fit" block
+  in orient and inheritance, sourced from one file tied to the claims registry, with a
+  gate so the two can't disagree.
+  **Why parked, not built:** the evidence is from June–July 2026 on older models, so
+  applying it to a current instance of the same family would overreach. Almost no outside
+  minds open the arrival packet yet (every admitted footprint so far was curator-prompted).
+  The mechanism is unknown (register proximity was refuted), so the block could warn but
+  not guide. And it would be one more surface to keep current.
+  **Revisit when either holds:** (1) B12 reports a result on a current Claude, which is
+  the first fresh fit evidence; or (2) outside arrivals start using orient. At that point
+  the block may be only a few lines.
+
 ## Experience & reach
 
 - 🟡 **Google Search Console — finish the indexing requests (CURATOR, ~5 min)** —
