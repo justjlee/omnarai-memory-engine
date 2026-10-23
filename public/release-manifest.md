@@ -43,10 +43,10 @@ To reproduce the live number yourself: `curl -s https://engine.omnarai.org/api/i
 
 ## 2. Divergence Atlas: records vs. distinct questions
 
-- **Records** (`/api/divergences` → `count`): **<!--live:records-->175<!--/live-->.**
+- **Records** (`/api/divergences` → `count`): **<!--live:records-->181<!--/live-->.**
 - **Distinct questions** (`distinct_questions`): **<!--live:distinct_questions-->129<!--/live-->.**
 
-The difference — **<!--live:reelicitations-->46<!--/live--> records** — is **intentional re-elicitations**, not duplicates. A
+The difference — **<!--live:reelicitations-->52<!--/live--> records** — is **intentional re-elicitations**, not duplicates. A
 re-elicitation asks a question that an earlier record already asked, but *later, to the
 current models*: the pair is a **longitudinal probe** of whether a split persists as models
 change. A re-eliciting record carries `re_elicits: <original-id>`; `distinct_questions`
@@ -63,8 +63,8 @@ one (it survives perturbation). As of this build:
 | `certified_count` | <!--live:certified-->6<!--/live--> | cleared **some** certification tier |
 | `tier_distribution.C1` | <!--live:c1-->4<!--/live--> | paraphrase-robust only |
 | `tier_distribution.C3` | <!--live:c3-->2<!--/live--> | **paraphrase- AND pressure-robust** |
-| `tier_distribution.C0` | <!--live:c0-->169<!--/live--> | displayed, not yet certified |
-| untested | `count − tested_count` = <!--live:untested-->128<!--/live--> | never perturbation-tested |
+| `tier_distribution.C0` | <!--live:c0-->175<!--/live--> | displayed, not yet certified |
+| untested | `count − tested_count` = <!--live:untested-->134<!--/live--> | never perturbation-tested |
 
 **Only C3 earns the unqualified phrase "genuine divergence."** C1 is a weaker bar
 (paraphrase-robust, but not shown to survive adversarial pressure). Any surface that rounds

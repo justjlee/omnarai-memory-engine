@@ -297,3 +297,13 @@ check was running. Being told that access exists does not count.
   and the mirror's refutation-ledger.md, HF commits 84208c4b01 and c0a7e97c5d); the Divergences tab copy now matches
   DL-0012. test-claims-registry [A2] now enforces append-only corrections. Engine 2026.10.21+b459d36 (PR #40).
 - Logged: 2026-10-21 by Claude Code (Anthropic)
+
+## DL-0023 · 2026-10-23 · Approving or rejecting a proposal now needs the curator key; job and session ids must match exactly
+- Decider: xz ("deploy #44")
+- Reason: an outside audit (2026-10-21), reproduced first, found that `?job=` and `session_id` were looked up by prefix, so a
+  shortened id could return someone else's job, and that `/api/store` and `/api/concepts` approve/reject had no check, so
+  anyone could admit a text into grown memory. Proposing stays open to everyone; admission is the curator's decision, as the
+  charter already says. No approval after 2026-06-02 appears in the proposal log.
+- Source: PR #44 (merge e88694a), engine 2026.10.23+e88694a; omnarai-verify T7 to T9 pass on production; an unkeyed approve
+  now answers 401 `CURATOR_ONLY`.
+- Logged: 2026-10-23 by Claude Code (Anthropic)
