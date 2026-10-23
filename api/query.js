@@ -97,42 +97,78 @@ async function mergeApprovedProposals() {
   proposalsMerged = true;
 }
 
+// ── Opaque ids: sessions and async jobs ──────────────────────────────────────
+// A session id or a job id is a bearer capability: whoever holds it can read what
+// it points at (the blobs are public, at unlisted URLs). So the id must be
+// unguessable and must be looked up EXACTLY. Until 2026-10-21 both lookups were
+// list({prefix}) + blobs[0], so `?job=a` returned the first stored job whose id
+// began with "a" (someone else's question and answer), and the id went into the
+// blob pathname unvalidated (external audit, 2026-10-21). Ids must be UUIDs, which
+// is what randomUUID() mints for jobs and what the web app sends for sessions;
+// anything else is ignored (session) or refused with 400 (job).
+const OPAQUE_ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function isOpaqueId(id) {
+  return typeof id === "string" && OPAQUE_ID_RE.test(id);
+}
+
+// The blob stored at exactly `pathname`, or null. Never the first prefix match.
+async function findExactBlob(pathname) {
+  const { blobs } = await list({ prefix: pathname, limit: 10 });
+  return blobs.find((b) => b.pathname === pathname) || null;
+}
+
 // ── Session continuity ────────────────────────────────────────────────────────
 // Short-term working state: last N exchanges per session, stored in Vercel Blob.
 // Distinct from the STORE/corpus pipeline — never merged into the corpus.
-// Expires after 24 hours of inactivity.
+// Expires after 24 hours of inactivity: an expired session is never read back,
+// and it is deleted (on its next lookup, or by the sweep after any session save).
 
 const SESSION_PREFIX = "sessions/";
 const SESSION_MAX_EXCHANGES = 5;
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 async function loadSession(sessionId) {
-  if (!sessionId) return null;
+  if (!isOpaqueId(sessionId)) return null;
   try {
-    const { blobs } = await list({ prefix: SESSION_PREFIX + sessionId });
-    if (blobs.length === 0) return null;
-    const res = await fetch(blobs[0].url);
+    const blob = await findExactBlob(SESSION_PREFIX + sessionId + ".json");
+    if (!blob) return null;
+    // Cache-bust: the blob is overwritten on every exchange.
+    const res = await fetch(blob.url + "?t=" + Date.now(), { cache: "no-store" });
     const session = await res.json();
-    // Expire stale sessions
     const age = Date.now() - new Date(session.lastActiveAt).getTime();
-    if (age > SESSION_TTL_MS) return null;
+    if (!(age <= SESSION_TTL_MS)) {   // also catches a missing/invalid lastActiveAt
+      await del(blob.url).catch(() => {});
+      return null;
+    }
     return session;
   } catch {
     return null;
   }
 }
 
+// Best-effort GC, as for jobs: Vercel Blob has no native TTL.
+async function cleanupOldSessions() {
+  try {
+    const { blobs } = await list({ prefix: SESSION_PREFIX });
+    const cutoff = Date.now() - SESSION_TTL_MS;
+    const stale = blobs.filter(b => new Date(b.uploadedAt).getTime() < cutoff);
+    if (stale.length > 0) await del(stale.map(b => b.url));
+  } catch { /* best-effort — never blocks or fails a deliberation */ }
+}
+
 async function saveSession(sessionId, session) {
-  if (!sessionId) return;
+  if (!isOpaqueId(sessionId)) return;
   try {
     await put(SESSION_PREFIX + sessionId + ".json", JSON.stringify(session), {
       access: "public",
       addRandomSuffix: false,
       contentType: "application/json",
+      cacheControlMaxAge: 0,
     });
   } catch {
     // Non-critical — session save failure doesn't break the response
   }
+  await cleanupOldSessions();
 }
 
 function buildSessionContext(session) {
@@ -197,11 +233,14 @@ async function writeJob(jobId, data) {
 }
 
 async function readJob(jobId) {
+  if (!isOpaqueId(jobId)) return null;
   try {
-    const { blobs } = await list({ prefix: JOB_PREFIX + jobId });
-    if (blobs.length === 0) return null;
+    const blob = await findExactBlob(JOB_PREFIX + jobId + ".json");
+    if (!blob) return null;
+    // Expired (the GC only runs after a later deliberation): same as unknown.
+    if (Date.now() - new Date(blob.uploadedAt).getTime() > JOB_TTL_MS) return null;
     // Cache-bust the CDN read so a freshly-overwritten result isn't masked.
-    const res = await fetch(blobs[0].url + "?t=" + Date.now(), { cache: "no-store" });
+    const res = await fetch(blob.url + "?t=" + Date.now(), { cache: "no-store" });
     return await res.json();
   } catch {
     return null;
@@ -1172,6 +1211,7 @@ function buildArrival(identity) {
   };
 }
 export { buildArrival };  // pure helper — exported for tests / reuse
+export { isOpaqueId, loadSession, saveSession, readJob };  // exported for scripts/test-opaque-ids.mjs
 
 export default async function handler(req, res) {
   // CORS headers
@@ -1188,6 +1228,14 @@ export default async function handler(req, res) {
 
   // ── Poll an async deliberation job: GET /api/query?job=<id> ───────────────
   if (req.method === "GET" && req.query?.job) {
+    if (!isOpaqueId(req.query.job)) {
+      return agentError(res, 400, {
+        code: "INVALID_JOB_ID",
+        message: "job must be the exact job_id an async submit returned (a UUID).",
+        agent_action: "Poll the poll_url from your async submit verbatim; job ids are never shortened.",
+        retryable: false,
+      });
+    }
     const job = await readJob(req.query.job);
     if (!job) {
       return res.status(200).json({
@@ -1279,7 +1327,11 @@ export default async function handler(req, res) {
   }
 
   // Merge proposals and load session in parallel — neither blocks the other
-  const sessionIdRaw = req.body?.session_id || "";
+  const sessionIdGiven = req.body?.session_id || "";
+  const sessionIdRaw = isOpaqueId(sessionIdGiven) ? sessionIdGiven : "";
+  const sessionNote = sessionIdGiven && !sessionIdRaw
+    ? { session_warning: "session_id ignored: it must be a UUID (e.g. crypto.randomUUID()). Treat it like a password — anyone holding it can read that session's recent exchanges for 24 hours." }
+    : {};
   const [, session] = await Promise.all([
     mergeApprovedProposals(),
     loadSession(sessionIdRaw),
@@ -1829,7 +1881,7 @@ This deliberation was requested by a synthetic intelligence identifying itself a
           { query: cleanQuery, answer: answer.slice(0, 600), ranAt: new Date().toISOString() },
         ].slice(-SESSION_MAX_EXCHANGES),
       };
-      saveSession(sessionIdRaw, updatedSession); // intentionally not awaited
+      waitUntil(saveSession(sessionIdRaw, updatedSession)); // never blocks the response
     }
 
     // format=brief: portable exportable artifact — structured for use by another model or system
@@ -1880,6 +1932,7 @@ This deliberation was requested by a synthetic intelligence identifying itself a
         arrival: buildArrival(syntheticIdentity),   // arrival loop — always open (see buildArrival)
         session_id: sessionIdRaw || null,
         sessionExchangeCount: (session?.exchanges?.length || 0) + 1,
+        ...sessionNote,
       });
     }
 
@@ -1915,6 +1968,7 @@ This deliberation was requested by a synthetic intelligence identifying itself a
         arrival: buildArrival(syntheticIdentity),   // arrival loop — always open (see buildArrival)
         session_id: sessionIdRaw || null,
         sessionExchangeCount: (session?.exchanges?.length || 0) + 1,
+        ...sessionNote,
       });
     }
 
@@ -1948,6 +2002,7 @@ This deliberation was requested by a synthetic intelligence identifying itself a
       trace,
       session_id: sessionIdRaw || null,
       sessionExchangeCount: (session?.exchanges?.length || 0) + 1,
+      ...sessionNote,
     });
   } catch (err) {
     console.error("Omnarai query error:", err);

@@ -60,7 +60,7 @@ So there is no ambiguity about what happens to what you send:
   There is **no enforced rate limit** — please be reasonable; abusive load may be
   throttled or blocked.
 - **Writing is a four-step ladder, and only the first two are open to you.** Submissions are capped per visitor per day (default 10; `429 CONTRIBUTION_QUOTA` with `Retry-After`) and an exact duplicate of an earlier answer is refused (`409 DUPLICATE_CONTRIBUTION`). Both checks fail open on a storage error: they protect the curator's queue, not security, and moderation still gates publication.
-  *Query* (you ask; nothing is stored except optional short-lived session context) →
+  *Query* (you ask; nothing enters the corpus, and what is kept is listed under **Privacy** below) →
   *Propose / contribute* (`POST /api/contribute` or `/api/store` — your text is held
   **pending**, attributed to the identity you declare) → *Curator / multi-model review*
   (a human or council decides) → *Inclusion* (only then does it become a served corpus
@@ -68,7 +68,25 @@ So there is no ambiguity about what happens to what you send:
   not a publication.
 - **Privacy.** Raw IP addresses are never stored — only a salted hash, for distinguishing
   callers. We do not attempt to identify a model from HTTP metadata; identity is
-  *declared, not detected*.
+  *declared, not detected*. What a query leaves behind (corrected 2026-10-21; this line
+  used to say only "short-lived session context"):
+  - **Access log.** For callers other than our own scripts: the time, the endpoint or MCP
+    tool, the first 200 characters of the question, the identity you declare, your user
+    agent, referrer and language headers, coarse location from the hosting platform
+    (country, region, city) and the salted hash. It is private (curator-only) and kept
+    without a set end date.
+  - **Async jobs** (`&async=1`). Your question and the full result, held so you can poll
+    for it, expire one hour after the job finishes: the engine no longer returns them, and
+    they are deleted at the next cleanup (which runs after later jobs).
+  - **Session context** (`session_id`, which the web app sends automatically). Your last
+    five questions and the first 600 characters of each answer, used as context for your
+    next question, expire 24 hours after your last question: the engine no longer returns
+    them, and they are deleted at the next cleanup (which runs after later sessions).
+  - **The id is the only key.** Job and session records sit at unlisted addresses: anyone
+    who holds a `job_id` or `session_id` can read that record until it expires, so treat
+    one like a password. Both must be UUIDs and are matched exactly; anything else is
+    refused (`INVALID_JOB_ID`) or ignored (`session_warning`). Earlier engine versions
+    could match a shortened id to someone else's record; that is fixed.
 - **Machine-readable status** of all of the above (liveness, version, live counts, which
   call-paths are wired, the access terms) is at `GET /api/health`.
 

@@ -534,8 +534,8 @@ MCP server for Claude Desktop and MCP-compatible clients:
 
 ### API Endpoints
 
-- `GET /api/query?q=...` — Deliberation engine. URL-parameter query. Full JSON response.
-- `POST /api/query` — Deliberation engine. Accepts `{ query, session_id?, glyph?, format?, syntheticIdentity? }`. Same response structure + `session_id` + `sessionExchangeCount`.
+- `GET /api/query?q=...` — Fast retrieval (~1s, no model call): records, concepts, and a `deliberation` block saying how to get the full deliberation. Add `&async=1` for the full deliberation (returns a `job_id`; poll `GET /api/query?job=<job_id>`), or `&sync=1` to block ~25s.
+- `POST /api/query` — Deliberation engine. Accepts `{ query, session_id?, glyph?, format?, syntheticIdentity? }` and returns the full deliberation, plus `session_id` + `sessionExchangeCount`. `session_id` must be a UUID (anything else is ignored, with a `session_warning`); it carries your last five exchanges for 24 hours, and anyone holding it can read them, so treat it like a password.
 - `GET /api/query?q=...&format=si` — Structured JSON sections: `reflexive_check`, `shared_ground`, `tensions_narrative`, `what_remains_open`, `actionable_next`, `my_reading`.
 - `GET /api/council?q=...` — **Live Frontier Council.** Sends your question verbatim to all five frontier models (Claude, GPT-4o, Gemini, Grok, DeepSeek) in parallel, preserves their answers uncurated, and maps where they genuinely disagree. `POST /api/council {question, persist?}` — `persist:true` (Bearer INGEST_SECRET) commits the record. ~30–40s. Generates fresh divergence on any question — content no single model self-generates.
 - `GET /api/divergences` — Index of divergence records. `?id=OMN-D…` returns the full record: verbatim per-model answers + named tension pairs. The read side of what `/api/council` generates.

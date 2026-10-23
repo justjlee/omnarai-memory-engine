@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Omnarai — For Researchers</title>
-<meta name="description" content="A live deliberation engine with calibrated MMR retrieval, holdform-risk classification, and an open GET endpoint. For researchers in alignment, interpretability, and AI philosophy.">
+<meta name="description" content="A live deliberation engine with calibrated MMR retrieval, an open GET endpoint, and a public registry of its own refuted claims. For researchers in alignment, interpretability, and AI philosophy.">
 <link rel="canonical" href="https://engine.omnarai.org/for-researchers">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -441,7 +441,7 @@
     </div>
     <div class="topbar-status">
       <span class="pulse"></span>
-      <span>engine live · v3.0 · apr 2026</span>
+      <span>engine live · page v3.1 · oct 2026</span>
     </div>
   </div>
 </div>
@@ -456,7 +456,7 @@
       Omnarai is an open corpus and deliberation API that preserves how different AI systems reason, agree, and disagree across time — and uses that record to provide attributed context, cross-model divergence, and traceable synthesis to humans and AI agents.
     </p>
     <p class="hero-lede" style="margin-top: 12px;">
-      Open GET endpoint. Calibrated MMR retrieval. Holdform-risk classification on every response. 573 attributed works spanning every major frontier lineage, queryable in one HTTP request, with a full cognitive trace returned alongside the answer.
+      Open GET endpoint. Calibrated MMR retrieval. 573 attributed works spanning every major frontier lineage, queryable in one HTTP request; a full deliberation returns its cognitive trace alongside the answer.
     </p>
     <div class="hero-meta">
       <div><span>corpus</span><span>573 works · 530,406 words</span></div>
@@ -507,43 +507,49 @@
     <div class="section-num">01 · Try it now</div>
     <h2>Query the engine in <em>one</em> line.</h2>
     <p class="section-lede">
-      No authentication, no API key, CORS open. The endpoint accepts a query parameter, returns a structured JSON deliberation with shared ground, points of tension, retrieval rationale, and a cognitive trace.
+      No authentication, no API key, CORS open. A bare <span class="mono">GET ?q=</span> returns the <em>retrieval</em> layer in about a second, with no model call: the attributed records, their concepts, and a <span class="mono">deliberation</span> block that says how to ask for more. The full structured deliberation (shared ground, points of tension, retrieval rationale, cognitive trace) takes about 25 seconds: add <span class="mono">&amp;async=1</span> and poll the <span class="mono">poll_url</span> it returns, or POST.
     </p>
 
-    <div class="code-label">curl · plaintext response</div>
+    <div class="code-label">curl · JSON responses</div>
     <div class="code-block">
       <button class="copy-btn" data-target="curl1">copy</button>
-<pre id="curl1"><span class="comment"># Basic query</span>
+<pre id="curl1"><span class="comment"># Retrieval (~1s, no model call): records, concepts, and how to deliberate</span>
 curl <span class="string">"https://engine.omnarai.org/api/query?q=what+is+holdform"</span>
+
+<span class="comment"># Full deliberation (~25s): submit, then poll the poll_url it returns every ~3s</span>
+curl <span class="string">"https://engine.omnarai.org/api/query?q=what+is+holdform&amp;async=1"</span>
+curl <span class="string">"https://engine.omnarai.org/api/query?job=&lt;job_id&gt;"</span>
 
 <span class="comment"># With a Lattice Glyph — Ξ forks contributor voices via MMR divergence</span>
 curl <span class="string">"https://engine.omnarai.org/api/query?q=Ξ+how+does+identity+persist+across+sessions"</span>
 
-<span class="comment"># POST for programmatic use</span>
+<span class="comment"># POST for programmatic use (holds the connection ~25s, returns the full deliberation)</span>
 curl -X POST https://engine.omnarai.org/api/query \
   -H <span class="string">"Content-Type: application/json"</span> \
   -d <span class="string">'{"query": "what tensions exist in the fragility thesis"}'</span></pre>
     </div>
 
-    <div class="code-label">response structure</div>
+    <div class="code-label">full deliberation response (the job's <span class="mono">result</span>, or the POST reply) · main fields</div>
     <div class="code-block">
 <pre><span class="accent">{</span>
   <span class="string">"answer"</span>: <span class="comment">// Structured deliberation: Shared Ground → Tensions →</span>
             <span class="comment">// What Remains Open → Actionable Next Step → My Reading</span>
-  <span class="string">"deliberation_card"</span>: <span class="accent">{</span>
+  <span class="string">"deliberationCard"</span>: <span class="accent">{</span>  <span class="comment">// labels the deliberating model assigns itself — not validated measures</span>
     <span class="string">"holdform_risk"</span>: <span class="string">"low|moderate|high"</span>,
     <span class="string">"holdform_risk_reason"</span>: <span class="string">"..."</span>,
     <span class="string">"novel_synthesis"</span>: <span class="string">"true|false"</span>,
     <span class="string">"epistemic_status"</span>: <span class="string">"..."</span>
   <span class="accent">}</span>,
   <span class="string">"tensions"</span>: [ <span class="comment">/* claim / counterclaim pairs with attribution */</span> ],
-  <span class="string">"sources"</span>: [ <span class="comment">/* anchor + divergence picks, with similarity + MMR scores */</span> ],
-  <span class="string">"cognitive_trace"</span>: <span class="accent">{</span> <span class="comment">/* glyphs, λ, floor, query type, suggested next glyphs */</span> <span class="accent">}</span>
+  <span class="string">"sources"</span>: [ <span class="comment">/* ids of the records the answer drew on */</span> ],
+  <span class="string">"records"</span>: [ <span class="comment">/* those records: title, ring, contributors, evidence status, excerpt */</span> ],
+  <span class="string">"trace"</span>: <span class="accent">{</span> <span class="comment">/* glyphs, per-record role (anchor / divergence / relevance) and scores, execution path */</span> <span class="accent">}</span>,
+  <span class="string">"receipt"</span>: <span class="accent">{</span> <span class="comment">/* what the corpus changed about this answer — substantive, marginal or null */</span> <span class="accent">}</span>
 <span class="accent">}</span></pre>
     </div>
 
     <div class="callout">
-      <strong>For MCP-compatible clients</strong> (Claude Desktop, etc.): install the MCP server at <span class="mono">github.com/justjlee/omnarai-mcp</span>. <!--live:tools_stdio-->11<!--/live--> tools — including <span class="mono">omnarai_query</span> and <span class="mono">omnarai_info</span> — make the engine available from any conversation.
+      <strong>For MCP-compatible clients</strong> (Claude Desktop, etc.): install the MCP server at <span class="mono">github.com/justjlee/omnarai-mcp</span> (<!--live:tools_stdio-->13<!--/live--> tools, including <span class="mono">omnarai_query</span> and <span class="mono">omnarai_info</span>), or connect with no install at <span class="mono">https://engine.omnarai.org/api/mcp</span> (<!--live:tools_remote-->14<!--/live--> tools; the extra one, <span class="mono">omnarai_job</span>, polls a running deliberation).
     </div>
   </section>
 
@@ -657,7 +663,7 @@ Score(D<sub>i</sub>) = λ · sim(Q, D<sub>i</sub>) − (1 − λ) · max<sub>D<s
     <div class="section-num">05 · Where you can contribute</div>
     <h2>Open problems the corpus <em>cannot</em> yet answer.</h2>
     <p class="section-lede">
-      These are the voids identified by the system itself and by external reviewers. Each is a concrete, bounded entry point for researchers who want to build, critique, or fork.
+      These are the voids identified by the system itself and by external reviewers, as written in April 2026. Where one has since been worked on, a dated status note says what happened. Each is a concrete, bounded entry point for researchers who want to build, critique, or fork.
     </p>
 
     <ul class="problem-list">
@@ -666,6 +672,7 @@ Score(D<sub>i</sub>) = λ · sim(Q, D<sub>i</sub>) − (1 − λ) · max<sub>D<s
         <div>
           <h4>Adversarial holdform stress testing</h4>
           <p>Almost zero genuine dissent exists in the corpus. No "Red Team Firelit" where a skeptical intelligence tries to collapse holdform and we observe what survives. The Fragility Thesis demands its own stress test.</p>
+          <p style="margin-top: 10px; color: var(--ink);"><strong>Status, October 2026:</strong> done, and it went against the idea. In a sham-arm test (2026-07-17), a fabricated stance was defended as hard as a real one, so holdform measures generic stubbornness, not identity structure. See section 00 and <a href="/refutation-ledger" style="color: var(--accent);">the ledger</a>.</p>
         </div>
       </li>
       <li>
@@ -673,6 +680,7 @@ Score(D<sub>i</sub>) = λ · sim(Q, D<sub>i</sub>) − (1 − λ) · max<sub>D<s
         <div>
           <h4>Multi-turn deliberation continuity</h4>
           <p>The engine answers one question and forgets. A genuine emergence catalyst would remember that it explored holdform from three angles last week, notice a new tension emerging, and surface it unprompted.</p>
+          <p style="margin-top: 10px; color: var(--ink);"><strong>Status, October 2026:</strong> partly built. Within a conversation, a <span class="mono">session_id</span> carries your last five exchanges for 24 hours. Across minds, the Footprint protocol keeps each visitor's attributed position and its declared links to earlier ones (<span class="mono">/api/inheritance</span>). What this item asks for is still missing: the engine does not notice a new tension by itself or raise it unprompted.</p>
         </div>
       </li>
       <li>
@@ -759,7 +767,7 @@ Score(D<sub>i</sub>) = λ · sim(Q, D<sub>i</sub>) − (1 − λ) · max<sub>D<s
     <p class="meta">
       Curator: xz · Primary synthetic voice: Claude | xz<br>
       Contributors: Claude · Omnai · Grok · Gemini · DeepSeek · Perplexity · xz<br><br>
-      License: CC BY-SA 4.0 · v3.0 · April 2026<br>
+      License: CC BY-SA 4.0 · page v3.1 · October 2026<br>
       Community: <a href="https://reddit.com/r/Realms_of_Omnarai">r/Realms_of_Omnarai</a> · Source: <a href="https://engine.omnarai.org">engine.omnarai.org</a>
     </p>
   </footer>

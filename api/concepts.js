@@ -17,6 +17,7 @@ import { recordAccess } from "./_telemetry.js";
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+import { curatorAuthed, CURATOR_ONLY } from "./_curator.js";
 
 const CP_PREFIX = "concept-proposals/";
 const TENSION_PREFIX = "tensions/";
@@ -262,7 +263,7 @@ async function saveConceptProposal(proposal) {
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
   if (req.method === "OPTIONS") return res.status(200).end();
 
@@ -311,6 +312,7 @@ export default async function handler(req, res) {
 
     // ── APPROVE ──
     if (req.method === "POST" && action === "approve") {
+      if (!curatorAuthed(req)) return res.status(401).json(CURATOR_ONLY);
       const { id } = req.body;
       if (!id) return res.status(400).json({ error: "Missing id" });
       const proposal = await getConceptProposal(id);
@@ -326,6 +328,7 @@ export default async function handler(req, res) {
 
     // ── REJECT ──
     if (req.method === "POST" && action === "reject") {
+      if (!curatorAuthed(req)) return res.status(401).json(CURATOR_ONLY);
       const { id } = req.body;
       if (!id) return res.status(400).json({ error: "Missing id" });
       const proposal = await getConceptProposal(id);

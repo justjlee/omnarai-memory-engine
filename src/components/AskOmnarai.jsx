@@ -276,11 +276,18 @@ export default function AskOmnarai({ corpus, conceptNodes, onResponse, initialQu
 
   // Session continuity — generate once per component mount (browser session).
   // Passed with every API call so the engine can thread prior exchanges as context.
-  const [sessionId] = useState(() =>
-    typeof crypto !== "undefined" && crypto.randomUUID
-      ? crypto.randomUUID()
-      : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
-  );
+  // The engine accepts only a UUID (the id is the only key to the session), so the
+  // fallback builds a v4 UUID from getRandomValues; with no crypto at all, no session.
+  const [sessionId] = useState(() => {
+    if (typeof crypto === "undefined") return "";
+    if (crypto.randomUUID) return crypto.randomUUID();
+    if (!crypto.getRandomValues) return "";
+    const b = crypto.getRandomValues(new Uint8Array(16));
+    b[6] = (b[6] & 0x0f) | 0x40;
+    b[8] = (b[8] & 0x3f) | 0x80;
+    const h = [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
+    return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+  });
 
   // API-powered interpretation — the organism's voice
   const interpretApi = useCallback(async (q) => {

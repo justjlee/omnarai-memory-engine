@@ -19,6 +19,12 @@ export default function ProposalReview() {
   const [filter, setFilter] = useState("pending");
   const [expandedId, setExpandedId] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
+  // Approve/reject need the curator token (server: api/_curator.js). Same storage
+  // key as the Tension Registry's repair panel, so it is entered once per browser.
+  const [token, setToken] = useState(() => {
+    try { return localStorage.getItem("omnarai_curator_token") || ""; } catch { return ""; }
+  });
+  const [actionError, setActionError] = useState(null);
 
   const fetchProposals = useCallback(async () => {
     setLoading(true);
@@ -37,15 +43,26 @@ export default function ProposalReview() {
 
   const handleAction = async (id, action, extraData) => {
     setActionLoading(id);
+    setActionError(null);
     try {
-      await fetch(`/api/store?action=${action}`, {
+      const headers = { "Content-Type": "application/json" };
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+        try { localStorage.setItem("omnarai_curator_token", token); } catch { /* ignore */ }
+      }
+      const r = await fetch(`/api/store?action=${action}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ id, ...extraData }),
       });
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}));
+        throw new Error(d.error || `HTTP ${r.status}`);
+      }
       await fetchProposals();
     } catch (err) {
       console.error(`${action} failed:`, err);
+      setActionError(`${action} failed: ${err.message}`);
     } finally {
       setActionLoading(null);
     }
@@ -78,6 +95,23 @@ export default function ProposalReview() {
           );
         })}
       </div>
+
+      {filter === "pending" && (
+        <input
+          type="password" value={token} onChange={e => setToken(e.target.value)}
+          placeholder="curator token (INGEST_SECRET) — needed to approve or reject"
+          style={{
+            width: "100%", marginBottom: 12, padding: "6px 10px", fontSize: 10,
+            fontFamily: "'IBM Plex Mono',monospace", color: "rgba(200,192,176,0.8)",
+            background: "transparent", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8,
+          }}
+        />
+      )}
+      {actionError && (
+        <div style={{ fontSize: 10, fontFamily: "'IBM Plex Mono',monospace", color: "#E87272", marginBottom: 12 }}>
+          {actionError}
+        </div>
+      )}
 
       {loading && (
         <div style={{

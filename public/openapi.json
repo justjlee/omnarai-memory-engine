@@ -433,9 +433,10 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "format": "uuid"
             },
-            "description": "Poll a previously submitted async job by id."
+            "description": "Poll a previously submitted async job by its exact job_id (a UUID). Anything else returns 400 INVALID_JOB_ID; ids are never prefix-matched. Jobs expire 1h after completion."
           },
           {
             "name": "glyph",
@@ -562,7 +563,7 @@
             }
           },
           "400": {
-            "description": "Missing or empty q (and no job param). The engine refuses rather than answering a question you didn't ask; the body carries the full usage doc plus param_missing: true.",
+            "description": "Missing or empty q (and no job param): the engine refuses rather than answering a question you didn't ask; the body carries the full usage doc plus param_missing: true. Or INVALID_JOB_ID: the job param was not an exact job_id (a UUID).",
             "content": {
               "application/json": {
                 "schema": {
@@ -600,7 +601,8 @@
                   },
                   "session_id": {
                     "type": "string",
-                    "description": "Thread prior exchanges (rolling buffer of 5, 24h TTL)."
+                    "format": "uuid",
+                    "description": "Thread prior exchanges (rolling buffer of 5, 24h TTL). Must be a UUID, matched exactly; anything else is ignored and the response carries session_warning. Anyone holding the id can read the session until it expires: treat it like a password."
                   },
                   "syntheticIdentity": {
                     "type": "string",
