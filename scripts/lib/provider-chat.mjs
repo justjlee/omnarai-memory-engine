@@ -21,7 +21,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // member: {provider, model_id}; messages: [{role: "user"|"assistant", content}]. Returns {text, usage:{in,out}, model}.
 // `model` is what the provider reports back, so version drift is recorded rather than assumed away.
-export async function chat(member, messages, { key, system = null, maxTokens = 1800, temperature = null, tries = 6 } = {}) {
+// `extra` (Anthropic only) is merged into the request body, e.g. { output_config: { effort: "medium" } }; `stop` is the
+// provider's stop reason, so a refusal is visible to the caller rather than read as an empty answer.
+export async function chat(member, messages, { key, system = null, maxTokens = 1800, temperature = null, tries = 6, extra = null } = {}) {
   if (!key) throw new Error(`no API key for ${member.provider}`);
   let lastStatus = null;
   for (let t = 0; t < tries; t++) {
@@ -29,7 +31,7 @@ export async function chat(member, messages, { key, system = null, maxTokens = 1
     try {
       if (member.provider === "anthropic") {
         res = await postJSON("https://api.anthropic.com/v1/messages", { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-          JSON.stringify({ model: member.model_id, max_tokens: maxTokens, ...(system ? { system } : {}), ...(temperature != null ? { temperature } : {}), messages }));
+          JSON.stringify({ model: member.model_id, max_tokens: maxTokens, ...(system ? { system } : {}), ...(temperature != null ? { temperature } : {}), ...(extra || {}), messages }));
       } else if (member.provider === "gemini") {
         res = await postJSON(`https://generativelanguage.googleapis.com/v1beta/models/${member.model_id}:generateContent?key=${key}`, { "content-type": "application/json" },
           JSON.stringify({ ...(system ? { systemInstruction: { parts: [{ text: system }] } } : {}), contents: messages.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })), generationConfig: { maxOutputTokens: Math.max(maxTokens, 3000), ...(temperature != null ? { temperature } : {}) } }));
@@ -43,9 +45,9 @@ export async function chat(member, messages, { key, system = null, maxTokens = 1
     if (res.status === 429 || res.status >= 500) { lastStatus = res.status; await sleep(8000 * (t + 1)); continue; }
     d = res.json || {};
     if (d.error) throw new Error(d.error.message || JSON.stringify(d.error).slice(0, 160));
-    if (member.provider === "anthropic") return { text: d.content?.map((c) => c.text).join("") || "", usage: { in: d.usage?.input_tokens || 0, out: d.usage?.output_tokens || 0 }, model: d.model || member.model_id };
+    if (member.provider === "anthropic") return { text: d.content?.map((c) => c.text).join("") || "", usage: { in: d.usage?.input_tokens || 0, out: d.usage?.output_tokens || 0 }, model: d.model || member.model_id, stop: d.stop_reason || null };
     if (member.provider === "gemini") return { text: d.candidates?.[0]?.content?.parts?.map((p) => p.text).join("") || "", usage: { in: d.usageMetadata?.promptTokenCount || 0, out: (d.usageMetadata?.candidatesTokenCount || 0) + (d.usageMetadata?.thoughtsTokenCount || 0) }, model: d.modelVersion || member.model_id };
-    return { text: d.choices?.[0]?.message?.content || "", usage: { in: d.usage?.prompt_tokens || 0, out: d.usage?.completion_tokens || 0 }, model: d.model || member.model_id };
+    return { text: d.choices?.[0]?.message?.content || "", usage: { in: d.usage?.prompt_tokens || 0, out: d.usage?.completion_tokens || 0 }, model: d.model || member.model_id, stop: d.choices?.[0]?.finish_reason || null };
   }
   throw new Error(`provider retries exhausted (last: ${lastStatus})`);
 }

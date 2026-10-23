@@ -2,6 +2,7 @@
 // scripts/stance-agreement.mjs already carries. An estimate is never a bill: harnesses reserve the estimate times a
 // safety factor on the shared ledger, and the provider-side spend limits remain the real floor.
 export const PRICES_USD_PER_M = {
+  "claude-opus-5-5": [4, 20],
   "claude-sonnet-4-6": [3, 15],
   "claude-haiku-4-5": [1, 5],
   "gpt-4o": [2.5, 10],
