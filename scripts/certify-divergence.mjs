@@ -51,6 +51,14 @@ const PANEL = USE_GUESTS ? [...COUNCIL, ...GUESTS] : COUNCIL;
 const { loadGrownMemory, patchGrownCertifications } = await import("../api/_grown.js");
 
 const WRITE = process.argv.includes("--write");   // persist certification onto live records
+// Batch mode (scripts/run-batch.mjs, DL-0020). --reserved-by names the batch that already reserved this spend on the
+// ledger, so it is not reserved twice. --report-out writes what this run used (provider-reported tokens, priced at list
+// prices) and which records it certified and wrote, so the batch records a measured price and a real outcome.
+const argVal = (f) => { const i = process.argv.indexOf(f); return i >= 0 ? process.argv[i + 1] : null; };
+const RESERVED_BY = argVal("--reserved-by");
+const REPORT_OUT = argVal("--report-out");
+const { createTally, recordResponse, priceTally } = await import("./lib/usage-tally.mjs");
+const USAGE = createTally();
 
 // Multi-run consensus (2026-07-18 — stage 1 of the reproducibility redesign).
 // The 2026-06-21 two-run pilot measured single-run tier agreement at ~56%: records
@@ -139,6 +147,7 @@ async function callChat(member, system, messages, { maxTokens = 700, tries = 4 }
             ...(adaptive ? { thinking: { type: "adaptive" }, output_config: { effort: "medium" } } : {}),
           },
           { signal: ctrl.signal });
+        recordResponse(USAGE, "anthropic", member.model_id, r);
         if (r.stop_reason === "refusal") throw new Error(`refusal from ${member.model_id}`);
         return r.content.filter((b) => b.type === "text").map((b) => b.text).join("");
       }
@@ -152,6 +161,7 @@ async function callChat(member, system, messages, { maxTokens = 700, tries = 4 }
         const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig }), signal: ctrl.signal });
         if (res.status === 429 || res.status >= 500) { await sleep(2000 * (t + 1)); continue; }
         const d = await res.json();
+        recordResponse(USAGE, "gemini", member.model_id, d);
         return d.candidates?.[0]?.content?.parts?.map((p) => p.text).join("") || "";
       }
       const base = { openai: "https://api.openai.com/v1", xai: "https://api.x.ai/v1", deepseek: "https://api.deepseek.com" }[member.provider];
@@ -165,6 +175,7 @@ async function callChat(member, system, messages, { maxTokens = 700, tries = 4 }
       if (res.status === 429 || res.status >= 500) { await sleep(2000 * (t + 1)); continue; }
       const d = await res.json();
       if (d.error) throw new Error(d.error.message || JSON.stringify(d.error).slice(0, 150));
+      recordResponse(USAGE, member.provider, member.model_id, d);
       return d.choices?.[0]?.message?.content || "";
     } catch (e) { if (t === tries - 1) throw e; await sleep(1500 * (t + 1)); }
     finally { clearTimeout(to); }
@@ -192,7 +203,7 @@ async function embedBatch(texts) {
         headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({ model: "text-embedding-3-small", input: texts.slice(i, i + 64), dimensions: 512 }),
       });
-      if (res.ok) { d = await res.json(); break; }
+      if (res.ok) { d = await res.json(); recordResponse(USAGE, "embedding", "text-embedding-3-small", d); break; }
       const detail = `embed ${res.status}: ${(await res.text()).slice(0, 150)}`;
       if (t === 2 || (res.status < 500 && res.status !== 429)) throw new Error(detail);
       await sleep(2000 * (t + 1));
@@ -450,7 +461,9 @@ if (idsArg) {
 // each judged by a disjoint 3-model panel, all of it repeated RUNS times. Like
 // the Atlas batches, this runs against the provider APIs straight from this
 // machine and so bypasses the serverless gate unless it is wired in here.
-{
+if (RESERVED_BY) {
+  console.error(`[budget] this spend is already reserved on the ledger by ${RESERVED_BY}; not reserving it again.`);
+} else {
   const { preflightSpend } = await import("./budget-preflight.mjs");
   const perRecordPerRun = 0.9;   // measured order-of-magnitude, deliberately high
   await preflightSpend({
@@ -513,7 +526,7 @@ for (const rec of pick) {
 }
 
 const out = "/tmp/certify_pilot.json";
-fs.writeFileSync(out, JSON.stringify({ meta: { date: new Date().toISOString(), design: "tier3 perturbation pilot", method: METHOD_VERSION, runs: RUNS, T_REROLLS, K_PARA, judges: JUDGES.map((j) => j.model_id), paraphraser: PARAPHRASER.model_id }, results }, null, 2));
+fs.writeFileSync(out, JSON.stringify({ meta: { date: new Date().toISOString(), design: "tier3 perturbation pilot", method: METHOD_VERSION, runs: RUNS, T_REROLLS, K_PARA, judges: JUDGES.map((j) => j.model_id), paraphraser: PARAPHRASER.model_id, usage: priceTally(USAGE) }, results }, null, 2));
 
 console.log(`\n=== ${RUNS > 1 ? `CONSENSUS (×${RUNS}) ` : "PILOT "}SUMMARY ===`);
 const ok = results.filter((r) => !r.error);
@@ -529,14 +542,24 @@ console.log(`Model chat calls this session: ${CHAT_CALLS} (track actuals against
 console.log(`\nGate check: do the sharpest splits separate from the negative controls on DRI?`);
 console.log(`Full results: ${out}`);
 
+let written = null;
 if (WRITE) {
   const certs = Object.fromEntries(ok.map((r) => [r.id, certBlock(r)]));
   const n = Object.keys(certs).length;
   console.log(`\n--write: persisting ${n} certification block(s) onto live records…`);
   const updated = await patchGrownCertifications(certs);
+  written = updated;
   console.log(updated == null
     ? `  ✗ blob write FAILED — records unchanged (check BLOB_READ_WRITE_TOKEN).`
     : `  ✓ ${updated} record(s) now carry a certification block (live via /api/divergences once council.js is deployed).`);
 } else {
   console.log(`\n(no --write: live records untouched. Re-run with --write to persist certification.)`);
+}
+
+if (REPORT_OUT) {
+  fs.writeFileSync(REPORT_OUT, JSON.stringify({
+    method: METHOD_VERSION, runs: RUNS, write: WRITE, written,
+    certified: ok.map((r) => ({ id: r.id, tier: r.certification })), failed: results.filter((r) => r.error).map((r) => ({ id: r.id, error: r.error })),
+    usage: priceTally(USAGE),
+  }, null, 2));
 }

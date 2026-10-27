@@ -41,7 +41,7 @@
       ],
       "estimate_usd": 0.6,
       "estimate_basis": "5 council runs at the budget table price of $0.12 each (api/_budget.js). Batch one replaces this with the measured per-question price.",
-      "waits_for": "Gemini prepay top-up: Gemini has been absent from every council record since 2026-10-16, and the panel rule asks for the full council.",
+      "waits_for": "Gemini prepay top-up: Gemini has been absent from every council record since 2026-10-16, and the panel rule asks for the full council. CORRECTION (2026-10-27, DL-0024): this no longer holds. Gemini is funded again: the curator reported topping up the prepay on 2026-10-21, and a one-call check through the production key answered on 2026-10-27. The batch now waits only for the curator's approval in the decision log (DL-0005).",
       "actual_usd": null
     },
     {
@@ -86,7 +86,7 @@
       "selection": "the first five of certification-queue-v1",
       "estimate_usd": 7.25,
       "estimate_basis": "5 records at about $1.45 each for the x3 strict-min battery (from the 2026-09-28 estimate of about $8–9 for 6 records). Batch one replaces this with the measured per-record price.",
-      "waits_for": "Gemini prepay top-up: the battery questions every council member, Gemini included.",
+      "waits_for": "Gemini prepay top-up: the battery questions every council member, Gemini included. CORRECTION (2026-10-27, DL-0024): the Gemini blocker is cleared (the same check as elicit-001). A second blocker was found the same day: the runner's certification path ran the legacy single-run battery and wrote nothing to the live records, so a run would have been closed as done without certifying anything. It is fixed in the same change as this correction (x3 strict-min, written to the record, reserved once on the ledger, priced from provider usage). The batch now waits for that fix to be on main and for the curator's approval in the decision log (DL-0005).",
       "actual_usd": null
     }
   ]

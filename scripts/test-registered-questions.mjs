@@ -16,7 +16,8 @@ import { GROWN, RECORDS, Q1 } from "./lib/fixtures.mjs";
 import * as R from "../api/_registered.js";
 import { questionIdFor } from "../api/_footprints.js";
 import { buildOrientPacket } from "../api/_protocol.js";
-import { runItems, councilRunUsd } from "./run-batch.mjs";
+import { runItems, councilRunUsd, missingVoices, certifyArgs, certOutcome } from "./run-batch.mjs";
+import { createTally, recordResponse, priceTally } from "./lib/usage-tally.mjs";
 
 process.env.INGEST_SECRET = "test-curator-secret";
 const CURATOR = { authorization: "Bearer test-curator-secret" };
@@ -161,6 +162,46 @@ test("[B3] the runner stops before the item that would cross the wall, and price
   assert.ok(c.usd > 0 && c.usd < 0.1, String(c.usd));
   assert.deepEqual(c.unpriced, []);
   assert.deepEqual(councilRunUsd("Q?", [{ ok: true, model_id: "no-such-model", text: "a" }], "s", { fallbackUsd: 0.12 }).unpriced, ["no-such-model"]);
+});
+test("[B5] the runner keeps the design: full panel or nothing; certification is ×3, written, reserved once, priced from usage", () => {
+  const five = ["Claude", "GPT-4o", "Gemini", "Grok", "DeepSeek"].map((model) => ({ model, ok: true }));
+  assert.deepEqual(missingVoices(R.FULL_PANEL, five), []);
+  assert.deepEqual(missingVoices(R.FULL_PANEL, five.map((a) => (a.model === "Gemini" ? { ...a, ok: false } : a))), ["Gemini"], "a failed voice is a missing voice");
+  assert.deepEqual(missingVoices(R.FULL_PANEL, five.filter((a) => a.model !== "Grok")), ["Grok"]);
+  const args = certifyArgs("cert-001", "OMN-D1", "/tmp/r.json");
+  assert.equal(args[args.indexOf("--runs") + 1], "3", "the ×3 strict-min battery, not the legacy single run");
+  assert.ok(args.includes("--write"), "the certification reaches the live record");
+  assert.equal(args[args.indexOf("--reserved-by") + 1], "batch cert-001", "reserved once, by the batch");
+  assert.equal(args[args.indexOf("--report-out") + 1], "/tmp/r.json");
+  assert.equal(args[args.indexOf("--ids") + 1], "OMN-D1");
+  const report = { method: "tier3-perturbation-v3-consensus-x3", write: true, written: 1, certified: [{ id: "OMN-D1", tier: "C1" }], failed: [], usage: { usd: 1.234, unpriced: [], no_usage: 0 } };
+  const good = certOutcome(report, "OMN-D1", 1.45);
+  assert.equal(good.ok, true); assert.equal(good.usd, 1.234, "the measured price, not the estimate"); assert.equal(good.created, "OMN-D1"); assert.equal(good.tier, "C1");
+  assert.match(good.usd_basis, /^provider-reported tokens/);
+  const unwritten = certOutcome({ ...report, written: null }, "OMN-D1", 1.45);
+  assert.equal(unwritten.ok, false); assert.equal(unwritten.created, null); assert.match(unwritten.error, /not written/);
+  const dry = certOutcome({ ...report, write: false }, "OMN-D1", 1.45);
+  assert.equal(dry.ok, false, "a dry run is not a certification");
+  const failed = certOutcome({ ...report, certified: [], failed: [{ id: "OMN-D1", error: "boom" }] }, "OMN-D1", 1.45);
+  assert.equal(failed.ok, false); assert.equal(failed.error, "boom");
+  const none = certOutcome(null, "OMN-D1", 1.45);
+  assert.equal(none.ok, false); assert.equal(none.usd, 1.45); assert.match(none.usd_basis, /^estimate/);
+  assert.match(certOutcome({ ...report, usage: { usd: 1, unpriced: ["x-model"], no_usage: 2 } }, "OMN-D1", 1.45).usd_basis, /no price on file for x-model; 2 response\(s\) reported no usage/);
+});
+test("[B6] usage tally: provider-reported tokens per model, thinking billed as output, priced at list prices", () => {
+  const t = createTally();
+  recordResponse(t, "anthropic", "claude-sonnet-4-6", { usage: { input_tokens: 1000, output_tokens: 500 } });
+  recordResponse(t, "gemini", "gemini-3.5-flash", { usageMetadata: { promptTokenCount: 1000, candidatesTokenCount: 100, thoughtsTokenCount: 400 } });
+  recordResponse(t, "openai", "gpt-5-mini", { usage: { prompt_tokens: 2000, completion_tokens: 1000 } });
+  recordResponse(t, "embedding", "text-embedding-3-small", { usage: { prompt_tokens: 10000, total_tokens: 10000 } });
+  recordResponse(t, "deepseek", "deepseek-chat", { choices: [] });
+  recordResponse(t, "openai", "no-such-model", { usage: { prompt_tokens: 1, completion_tokens: 1 } });
+  const p = priceTally(t);
+  assert.equal(t.by_model["gemini-3.5-flash"].out, 500, "Gemini's thoughts are output tokens");
+  assert.equal(p.no_usage, 1); assert.equal(p.calls, 5);
+  assert.deepEqual(p.unpriced, ["no-such-model"]);
+  const expect = (1000 * 3 + 500 * 15 + 1000 * 1.5 + 500 * 9 + 2000 * 0.25 + 1000 * 2 + 10000 * 0.02) / 1e6;
+  assert.equal(p.usd, +expect.toFixed(5));
 });
 test("[B4] the shipped batches are proposals: nothing in public/batches.json can run today", () => {
   const doc = JSON.parse(readFileSync(new URL("../public/batches.json", import.meta.url), "utf8"));
