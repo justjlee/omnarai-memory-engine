@@ -30,6 +30,27 @@ export const COUNCIL = [
   { model: "DeepSeek", lab: "DeepSeek",  model_id: "deepseek-chat",            provider: "deepseek",  env: "DEEPSEEK_API_KEY" },
 ];
 
+// The frontier track (longitudinal, track "frontier"): each lab's current flagship
+// on the same frozen canon, so the record shows what NEWER minds say, not only what
+// the standing council (fixed ids since 2026-06, a noise floor) re-says. Ids checked
+// against each provider's model list on 2026-10-23; PROPOSED until the curator sets
+// FRONTIER_TRACK=on. Reasoning models spend thinking tokens out of the same output
+// cap, so each member carries its own request settings (`body` / `generationConfig`).
+// No refusal fallback on any member: a fallback would put another model's words
+// under this model's name in a record that cannot be redone.
+export const FRONTIER_COUNCIL = [
+  { model: "Claude",   lab: "Anthropic", model_id: "claude-opus-5-5", provider: "anthropic", env: "ANTHROPIC_API_KEY",
+    body: { max_tokens: 4000, output_config: { effort: "medium" } } },
+  { model: "GPT",      lab: "OpenAI",    model_id: "gpt-6.1-sol",     provider: "openai",    env: "OPENAI_API_KEY",
+    body: { max_completion_tokens: 2400, reasoning_effort: "medium" } },
+  { model: "Gemini",   lab: "Google",    model_id: "gemini-4-argon",  provider: "gemini",    env: "GEMINI_API_KEY",
+    generationConfig: { maxOutputTokens: 4096 } },
+  { model: "Grok",     lab: "xAI",       model_id: "grok-4.7",        provider: "xai",       env: "XAI_API_KEY",
+    body: { max_tokens: 2400 } },
+  { model: "DeepSeek", lab: "DeepSeek",  model_id: "deepseek-v4-pro", provider: "deepseek",  env: "DEEPSEEK_API_KEY",
+    body: { max_tokens: 2400 } },
+];
+
 // Each council member answers the verbatim question in its own voice. The point
 // is genuine divergence, so the framing invites a position, not a hedge — but it
 // does NOT tell the model what to think. Disagreement must be real, not staged.
@@ -41,89 +62,123 @@ const MEMBER_SYSTEM =
 
 const MEMBER_MAX_TOKENS = 700;
 
-// ── Per-provider callers ────────────────────────────────────────────────────
-// All return a plain string. All honor an AbortSignal for timeout.
-
-async function callAnthropic({ model_id }, question, signal) {
-  const client = new Anthropic();
-  const msg = await client.messages.create(
-    { model: model_id, max_tokens: MEMBER_MAX_TOKENS, system: MEMBER_SYSTEM,
-      messages: [{ role: "user", content: question }] },
-    { signal }
-  );
-  return msg.content[0]?.text || "";
-}
-
-// OpenAI-compatible chat completions (OpenAI, xAI, DeepSeek share this shape)
-async function callOpenAICompatible(baseURL, key, { model_id }, question, signal) {
-  const res = await fetch(`${baseURL}/chat/completions`, {
-    method: "POST",
-    signal,
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-    body: JSON.stringify({
-      model: model_id,
-      max_tokens: MEMBER_MAX_TOKENS,
-      messages: [
-        { role: "system", content: MEMBER_SYSTEM },
-        { role: "user", content: question },
-      ],
-    }),
-  });
-  if (!res.ok) throw new Error(`${res.status} ${(await res.text()).slice(0, 200)}`);
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content || "";
-}
-
-async function callGemini({ model_id }, question, signal) {
-  const key = process.env.GEMINI_API_KEY;
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model_id}:generateContent?key=${key}`;
-  const res = await fetch(url, {
-    method: "POST",
-    signal,
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
+// ── Per-provider requests (pure) ────────────────────────────────────────────
+// memberRequest builds exactly what is sent; parseMemberReply reads the answer and
+// the model the PROVIDER reports having run. A standing-council member (no `body`,
+// no `generationConfig`) gets the request it has always had: the control track's
+// comparability depends on that, and scripts/test-council-requests.mjs pins it.
+export function memberRequest(member, question) {
+  if (member.provider === "anthropic") {
+    return { model: member.model_id, max_tokens: MEMBER_MAX_TOKENS, ...member.body, system: MEMBER_SYSTEM,
+             messages: [{ role: "user", content: question }] };
+  }
+  if (member.provider === "gemini") {
+    return {
       systemInstruction: { parts: [{ text: MEMBER_SYSTEM }] },
       contents: [{ role: "user", parts: [{ text: question }] }],
       // 2.5 models are reasoning models: thinking tokens count against
       // maxOutputTokens and will truncate the visible answer. Disable thinking so
-      // the full budget goes to the response, and keep headroom.
-      generationConfig: {
-        maxOutputTokens: 1024,
-        thinkingConfig: { thinkingBudget: 0 },
-      },
-    }),
-  });
-  if (!res.ok) throw new Error(`${res.status} ${(await res.text()).slice(0, 200)}`);
-  const data = await res.json();
-  return data.candidates?.[0]?.content?.parts?.map((p) => p.text).join("") || "";
+      // the full budget goes to the response, and keep headroom. (Gemini 3+ rejects
+      // thinkingBudget, so frontier members bring their own generationConfig.)
+      generationConfig: member.generationConfig || { maxOutputTokens: 1024, thinkingConfig: { thinkingBudget: 0 } },
+    };
+  }
+  // OpenAI-compatible chat completions (OpenAI, xAI, DeepSeek share this shape)
+  return {
+    model: member.model_id,
+    ...(member.body || { max_tokens: MEMBER_MAX_TOKENS }),
+    messages: [
+      { role: "system", content: MEMBER_SYSTEM },
+      { role: "user", content: question },
+    ],
+  };
 }
 
-function callMember(member, question, signal) {
-  switch (member.provider) {
-    case "anthropic": return callAnthropic(member, question, signal);
-    case "openai":    return callOpenAICompatible("https://api.openai.com/v1", process.env.OPENAI_API_KEY, member, question, signal);
-    case "xai":       return callOpenAICompatible("https://api.x.ai/v1", process.env.XAI_API_KEY, member, question, signal);
-    case "deepseek":  return callOpenAICompatible("https://api.deepseek.com", process.env.DEEPSEEK_API_KEY, member, question, signal);
-    case "gemini":    return callGemini(member, question, signal);
-    default: throw new Error(`Unknown provider: ${member.provider}`);
+// → { text, resolved, truncated, usage }. `resolved` is the provider's own report
+// of the model that answered (an alias such as deepseek-chat can be repointed under
+// an unchanged requested id); it is a claim by the provider, not a verification.
+export function parseMemberReply(member, data) {
+  if (member.provider === "anthropic") {
+    if (data.stop_reason === "refusal") {
+      throw new Error(`refusal${data.stop_details?.category ? ` (${data.stop_details.category})` : ""}`);
+    }
+    // A thinking model's first block is its reasoning (empty by default), so read
+    // the text blocks, never content[0].
+    const text = (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("");
+    return { text, resolved: data.model || null, truncated: data.stop_reason === "max_tokens",
+             usage: data.usage ? { input: data.usage.input_tokens, output: data.usage.output_tokens } : null };
   }
+  if (member.provider === "gemini") {
+    const cand = data.candidates?.[0];
+    const u = data.usageMetadata;
+    return { text: cand?.content?.parts?.map((p) => p.text).join("") || "", resolved: data.modelVersion || null,
+             truncated: cand?.finishReason === "MAX_TOKENS",
+             usage: u ? { input: u.promptTokenCount, output: (u.candidatesTokenCount || 0) + (u.thoughtsTokenCount || 0) } : null };
+  }
+  const choice = data.choices?.[0];
+  return { text: choice?.message?.content || "", resolved: data.model || null, truncated: choice?.finish_reason === "length",
+           usage: data.usage ? { input: data.usage.prompt_tokens, output: data.usage.completion_tokens } : null };
+}
+
+const OPENAI_COMPATIBLE = {
+  openai:   { url: "https://api.openai.com/v1/chat/completions",  env: "OPENAI_API_KEY" },
+  xai:      { url: "https://api.x.ai/v1/chat/completions",        env: "XAI_API_KEY" },
+  deepseek: { url: "https://api.deepseek.com/chat/completions",   env: "DEEPSEEK_API_KEY" },
+};
+
+async function postJson(url, headers, body, signal) {
+  const res = await fetch(url, {
+    method: "POST",
+    signal,
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`${res.status} ${(await res.text()).slice(0, 200)}`);
+  return res.json();
+}
+
+// Honors an AbortSignal for timeout.
+async function callMember(member, question, signal) {
+  const body = memberRequest(member, question);
+  let data;
+  if (member.provider === "anthropic") {
+    data = await new Anthropic().messages.create(body, { signal });
+  } else if (member.provider === "gemini") {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${member.model_id}:generateContent?key=${process.env.GEMINI_API_KEY}`;
+    data = await postJson(url, {}, body, signal);
+  } else if (OPENAI_COMPATIBLE[member.provider]) {
+    const p = OPENAI_COMPATIBLE[member.provider];
+    data = await postJson(p.url, { Authorization: `Bearer ${process.env[p.env]}` }, body, signal);
+  } else {
+    throw new Error(`Unknown provider: ${member.provider}`);
+  }
+  return parseMemberReply(member, data);
 }
 
 // ── Fan-out ─────────────────────────────────────────────────────────────────
-// Calls every council member with a key present, in parallel, with a hard
-// timeout per call. One failure never sinks the council — it just drops a voice.
-export async function elicitCouncil(question, { timeoutMs = 45000 } = {}) {
-  const members = COUNCIL.filter((m) => process.env[m.env]);
+// Calls every panel member with a key present, in parallel, with a hard timeout
+// per call. One failure never sinks the council — it just drops a voice. `ms` and
+// `usage` ride on the returned answers for callers that measure (never persisted:
+// buildDivergenceRecord copies named fields only).
+export async function elicitCouncil(question, { timeoutMs = 45000, panel = COUNCIL } = {}) {
+  const members = panel.filter((m) => process.env[m.env]);
   const date = new Date().toISOString().slice(0, 10);
 
   const results = await Promise.allSettled(
     members.map(async (m) => {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), timeoutMs);
+      const t0 = Date.now();
       try {
-        const text = (await callMember(m, question, controller.signal)).trim();
+        const reply = await callMember(m, question, controller.signal);
+        const text = reply.text.trim();
         if (!text) throw new Error("empty response");
-        return { model: m.model, lab: m.lab, model_id: m.model_id, date, text, ok: true };
+        return {
+          model: m.model, lab: m.lab, model_id: m.model_id,
+          ...(reply.resolved ? { model_resolved: reply.resolved } : {}),
+          ...(reply.truncated ? { truncated: true } : {}),
+          date, text, ok: true, ms: Date.now() - t0, usage: reply.usage,
+        };
       } finally {
         clearTimeout(timer);
       }
@@ -315,7 +370,10 @@ export function buildDivergenceRecord(question, answers, synthesis) {
       question,
       method: "Live frontier council — verbatim parallel elicitation, uncurated answers preserved",
       answers: answered.map((a) => ({
-        model: a.model, lab: a.lab, model_id: a.model_id, date: a.date, text: a.text,
+        model: a.model, lab: a.lab, model_id: a.model_id,
+        ...(a.model_resolved ? { model_resolved: a.model_resolved } : {}),
+        ...(a.truncated ? { truncated: true } : {}),
+        date: a.date, text: a.text,
       })),
       tensions: synthesis.tensions,
       deliberation_card: synthesis.deliberation_card,

@@ -10,6 +10,7 @@ import { readOpenItems, applyOpenItemAction, readScorecard, writeScorecard } fro
 import { getCitationReport, peekCitation } from "./_citation.js";
 import { loadGrownMemory } from "./_grown.js";
 import { CANON } from "./_canon.js";
+import { epochCoverage } from "./_longitudinal.js";
 import { atlasCertCounts } from "./_atlas-counts.js";
 import { TOOLS as MCP_REMOTE_TOOLS } from "./_mcp.js";
 import { foldLineages } from "./_lineages.js";
@@ -181,14 +182,9 @@ async function checkLongitudinal() {
     const epoch = now.toISOString().slice(0, 7);
     // Through yesterday only: Hobby crons fire anywhere in the 06:00 UTC hour.
     const expectedThrough = Math.min(now.getUTCDate() - 2, CANON.length - 1);
-    const done = new Set();
-    let last = null;
-    for (const e of grown.entries) {
-      const lon = e.divergence?.longitudinal || e.provenance?.longitudinal;
-      if (!lon) continue;
-      if (lon.epoch === epoch) done.add(lon.canon_id);
-      if (!last || (e.date || "") > (last.date || "")) last = { id: e.id, date: e.date || null, canon_id: lon.canon_id };
-    }
+    // Control track only: a frontier-track record for a canon question must not
+    // hide a missed control day.
+    const { done, last } = epochCoverage(grown.entries, epoch, "control");
     const missing = [];
     for (let i = 0; i <= expectedThrough; i++) {
       if (!done.has(CANON[i].canon_id)) missing.push(i);

@@ -50,6 +50,10 @@ const WINDOW_DAYS = 30;
 const COST_USD = {
   council: 0.12, // 5 frontier members + synthesis pass + moderation gate
   cron: 0.12, //    the daily longitudinal council run (same shape as council)
+  // The frontier-track run: five flagship reasoning models + synthesis. A worst-case
+  // bound from each member's output cap (thinking included), not a measurement;
+  // replace it with the measured figure from `scripts/test-council.js --frontier`.
+  cron_frontier: 0.35,
   trace: 0.08, //   baseline + augmented + delta = 3 Sonnet passes
   query: 0.04, //   one Sonnet deliberation (+ Haiku classifier)
 };

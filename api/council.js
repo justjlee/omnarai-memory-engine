@@ -1,7 +1,8 @@
-import { elicitCouncil, synthesizeCouncil, buildDivergenceRecord, embedRecord, embedOne, atlasSearchText, ATLAS_EMBED_META, COUNCIL } from "./_council.js";
+import { elicitCouncil, synthesizeCouncil, buildDivergenceRecord, embedRecord, embedOne, atlasSearchText, ATLAS_EMBED_META, COUNCIL, FRONTIER_COUNCIL } from "./_council.js";
 import { loadAnnotations, appendAnnotation, foldAnnotations, validateAnnotation, annotatedRecordIds } from "./_annotations.js";
 import { appendGrownEntry, loadGrownMemory } from "./_grown.js";
 import { CANON } from "./_canon.js";
+import { requestedTrack, frontierEnabled, findEpochRecord } from "./_longitudinal.js";
 import { SYNTHETIC_LINEAGES, findFamily } from "./_lineages.js";
 import { checkCouncilQuota, recordCouncilRun, quotaSubject, checkContributionQuota, recordContributionUse, contributionFingerprint, findDuplicateContribution, recordContributionFingerprint } from "./_quota.js";
 import { checkBudget, recordSpend, budgetExceededBody, budgetNotice } from "./_budget.js";
@@ -1406,36 +1407,47 @@ async function runLongitudinal(req, res) {
   const curatorOk = process.env.INGEST_SECRET && auth === process.env.INGEST_SECRET;
   if (!cronOk && !curatorOk) return res.status(401).json({ error: "Bearer CRON_SECRET or INGEST_SECRET required" });
 
+  // Two tracks (api/_longitudinal.js): control = the standing council (the
+  // original cron, unchanged); frontier = current flagships on the same canon,
+  // its own cron at 18:00 UTC so the two never write grown.json within a minute
+  // of each other (stale-read clobber, 2026-09-28). Frontier spends more and is
+  // off until the curator sets FRONTIER_TRACK=on — checked before anything else.
+  const track = requestedTrack(req.query);
+  if (!track) return res.status(400).json({ error: "track must be control or frontier" });
+  if (track === "frontier" && !frontierEnabled()) {
+    return res.status(200).json({ idle: true, track, disabled: true, note: "frontier track is off (FRONTIER_TRACK is not 'on') — nothing asked, nothing spent" });
+  }
+  const panel = track === "frontier" ? FRONTIER_COUNCIL : COUNCIL;
+  const spendKind = track === "frontier" ? "cron_frontier" : "cron";
+
   const now = new Date();
   const epoch = now.toISOString().slice(0, 7); // "2026-06"
   const override = req.query?.index !== undefined ? parseInt(req.query.index, 10) : null;
   const index = override !== null ? override : now.getUTCDate() - 1;
 
   if (!(index >= 0 && index < CANON.length)) {
-    return res.status(200).json({ idle: true, epoch, note: `day index ${index} outside canon (0..${CANON.length - 1}) — idle day` });
+    return res.status(200).json({ idle: true, track, epoch, note: `day index ${index} outside canon (0..${CANON.length - 1}) — idle day` });
   }
   const canon = CANON[index];
 
   try {
     const grown = await loadGrownMemory();
     // stored entries carry longitudinal under `divergence` (normalizeEntry maps
-    // provenance there); the in-flight record carries it under `provenance`
-    const existing = grown.entries.find((e) => {
-      const lon = e.divergence?.longitudinal || e.provenance?.longitudinal;
-      return lon?.canon_id === canon.canon_id && lon?.epoch === epoch;
-    });
+    // provenance there); the in-flight record carries it under `provenance`.
+    // Idempotent per canon_id + epoch + track.
+    const existing = findEpochRecord(grown.entries, { canon_id: canon.canon_id, epoch, track });
     if (existing) {
-      return res.status(200).json({ skipped: true, epoch, canon_id: canon.canon_id, existing: existing.id });
+      return res.status(200).json({ skipped: true, track, epoch, canon_id: canon.canon_id, existing: existing.id });
     }
 
     // The daily cron spends a full council run with no visitor behind it, so it is
     // gated by the same hard ceiling. Checked AFTER idempotency (a skipped day
     // spends nothing) and BEFORE elicitation. Fails closed.
-    const cronBudget = await checkBudget("cron");
+    const cronBudget = await checkBudget(spendKind);
     if (!cronBudget.allowed) {
       return res.status(429).json({
-        ...budgetExceededBody("cron", cronBudget),
-        epoch, canon_id: canon.canon_id, skipped: true,
+        ...budgetExceededBody(spendKind, cronBudget),
+        track, epoch, canon_id: canon.canon_id, skipped: true,
       });
     }
 
@@ -1454,10 +1466,12 @@ async function runLongitudinal(req, res) {
         new Promise((r) => setTimeout(() => r(fallback), Math.max(0, ms))),
       ]);
 
-    const answers = await elicitCouncil(canon.question, { timeoutMs: 25000 });
+    // Frontier members think before answering, so they get longer; whatever that
+    // costs comes out of the droppable synthesis budget below, never the primaries.
+    const answers = await elicitCouncil(canon.question, { timeoutMs: track === "frontier" ? 32000 : 25000, panel });
     const answered = answers.filter((a) => a.ok);
     if (answered.length < 2) {
-      return res.status(502).json({ error: "council assembled <2 voices", epoch, canon_id: canon.canon_id, answers });
+      return res.status(502).json({ error: "council assembled <2 voices", track, epoch, canon_id: canon.canon_id, answers });
     }
 
     // Interpretation runs in parallel, inside whatever budget elicitation left.
@@ -1479,6 +1493,8 @@ async function runLongitudinal(req, res) {
     record.provenance.longitudinal = {
       canon_id: canon.canon_id,
       epoch,
+      // control records keep their original shape (no `track` = control)
+      ...(track === "frontier" ? { track } : {}),
       source_record: canon.source_record,
       original_score: canon.original_score,
       ...(synthesis === pendingSynthesis ? { synthesis_pending: true } : {}),
@@ -1491,11 +1507,12 @@ async function runLongitudinal(req, res) {
     // The elicitation above spent real money — charge the ledger. After the panel
     // assembled (answered.length >= 2 was already checked), so we never bill a
     // failed run.
-    await recordSpend("cron");
+    await recordSpend(spendKind);
 
     return res.status(200).json({
       committed: count !== null,
       id: record.id,
+      track,
       epoch,
       canon_id: canon.canon_id,
       panel: answered.map((a) => a.model),
