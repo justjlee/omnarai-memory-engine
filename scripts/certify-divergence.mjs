@@ -32,9 +32,10 @@ import Anthropic from "@anthropic-ai/sdk";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
+const { envValue } = await import("./lib/env-value.mjs");
 for (const line of fs.readFileSync(path.join(ROOT, ".env.local"), "utf8").split("\n")) {
   const m = line.match(/^\s*([A-Z_]+)\s*=\s*(.*)\s*$/);
-  if (m) { let v = m[2].trim(); if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1); if (!(m[1] in process.env)) process.env[m[1]] = v; }
+  if (m && !(m[1] in process.env)) process.env[m[1]] = envValue(m[2]);
 }
 const { COUNCIL } = await import("../api/_council.js");
 

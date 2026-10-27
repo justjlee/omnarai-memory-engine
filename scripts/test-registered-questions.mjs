@@ -18,6 +18,7 @@ import { questionIdFor } from "../api/_footprints.js";
 import { buildOrientPacket } from "../api/_protocol.js";
 import { runItems, councilRunUsd, missingVoices, certifyArgs, certOutcome } from "./run-batch.mjs";
 import { createTally, recordResponse, priceTally } from "./lib/usage-tally.mjs";
+import { envValue } from "./lib/env-value.mjs";
 
 process.env.INGEST_SECRET = "test-curator-secret";
 const CURATOR = { authorization: "Bearer test-curator-secret" };
@@ -203,6 +204,14 @@ test("[B6] usage tally: provider-reported tokens per model, thinking billed as o
   assert.deepEqual(p.unpriced, ["no-such-model"]);
   const expect = (1000 * 3 + 500 * 15 + 1000 * 1.5 + 500 * 9 + 2000 * 0.25 + 1000 * 2 + 10000 * 0.02) / 1e6;
   assert.equal(p.usd, +expect.toFixed(5));
+});
+test("[B7] env values are read as dotenv reads them: a Vercel-pulled key loses its quotes and its literal \\n", () => {
+  assert.equal(envValue('"sk-proj-abc\\n"'), "sk-proj-abc", "the elicit-001 failure: a literal backslash-n kept in the key");
+  assert.equal(envValue('  "tok"  '), "tok");
+  assert.equal(envValue("'sk-single'"), "sk-single");
+  assert.equal(envValue("bare-value "), "bare-value");
+  assert.equal(envValue('"'), '"', "a lone quote is not a quoted value");
+  assert.equal(envValue(""), "");
 });
 test("[B4] a shipped batch can run only on its own logged approval, and never twice", () => {
   const doc = JSON.parse(readFileSync(new URL("../public/batches.json", import.meta.url), "utf8"));

@@ -353,3 +353,16 @@ check was running. Being told that access exists does not count.
 - Source: branch b12-arm-a-material, commit 135f94ec01a8bb04a3f2e5ac8eea028a54bfc20c (docs/b12/arm-b/briefing.txt, 12,051
   bytes, sha256 5b65b93a64ed45ff354d284776e789e84153b9a1165df055d5fa50a62c8104b2), PR #34
 - Logged: 2026-10-27 by Claude Code (Anthropic)
+
+## DL-0028 · 2026-10-27 · Batch elicit-001 run and closed: nothing stored, $0.0939 spent, the builder's error
+- Decider: none; this records an outcome. Under DL-0025 the batch ran once and is closed.
+- Reason: all five questions were asked, and on each one GPT-4o was refused with HTTP 401. The runner had read the
+  OpenAI key from a Vercel-pulled env file and kept the literal `\n` that Vercel writes into some quoted values. OpenAI
+  had no outage. The other four voices answered. Under the panel rule (DL-0024), each question stored nothing, so no
+  record entered the Atlas and all twelve registered questions remain unasked. Spend was $0.0939 (list prices times
+  measured text length), and the runner reserved $2.00 on the ledger. The key reader is fixed (scripts/lib/env-value.mjs,
+  test [B7]). All five providers then authenticated on free model-list calls. Asking the same five questions again is a
+  new batch, elicit-002, proposed for its own approval. The same flaw sits in the B12 harness's key reader, which the
+  gpt-4o judge depends on; it is fixed on the B12 branch before any pilot.
+- Source: public/batches.json (elicit-001: status run, actual_usd 0.0939, results, note); PR #49
+- Logged: 2026-10-27 by Claude Code (Anthropic)

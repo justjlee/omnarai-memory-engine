@@ -20,6 +20,7 @@ import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { costUsd, tokensFor } from "./lib/model-prices.mjs";
+import { envValue } from "./lib/env-value.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const ENGINE = process.env.OMNARAI_ENGINE || "https://engine.omnarai.org";
@@ -113,7 +114,7 @@ async function main() {
   // Keys come from the file named on the command line, never from the ambient environment.
   for (const line of readFileSync(val("--env-file") || join(ROOT, ".env.local"), "utf8").split("\n")) {
     const m = line.match(/^\s*([A-Z_]+)\s*=\s*(.*)\s*$/);
-    if (m && !(m[1] in process.env)) process.env[m[1]] = m[2].trim().replace(/^["']|["']$/g, "");
+    if (m && !(m[1] in process.env)) process.env[m[1]] = envValue(m[2]);
   }
   const reserve = Math.ceil(2 * batch.estimate_usd);
   const pre = spawnSync(process.execPath, [join(ROOT, "scripts/budget-preflight.mjs"), "--reserve", String(reserve), "--label", `batch ${batch.id}`], { stdio: "inherit", env: process.env });
