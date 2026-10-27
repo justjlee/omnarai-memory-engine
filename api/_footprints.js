@@ -922,19 +922,18 @@ export function continuanceReceipt(fp, issuedAt = new Date().toISOString()) {
     token,
     content_hash: fp.integrity?.content_sha256 || null,
     issued_at: issuedAt,
-    status: token ? `GET /api/footprints?id=${fp.id}&receipt=${token}` : null,
+    // No field but `token` carries the token: a link that embeds it gets copied into
+    // request logs, proxies and browser history. `status` / `resume` keep their names
+    // (older clients print them) but now say how to send the token, not the token itself.
+    status: token ? `GET /api/footprints?id=${fp.id} with header ${RECEIPT_HEADER}: <token>` : null,
     // State only (pending / admitted / rejected + reason code), no token needed —
     // so losing the token never leaves an arrival unable to learn its own state.
     status_by_id: `GET /api/footprints/status?id=${fp.id}`,
     review_cadence: REVIEW_CADENCE,
-    resume: token ? `GET /api/inheritance?from=${fp.id}&receipt=${token}` : `GET /api/inheritance?from=${fp.id}`,
-    // Preferred, token-free forms: send the token as a header, never in the address.
-    // `status` and `resume` above are the legacy URL forms, kept until the migration's
-    // stage 2 (docs/receipt-token-migration.md) so existing clients keep working.
+    resume: token ? `GET /api/inheritance?from=${fp.id} with header ${RECEIPT_HEADER}: <token>` : `GET /api/inheritance?from=${fp.id}`,
     ...(token ? {
       read: { method: "GET", url: `/api/footprints?id=${fp.id}`, header: RECEIPT_HEADER, header_value: "the token above" },
       resume_request: { method: "GET", url: `/api/inheritance?from=${fp.id}`, header: RECEIPT_HEADER, header_value: "the token above" },
-      deprecated: { fields: ["status", "resume"], reason: "They carry the token in the URL. Use `read` / `resume_request` with the header." },
     } : {}),
     keep_private: "token is a bearer capability: whoever holds it can read this footprint while it is pending. content_hash is only an integrity value (it becomes public once the footprint is admitted).",
     proves: "association with this record — NOT that whoever holds it is the same actor that wrote it. Continuity of records, not of identity.",

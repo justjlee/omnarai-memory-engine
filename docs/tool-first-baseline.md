@@ -269,7 +269,7 @@ is deployed and npm is not released. Engine commits on this branch: `509bed8` (r
 |---|---|
 | The log keeps the route, parameter names and only short structural values. Receipt, job, session_id, q and unknown parameters are stored as `[redacted]`; the referrer is kept as origin + path. | `api/_telemetry.js` `sanitizePath`, `sanitizeReferer` |
 | The `x-omnarai-receipt` header is preferred. `?receipt=` still works and returns a `RECEIPT_IN_URL` notice. Responses send `Vary: x-omnarai-receipt` and CORS allows the header. | `api/_footprints.js` `receiptFromRequest`, `api/council.js`, `vercel.json` |
-| Receipt 1.2 (additive) adds token-free `read` and `resume_request`; legacy `status`/`resume` are kept and listed under `deprecated`. | `continuanceReceipt` |
+| Receipt 1.2 adds token-free `read` and `resume_request`; `status`/`resume` keep their names but no longer embed the token (only `token` carries it, in raw HTTP and MCP output alike). | `continuanceReceipt` |
 | Both MCP clients send the header, and the contribute reply prints no URL that carries the token. | `omnarai-mcp/protocol-tools.js` = `api/_protocol-tools.js` |
 | Privacy page, llms.txt, OpenAPI (header documented, query parameter `deprecated`) and protocol spec §14 are updated. | `public/`, `docs/` |
 | Pre-fix log entries: scrub with `scripts/scrub-telemetry-urls.mjs` (dry run by default). | — |
@@ -288,9 +288,18 @@ is deployed and npm is not released. Engine commits on this branch: `509bed8` (r
   re-exports, so `src/` has no copies.
 - **Parity gate.** `scripts/check-tool-contract.mjs` compares the npm package, the remote `tools/list`,
   `openai-tools.json` and `public/openapi.json` with the table. It checks names, surfaces, property
-  sets, required lists, types and enums, annotations, every property mapped or declared
-  client-side, the runners, and that there is one write. It is a HARD gate in `deploy.sh`. The only
-  allowed exception is `include_deliberation` (stdio only, stated in the gate).
+  sets, required lists, the full parameter schema (type, enum, items, nested properties) between
+  npm, remote and OpenAI, OpenAPI types/enums/required, annotations, every property mapped or
+  declared client-side, the protocol runners, and that there is one write. **Descriptions:** every
+  tool and property must be described on every surface, and every place two surfaces word the same
+  thing differently is recorded by hash in `scripts/tool-contract-descriptions.lock.json`; editing a
+  description on one side fails the gate until the pair is re-read and accepted
+  (`--accept-descriptions`). All four sources are required: a missing omnarai-mcp checkout fails the
+  gate instead of skipping two layers. It is a HARD gate in `deploy.sh`. The only allowed exceptions
+  are `include_deliberation` (stdio only) and `omnarai_footprints.limit` (tool `number`, route
+  `integer`), both stated in the gate. Writing the stricter version found real drift:
+  `openai-tools.json` still told callers to pass the receipt's `content_hash`, which stopped working
+  in receipt 1.1; fixed.
 
 **Visible wording changes, for your review** (meaning unchanged unless noted):
 1. `/api/agent-entry` `trust_boundary` now opens with the card sentence. The two sentences it replaces
@@ -310,9 +319,9 @@ is deployed and npm is not released. Engine commits on this branch: `509bed8` (r
 | Command | Result |
 |---|---|
 | Engine suite (`for t in scripts/test-*.mjs …`) | **46/46 files pass** (44 before + 2 new) |
-| `scripts/test-receipt-hygiene.mjs` | 9/9. Each "absent" check first proves the thing it searched was written. **Mutation-checked:** restoring `path: req.url` fails 4; sending the receipt in the MCP URL fails 2 |
-| `scripts/test-tool-contract.mjs` | 5/5. Injected drift in OpenAPI (parameter, header, route), remote schema, annotations, a second write tool and the contract copy; each is caught. Writing it found a real hole in the first gate version (a remote-only property slipped through), now fixed |
-| `omnarai-mcp`: `node --test test/*.test.js` | **64/64** (58 before + 6 new, incl. the real stdio server's `tools/list` via the SDK client) |
+| `scripts/test-receipt-hygiene.mjs` | 12/12. Each "absent" check first proves the thing it searched was written. Raw HTTP replies and MCP `structuredContent` hold the token once, in no link. The scrub: dry run lists every change without a removed value, `--apply` needs a validated encrypted backup, restore round-trips, and the CLI runs from a path with spaces. **Mutation-checked:** restoring `path: req.url` fails 4; sending the receipt in the MCP URL fails 2; the old token-link receipt fails 2; the old run guard fails the spaces test |
+| `scripts/test-tool-contract.mjs` | 7/7. Injected drift in OpenAPI (parameter, header, route, type, required), remote schema, OpenAI type/enum, a nested schema, descriptions (one-sided edit, edited reviewed pair, blank, stale lock entry), annotations, a second write tool, the contract copy, and a missing omnarai-mcp checkout; each is caught |
+| `omnarai-mcp`: `node --test test/*.test.js` | **65/65** (58 before + 7 new, incl. the real stdio server's `tools/list` via the SDK client) |
 | Gates: `check-tool-contract`, `check-mcp-surface`, `check-footprint-parity` (12/12 functions), `check-shape-literals`, `check-tier-language`, `check-tool-parity` | all green |
 | `vite build` | OK (existing chunk-size warning only) |
 | Local engine, browser | The form renders the engine's lists and card, keeps its default, submits as pending, and shows the token once. The token is not in the URL, storage or any request; no console errors |
@@ -331,7 +340,7 @@ production, which is unchanged; they run in `deploy.sh --promote`.
 2. **Then npm:** merge the omnarai-mcp PR, then `./scripts/publish.sh minor` (→ 1.12.0) and the MCP
    Registry. Never before step 1: a new client against the old engine sends a header the engine
    ignores, so pending-footprint reads would return 404.
-3. **Optional:** `node scripts/scrub-telemetry-urls.mjs` (dry run), then `--apply` on your word. It
+3. **Optional:** `node scripts/scrub-telemetry-urls.mjs` (dry run), then `--apply --backup <file>` with `SCRUB_BACKUP_KEY` set, on your word, after you have reviewed its backup and recovery behaviour. It
    rewrites old entries' `path`/`referer` only; counts are unchanged.
 4. **Rollback:** redeploy the previous engine. Old npm clients work on either engine. The scrub is not
    reversible (it removes values by design).

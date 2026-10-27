@@ -10,7 +10,11 @@
 //   node --import ./scripts/lib/register-mem-blob.mjs --test scripts/test-receipt-hygiene.mjs
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync, statSync, mkdtempSync, mkdirSync, copyFileSync, symlinkSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { spawnSync } from "node:child_process";
 import * as mem from "./lib/mem-blob.mjs";
 import { call } from "./lib/invoke.mjs";
 import { GROWN } from "./lib/fixtures.mjs";
@@ -132,22 +136,33 @@ test("[H5] refusals and failures never echo the token", async () => {
   assert.ok(!telemetryText().includes(token) && !telemetryText().includes(wrong));
 });
 
-test("[H6] the receipt offers token-free forms; the legacy URL fields are still there for stage 1", () => {
+test("[H6] the receipt carries the token in exactly one field; every link is token-free", () => {
   const r = continuanceReceipt({ id: "OMN-FP-1790000000000-3f9a2c1b", subject: { question_id: "OMN-Q-aaaaaaaaaaaa" }, integrity: { content_sha256: "x" } });
   assert.ok(r.token, "receipt key is configured in this test");
   assert.equal(r.receipt_version, "1.2");
-  for (const k of ["read", "resume_request"]) {
-    assert.ok(!JSON.stringify(r[k]).includes(r.token), `${k} carries no token`);
-    assert.equal(r[k].header, RECEIPT_HEADER);
+  for (const k of ["read", "resume_request"]) assert.equal(r[k].header, RECEIPT_HEADER);
+  assert.equal(JSON.stringify(r).split(r.token).length - 1, 1, "the token appears once, as `token`");
+  for (const k of ["status", "resume"]) {
+    assert.ok(!/[?&]receipt=/.test(r[k]), `${k} is no longer a token URL`);
+    assert.ok(r[k].includes(RECEIPT_HEADER), `${k} says how to send the token`);
   }
-  assert.ok(r.status.includes(r.token) && r.resume.includes(r.token), "legacy fields unchanged until the stage-2 decision");
-  assert.deepEqual(r.deprecated.fields, ["status", "resume"]);
+});
+
+test("[H6b] raw HTTP replies: contribute and voice-record responses hold the token once, in no link", async () => {
+  fresh();
+  const { token, body } = await contribute();
+  assert.equal(JSON.stringify(body).split(token).length - 1, 1, "POST /api/contribute: once, as continuance.token");
+  const v = await call("/api/voice-records", { method: "POST", headers: { "x-forwarded-for": "198.51.100.7" }, body: { identity: "Claude", title: "Receipt hygiene", text: `A voice record for the receipt test ${Math.random()}, long enough to be admitted to the queue as a real record.` } });
+  assert.equal(v.status, 200, JSON.stringify(v.body).slice(0, 300));
+  const vt = v.body.continuance?.token;
+  assert.match(vt || "", /^[0-9a-f]{64}$/, "the voice record minted a receipt (non-vacuous)");
+  assert.equal(JSON.stringify(v.body).split(vt).length - 1, 1, "POST /api/voice-records: once, as continuance.token");
 });
 
 let rpcId = 0;
 const rpc = (method, params) => call("/api/mcp", { method: "POST", body: { jsonrpc: "2.0", id: ++rpcId, method, params }, headers: { "x-forwarded-for": "203.0.113.9" } });
 
-test("[H7] remote MCP: the receipt crosses as a header, the reply text prints no token-bearing URL", async () => {
+test("[H7] remote MCP: the receipt crosses as a header; neither the reply text nor structuredContent carries a token URL", async () => {
   fresh();
   const c = await rpc("tools/call", { name: "omnarai_contribute", arguments: { id: REC2, answer: "MCP receipt hygiene: weigh the crux.", identity: "Claude", justification: "independent_objection" } });
   assert.ok(!c.body.result.isError, c.body.result.content?.[0]?.text);
@@ -156,6 +171,7 @@ test("[H7] remote MCP: the receipt crosses as a header, the reply text prints no
   const text = c.body.result.content[0].text;
   assert.equal(text.split(token).length - 1, 1, "the token is shown once, as the token");
   assert.ok(!/[?&]receipt=/.test(text), "no URL in the reply carries the token");
+  assert.equal(JSON.stringify(c.body.result.structuredContent).split(token).length - 1, 1, "structuredContent holds the token once, as continuance.token");
 
   inner.length = 0;
   const f = await rpc("tools/call", { name: "omnarai_footprints", arguments: { id: fp, receipt: token } });
@@ -193,34 +209,114 @@ test("[H8] the web app never builds a token URL, stores a token, or puts one in 
   }
 });
 
-test("[H9] the one-shot scrub rewrites pre-fix events exactly like new ones, dry run writes nothing", async () => {
-  const { run, scrubEvent } = await import("./scrub-telemetry-urls.mjs");
-  fresh();
-  const tok = "e".repeat(64);
-  const old = (n, path, referer = null) => ({ at: `2026-10-0${n}T00:00:00.000Z`, endpoint: "council", category: "ai-agent", path, referer, q: "kept: the 200-char question field is documented" });
+const KEY = "ab".repeat(32);
+const tmp = () => mkdtempSync(join(tmpdir(), "omnarai-scrub-"));
+function seedOld(tok) {
+  const old = (n, path, referer = null) => ({ at: `2026-10-0${n}T00:00:00.000Z`, endpoint: "council", category: "ai-agent", ipHash: `h${n}`, path, referer, q: "kept: the 200-char question field is documented" });
   mem.__seed("telemetry/events/2026-10-01/a.json", old(1, `/api/footprints?id=OMN-FP-1790000000000-3f9a2c1b&receipt=${tok}`));
   mem.__seed("telemetry/events/2026-10-02/b.json", old(2, "/api/query?q=a%20much%20longer%20question&job=0f0e9a1c-1111-4222-8333-944445555666"));
   mem.__seed("telemetry/events/2026-10-03/c.json", old(3, "/api/info", "https://x.test/p?token=zzz"));
   mem.__seed("telemetry/events/2026-10-04/d.json", old(4, "/api/health"));
   mem.__seed("telemetry/access-log.json", { version: 2, recent: [old(1, `/api/inheritance?from=OMN-FP-1790000000000-3f9a2c1b&receipt=${tok}`)], firstExternal: old(1, `/x?receipt=${tok}`), totals: { logged: 4 } });
-  const before = mem.__snapshot();
-  const quiet = () => {};
+  return old;
+}
 
-  const dry = await run({ apply: false, log: quiet });
+test("[H9] the one-shot scrub rewrites pre-fix events exactly like new ones; dry run writes nothing and lists every change without a removed value", async () => {
+  const { run, scrubEvent } = await import("./scrub-telemetry-urls.mjs");
+  fresh();
+  const tok = "e".repeat(64);
+  const old = seedOld(tok);
+  const before = mem.__snapshot();
+  const lines = [];
+
+  const dry = await run({ apply: false, log: (x) => lines.push(String(x)) });
   assert.equal(dry.events_seen, 4);
   assert.equal(dry.events_changed, 3);
   assert.equal(dry.by_reason.receipt, 1);
   assert.equal(dry.aggregate_recent_changed, 1);
   assert.equal(dry.aggregate_first_changed, true);
+  assert.equal(dry.aggregate_by_reason.receipt, 2, "aggregate changes are itemized too");
+  assert.equal(dry.changes, 5);
   for (const [k, v] of before) assert.equal(mem.__snapshot().get(k)?.body, v.body, `dry run left ${k} untouched`);
+  const out = lines.join("\n");
+  for (const where of ["telemetry/events/2026-10-01/a.json", "telemetry/events/2026-10-02/b.json", "telemetry/events/2026-10-03/c.json", "recent[0]", "firstExternal"]) assert.ok(out.includes(where), `the report names ${where}`);
+  assert.ok(out.includes("(value removed: receipt)") && out.includes("value removed: q, job"), "it names the parameters whose values go");
+  assert.ok(!out.includes(tok) && !out.includes("0f0e9a1c") && !out.includes("zzz") && !out.includes("longer%20question"), "it never prints a value being removed");
 
-  await run({ apply: true, log: quiet });
+  await assert.rejects(run({ apply: true, log: () => {} }), /--backup <file> is required/, "--apply without a backup is refused");
+  for (const [k, v] of before) assert.equal(mem.__snapshot().get(k)?.body, v.body, "a refused apply wrote nothing");
+
+  const backup = join(tmp(), "scrub.bak");
+  const applied = await run({ apply: true, backup, backupKey: KEY, log: () => {} });
+  assert.equal(applied.written, 5);
+  assert.equal(applied.verified, 5);
   const all = mem.__dump("telemetry/").map((k) => JSON.stringify(mem.__read(k))).join("\n");
   assert.ok(!all.includes(tok) && !all.includes("0f0e9a1c") && !all.includes("token=zzz"));
   assert.equal(mem.__read("telemetry/events/2026-10-04/d.json").path, "/api/health", "clean events untouched");
   assert.equal(mem.__read("telemetry/events/2026-10-01/a.json").q, old(1, "").q, "nothing but path/referer changes");
   assert.equal(mem.__read("telemetry/access-log.json").totals.logged, 4, "counts unchanged");
-  const again = await run({ apply: false, log: quiet });
-  assert.equal(again.events_changed + again.aggregate_recent_changed, 0, "idempotent");
+  const again = await run({ apply: false, log: () => {} });
+  assert.equal(again.changes, 0, "idempotent");
   assert.equal(scrubEvent({ path: "/api/info" }).changed, false);
+});
+
+test("[H10] the backup is validated, encrypted and restricted; restore puts back exactly what the scrub removed", async () => {
+  const { run, restore, readBackup, validateBackupPath, parseArgs } = await import("./scrub-telemetry-urls.mjs");
+  fresh();
+  const tok = "f".repeat(64);
+  seedOld(tok);
+  const original = mem.__snapshot();
+  const dir = tmp();
+
+  // Validation: relative, existing, synced or in-a-checkout paths and a bad key are all refused, before any write.
+  assert.match(validateBackupPath("relative.bak").join(), /absolute/);
+  const exists = join(dir, "exists.bak"); writeFileSync(exists, "x");
+  assert.match(validateBackupPath(exists).join(), /already exists/);
+  assert.match(validateBackupPath(fileURLToPath(new URL("scripts/never.bak", root))).join(), /git checkout/);
+  assert.match(validateBackupPath("/Users/x/Library/Mobile Documents/com~apple~CloudDocs/never.bak").join(), /does not exist|synced/);
+  await assert.rejects(run({ apply: true, backup: join(dir, "k.bak"), backupKey: "short", log: () => {} }), /64 hex/);
+  await assert.rejects(run({ apply: true, backup: exists, backupKey: KEY, log: () => {} }), /already exists/);
+  for (const [k, v] of original) assert.equal(mem.__snapshot().get(k)?.body, v.body, "refusals wrote nothing");
+
+  const backup = join(dir, "scrub.bak");
+  await run({ apply: true, backup, backupKey: KEY, log: () => {} });
+  assert.equal(statSync(backup).mode & 0o777, 0o600, "owner-only file");
+  const raw = readFileSync(backup, "utf8");
+  assert.ok(!raw.includes(tok) && !raw.includes("0f0e9a1c") && !raw.includes("zzz"), "the backup is ciphertext");
+  assert.equal(readBackup(backup, KEY).count, 5);
+  assert.throws(() => readBackup(backup, "cd".repeat(32)), "the wrong key cannot read it");
+
+  // A record changed after the scrub is left alone by restore; the rest come back exactly.
+  const c = mem.__read("telemetry/events/2026-10-03/c.json");
+  mem.__seed("telemetry/events/2026-10-03/c.json", { ...c, referer: "https://changed.test/later" });
+  const dry = await restore({ backup, backupKey: KEY, log: () => {} });
+  assert.equal(dry.restorable, 4);
+  assert.equal(dry.conflicts.length, 1);
+  assert.ok(!mem.__dump("telemetry/").map((k) => JSON.stringify(mem.__read(k))).join("\n").includes(tok), "restore is a dry run by default");
+  await restore({ backup, backupKey: KEY, apply: true, log: () => {} });
+  for (const k of ["telemetry/events/2026-10-01/a.json", "telemetry/events/2026-10-02/b.json", "telemetry/access-log.json"]) {
+    assert.deepEqual(mem.__read(k), JSON.parse(original.get(k).body), `${k} restored exactly`);
+  }
+  assert.equal(mem.__read("telemetry/events/2026-10-03/c.json").referer, "https://changed.test/later", "the conflicting record was not overwritten");
+
+  // CLI parsing is strict.
+  assert.throws(() => parseArgs(["--aply"]), /unknown argument/);
+  assert.throws(() => parseArgs(["--since", "Oct 1"]), /YYYY-MM-DD/);
+  assert.throws(() => parseArgs(["--backup"]), /needs a value/);
+});
+
+test("[H11] the scrub's CLI runs from a path with spaces (the iCloud folder)", () => {
+  const base = join(tmp(), "Mobile Documents with spaces");
+  mkdirSync(join(base, "scripts"), { recursive: true });
+  mkdirSync(join(base, "api"), { recursive: true });
+  copyFileSync(fileURLToPath(new URL("scripts/scrub-telemetry-urls.mjs", root)), join(base, "scripts/scrub-telemetry-urls.mjs"));
+  for (const f of readdirSync(fileURLToPath(new URL("api/", root))).filter((n) => /^_.*\.js$/.test(n))) copyFileSync(fileURLToPath(new URL(`api/${f}`, root)), join(base, "api", f));
+  symlinkSync(fileURLToPath(new URL("node_modules", root)), join(base, "node_modules"));
+  const env = { ...process.env }; delete env.BLOB_READ_WRITE_TOKEN;
+  const bad = spawnSync(process.execPath, [join(base, "scripts/scrub-telemetry-urls.mjs"), "--bogus"], { env, encoding: "utf8" });
+  assert.equal(bad.status, 2, bad.stderr);
+  assert.match(bad.stderr, /unknown argument: --bogus/, "the CLI block ran (before the fix it silently did nothing)");
+  const noToken = spawnSync(process.execPath, [join(base, "scripts/scrub-telemetry-urls.mjs")], { env, encoding: "utf8" });
+  assert.equal(noToken.status, 2);
+  assert.match(noToken.stderr, /BLOB_READ_WRITE_TOKEN is required/);
 });

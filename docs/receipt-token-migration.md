@@ -23,12 +23,12 @@ A token in a URL is copied wherever URLs are kept:
 |---|---|---|
 | The log keeps the route, parameter names, and values only for short structural parameters. Everything else (receipt, job, session_id, q, unknown) becomes `[redacted]`. The referrer is kept as origin + path. | `api/_telemetry.js` `sanitizePath` / `sanitizeReferer` | Unaffected |
 | The engine reads the token from the **`x-omnarai-receipt` header** first, then `?receipt=`. A read that used the URL form carries `notices: [{code: "RECEIPT_IN_URL"}]`. Responses send `Vary: x-omnarai-receipt`, and CORS allows the header. | `api/_footprints.js` `receiptFromRequest`, `api/council.js`, `vercel.json` | `?receipt=` still works |
-| The receipt (version 1.1 → **1.2**, additive) gains `read` and `resume_request`: token-free URL + header name. `status`/`resume` are unchanged and listed in `deprecated`. | `continuanceReceipt` | Unchanged fields |
-| Both MCP clients send the receipt as the header. The contribute reply no longer prints a URL containing the token; the token is shown once. | `omnarai-mcp/protocol-tools.js` = `api/_protocol-tools.js` | — |
+| The receipt (version 1.1 → **1.2**) gains `read` and `resume_request`: token-free URL + header name. `status`/`resume` keep their names but no longer embed the token: they now read `GET … with header x-omnarai-receipt: <token>`. Only the `token` field carries the token, in every raw HTTP reply and every MCP output. | `continuanceReceipt` | Saved old strings still work (the query form is accepted); a client that follows the *new* `status` string must send the header |
+| Both MCP clients send the receipt as the header. Neither the text nor `structuredContent` carries a URL containing the token; the token is shown once. Against an older engine the client replaces the token inside any link with `<token>`. | `omnarai-mcp/protocol-tools.js` = `api/_protocol-tools.js` | — |
 | llms.txt, OpenAPI (query param marked `deprecated`, header documented), hints, and the privacy page. | `public/` | — |
 | A one-shot scrub of entries written before the fix: dry run by default, `--apply` is xz's call. | `scripts/scrub-telemetry-urls.mjs` | — |
 
-Tests: `scripts/test-receipt-hygiene.mjs` (9). They cover logs, the aggregate, console output, error
+Tests: `scripts/test-receipt-hygiene.mjs` (10). They cover logs, the aggregate, console output, error
 bodies under an injected store failure, the remote MCP inner requests, the web app source, and the
 scrub. Two mutations were checked: restoring `path: req.url` fails 4 tests, and sending the receipt in
 the MCP URL fails 2.
@@ -50,13 +50,12 @@ Tokens already issued keep working: the token is still `HMAC(RECEIPT_SECRET, foo
 rotation is proposed, because rotating `RECEIPT_SECRET` would invalidate every receipt ever issued,
 and the sample shows no logged token.
 
-## Stage 2 (proposal): stop *handing out* token URLs
+## Stage 2: stop *handing out* token URLs (folded into stage 1, 2026-10-27)
 
-After the npm release has been out for a while, replace the legacy `status` and `resume` strings
-with the token-free forms, or drop them in a receipt 2.0. Saved copies of old strings keep working
-until stage 3.
+Done in this PR on xz's instruction: no reply carries a token URL any more (see the table above).
+Saved copies of old strings keep working until stage 3.
 
-**Measure first:** the log keeps parameter *names*, so `receipt=[redacted]` events count URL-form
+**Before stage 3, measure:** the log keeps parameter *names*, so `receipt=[redacted]` events count URL-form
 reads without revealing anything. Two numbers (counts and client versions) say who still uses the URL
 form.
 
@@ -72,4 +71,5 @@ and a dated notice on llms.txt beforehand.
   the header avoids them.
 - `job` and `session_id` are also bearer ids in URLs. They are now redacted from our log. Moving them
   to headers is not proposed: they expire within 1 h / 24 h (`limitations.md`).
-- Showing the token in MCP *text* at all is still product decision G7 (`docs/tool-first-baseline.md`).
+- Showing the token once in MCP *text* stays (recommended under G7, `docs/tool-first-baseline.md`): most
+  clients pass only the text to the model, which needs the token to come back later.

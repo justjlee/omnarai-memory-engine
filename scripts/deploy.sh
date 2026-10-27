@@ -92,7 +92,9 @@ echo
 
 # HARD gate: the tool contract (2026-10-27). api/_contract.js is byte-identical to
 # omnarai-mcp/contract.js, and the npm tools, the remote MCP tools/list, openai-tools.json
-# and public/openapi.json all agree with it (modes, annotations, routes, parameters).
+# and public/openapi.json all agree with it (modes, annotations, routes, parameter schemas,
+# reviewed descriptions). It NEEDS the omnarai-mcp checkout this release pairs with — the
+# sibling ../omnarai-mcp, or OMNARAI_MCP_DIR — and fails (never skips) without it.
 echo ">> Tool-contract parity (npm · remote MCP · OpenAI · OpenAPI)"
 node scripts/check-tool-contract.mjs
 echo

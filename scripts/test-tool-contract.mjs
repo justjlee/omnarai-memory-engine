@@ -6,6 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import * as mem from "./lib/mem-blob.mjs";
 import { call } from "./lib/invoke.mjs";
 import { GROWN } from "./lib/fixtures.mjs";
@@ -17,13 +18,25 @@ import { JUSTIFICATIONS, STANCES } from "../api/_footprints.js";
 const root = new URL("../", import.meta.url);
 const openapi = () => JSON.parse(readFileSync(new URL("public/openapi.json", root), "utf8"));
 const contractSrc = readFileSync(new URL("api/_contract.js", root), "utf8");
-const hasMcp = existsSync(new URL("../omnarai-mcp/contract.js", root));
+const MCP = (process.env.OMNARAI_MCP_DIR || fileURLToPath(new URL("../omnarai-mcp", root))).replace(/\/?$/, "/");
+const hasMcp = existsSync(`${MCP}contract.js`);
+const clone = (x) => JSON.parse(JSON.stringify(x));
+const npmTools = async () => { const td = await import(pathToFileURL(`${MCP}lib/tool-definitions.js`).href); return clone([...td.ENGINE_TOOLS, ...td.DECISION_TOOLS]); };
+const openaiTools = () => JSON.parse(readFileSync(`${MCP}openai-tools.json`, "utf8")).map((t) => t.function || t);
 
-test("[C1] the gate passes on the surfaces as shipped", async () => {
+test("[C1] the gate passes on the surfaces as shipped — and the omnarai-mcp checkout is REQUIRED", async () => {
+  assert.ok(hasMcp, `the contract gate needs omnarai-mcp at ${MCP} (or OMNARAI_MCP_DIR); without it the gate fails, so this suite does too`);
   const r = await checkContract();
   assert.deepEqual(r.problems, []);
   assert.equal(r.tools.remote, LISTED_TOOLS.length);
-  if (!hasMcp) console.log("note: ../omnarai-mcp absent — npm/openai layers were skipped");
+  assert.ok(r.tools.npm > 0 && r.tools.openai > 0, "all four surfaces were read");
+});
+
+test("[C1b] a missing source is a failure, never a skipped layer", async () => {
+  const gone = await checkContract({ mcpDir: "/nonexistent/omnarai-mcp/" });
+  assert.ok(gone.problems.length >= 3, gone.problems.join("\n"));
+  assert.ok(gone.problems.every((p) => p.startsWith("required source missing")));
+  assert.ok(gone.problems.some((p) => /contract\.js/.test(p)) && gone.problems.some((p) => /openai-tools\.json/.test(p)) && gone.problems.some((p) => /tool definitions/.test(p)));
 });
 
 test("[C2] it fails on drift in each layer", async () => {
@@ -51,14 +64,65 @@ test("[C2] it fails on drift in each layer", async () => {
     const p = (await checkContract()).problems;
     assert.ok(p.some((x) => /omnarai_orient: annotations/.test(x)), "annotation drift");
     assert.ok(p.some((x) => /omnarai_orient\.mood is neither mapped/.test(x)), "unaccounted property");
-    if (hasMcp) assert.ok(p.some((x) => /omnarai_orient: properties npm/.test(x)), "npm ↔ remote drift");
+    assert.ok(p.some((x) => /omnarai_orient: properties npm/.test(x)), "npm ↔ remote drift");
     assert.ok(p.some((x) => /remote write tools are/.test(x)), "a second write is caught");
   } finally {
     t.inputSchema = saved.schema; t.annotations = saved.ann;
   }
 
   // The engine copy of the contract is edited without the npm copy.
-  if (hasMcp) assert.ok((await checkContract({ engineContractSrc: contractSrc + "\n// edited here only\n" })).problems.some((p) => /differs from omnarai-mcp\/contract\.js/.test(p)));
+  assert.ok((await checkContract({ engineContractSrc: contractSrc + "\n// edited here only\n" })).problems.some((p) => /differs from omnarai-mcp\/contract\.js/.test(p)));
+});
+
+test("[C2b] it fails on type, enum, nested-schema, required and description drift", async () => {
+  const has = (r, re) => r.problems.some((p) => re.test(p));
+
+  // OpenAI: a parameter's type changes.
+  let oa = openaiTools();
+  oa.find((f) => f.name === "omnarai_footprints").parameters.properties.id.type = "boolean";
+  assert.ok(has(await checkContract({ openaiTools: oa }), /omnarai_footprints\.id: type npm string vs openai boolean/), "openai type drift");
+
+  // OpenAI: an enum gains a value.
+  oa = openaiTools();
+  const depth = oa.find((f) => f.name === "omnarai_query").parameters.properties.depth;
+  depth.enum = [...depth.enum, "think-hard"];
+  assert.ok(has(await checkContract({ openaiTools: oa }), /omnarai_query\.depth: enum differs between npm and openai/), "openai enum drift");
+
+  // npm: a nested schema changes (an array's item type / an object's inner field) — remote and openai disagree.
+  const npm = await npmTools();
+  const c = npm.find((t) => t.name === "omnarai_contribute").inputSchema.properties;
+  const nestedKey = Object.keys(c).find((k) => c[k].type === "array" || (c[k].type === "object" && c[k].properties));
+  assert.ok(nestedKey, "contribute has a nested parameter to mutate (non-vacuous)");
+  if (c[nestedKey].type === "array") c[nestedKey].items = { type: "number" }; else c[nestedKey].properties = { ...c[nestedKey].properties, smuggled: { type: "string", description: "x" } };
+  const nested = await checkContract({ npmTools: npm });
+  assert.ok(has(nested, new RegExp(`omnarai_contribute\\.${nestedKey}: schema .* differs between npm and remote`)), nested.problems.join("\n"));
+
+  // OpenAPI: the receipt header's type changes; a parameter becomes required that the tool leaves optional.
+  const o = openapi();
+  o.paths["/api/footprints"].get.parameters.find((p) => p.name === "x-omnarai-receipt").schema.type = "integer";
+  o.paths["/api/orient"].get.parameters.find((p) => p.name === "focus").required = true;
+  const ro = await checkContract({ openapi: o });
+  assert.ok(has(ro, /omnarai_footprints\.receipt → header x-omnarai-receipt: type tool string vs OpenAPI integer/), "OpenAPI type drift");
+  assert.ok(has(ro, /omnarai_orient\.focus → \?focus: OpenAPI requires it, the tool leaves it optional/), "OpenAPI required drift");
+
+  // Descriptions: edit one surface only; blank one out.
+  oa = openaiTools();
+  oa.find((f) => f.name === "omnarai_concordance").parameters.properties.question_id.description = "Pass the content_hash here.";
+  assert.ok(has(await checkContract({ openaiTools: oa }), /description: npm~openai:omnarai_concordance\.question_id differs and the difference was never reviewed/), "a one-sided description edit");
+  oa = openaiTools();
+  const fpDesc = oa.find((f) => f.name === "omnarai_footprints").parameters.properties.receipt;
+  fpDesc.description = fpDesc.description + " Or put it in the URL.";
+  const changed = await checkContract({ openaiTools: oa });
+  assert.ok(has(changed, /description: npm~openai:omnarai_footprints\.receipt differs/), "an edit that breaks a matching pair");
+  const o2 = openapi();
+  o2.paths["/api/footprints"].get.parameters.find((p) => p.name === "x-omnarai-receipt").description += " (edited)";
+  assert.ok(has(await checkContract({ openapi: o2 }), /description: tool~openapi:omnarai_footprints\.receipt changed since it was last reviewed/), "a reviewed pair edited on one side");
+  oa = openaiTools();
+  oa.find((f) => f.name === "omnarai_orient").parameters.properties.focus.description = "";
+  assert.ok(has(await checkContract({ openaiTools: oa }), /openai omnarai_orient\.focus: no description/), "a missing description");
+
+  // The description lock itself is a required source; a stale entry is reported.
+  assert.ok(has(await checkContract({ descriptionLock: { pairs: { "npm~openai:omnarai_info": "0:0", "npm~remote:nope": "1:1" } } }), /lock entry npm~remote:nope no longer applies/));
 });
 
 test("[C3] annotations: every remote tool is marked, and the only write is contribute", () => {
