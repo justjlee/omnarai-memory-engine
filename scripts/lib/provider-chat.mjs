@@ -3,6 +3,7 @@
 // hermetic loader: that loader replaces global fetch with a refuse-all shim (which is what seals the ENGINE off), so
 // model calls go out over node:https instead, with keys passed explicitly — never read from the engine's environment.
 import https from "node:https";
+import { envValue } from "./env-value.mjs";
 
 function postJSON(url, headers, body) {
   return new Promise((resolve, reject) => {
@@ -76,9 +77,7 @@ export function readKeys(envFile, readFileSync) {
     for (const line of readFileSync(envFile, "utf8").split("\n")) {
       const m = line.match(/^\s*([A-Z_]+)\s*=\s*(.*)\s*$/);
       if (!m || !want.includes(m[1]) || out[m[1]]) continue;
-      let v = m[2].trim();
-      if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1);
-      out[m[1]] = v;
+      out[m[1]] = envValue(m[2]);
     }
   }
   return out;

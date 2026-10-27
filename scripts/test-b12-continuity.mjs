@@ -192,3 +192,12 @@ test("[G2] --freeze-check refuses the draft and names what is missing", () => {
   assert.equal(r.status, 1);
   assert.match(r.stdout, /NOT READY TO FREEZE/); assert.match(r.stdout, /PENDING: sealed sha256/);
 });
+test("[K1] keys are read as dotenv reads them: a Vercel-pulled key loses its quotes and its literal \\n (the gpt-4o judge)", async () => {
+  const { readKeys } = await import("./lib/provider-chat.mjs");
+  const file = 'OPENAI_API_KEY="sk-proj-abc\\n"\nXAI_API_KEY=\'xai-1\'\nDEEPSEEK_API_KEY= ds-2 \nNOT_A_KEY="x"\n';
+  const k = readKeys("env", () => file);
+  assert.equal(k.OPENAI_API_KEY, "sk-proj-abc");
+  assert.equal(k.XAI_API_KEY, "xai-1");
+  assert.equal(k.DEEPSEEK_API_KEY, "ds-2");
+  assert.equal(k.NOT_A_KEY, undefined);
+});
