@@ -11,6 +11,11 @@ read-only live calls. It changes no behavior.
 **Evidence status:** *measured* for the inventory and the test results; *inference* where a row
 says so.
 
+> **Update 2026-10-27 (same PR, after xz's review):** G1, G3, G4 and G6 are implemented, and G7 is
+> partly done. G2 (confirmation) is left as a documented decision (§11). Nothing is deployed or
+> released. See §10 for what changed, what was tested and the deploy order. Sections 1–9 are the
+> Phase 0 snapshot as first written; their "today" means before these changes.
+
 ---
 
 ## 1. Bottom line
@@ -220,7 +225,7 @@ trace_delta) and would spend real money.
 
 ---
 
-## 8. Decisions for xz
+## 8. Decisions for xz (as first asked; answered 2026-10-27: 3 and 4 yes, 1 deferred → §11, 2 and 5 still open)
 
 1. **Contribution confirmation (G2).** Keep one-step MCP contributions with review as the gate
    (today's rule), add an *optional* hash-bound preview (Option A), or require confirmation everywhere (Option B)?
@@ -249,3 +254,137 @@ trace_delta) and would spend real money.
 | AC-11 independent-agent protocol | partial | Existing preregistered studies; not in the brief's three-arm form |
 | AC-12 accessibility | unknown | Form has labels and `role=status`; no automated run |
 | AC-13 rollback per tool | partial | Preview→promote and per-deploy rollback; no per-tool kill switch |
+
+---
+
+## 10. Implemented (2026-10-27): receipt hygiene + tool-contract consolidation
+
+**Scope held:** no capability was rebuilt and no rule changed. Contribution stays one step, nothing
+is deployed and npm is not released. Engine commits on this branch: `509bed8` (receipts) and
+`722a378` (contract). omnarai-mcp branch `tool-first-contract`: `03d266a` and `da7954c`.
+
+### 10.1 Receipt tokens (G1, part of G7)
+
+| What | Where |
+|---|---|
+| The log keeps the route, parameter names and only short structural values. Receipt, job, session_id, q and unknown parameters are stored as `[redacted]`; the referrer is kept as origin + path. | `api/_telemetry.js` `sanitizePath`, `sanitizeReferer` |
+| The `x-omnarai-receipt` header is preferred. `?receipt=` still works and returns a `RECEIPT_IN_URL` notice. Responses send `Vary: x-omnarai-receipt` and CORS allows the header. | `api/_footprints.js` `receiptFromRequest`, `api/council.js`, `vercel.json` |
+| Receipt 1.2 (additive) adds token-free `read` and `resume_request`; legacy `status`/`resume` are kept and listed under `deprecated`. | `continuanceReceipt` |
+| Both MCP clients send the header, and the contribute reply prints no URL that carries the token. | `omnarai-mcp/protocol-tools.js` = `api/_protocol-tools.js` |
+| Privacy page, llms.txt, OpenAPI (header documented, query parameter `deprecated`) and protocol spec §14 are updated. | `public/`, `docs/` |
+| Pre-fix log entries: scrub with `scripts/scrub-telemetry-urls.mjs` (dry run by default). | — |
+| Staged plan (stage 1 here; stages 2–3 are proposals): | `docs/receipt-token-migration.md` |
+
+### 10.2 Tool contract (G3, G4, G6)
+
+- **One table.** `omnarai-mcp/contract.js`, byte-copied to `api/_contract.js`, has `TOOL_META` (mode,
+  scope, cost, surfaces, route and arg → parameter names), `annotationsFor`, and `POLICY_CARD` v1.0.0.
+- **Shared read/write metadata.** Every tool on both MCP transports carries `annotations`
+  (`readOnlyHint` etc.) derived from the table. `/api/agent-entry` gains `contract` (modes, costs,
+  routes, card). Remote server version is now 1.1.0, and both report `contract_version`.
+- **One policy card.** Orient, agent-entry, remote MCP instructions, the context-tool footer, the
+  contribution and voice-record responses and the web form now state the card's sentences.
+- **Web form.** `STANCES`/`JUSTIFICATIONS` come from `api/_footprint-vocab.js`, which `_footprints.js`
+  re-exports, so `src/` has no copies.
+- **Parity gate.** `scripts/check-tool-contract.mjs` compares the npm package, the remote `tools/list`,
+  `openai-tools.json` and `public/openapi.json` with the table. It checks names, surfaces, property
+  sets, required lists, types and enums, annotations, every property mapped or declared
+  client-side, the runners, and that there is one write. It is a HARD gate in `deploy.sh`. The only
+  allowed exception is `include_deliberation` (stdio only, stated in the gate).
+
+**Visible wording changes, for your review** (meaning unchanged unless noted):
+1. `/api/agent-entry` `trust_boundary` now opens with the card sentence. The two sentences it replaces
+   said the same thing in other words.
+2. The contribution and question-proposal responses say "curator **review**" (was "curator approval"
+   in two of three copies).
+3. Remote MCP `initialize.instructions` state the card's trust boundary and identity sentence and
+   point to the contract.
+4. The web form's intro paragraph adds the card's write-policy and identity sentences.
+5. **New public statement:** `contract.policy_card.write_gate` says "a contribution is sent in one
+   call and held for curator review; there is no client-side confirmation step." It is true today,
+   and it changes only if you choose a confirmation policy (§11).
+6. Receipt how-to hints, llms.txt and the MCP contribute reply describe the header, not the URL.
+
+### 10.3 Tests run (all hermetic, no network, no spend)
+
+| Command | Result |
+|---|---|
+| Engine suite (`for t in scripts/test-*.mjs …`) | **46/46 files pass** (44 before + 2 new) |
+| `scripts/test-receipt-hygiene.mjs` | 9/9. Each "absent" check first proves the thing it searched was written. **Mutation-checked:** restoring `path: req.url` fails 4; sending the receipt in the MCP URL fails 2 |
+| `scripts/test-tool-contract.mjs` | 5/5. Injected drift in OpenAPI (parameter, header, route), remote schema, annotations, a second write tool and the contract copy; each is caught. Writing it found a real hole in the first gate version (a remote-only property slipped through), now fixed |
+| `omnarai-mcp`: `node --test test/*.test.js` | **64/64** (58 before + 6 new, incl. the real stdio server's `tools/list` via the SDK client) |
+| Gates: `check-tool-contract`, `check-mcp-surface`, `check-footprint-parity` (12/12 functions), `check-shape-literals`, `check-tier-language`, `check-tool-parity` | all green |
+| `vite build` | OK (existing chunk-size warning only) |
+| Local engine, browser | The form renders the engine's lists and card, keeps its default, submits as pending, and shows the token once. The token is not in the URL, storage or any request; no console errors |
+
+Not run: live probes (`omnarai-verify.sh`, `dual-native-check`, `check-surfaces`). They test
+production, which is unchanged; they run in `deploy.sh --promote`.
+
+### 10.4 Deploy and release requirements (when you say so)
+
+1. **Engine first:** merge #50, then `scripts/deploy.sh` (preview) and `--promote` on your word. This
+   ships the remote MCP, the web app and the log redaction together. After promote, verify:
+   - `GET /api/agent-entry` has `contract.contract_version: "1.0.0"`;
+   - a `?receipt=` read returns the notice;
+   - the next stranger event shows `receipt=[redacted]`;
+   - `tools/list` carries annotations.
+2. **Then npm:** merge the omnarai-mcp PR, then `./scripts/publish.sh minor` (→ 1.12.0) and the MCP
+   Registry. Never before step 1: a new client against the old engine sends a header the engine
+   ignores, so pending-footprint reads would return 404.
+3. **Optional:** `node scripts/scrub-telemetry-urls.mjs` (dry run), then `--apply` on your word. It
+   rewrites old entries' `path`/`referer` only; counts are unchanged.
+4. **Rollback:** redeploy the previous engine. Old npm clients work on either engine. The scrub is not
+   reversible (it removes values by design).
+
+### 10.5 Still open
+
+- G5 (shared result envelope with `correlationId` / `transport`) is not built.
+- G7 (showing the token in MCP text at all) waits on your call.
+- G8 (CI) needs a `workflow`-scope token.
+- Phases 2–5 of the brief are not started.
+
+---
+
+## 11. Contribution confirmation: proposal (not implemented; your decision)
+
+**Today:** one call submits; curator review is the gate (decision of 2026-10-15). This is unchanged.
+
+**What a confirmation step can and cannot do here.** Submissions are unauthenticated. So the server
+cannot tell a human's confirmation from an agent's: any client that can compute a hash can "confirm".
+A confirmation step guards against a client sending something other than what was previewed. It
+does not prove a person approved. "A model cannot self-confirm" is enforceable only by the host
+application (a chat UI's approval prompt), not by Omnarai.
+
+**Option A: optional, hash-bound preview (additive, recommended if you want one).**
+- `POST /api/contribute` with `dry_run: true` runs every validator and reference check. It stores
+  nothing, spends no daily allowance and records no duplicate fingerprint. It returns the canonical
+  payload and its `payload_sha256`. The request itself is still logged like any request.
+- An optional `confirm_sha256` on submit means a mismatch gets `409 CONFIRMATION_MISMATCH` and nothing
+  is stored. Without it, the call behaves as it does today.
+- MCP: a read tool `omnarai_prepare_contribution` and an optional `confirm_sha256` on
+  `omnarai_contribute`. That is contract 1.1.0 (additive), and the parity gate covers it.
+- Web form: a preview step that shows the exact payload, then submit with the hash. Editing changes the
+  hash, which invalidates the earlier preview.
+- **Compatibility:** nothing breaks. Old clients, orient's pre-filled bodies, the invite packets and
+  the cold-start packet keep working.
+- **Limit:** "expires on transport retry" needs server state (a single-use confirmation id). Blob has
+  no compare-and-swap, so single use can only be best effort. A stateless hash can't tell a retry from
+  a resend; the duplicate guard (409) already stops an identical resend from storing twice.
+
+**Option B: mandatory confirmation everywhere.**
+- Submitting without a valid, fresh confirmation would get `400 CONFIRMATION_REQUIRED`.
+- **Breaks:**
+  - `omnarai_contribute` in omnarai-mcp ≤ 1.11.0 (every installed copy);
+  - every pre-filled body already handed out (orient `contribute_template`, `/api/invite`, the
+    cold-start packet, llms.txt examples);
+  - the STRANGER-LOOP harness;
+  - any outside script.
+- Every contribution needs two calls, from a funnel that saw 2 contributions in 30 days
+  (`project_arrival_funnel`).
+- It needs server-issued single-use ids, with the same compare-and-swap limit.
+- It still proves no human was involved.
+
+**Recommendation:** keep today's rule. If you want the brief's preview-and-confirm property, take
+Option A, which adds the guarantee for clients that opt in and breaks nothing. Option B costs
+compatibility and conversion for a guarantee it cannot actually give. Either way,
+`POLICY_CARD.write_gate` is the one sentence to update.
