@@ -2,32 +2,39 @@
 // Runs the REAL five-model fan-out + synthesis against live APIs. Writes NOTHING.
 //
 //   node --env-file=.env.local scripts/test-council.js "your question here"
+//   node --env-file=.env.local scripts/test-council.js --frontier "question"
 //
 // Prints: which voices answered, each verbatim answer, the synthesized
 // divergence map, and the assembled record (without persisting it).
+// --frontier asks FRONTIER_COUNCIL instead (it spends more) and adds each voice's
+// latency, provider-reported model and token counts: the measurement that
+// replaces the cron_frontier estimate in api/_budget.js and sets its timeout.
 
-import { elicitCouncil, synthesizeCouncil, buildDivergenceRecord, COUNCIL } from "../api/_council.js";
+import { elicitCouncil, synthesizeCouncil, buildDivergenceRecord, COUNCIL, FRONTIER_COUNCIL } from "../api/_council.js";
 
+const args = process.argv.slice(2);
+const frontier = args.includes("--frontier");
+const panel = frontier ? FRONTIER_COUNCIL : COUNCIL;
 const question =
-  process.argv.slice(2).join(" ").trim() ||
+  args.filter((a) => a !== "--frontier").join(" ").trim() ||
   "When an AI system faces a high-stakes decision under deep uncertainty, should it defer to consensus or trust a well-reasoned minority view? Is there a principled way to decide?";
 
 const line = (c = "─") => console.log(c.repeat(72));
 
 (async () => {
   console.log(`\nQUESTION:\n  ${question}\n`);
-  console.log("COUNCIL (keys present):");
-  for (const m of COUNCIL) console.log(`  ${process.env[m.env] ? "✓" : "✗"} ${m.model} — ${m.lab} (${m.model_id})`);
+  console.log(`${frontier ? "FRONTIER COUNCIL" : "COUNCIL"} (keys present):`);
+  for (const m of panel) console.log(`  ${process.env[m.env] ? "✓" : "✗"} ${m.model} — ${m.lab} (${m.model_id})`);
   line();
 
   console.time("elicit");
-  const answers = await elicitCouncil(question);
+  const answers = await elicitCouncil(question, frontier ? { timeoutMs: 60000, panel } : {});
   console.timeEnd("elicit");
 
   for (const a of answers) {
     line();
     if (a.ok) {
-      console.log(`✓ ${a.model} (${a.lab})\n`);
+      console.log(`✓ ${a.model} (${a.lab}) · ${a.model_id} → ${a.model_resolved || "?"} · ${a.ms} ms · tokens in ${a.usage?.input ?? "?"} / out ${a.usage?.output ?? "?"}${a.truncated ? " · TRUNCATED" : ""}\n`);
       console.log(a.text);
     } else {
       console.log(`✗ ${a.model} (${a.lab}) — FAILED: ${a.error}`);

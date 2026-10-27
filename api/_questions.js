@@ -245,7 +245,9 @@ export function buildCouncilRun({ question, answers, synthesis, visitorHash }) {
     run_id: `OMN-R${Date.now()}${Math.random().toString(36).slice(2, 6)}`,
     question,
     answers: answers.filter((a) => a.ok).map((a) => ({
-      model: a.model, lab: a.lab, model_id: a.model_id, date: a.date, text: a.text,
+      model: a.model, lab: a.lab, model_id: a.model_id,
+      ...(a.model_resolved ? { model_resolved: a.model_resolved } : {}),
+      date: a.date, text: a.text,
     })),
     synthesis,
     visitor: visitorHash || null,
