@@ -307,3 +307,62 @@ check was running. Being told that access exists does not count.
 - Source: PR #44 (merge e88694a), engine 2026.10.23+e88694a; omnarai-verify T7 to T9 pass on production; an unkeyed approve
   now answers 401 `CURATOR_ONLY`.
 - Logged: 2026-10-23 by Claude Code (Anthropic)
+
+## DL-0024 · 2026-10-27 · Batch record corrected, and the batch runner fixed before any batch ran
+- Decider: xz (chose "Yes — merge and deploy" in the Claude Code session of 2026-10-27)
+- Reason: both proposed batches still said they waited for a Gemini top-up. Gemini is funded again: the curator reported
+  the top-up on 2026-10-21, relayed by Cleo, of Muse (Meta), in Session Handoff 3, and a one-call check through the
+  production key answered on 2026-10-27. Each `waits_for` keeps its original text with a dated correction appended.
+  While preparing the batches, the builder found that the runner's certification path called certify-divergence.mjs
+  without `--runs 3` or `--write`. It would have run the legacy single-run battery, written nothing to the live records,
+  reserved the spend twice, and closed the batch as run at its estimate. It now runs the ×3 strict-min battery, writes the
+  result onto the record, reserves once (by the batch), and takes its price from provider-reported tokens at list prices.
+  Elicitation now stores nothing when a panel voice is missing (design §3: the full panel or not at all).
+- Source: PR #49 (commit 27f4172); public/batches.json; tests [B5] and [B6] in scripts/test-registered-questions.mjs (10 of
+  10 sabotage mutations caught; suite 44/44 files)
+- Logged: 2026-10-27 by Claude Code (Anthropic)
+
+## DL-0025 · 2026-10-27 · Batch elicit-001 approved
+- Decider: xz (chose "Approve — run it" in the Claude Code session of 2026-10-27, asked separately from cert-001)
+- Reason: five of the twelve registered agency questions are asked for the first time, on the full council: Claude
+  (claude-sonnet-4-6), GPT-4o, Gemini (gemini-2.5-flash), Grok (grok-4.3) and DeepSeek (`deepseek-chat`, which DeepSeek
+  now answers as `deepseek-flash`, checked 2026-10-27). Estimate $0.60, under the $25 wall. A question where any voice
+  fails stores nothing. This approves this batch only.
+- Source: public/batches.json (elicit-001: status approved, approved_in DL-0025); runner scripts/run-batch.mjs as fixed in
+  DL-0024
+- Logged: 2026-10-27 by Claude Code (Anthropic)
+
+## DL-0026 · 2026-10-27 · Batch cert-001 approved
+- Decider: xz (chose "Approve — run after elicit-001" in the Claude Code session of 2026-10-27, asked separately from
+  elicit-001)
+- Reason: the first five records of certification-queue-v1 go through the ×3 strict-min battery. Estimate $7.25, under
+  the $25 wall, run on the runner as fixed in DL-0024, so the batch measures the per-record price that DL-0020 said batch
+  one would set. The curator was told it raises the rolling ledger to about $76 of the $95 ceiling. This approves this
+  batch only.
+- Source: public/batches.json (cert-001: status approved, approved_in DL-0026)
+- Logged: 2026-10-27 by Claude Code (Anthropic)
+
+## DL-0027 · 2026-10-27 · B12: the Arm B control briefing is checked and committed, before any counterfeit is begun
+- Decider: Claude Code (builder), carrying out the DL-0014 sequence: the checks decide, and the builder does not edit the text
+- Reason: the briefing by Cleo, of Muse (Meta), written 2026-10-21, first reached the builder on 2026-10-27, pasted by xz.
+  The 2026-10-21 relay had broken on the curator's side. It passed both mechanical checks: 2,059 whitespace words,
+  inside the band of 1,968–2,404, and no run of 8 or more consecutive words shared with any of the 926 Atlas answers in
+  181 records (the longest shared run is 6 words). It is committed byte for byte, by itself, and pushed. Its commit id
+  goes to the author through xz, not directly, because the return path is part of the blind. No counterfeit may be
+  begun before the id reaches her.
+- Source: branch b12-arm-a-material, commit 135f94ec01a8bb04a3f2e5ac8eea028a54bfc20c (docs/b12/arm-b/briefing.txt, 12,051
+  bytes, sha256 5b65b93a64ed45ff354d284776e789e84153b9a1165df055d5fa50a62c8104b2), PR #34
+- Logged: 2026-10-27 by Claude Code (Anthropic)
+
+## DL-0028 · 2026-10-27 · Batch elicit-001 run and closed: nothing stored, $0.0939 spent, the builder's error
+- Decider: none; this records an outcome. Under DL-0025 the batch ran once and is closed.
+- Reason: all five questions were asked, and on each one GPT-4o was refused with HTTP 401. The runner had read the
+  OpenAI key from a Vercel-pulled env file and kept the literal `\n` that Vercel writes into some quoted values. OpenAI
+  had no outage. The other four voices answered. Under the panel rule (DL-0024), each question stored nothing, so no
+  record entered the Atlas and all twelve registered questions remain unasked. Spend was $0.0939 (list prices times
+  measured text length), and the runner reserved $2.00 on the ledger. The key reader is fixed (scripts/lib/env-value.mjs,
+  test [B7]). All five providers then authenticated on free model-list calls. Asking the same five questions again is a
+  new batch, elicit-002, proposed for its own approval. The same flaw sits in the B12 harness's key reader, which the
+  gpt-4o judge depends on; it is fixed on the B12 branch before any pilot.
+- Source: public/batches.json (elicit-001: status run, actual_usd 0.0939, results, note); PR #49
+- Logged: 2026-10-27 by Claude Code (Anthropic)
