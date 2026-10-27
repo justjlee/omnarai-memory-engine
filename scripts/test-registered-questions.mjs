@@ -119,8 +119,9 @@ test("[H4] the manifest keeps canonical_questions and adds the registry, the bat
   assert.equal(q.registered_unasked, 12);
   assert.equal(q.by_state.registered, 12);
   assert.equal(q.certification_queue.rule, "certification-queue-v1");
-  assert.equal(q.elicitation.proposed, 1);
-  assert.equal(q.elicitation.run, 0);
+  // The batch counts are read from public/batches.json as shipped, so they follow its statuses rather than pin them.
+  const shipped = JSON.parse(readFileSync(new URL("../public/batches.json", import.meta.url), "utf8")).batches.filter((b) => b.kind === "elicitation");
+  for (const s of ["proposed", "approved", "run"]) assert.equal(q.elicitation[s], shipped.filter((b) => b.status === s).length, s);
 });
 
 // ── Batches and the queue ──
@@ -203,8 +204,19 @@ test("[B6] usage tally: provider-reported tokens per model, thinking billed as o
   const expect = (1000 * 3 + 500 * 15 + 1000 * 1.5 + 500 * 9 + 2000 * 0.25 + 1000 * 2 + 10000 * 0.02) / 1e6;
   assert.equal(p.usd, +expect.toFixed(5));
 });
-test("[B4] the shipped batches are proposals: nothing in public/batches.json can run today", () => {
+test("[B4] a shipped batch can run only on its own logged approval, and never twice", () => {
   const doc = JSON.parse(readFileSync(new URL("../public/batches.json", import.meta.url), "utf8"));
+  const log = readFileSync(new URL("../governance/decision-log.md", import.meta.url), "utf8");
   assert.ok(doc.batches.length >= 2);
-  for (const b of doc.batches) assert.notDeepEqual(R.batchProblems(b, { registry: REG, divRecords: RECORDS, decisionLog: "" }), [], b.id);
+  const approvals = doc.batches.map((b) => b.approved_in).filter(Boolean);
+  assert.equal(new Set(approvals).size, approvals.length, "one decision-log entry per batch: approving one is not approving another");
+  for (const b of doc.batches) {
+    const p = R.batchProblems(b, { registry: REG, divRecords: RECORDS, decisionLog: log });
+    if (b.status === "approved") {
+      assert.ok(!p.some((x) => /approved|decision log/.test(x)), `${b.id}: ${p}`);
+      assert.match(log, new RegExp(`^## ${b.approved_in} · .*\\b${b.id}\\b.*approved`, "m"), `${b.approved_in} is the entry that approves ${b.id}`);
+    } else assert.ok(p.some((x) => /not "approved"/.test(x)), `${b.id} (${b.status}) must be refused`);
+  }
+  assert.ok(R.batchProblems({ ...doc.batches[0], status: "run" }, { registry: REG, divRecords: RECORDS, decisionLog: log }).some((x) => /not "approved"/.test(x)), "a batch that has run is refused: it cannot spend twice");
+  assert.ok(R.batchProblems({ ...doc.batches[0], approved_in: "DL-9999" }, { registry: REG, divRecords: RECORDS, decisionLog: log }).some((x) => /not in the decision log/.test(x)));
 });

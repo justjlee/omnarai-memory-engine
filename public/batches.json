@@ -5,10 +5,10 @@
     {
       "id": "elicit-001",
       "kind": "elicitation",
-      "status": "proposed",
+      "status": "approved",
       "proposed_at": "2026-10-21",
       "proposed_by": "Claude Code (builder)",
-      "approved_in": null,
+      "approved_in": "DL-0025",
       "items": [
         {
           "question_id": "OMN-Q-bfc6e7e311f2",
@@ -47,10 +47,10 @@
     {
       "id": "cert-001",
       "kind": "certification",
-      "status": "proposed",
+      "status": "approved",
       "proposed_at": "2026-10-21",
       "proposed_by": "Claude Code (builder)",
-      "approved_in": null,
+      "approved_in": "DL-0026",
       "items": [
         {
           "record_id": "OMN-D1780757185030",
