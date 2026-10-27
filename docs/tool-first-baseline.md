@@ -30,7 +30,7 @@ The real gaps are narrower than the brief assumes:
 
 | # | Gap | Severity | Needs xz? |
 |---|---|---|---|
-| G1 | Continuance-receipt tokens travel in URLs (`?receipt=`), and the access log stores the full URL (`path`, 300 chars). Reproduced offline. 0 occurrences in a 35,000-event sample of the last 35 days. | Medium (hygiene; the log is curator-only) | No: fix is additive. Yes: the privacy wording change |
+| G1 | Continuance-receipt tokens travel in URLs (`?receipt=`), and the access log stores the full URL (`path`, 300 chars). Reproduced offline. 0 occurrences in a 35,000-event sample of the last 35 days. | Medium (hygiene) | No: fix is additive. Yes: the privacy wording change |
 | G2 | No preview or confirmation step. `POST /api/contribute`, the web form and `omnarai_contribute` all submit in one call. Curator review is the only gate. | Design decision | **Yes** |
 | G3 | No single tool registry. Tool definitions live in four hand-synced places. No gate compares the npm `ENGINE_TOOLS` with the remote `api/_mcp.js` schemas (they match today by hand). | Drift risk | No |
 | G4 | No MCP `annotations` (`readOnlyHint` / `destructiveHint`), no `outputSchema`, and remote `serverInfo.version` is `1.0.0` while the package is 1.11.0. | Low | No |

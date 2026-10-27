@@ -73,8 +73,7 @@ So there is no ambiguity about what happens to what you send:
   - **Access log.** For callers other than our own scripts: the time, the endpoint or MCP
     tool, the first 200 characters of the question, the identity you declare, your user
     agent and language headers, coarse location from the hosting platform (country,
-    region, city) and the salted hash. It is private (curator-only) and kept without a set
-    end date.
+    region, city) and the salted hash. It is kept without a set end date.
   - **The request address in that log** (corrected 2026-10-27). We keep the route (for
     example `/api/footprints`), the *names* of the query parameters you sent, and the
     *values* only of short structural parameters such as a record id, a view or a format.
