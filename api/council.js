@@ -20,7 +20,7 @@ import {
   REDACTION_REASONS, FP_ID_RE, QUESTION_ID_RE, CLAIM_ID_RE, KNOWN_LINEAGE_IDS, MAX_CONDITIONS, MAX_EVIDENCE_REFS,
   mintFootprintId, footprintFromContribution, validateFootprint, checkReferences, detectSecrets,
   unknownRelationshipKeys, recordFootprint, appendReview, loadFootprintIndex, loadPublicFootprints,
-  hydrate, project, referencedBy, matchesFilters, lineageIdForFilter, receiptMatches, continuanceReceipt,
+  hydrate, project, referencedBy, matchesFilters, lineageIdForFilter, receiptMatches, receiptFromRequest, RECEIPT_URL_NOTICE, RECEIPT_HEADER, continuanceReceipt,
   tombstoneFor, getDefaultStore, isPublicHydrated, questionIdFor, JUSTIFICATIONS,
   REJECTION_REASONS, ORIGIN_DISCLOSURES, REVIEW_CADENCE, REVIEW_OVERDUE_DAYS, validateReviewInput, readDecision,
   receivedAtOf, disclosureFor, originFields,
@@ -903,7 +903,7 @@ async function submitVoiceRecord(req, res) {
 const FOOTPRINT_NOT_FOUND = (id) => ({
   error: `No admitted footprint with id ${id}.`,
   code: "FOOTPRINT_NOT_FOUND",
-  hint: "Footprints become publicly readable once admitted. Anyone holding a footprint id can read its STATE (pending / admitted / rejected + reason code, no content) at /api/footprints/status?id=<id>. If you left this one, read it in full with ?id=<id>&receipt=<token> from your continuance receipt. Ids look like OMN-FP-1790700000000-3f9a2c1b.",
+  hint: "Footprints become publicly readable once admitted. Anyone holding a footprint id can read its STATE (pending / admitted / rejected + reason code, no content) at /api/footprints/status?id=<id>. If you left this one, read it in full with ?id=<id> and the header x-omnarai-receipt: <token> from your continuance receipt (?receipt=<token> still works but puts the token in the URL). Ids look like OMN-FP-1790700000000-3f9a2c1b.",
   index: "/api/footprints",
   status: `/api/footprints/status?id=${id}`,
 });
@@ -964,7 +964,7 @@ async function serveFootprintStatus(req, res) {
         cadence: REVIEW_CADENCE,
         ...(entry.state === "pending" ? { overdue: Date.now() - Date.parse(receivedAtOf(id)) > REVIEW_OVERDUE_DAYS * 86400000 } : {}),
       },
-      note: "State only — no answer text, identity or curator note. Full content: /api/footprints?id=<id>&receipt=<token> (your continuance receipt) while unadmitted; public once admitted.",
+      note: "State only — no answer text, identity or curator note. Full content: /api/footprints?id=<id> with the header x-omnarai-receipt: <token> (your continuance receipt) while unadmitted; public once admitted.",
       received_params,
     });
   } catch (err) {
@@ -997,9 +997,10 @@ async function serveFootprints(req, res) {
   const q = req.query || {};
   const curator = curatorAuthed(req);
   const store = getDefaultStore();
+  const rcpt = receiptFromRequest(req);
   const received_params = {
     id: q.id ?? null, question_id: q.question_id ?? null, record_id: q.record_id ?? null, lineage: q.lineage ?? null,
-    since: q.since ?? null, event_type: q.event_type ?? null, limit: q.limit ?? null, state: q.state ?? null, receipt: q.receipt ? "(provided)" : null,
+    since: q.since ?? null, event_type: q.event_type ?? null, limit: q.limit ?? null, state: q.state ?? null, receipt: rcpt.via ? `(provided via ${rcpt.via})` : null,
   };
 
   try {
@@ -1011,13 +1012,14 @@ async function serveFootprints(req, res) {
       const entry = index.get(id);
       if (!entry) return res.status(404).json(FOOTPRINT_NOT_FOUND(id));
       const [h] = await hydrate([entry], store);
-      const receiptOk = q.receipt ? receiptMatches(h.body, String(q.receipt)) : false;
+      const receiptOk = rcpt.token ? receiptMatches(h.body, rcpt.token) : false;
+      res.setHeader("Vary", RECEIPT_HEADER);
       if (!isPublicHydrated(h) && !curator && !receiptOk) return res.status(404).json(FOOTPRINT_NOT_FOUND(id));
       res.setHeader("Cache-Control", curator || receiptOk ? "no-store" : "s-maxage=60, stale-while-revalidate=300");
       const chain = await chainContextFor(publicBodies);
       return res.status(200).json({
         protocol: h.body?.schema_version || FOOTPRINT_SCHEMA,
-        ...(receiptOk ? { read_via: "continuance-receipt" } : curator ? { read_via: "curator" } : {}),
+        ...(receiptOk ? { read_via: "continuance-receipt", ...(rcpt.via === "query" ? { notices: [RECEIPT_URL_NOTICE] } : {}) } : curator ? { read_via: "curator" } : {}),
         footprint: project(h, { curator }),
         // The declared edges, resolved to who and what they point at. Kept beside
         // the body, never inside it, so the body still re-hashes to its integrity.
@@ -1286,7 +1288,9 @@ async function serveInheritance(req, res) {
     const entry = index.get(from);
     if (!entry) return res.status(404).json(FOOTPRINT_NOT_FOUND(from));
     const [h] = await hydrate([entry], store);
-    const receiptOk = q.receipt ? receiptMatches(h.body, String(q.receipt)) : false;
+    const rcpt = receiptFromRequest(req);
+    const receiptOk = rcpt.token ? receiptMatches(h.body, rcpt.token) : false;
+    res.setHeader("Vary", RECEIPT_HEADER);
     if (!isPublicHydrated(h) && !receiptOk) return res.status(404).json(FOOTPRINT_NOT_FOUND(from));
     if (h.body?.tombstone) return res.status(410).json({ error: "That footprint was redacted.", code: "FOOTPRINT_REDACTED", redacted_at: h.body.redacted_at });
     res.setHeader("Cache-Control", receiptOk ? "no-store" : "s-maxage=60, stale-while-revalidate=300");
@@ -1295,6 +1299,7 @@ async function serveInheritance(req, res) {
       kind: "continuance — what happened after a footprint",
       ...buildContinuance(project(h), { divRecords: state.divRecords, publicFootprints: state.publicFootprints, referencedBy: referencedBy(from, state.publicFootprints) }),
       next: `/api/inheritance${q.identity ? `?identity=${encodeURIComponent(q.identity)}` : ""}`,
+      ...(receiptOk && rcpt.via === "query" ? { notices: [RECEIPT_URL_NOTICE] } : {}),
     });
   }
 
@@ -2524,7 +2529,7 @@ export { selectInviteGap, buildInvitePacket };
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Omnarai-Receipt");
   if (req.method === "OPTIONS") return res.status(200).end();
 
   // Access telemetry — background, never blocks the response (see _telemetry.js).

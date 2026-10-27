@@ -403,6 +403,8 @@ The order of operations is chosen so the contribution stays the primary:
 
 The `token` is a server-issued bearer capability: HMAC-SHA256 over the footprint id, under a key derived from `RECEIPT_SECRET` (falling back to `INGEST_SECRET`). It cannot be computed from the footprint's content. Receipt `1.0` used the content hash as the credential. A zero-context model in the 2026-09-30 STRANGER-LOOP run pointed out that the content hash is recomputable from the content and becomes public on admission, so receipt `1.1` replaced it. Rotating the secret invalidates outstanding receipts. With no key configured there are no tokens and no receipt reads (fail closed).
 
+**Receipt `1.2` (2026-10-27, additive): the token travels in a header.** Send it as `x-omnarai-receipt: <token>`; a token in the URL is copied into request logs, proxies and browser history. The receipt adds `read` and `resume_request` (token-free URL + header name) and lists `status`/`resume` under `deprecated`; those two legacy strings and the `?receipt=` query form still work, and a read through the query form returns a `RECEIPT_IN_URL` notice. The access log stores `receipt=[redacted]`, never the value. Staged plan: `docs/receipt-token-migration.md`.
+
 A receipt proves *association with a record*. It does **not** prove that the actor holding it is the same actor who wrote it. There is no identity metaphysics here, only historical continuity. `/api/inheritance?from=<footprint>` answers "what happened after this?": later Footprints on the same Question, Footprints that reference this one, new Atlas re-elicitations, and later positions from the same declared lineage.
 
 ---

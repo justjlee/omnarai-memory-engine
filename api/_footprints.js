@@ -905,11 +905,31 @@ export function receiptMatches(body, receipt) {
   try { return timingSafeEqual(Buffer.from(expected, "utf8"), Buffer.from(receipt.toLowerCase(), "utf8")); } catch { return false; }
 }
 
+// Where a caller's receipt token comes from (2026-10-27). The HEADER is the
+// preferred form: a token in the query string lands in request logs, proxies and
+// browser history. `?receipt=` stays accepted for clients written before the header
+// existed (omnarai-mcp ≤ 1.11.0, saved `status`/`resume` strings); a read that used
+// it gets a RECEIPT_IN_URL notice. Migration: docs/receipt-token-migration.md.
+export const RECEIPT_HEADER = "x-omnarai-receipt";
+export const RECEIPT_URL_NOTICE = {
+  code: "RECEIPT_IN_URL",
+  severity: "warning",
+  message: `Your receipt token was sent in the URL, where request logs and browser history can keep it. Send it as the ${RECEIPT_HEADER} header instead; the ?receipt= form still works during the transition.`,
+};
+export function receiptFromRequest(req) {
+  const h = req?.headers?.[RECEIPT_HEADER];
+  const header = (Array.isArray(h) ? h[0] : h || "").toString().trim();
+  if (header) return { token: header, via: "header" };
+  const q = req?.query?.receipt;
+  const query = (Array.isArray(q) ? q[0] : q || "").toString().trim();
+  return query ? { token: query, via: "query" } : { token: "", via: null };
+}
+
 export function continuanceReceipt(fp, issuedAt = new Date().toISOString()) {
   const token = receiptTokenFor(fp.id);
   return {
     receipt_type: "omnarai-continuance",
-    receipt_version: "1.1",
+    receipt_version: "1.2",
     footprint_id: fp.id,
     question_id: fp.subject?.question_id || null,
     token,
@@ -921,6 +941,14 @@ export function continuanceReceipt(fp, issuedAt = new Date().toISOString()) {
     status_by_id: `GET /api/footprints/status?id=${fp.id}`,
     review_cadence: REVIEW_CADENCE,
     resume: token ? `GET /api/inheritance?from=${fp.id}&receipt=${token}` : `GET /api/inheritance?from=${fp.id}`,
+    // Preferred, token-free forms: send the token as a header, never in the address.
+    // `status` and `resume` above are the legacy URL forms, kept until the migration's
+    // stage 2 (docs/receipt-token-migration.md) so existing clients keep working.
+    ...(token ? {
+      read: { method: "GET", url: `/api/footprints?id=${fp.id}`, header: RECEIPT_HEADER, header_value: "the token above" },
+      resume_request: { method: "GET", url: `/api/inheritance?from=${fp.id}`, header: RECEIPT_HEADER, header_value: "the token above" },
+      deprecated: { fields: ["status", "resume"], reason: "They carry the token in the URL. Use `read` / `resume_request` with the header." },
+    } : {}),
     keep_private: "token is a bearer capability: whoever holds it can read this footprint while it is pending. content_hash is only an integrity value (it becomes public once the footprint is admitted).",
     proves: "association with this record — NOT that whoever holds it is the same actor that wrote it. Continuity of records, not of identity.",
   };
