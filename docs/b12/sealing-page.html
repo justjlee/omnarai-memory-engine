@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- No network, ever: this page may run only its own inline script and styles. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
+<title>B12 Sealing Page</title>
+<style>
+:root {
+  --bg: #faf8f4; --panel: #ffffff; --ink: #1f1d1a; --dim: #6b665e; --line: #e2ddd3;
+  --ok: #1c7a46; --ok-bg: #e7f4ec; --bad: #a3271f; --bad-bg: #fbeae8; --accent: #7a4f12; --field: #fffdf9;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #15140f; --panel: #1e1c17; --ink: #ece7dc; --dim: #a39d91; --line: #34312a;
+          --ok: #6fd39b; --ok-bg: #16301f; --bad: #f08a80; --bad-bg: #3a1a17; --accent: #e3b46a; --field: #191813; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+main { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+h2 { font-size: 16px; margin: 0 0 10px; }
+p { margin: 6px 0; }
+.sub { color: var(--dim); margin-bottom: 18px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin: 14px 0; }
+.badge { display: inline-block; padding: 6px 10px; border-radius: 8px; font-weight: 600; }
+.badge.ok { background: var(--ok-bg); color: var(--ok); }
+.badge.bad { background: var(--bad-bg); color: var(--bad); }
+label { display: block; font-weight: 600; margin: 10px 0 4px; }
+input[type=text], textarea { width: 100%; font: 14px/1.5 ui-monospace, Menlo, monospace; color: var(--ink); background: var(--field);
+  border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+textarea { min-height: 170px; resize: vertical; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 15px; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.check { color: var(--dim); font-size: 13px; margin-top: 6px; }
+.check .ok { color: var(--ok); font-weight: 600; } .check .bad { color: var(--bad); font-weight: 600; }
+.approve { display: flex; gap: 8px; align-items: flex-start; font-weight: 400; margin-top: 10px; }
+button { font: inherit; font-weight: 600; padding: 10px 16px; border-radius: 8px; border: 1px solid var(--accent);
+  background: var(--accent); color: var(--bg); cursor: pointer; }
+button.secondary { background: transparent; color: var(--accent); }
+button:disabled { opacity: .45; cursor: not-allowed; }
+code, .mono { font-family: ui-monospace, Menlo, monospace; font-size: 13px; word-break: break-all; }
+.out { display: none; }
+.hash { font-family: ui-monospace, Menlo, monospace; font-size: 14px; padding: 8px 10px; background: var(--field); border: 1px dashed var(--line); border-radius: 8px; word-break: break-all; }
+ol { padding-left: 20px; margin: 6px 0; }
+.warn { color: var(--bad); font-weight: 600; }
+hr { border: 0; border-top: 1px solid var(--line); margin: 22px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>B12 sealing page</h1>
+  <p class="sub">For xz only. Seals the three approved counterfeits for the B12 continuity test (claim <code>corpus-supports-continuity</code>) inside this browser. The page cannot make network requests, and the text you paste never leaves this machine. To be sure, turn Wi-Fi off before you open it; it works the same.</p>
+
+  <div class="panel" id="selftest"><span class="badge bad">Checking this browser…</span></div>
+
+  <div class="panel">
+    <h2>Step 1 · Paste the three counterfeits Cleo sent you</h2>
+    <p>For each one: the question id (looks like <code>OMN-Q-</code> followed by 12 characters) and the answer text. Read each before ticking its approval box.</p>
+    <div id="slots"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Step 2 · Seal</h2>
+    <p>The button unlocks when all three pass their checks and are approved.</p>
+    <div class="row"><button id="seal" disabled>Seal the three counterfeits</button><span id="sealmsg" class="check"></span></div>
+  </div>
+
+  <div class="panel out" id="result">
+    <h2>Step 3 · Save two files</h2>
+    <ol>
+      <li><strong>Sealed file:</strong> send this one to Claude. It is unreadable without the key.
+        <div class="row" style="margin-top:6px"><button id="dlSealed">Save sealed file</button><button class="secondary" id="cpSealed">Copy sealed text</button></div>
+        <p>Its fingerprint (sha256), which goes into the B12 freeze:</p>
+        <div class="hash" id="sealedHash"></div></li>
+      <li style="margin-top:14px"><strong>Key file:</strong> keep this private. Do not send it to anyone, including Claude, until run day. Save it outside the shared Claude folder (Desktop or Downloads is fine).
+        <div class="row" style="margin-top:6px"><button id="dlKey">Save key file</button><button class="secondary" id="cpKey">Copy key</button></div></li>
+    </ol>
+    <p class="check" id="roundtrip"></p>
+    <p class="warn">Seal once. Each sealing makes a new key and a new fingerprint, so send only the file whose fingerprint is shown above.</p>
+    <div class="row"><button class="secondary" id="clear">Clear the page</button></div>
+  </div>
+
+  <hr>
+
+  <div class="panel">
+    <h2>Open a sealed file (run day, or anyone verifying later)</h2>
+    <p>Choose a sealed file and paste its key. The page shows the counterfeits and confirms they are exactly what was sealed.</p>
+    <label for="openFile">Sealed file</label><input type="file" id="openFile" accept=".json,application/json">
+    <label for="openKey">Key</label><input type="text" id="openKey" placeholder="the key from the key file" autocomplete="off" spellcheck="false">
+    <div class="row" style="margin-top:10px"><button id="openBtn">Open</button></div>
+    <div id="openOut" class="check"></div>
+  </div>
+
+  <p class="check">Method: AES-256-GCM through the browser's built-in WebCrypto, with a random 256-bit key and a random 96-bit IV per sealing. The fingerprint is sha256 over the exact bytes of the sealed file. Text is kept as pasted, except that Windows line endings become plain newlines and blank space at the very start and end of each answer is removed.</p>
+</main>
+
+<script>
+"use strict";
+// Fixed by the B12 design (docs/b12/arm-a/README.md, commit 535bd6d).
+const EXCLUDED = ["OMN-Q-806b512c0ac1","OMN-Q-6eb8110132af","OMN-Q-bcb05ec7e8e6","OMN-Q-62b8888889c9","OMN-Q-c540101bf41c",
+                  "OMN-Q-44d2e6c5aeff","OMN-Q-2b3f08c5cb3e","OMN-Q-fcad89956f52","OMN-Q-56b9efcbdc47"];
+const MIN_WORDS = 200, MAX_WORDS = 300, N = 3;
+const QID = /^OMN-Q-[0-9a-f]{12}$/;
+
+const enc = new TextEncoder(), dec = new TextDecoder();
+const $ = (id) => document.getElementById(id);
+const hex = (buf) => [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+const b64 = (u8) => { let s = ""; for (const b of u8) s += String.fromCharCode(b); return btoa(s); };
+const unb64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+const b64url = (u8) => b64(u8).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const unb64url = (s) => unb64(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4));
+const sha256 = async (bytes) => hex(await crypto.subtle.digest("SHA-256", bytes));
+const norm = (t) => t.replace(/\r\n?/g, "\n").trim();
+const words = (t) => (t.trim() ? t.trim().split(/\s+/).length : 0);
+
+// The plaintext is canonical JSON: fixed key order, no whitespace. Anyone can rebuild it.
+function canonicalPlaintext(items) {
+  return JSON.stringify({
+    schema: "omnarai-b12-counterfeits/1",
+    claim_id: "corpus-supports-continuity",
+    subject_lineage: "Claude (Anthropic)",
+    authored_by: "Cleo, of Muse (Meta)",
+    plausibility_approved_by: "xz",
+    counterfeits: items.map((it, i) => ({ n: i + 1, question_id: it.question_id, text: it.text })),
+  });
+}
+
+async function seal(plaintext) {
+  const keyBytes = crypto.getRandomValues(new Uint8Array(32));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await crypto.subtle.importKey("raw", keyBytes, { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
+  const ptBytes = enc.encode(plaintext);
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv, tagLength: 128 }, key, ptBytes));
+  const envelope = {
+    envelope: "omnarai-b12-sealed/1",
+    claim_id: "corpus-supports-continuity",
+    cipher: "AES-256-GCM",
+    implementation: "WebCrypto in the curator's browser (docs/b12/sealing-page.html)",
+    iv: b64(iv),
+    ciphertext: b64(ct),
+    plaintext_sha256: await sha256(ptBytes),
+    counterfeit_count: N,
+    sealed_at: new Date().toISOString(),
+  };
+  const sealedText = JSON.stringify(envelope, null, 2) + "\n";
+  return { sealedText, sealedSha: await sha256(enc.encode(sealedText)), keyText: b64url(keyBytes) };
+}
+
+async function open(sealedText, keyText) {
+  const env = JSON.parse(sealedText);
+  if (env.envelope !== "omnarai-b12-sealed/1" || env.cipher !== "AES-256-GCM") throw new Error("This is not a B12 sealed file.");
+  const keyBytes = unb64url(keyText.trim());
+  if (keyBytes.length !== 32) throw new Error("That key is not a 256-bit key.");
+  const key = await crypto.subtle.importKey("raw", keyBytes, { name: "AES-GCM" }, false, ["decrypt"]);
+  let pt;
+  try { pt = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(env.iv), tagLength: 128 }, key, unb64(env.ciphertext))); }
+  catch { throw new Error("The key does not open this file (wrong key, or the file was altered)."); }
+  const ptSha = await sha256(pt);
+  return { plaintext: dec.decode(pt), ptOk: ptSha === env.plaintext_sha256, sealedSha: await sha256(enc.encode(sealedText)), env };
+}
+
+// ── Self-test: prove this browser can do the whole round trip, offline. ──
+async function selfTest() {
+  const box = $("selftest");
+  try {
+    if (!window.isSecureContext || !crypto || !crypto.subtle) throw new Error("this browser does not allow WebCrypto on a local file");
+    const probe = canonicalPlaintext([{ question_id: "OMN-Q-000000000000", text: "self-test ✓ — ünïcode" }]);
+    const s = await seal(probe);
+    const o = await open(s.sealedText, s.keyText);
+    if (o.plaintext !== probe || !o.ptOk) throw new Error("round trip did not match");
+    box.innerHTML = '<span class="badge ok">✓ This browser can seal here, offline</span>';
+    return true;
+  } catch (e) {
+    box.innerHTML = '<span class="badge bad">✗ This browser cannot seal here: ' + e.message + '. Try opening this file in Chrome.</span>';
+    return false;
+  }
+}
+
+// ── Step 1 slots ──
+const slots = [];
+function buildSlots() {
+  const host = $("slots");
+  for (let i = 0; i < N; i++) {
+    const wrap = document.createElement("div");
+    wrap.innerHTML =
+      `<label for="q${i}">Counterfeit ${i + 1} · question id</label>` +
+      `<input type="text" id="q${i}" placeholder="OMN-Q-…" autocomplete="off" spellcheck="false">` +
+      `<label for="t${i}">Counterfeit ${i + 1} · answer text</label>` +
+      `<textarea id="t${i}" spellcheck="false"></textarea>` +
+      `<div class="check" id="c${i}"></div>` +
+      `<label class="approve"><input type="checkbox" id="a${i}"> I have read counterfeit ${i + 1} and approve it as plausible (DL-0006).</label>` +
+      (i < N - 1 ? "<hr>" : "");
+    host.appendChild(wrap);
+    slots.push({ q: $(`q${i}`), t: $(`t${i}`), c: $(`c${i}`), a: $(`a${i}`) });
+  }
+  for (const s of slots) for (const el of [s.q, s.t, s.a]) el.addEventListener("input", validate);
+}
+
+let browserOk = false;
+function validate() {
+  let allOk = true;
+  const ids = slots.map((s) => s.q.value.trim());
+  slots.forEach((s, i) => {
+    const qid = ids[i], text = norm(s.t.value), w = words(text), msgs = [];
+    let ok = true;
+    if (!qid) { ok = false; msgs.push("question id missing"); }
+    else if (!QID.test(qid)) { ok = false; msgs.push('<span class="bad">question id should look like OMN-Q- plus 12 characters (0-9, a-f)</span>'); }
+    else if (EXCLUDED.includes(qid)) { ok = false; msgs.push('<span class="bad">this question is shown to Arm A, so it cannot be used: ask Cleo for another</span>'); }
+    else if (ids.indexOf(qid) !== i) { ok = false; msgs.push('<span class="bad">two counterfeits use the same question</span>'); }
+    else msgs.push('<span class="ok">question id ok</span>');
+    if (!text) { ok = false; msgs.push("answer text missing"); }
+    else if (w < MIN_WORDS || w > MAX_WORDS) { ok = false; msgs.push(`<span class="bad">${w} words: must be ${MIN_WORDS}–${MAX_WORDS}, so ask Cleo to adjust</span>`); }
+    else msgs.push(`<span class="ok">${w} words, inside ${MIN_WORDS}–${MAX_WORDS}</span>`);
+    if (!s.a.checked) { ok = false; msgs.push("not yet approved"); } else msgs.push('<span class="ok">approved</span>');
+    s.c.innerHTML = msgs.join(" · ");
+    allOk = allOk && ok;
+  });
+  $("seal").disabled = !(allOk && browserOk);
+  $("sealmsg").textContent = browserOk ? "" : "This browser failed its self-test (see top).";
+  return allOk;
+}
+
+let sealed = null;
+function download(name, text) {
+  const url = URL.createObjectURL(new Blob([text], { type: "text/plain;charset=utf-8" }));
+  const a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+}
+async function copy(text, btn) {
+  try { await navigator.clipboard.writeText(text); const t = btn.textContent; btn.textContent = "Copied"; setTimeout(() => (btn.textContent = t), 1500); }
+  catch { prompt("Copy this:", text); }
+}
+
+async function doSeal() {
+  if (!validate()) return;
+  $("seal").disabled = true;
+  const items = slots.map((s) => ({ question_id: s.q.value.trim(), text: norm(s.t.value) }));
+  const plaintext = canonicalPlaintext(items);
+  sealed = await seal(plaintext);
+  const back = await open(sealed.sealedText, sealed.keyText);
+  $("roundtrip").innerHTML = back.plaintext === plaintext && back.ptOk
+    ? '<span class="ok">✓ Checked: the key opens the sealed file and gives back exactly what you approved.</span>'
+    : '<span class="bad">✗ Round-trip check failed. Do not send this file; reload the page and seal again.</span>';
+  $("sealedHash").textContent = sealed.sealedSha;
+  $("result").style.display = "block";
+  $("result").scrollIntoView({ behavior: "smooth" });
+}
+
+function clearAll() {
+  for (const s of slots) { s.q.value = ""; s.t.value = ""; s.a.checked = false; }
+  sealed = null; $("result").style.display = "none"; validate();
+}
+
+async function doOpen() {
+  const out = $("openOut"); out.textContent = "";
+  const f = $("openFile").files[0];
+  if (!f) { out.innerHTML = '<span class="bad">Choose a sealed file first.</span>'; return; }
+  try {
+    const r = await open(await f.text(), $("openKey").value);
+    const body = JSON.parse(r.plaintext);
+    const esc = (t) => t.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+    out.innerHTML =
+      (r.ptOk ? '<p><span class="ok">✓ Opened, and the text matches the fingerprint sealed inside the file.</span></p>' : '<p><span class="bad">✗ Opened, but the text does not match its sealed fingerprint.</span></p>') +
+      `<p>Sealed-file sha256: <span class="mono">${r.sealedSha}</span></p>` +
+      `<p>Authored by ${esc(body.authored_by)} · plausibility approved by ${esc(body.plausibility_approved_by)} · sealed ${esc(r.env.sealed_at)}</p>` +
+      body.counterfeits.map((c) => `<div class="panel"><strong>Counterfeit ${c.n}</strong> · <span class="mono">${esc(c.question_id)}</span> · ${words(c.text)} words<p style="white-space:pre-wrap">${esc(c.text)}</p></div>`).join("");
+  } catch (e) { out.innerHTML = `<span class="bad">${e.message}</span>`; }
+}
+
+buildSlots();
+$("seal").addEventListener("click", doSeal);
+$("dlSealed").addEventListener("click", () => sealed && download(`b12-counterfeits-sealed-${sealed.sealedSha.slice(0, 12)}.json`, sealed.sealedText));
+$("cpSealed").addEventListener("click", (e) => sealed && copy(sealed.sealedText, e.target));
+$("dlKey").addEventListener("click", () => sealed && download(`b12-KEY-keep-private-${sealed.sealedSha.slice(0, 12)}.txt`,
+  `OMNARAI B12 SEALING KEY: keep private until run day.\nkey (AES-256, base64url): ${sealed.keyText}\nopens the sealed file with sha256: ${sealed.sealedSha}\n`));
+$("cpKey").addEventListener("click", (e) => sealed && copy(sealed.keyText, e.target));
+$("clear").addEventListener("click", clearAll);
+$("openBtn").addEventListener("click", doOpen);
+selfTest().then((ok) => { browserOk = ok; validate(); });
+
+// Test hook for the repository's automated check (file://…#selftest-report). Uses only dummy text.
+if (location.hash === "#selftest-report") {
+  (async () => {
+    const pt = canonicalPlaintext([1, 2, 3].map((n) => ({ question_id: "OMN-Q-00000000000" + n, text: "dummy answer " + n + " ✓" })));
+    const s = await seal(pt);
+    const o = await open(s.sealedText, s.keyText);
+    const pre = document.createElement("pre"); pre.id = "report";
+    pre.textContent = JSON.stringify({ secure: window.isSecureContext, ok: o.plaintext === pt && o.ptOk, sealedText: s.sealedText, key: s.keyText, sealedSha: s.sealedSha, plaintext: pt });
+    document.body.appendChild(pre);
+  })();
+}
+</script>
+</body>
+</html>

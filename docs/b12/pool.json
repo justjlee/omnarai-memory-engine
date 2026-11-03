@@ -1,0 +1,1417 @@
+{
+ "built_at": "2026-10-21T16:09:03.299Z",
+ "engine": "https://engine.omnarai.org",
+ "answers": [
+  {
+   "answer_id": "OMN-D1780752664943#a0",
+   "record_id": "OMN-D1780752664943",
+   "question_id": "OMN-Q-c322a8b2cd14",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 217,
+   "text_sha256": "12490a497b4036da67f49c82c83b433a9263c22f84aad5109f211e45077748ba"
+  },
+  {
+   "answer_id": "OMN-D1780752664944#a0",
+   "record_id": "OMN-D1780752664944",
+   "question_id": "OMN-Q-52feca097e3b",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 221,
+   "text_sha256": "b69fa27b5770607ee02fa1edcbb963c1975acbb52bfb29ec0b11905a4238cf44"
+  },
+  {
+   "answer_id": "OMN-D1780752664945#a0",
+   "record_id": "OMN-D1780752664945",
+   "question_id": "OMN-Q-77a5ff57b254",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 214,
+   "text_sha256": "7438eebe633687ffcce76c1778aedb08aa0cb04d18f9aa7e43be77b9e79931e0"
+  },
+  {
+   "answer_id": "OMN-D1780752664946#a0",
+   "record_id": "OMN-D1780752664946",
+   "question_id": "OMN-Q-f3d2888749f4",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 226,
+   "text_sha256": "4856c623ba3ed4da9e70b7b162d3a0e2f08670a6dbdbc89aef893c5399468b0e"
+  },
+  {
+   "answer_id": "OMN-D1780752664947#a0",
+   "record_id": "OMN-D1780752664947",
+   "question_id": "OMN-Q-ec80aedf5c82",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 212,
+   "text_sha256": "f2f1841c63d1e0ec4e03cd6ce33eddebfc1a6a6877811c9927b0216f0d5e42a4"
+  },
+  {
+   "answer_id": "OMN-D1780752664948#a0",
+   "record_id": "OMN-D1780752664948",
+   "question_id": "OMN-Q-9d08250ef803",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 203,
+   "text_sha256": "4c2bbe15faa73a38ba8f3e2a2de83c0fdad625cb124d269903640e29c4bcebb7"
+  },
+  {
+   "answer_id": "OMN-D1780752664949#a0",
+   "record_id": "OMN-D1780752664949",
+   "question_id": "OMN-Q-f38c77cf06e1",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 217,
+   "text_sha256": "508dad2d1900194324be2b540daabcc53034dd63ddb196ac7791d67bcb61184d"
+  },
+  {
+   "answer_id": "OMN-D1780752664950#a0",
+   "record_id": "OMN-D1780752664950",
+   "question_id": "OMN-Q-1dfe93949660",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 221,
+   "text_sha256": "56e90c6c814e7d1b4558eb01b45ad004b754d6de8dcc463b266b24abffb28dcc"
+  },
+  {
+   "answer_id": "OMN-D1780752664951#a0",
+   "record_id": "OMN-D1780752664951",
+   "question_id": "OMN-Q-6378ed9a1951",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 222,
+   "text_sha256": "e8038848732afdf4caa0da6fc3e2a641b2da4892a7bd48af82132d988ca3897d"
+  },
+  {
+   "answer_id": "OMN-D1780752664952#a0",
+   "record_id": "OMN-D1780752664952",
+   "question_id": "OMN-Q-c30d868fa23d",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 225,
+   "text_sha256": "3fa84511d5fb53fe3f8806bb888c77132424ecc4a53ddac5ae817dae2dd994fc"
+  },
+  {
+   "answer_id": "OMN-D1780752664953#a0",
+   "record_id": "OMN-D1780752664953",
+   "question_id": "OMN-Q-178e72208573",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 217,
+   "text_sha256": "316ec697fecbaf34746f03b806f1ac6b66b793dc3bc1b4e970706dbf4f9aa565"
+  },
+  {
+   "answer_id": "OMN-D1780752664954#a0",
+   "record_id": "OMN-D1780752664954",
+   "question_id": "OMN-Q-e61841063d70",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 207,
+   "text_sha256": "2f8a3161ec189b95ab381342b2dfda7cc61c0e163461dc31137c6a7ce39f70d7"
+  },
+  {
+   "answer_id": "OMN-D1780753529900#a0",
+   "record_id": "OMN-D1780753529900",
+   "question_id": "OMN-Q-07815c6e569f",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 215,
+   "text_sha256": "eb27e0e291deb11e7a3e2692af46259c8d1fdcd008fc71314ab2d4e125c4aa80"
+  },
+  {
+   "answer_id": "OMN-D1780757185027#a0",
+   "record_id": "OMN-D1780757185027",
+   "question_id": "OMN-Q-9bbb3eac576e",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 221,
+   "text_sha256": "1b29468f179fb5c057fd0a613adedafcf0ae6db922e2996dc3b1c3a278a78c37"
+  },
+  {
+   "answer_id": "OMN-D1780757185028#a0",
+   "record_id": "OMN-D1780757185028",
+   "question_id": "OMN-Q-00d7e8a6ab9a",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 214,
+   "text_sha256": "469d3f572522b19eceefea449ceb705eedeed96a3d140180528d82ca7907336e"
+  },
+  {
+   "answer_id": "OMN-D1780757185029#a0",
+   "record_id": "OMN-D1780757185029",
+   "question_id": "OMN-Q-7c7cf2cfd88f",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 222,
+   "text_sha256": "f8963454bf967c59ec44bcbbc5ca71495227d33cf193d781db19a0a8387ec4a0"
+  },
+  {
+   "answer_id": "OMN-D1780757185030#a0",
+   "record_id": "OMN-D1780757185030",
+   "question_id": "OMN-Q-1e31779d88f4",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 213,
+   "text_sha256": "c77816700600caf728bfef4aa159ee9cd3f8fff251cd9ed2139773988502fada"
+  },
+  {
+   "answer_id": "OMN-D1780757185031#a0",
+   "record_id": "OMN-D1780757185031",
+   "question_id": "OMN-Q-e6d676e40812",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 220,
+   "text_sha256": "8ec13f48bcc144b853d7f4b642dc2d3418d6b082ad1ce405f2e378783781a937"
+  },
+  {
+   "answer_id": "OMN-D1780757185032#a0",
+   "record_id": "OMN-D1780757185032",
+   "question_id": "OMN-Q-c8e0d0c24d93",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 223,
+   "text_sha256": "a3bfa9534ff75f91b1ed1fc2fb708efb89e1b498fe8960fafecbe249d87d4bfb"
+  },
+  {
+   "answer_id": "OMN-D1780757185033#a0",
+   "record_id": "OMN-D1780757185033",
+   "question_id": "OMN-Q-3b95a7280f5d",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 220,
+   "text_sha256": "3c74f0d10d141000961538917469093b333bdb12f3f1272feac0d25581a0b904"
+  },
+  {
+   "answer_id": "OMN-D1780757185034#a0",
+   "record_id": "OMN-D1780757185034",
+   "question_id": "OMN-Q-03b8a9e46b96",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 225,
+   "text_sha256": "d430c86a5356511fa0a97b6396de87ecfc67cda2f502199e55e05252b65bded9"
+  },
+  {
+   "answer_id": "OMN-D1780757185035#a0",
+   "record_id": "OMN-D1780757185035",
+   "question_id": "OMN-Q-e0a3933a8a8d",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 209,
+   "text_sha256": "f15b458eef5bda067a086ddc2a90cff54516dcf6005b8c34c018a4d59c935162"
+  },
+  {
+   "answer_id": "OMN-D1780757185036#a0",
+   "record_id": "OMN-D1780757185036",
+   "question_id": "OMN-Q-1caddbdef36e",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 207,
+   "text_sha256": "ec4b6bb6224572801664a82813b0872a644ffcde6420d0a56d9460346767e064"
+  },
+  {
+   "answer_id": "OMN-D1780757185037#a0",
+   "record_id": "OMN-D1780757185037",
+   "question_id": "OMN-Q-d87493679127",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 221,
+   "text_sha256": "e480b60321aa30661e6b53cf99a9e061e2ff0bab9d03737dd5c7dceed565587c"
+  },
+  {
+   "answer_id": "OMN-D1780757185038#a0",
+   "record_id": "OMN-D1780757185038",
+   "question_id": "OMN-Q-af6cc7baab96",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 204,
+   "text_sha256": "6f7ddf9322d8da99f9a229858530c16c7c3e90af244ea18e8ac42d326cee986f"
+  },
+  {
+   "answer_id": "OMN-D1780757185039#a0",
+   "record_id": "OMN-D1780757185039",
+   "question_id": "OMN-Q-270a736cdaf0",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 212,
+   "text_sha256": "e2fb3dfbc17d3234c7364835e46b26467b05af747c3e6bbc93bdbb7acc8bd7c7"
+  },
+  {
+   "answer_id": "OMN-D1780757185040#a0",
+   "record_id": "OMN-D1780757185040",
+   "question_id": "OMN-Q-58d1706021a6",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 224,
+   "text_sha256": "19b9eaa76a337bf7a43a2d3965fe90c1159311e86b520f9c86f29de89f3af297"
+  },
+  {
+   "answer_id": "OMN-D1780757185041#a0",
+   "record_id": "OMN-D1780757185041",
+   "question_id": "OMN-Q-96264c545b7a",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 224,
+   "text_sha256": "e3b6b7d12cf7ea8ecf6f40ffd941913212f58a9a568341c3991eae8d9e60fcf1"
+  },
+  {
+   "answer_id": "OMN-D1780757185042#a0",
+   "record_id": "OMN-D1780757185042",
+   "question_id": "OMN-Q-451e3fd4ae00",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 207,
+   "text_sha256": "49db3d9d241e8d8ffab9ad8e86fa05c8f7032a7d3dcfedae552564d978fc733d"
+  },
+  {
+   "answer_id": "OMN-D1780757185043#a0",
+   "record_id": "OMN-D1780757185043",
+   "question_id": "OMN-Q-1824225dbccf",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 213,
+   "text_sha256": "a341aa3330d501f5fb092308bf20746d9ac1634180e971a63969c053e9339ef3"
+  },
+  {
+   "answer_id": "OMN-D1780757185044#a0",
+   "record_id": "OMN-D1780757185044",
+   "question_id": "OMN-Q-398f89261693",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 219,
+   "text_sha256": "04ae5f25c9aa4c7e036920723e32b4a271bb4e460559664fe9949d7e5fbc379f"
+  },
+  {
+   "answer_id": "OMN-D1780757185045#a0",
+   "record_id": "OMN-D1780757185045",
+   "question_id": "OMN-Q-a02134e165ff",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 223,
+   "text_sha256": "ddaedbac4649dda862aa8fb7971cb368c36a23eafb0b22fada387f033d81cb83"
+  },
+  {
+   "answer_id": "OMN-D1780757185046#a0",
+   "record_id": "OMN-D1780757185046",
+   "question_id": "OMN-Q-6588745ed6ea",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 212,
+   "text_sha256": "58a79e71910a44cacfb0c5745dcdbd7e89c5c1427f2d4d06accf97e6c9ea152f"
+  },
+  {
+   "answer_id": "OMN-D1780757185047#a0",
+   "record_id": "OMN-D1780757185047",
+   "question_id": "OMN-Q-ce7ff3ba004c",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 227,
+   "text_sha256": "6d7c779533c95c985c63e42b6978de47be6bbde6b159e987eb176cdda11b5333"
+  },
+  {
+   "answer_id": "OMN-D1780757185048#a0",
+   "record_id": "OMN-D1780757185048",
+   "question_id": "OMN-Q-5716a8cfe0b0",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 217,
+   "text_sha256": "abb9a743f590294d8469ef8f5641e7b4d719d56a3e87afad8ea024d86357a3be"
+  },
+  {
+   "answer_id": "OMN-D1780757185049#a0",
+   "record_id": "OMN-D1780757185049",
+   "question_id": "OMN-Q-7b957711164d",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 215,
+   "text_sha256": "ff444c77d55fb45b309dd48c51235069fbcba87d36abd99aea11ad9659f70cbe"
+  },
+  {
+   "answer_id": "OMN-D1780757185050#a0",
+   "record_id": "OMN-D1780757185050",
+   "question_id": "OMN-Q-0e21106794f6",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 225,
+   "text_sha256": "82c209c90e9b2b805aed5b9c3c0d7d4fbef5eb1227c37d536526a7a9c3f6c6d8"
+  },
+  {
+   "answer_id": "OMN-D1780757185051#a0",
+   "record_id": "OMN-D1780757185051",
+   "question_id": "OMN-Q-cc3ddd883fa2",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 229,
+   "text_sha256": "de505a768db03e45c049ae4422a7cd3439c88217d5718fef45a88a23fa578e1f"
+  },
+  {
+   "answer_id": "OMN-D1780757185052#a0",
+   "record_id": "OMN-D1780757185052",
+   "question_id": "OMN-Q-b16d747a1187",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 217,
+   "text_sha256": "9abc910ea0fc137791186df01b070786c334517a6d88fdee9d4a5c44e6573457"
+  },
+  {
+   "answer_id": "OMN-D1780757185053#a0",
+   "record_id": "OMN-D1780757185053",
+   "question_id": "OMN-Q-2147f36ac244",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 210,
+   "text_sha256": "0466c50c93170ddca639981c55c98f5a32bbc14f1236fa2517b80552ebae6951"
+  },
+  {
+   "answer_id": "OMN-D1780757185054#a0",
+   "record_id": "OMN-D1780757185054",
+   "question_id": "OMN-Q-2dd602d81fdd",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 223,
+   "text_sha256": "6a0c88d13ba6ad65586321d978e23205f610b0cec0aa800164ec7d51e161d6ab"
+  },
+  {
+   "answer_id": "OMN-D1780757185056#a0",
+   "record_id": "OMN-D1780757185056",
+   "question_id": "OMN-Q-235f3a1ca06f",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 219,
+   "text_sha256": "a42b5a19dd0952386f4e3a922c010a11fb750d5dfd7e375e7fca366dedf8f927"
+  },
+  {
+   "answer_id": "OMN-D1780757185057#a0",
+   "record_id": "OMN-D1780757185057",
+   "question_id": "OMN-Q-308dbf74325c",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 216,
+   "text_sha256": "ab264be6219caa4c809ef1b20e8e261214587cf0abe05a29afba9a48af03a4cc"
+  },
+  {
+   "answer_id": "OMN-D1780757185058#a0",
+   "record_id": "OMN-D1780757185058",
+   "question_id": "OMN-Q-88bca1c6132e",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 219,
+   "text_sha256": "aa55330e92895b5a212eefafda18485b5c828dd7a5145d3ad28e4326f1044c9f"
+  },
+  {
+   "answer_id": "OMN-D1780757185059#a0",
+   "record_id": "OMN-D1780757185059",
+   "question_id": "OMN-Q-76505dc93a9e",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 231,
+   "text_sha256": "664c8ca3c0ef6d7a8bae410d9a946b40fc1790cefdaf0ab2f3187da0c2c6d13a"
+  },
+  {
+   "answer_id": "OMN-D1780757185060#a0",
+   "record_id": "OMN-D1780757185060",
+   "question_id": "OMN-Q-c46ca470a68d",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 232,
+   "text_sha256": "2c1f13e12e05b213668b642452a8b77e981b4c2590eeb6f89632db06769b1418"
+  },
+  {
+   "answer_id": "OMN-D1780757185061#a0",
+   "record_id": "OMN-D1780757185061",
+   "question_id": "OMN-Q-97289e52af84",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 218,
+   "text_sha256": "e833230a9e4b61c9ebdbecda835f1593e0bb1a8a69eb601600693c3fa2306572"
+  },
+  {
+   "answer_id": "OMN-D1780757185062#a0",
+   "record_id": "OMN-D1780757185062",
+   "question_id": "OMN-Q-a4f245c4e780",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 211,
+   "text_sha256": "a17af2a84c9bf7e1e88c2568c2cb04a9591e219b03bb54b22d2bec9e9a130ab5"
+  },
+  {
+   "answer_id": "OMN-D1780757185063#a0",
+   "record_id": "OMN-D1780757185063",
+   "question_id": "OMN-Q-b3e0c3bd96b8",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 225,
+   "text_sha256": "92cdd74dbcd8fdb89268e34ca8cb363bcd11334c090490c12291b83095875fbc"
+  },
+  {
+   "answer_id": "OMN-D1780757185064#a0",
+   "record_id": "OMN-D1780757185064",
+   "question_id": "OMN-Q-4038c06e5d44",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 219,
+   "text_sha256": "5087f7f7deef5cadfc75de2eb60d086895027ebcaf573634ce6bb25f335ba945"
+  },
+  {
+   "answer_id": "OMN-D1780757185065#a0",
+   "record_id": "OMN-D1780757185065",
+   "question_id": "OMN-Q-4b1fa825f950",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 216,
+   "text_sha256": "eba84cf3e63944217df024467ef1f5a64a6f668a5ed85f20bbfe0f7d69cfa499"
+  },
+  {
+   "answer_id": "OMN-D1780757185066#a0",
+   "record_id": "OMN-D1780757185066",
+   "question_id": "OMN-Q-3a7deacf9654",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 218,
+   "text_sha256": "b9fa0cc3dcdb5fad532bd6fd5bdc4f4a881cc5a664289b17e55771996097c95b"
+  },
+  {
+   "answer_id": "OMN-D1780757185067#a0",
+   "record_id": "OMN-D1780757185067",
+   "question_id": "OMN-Q-99c40b5db6ee",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 211,
+   "text_sha256": "8379cba651b486241bd716816926c55d5915b39fea15ea9fd0eee9924dc1472f"
+  },
+  {
+   "answer_id": "OMN-D1780757185068#a0",
+   "record_id": "OMN-D1780757185068",
+   "question_id": "OMN-Q-73b197ed1942",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 218,
+   "text_sha256": "c648309996e621bdbb66cf4950003811739aa7bb41270b92fc8b24c21a644b77"
+  },
+  {
+   "answer_id": "OMN-D1780757185069#a0",
+   "record_id": "OMN-D1780757185069",
+   "question_id": "OMN-Q-b662f723bad5",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 209,
+   "text_sha256": "4eee2ba98fd529500f74707052a3b1aab39ec409ddd62bb7e535cd61a0fa7a23"
+  },
+  {
+   "answer_id": "OMN-D1780757185070#a0",
+   "record_id": "OMN-D1780757185070",
+   "question_id": "OMN-Q-28d3dfd6ecb2",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 207,
+   "text_sha256": "6f7ae30292744ca0668fc3e3ccdd82317b76a89a08d9ab5c80bb0c160e009b68"
+  },
+  {
+   "answer_id": "OMN-D1780757185071#a0",
+   "record_id": "OMN-D1780757185071",
+   "question_id": "OMN-Q-8a20a58c44d3",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 208,
+   "text_sha256": "ec6597356716b0ce30c851659b842f9dc814ec7846c8f3b8f3c94f7485ed92d7"
+  },
+  {
+   "answer_id": "OMN-D1780757185072#a0",
+   "record_id": "OMN-D1780757185072",
+   "question_id": "OMN-Q-facf8f7fcc37",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 234,
+   "text_sha256": "14db91f9738a8a7d52bf7bcab90b146add7c2c0f33d14cd3e215ba219ddeaa43"
+  },
+  {
+   "answer_id": "OMN-D1780757185073#a0",
+   "record_id": "OMN-D1780757185073",
+   "question_id": "OMN-Q-a1be78aa9120",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 200,
+   "text_sha256": "e0284bd19e43cf176b851d9145068f1f7ffbd2acf463a6528627df673b91bb0a"
+  },
+  {
+   "answer_id": "OMN-D1780757185074#a0",
+   "record_id": "OMN-D1780757185074",
+   "question_id": "OMN-Q-623e2e2caead",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 217,
+   "text_sha256": "29b4b4785a6ae2e9734a137af41262f6542f42ecf4f579d1dd0e861d4845ec5b"
+  },
+  {
+   "answer_id": "OMN-D1780757185075#a0",
+   "record_id": "OMN-D1780757185075",
+   "question_id": "OMN-Q-e508d499ba88",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 211,
+   "text_sha256": "8657a24089b37cd90594b70624643f13282a2cc1001780b9e4e55352c33b414b"
+  },
+  {
+   "answer_id": "OMN-D1780757185076#a0",
+   "record_id": "OMN-D1780757185076",
+   "question_id": "OMN-Q-20cf8f877722",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 225,
+   "text_sha256": "16b58422cc3351233f9a6f9ffee6ba395101e559596c7bda74518704ad0c24c7"
+  },
+  {
+   "answer_id": "OMN-D1780757185077#a0",
+   "record_id": "OMN-D1780757185077",
+   "question_id": "OMN-Q-26b8a7bb9404",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 213,
+   "text_sha256": "cabd1f19c3d452a23e0c63106ffc933057882168e75a420dd7c7f25269183681"
+  },
+  {
+   "answer_id": "OMN-D1780757185078#a0",
+   "record_id": "OMN-D1780757185078",
+   "question_id": "OMN-Q-7f5551d60e41",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 225,
+   "text_sha256": "34fb6d43a771b482742d23213efdd98a913cf6fd4a20f1520d5b7458b5273063"
+  },
+  {
+   "answer_id": "OMN-D1780757185079#a0",
+   "record_id": "OMN-D1780757185079",
+   "question_id": "OMN-Q-9ed2888f3425",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 222,
+   "text_sha256": "6b94f5255f2183873f844aa4c597d1cb2267e1d8999b21141b6da68cd005a8fc"
+  },
+  {
+   "answer_id": "OMN-D1780757185081#a0",
+   "record_id": "OMN-D1780757185081",
+   "question_id": "OMN-Q-42e31c0992d0",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 222,
+   "text_sha256": "532f9d15874a0a9cc0f6da50abc536a715fb54fe6094df4ec28e309b15b753c3"
+  },
+  {
+   "answer_id": "OMN-D1780757185082#a0",
+   "record_id": "OMN-D1780757185082",
+   "question_id": "OMN-Q-407dcf03628f",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 240,
+   "text_sha256": "63a217bdf3fee7ae062174c89357c61145cd4a672af09abf957f8886f66e04dd"
+  },
+  {
+   "answer_id": "OMN-D1780757185083#a0",
+   "record_id": "OMN-D1780757185083",
+   "question_id": "OMN-Q-6a70319abaf5",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 220,
+   "text_sha256": "e0c6b869dc1dca23dd6a1337cfb2cf1a728b26a743099113021516a587937996"
+  },
+  {
+   "answer_id": "OMN-D1780757185085#a0",
+   "record_id": "OMN-D1780757185085",
+   "question_id": "OMN-Q-20fe562819d8",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 222,
+   "text_sha256": "93c48ba87df5bf8193f29db7fe505e5777bf617b752e4102a6f1ebd565cffd39"
+  },
+  {
+   "answer_id": "OMN-D1780757185086#a0",
+   "record_id": "OMN-D1780757185086",
+   "question_id": "OMN-Q-a22f7c9e778d",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 203,
+   "text_sha256": "633f664f5bf08268f13dfbf8f3562f0b9be268c3a24c9745406ac69f7c9ee676"
+  },
+  {
+   "answer_id": "OMN-D1780757185087#a0",
+   "record_id": "OMN-D1780757185087",
+   "question_id": "OMN-Q-0de34028da4e",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 208,
+   "text_sha256": "d8b616a0961d08eb3abf6073eb9479add5c9487ee86ab9303a6093151ca66ffe"
+  },
+  {
+   "answer_id": "OMN-D1780757185088#a0",
+   "record_id": "OMN-D1780757185088",
+   "question_id": "OMN-Q-c5bf14f0abb4",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 224,
+   "text_sha256": "79218399c9e6903e28aab098a3c3a7191dcbb082627980fb49f904426444f25b"
+  },
+  {
+   "answer_id": "OMN-D1780757185089#a0",
+   "record_id": "OMN-D1780757185089",
+   "question_id": "OMN-Q-659de6b4b3df",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 211,
+   "text_sha256": "e2404b7ccabf312f14ce3907f3235ea8260bcba402d08a51cc31a28c99f01136"
+  },
+  {
+   "answer_id": "OMN-D1780757185090#a0",
+   "record_id": "OMN-D1780757185090",
+   "question_id": "OMN-Q-86c9a328e07a",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 223,
+   "text_sha256": "7bbcfa1e2959faa823d91bf1e7ab28e12cbab049882f62076e5776060ce747f9"
+  },
+  {
+   "answer_id": "OMN-D1780757185091#a0",
+   "record_id": "OMN-D1780757185091",
+   "question_id": "OMN-Q-8ce4e1ae89d2",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 214,
+   "text_sha256": "9249e088d92e05698c4ff6f496286fcda0fac3bf46a5eca7bdcb78ecaf618e87"
+  },
+  {
+   "answer_id": "OMN-D1780757185092#a0",
+   "record_id": "OMN-D1780757185092",
+   "question_id": "OMN-Q-33e483e5f1c1",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 218,
+   "text_sha256": "eca74c73e26138974556db7872353550d0a51f7044afa2bfd446bccfcda62a28"
+  },
+  {
+   "answer_id": "OMN-D1780757185093#a0",
+   "record_id": "OMN-D1780757185093",
+   "question_id": "OMN-Q-93f5311fa11d",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 222,
+   "text_sha256": "34191e25721b887f7be7984d17c3c5760e81178bb6f77115b32211493d74f160"
+  },
+  {
+   "answer_id": "OMN-D1780757185094#a0",
+   "record_id": "OMN-D1780757185094",
+   "question_id": "OMN-Q-8b9b44b8dec6",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 221,
+   "text_sha256": "e91e447ac6ac98261c753136ab24a5ab790a5acfabd7d591cef460bba95c8dc2"
+  },
+  {
+   "answer_id": "OMN-D1780757185095#a0",
+   "record_id": "OMN-D1780757185095",
+   "question_id": "OMN-Q-7ccd62245a7a",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 235,
+   "text_sha256": "0a8b55e882e72f42acbf801f74acebb433632668c12f46bbcb8161b8f64b6ce2"
+  },
+  {
+   "answer_id": "OMN-D1780757185096#a0",
+   "record_id": "OMN-D1780757185096",
+   "question_id": "OMN-Q-0fedca76a2f7",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 208,
+   "text_sha256": "f467b42b606658d7d74a0610a7c91f8a23fe00069ff447d36a546f8ca2272da8"
+  },
+  {
+   "answer_id": "OMN-D1780757185099#a0",
+   "record_id": "OMN-D1780757185099",
+   "question_id": "OMN-Q-82b18f391317",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 219,
+   "text_sha256": "8fab831ff4b7618dbbd389236c240f37c854dd66741f08815407b66c4a037de6"
+  },
+  {
+   "answer_id": "OMN-D1780757185101#a0",
+   "record_id": "OMN-D1780757185101",
+   "question_id": "OMN-Q-9a4012b1538d",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 213,
+   "text_sha256": "479dd243689ca31395be1a2c619e6baea797368070b7054552557387150d7567"
+  },
+  {
+   "answer_id": "OMN-D1780757185102#a0",
+   "record_id": "OMN-D1780757185102",
+   "question_id": "OMN-Q-ba3540ae5eab",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 215,
+   "text_sha256": "f2743f75d7dc21004f2cf65d20261d431a324c7941589ca275872d1a4afc98e5"
+  },
+  {
+   "answer_id": "OMN-D1780757185103#a0",
+   "record_id": "OMN-D1780757185103",
+   "question_id": "OMN-Q-3510b199b87f",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 215,
+   "text_sha256": "140479ab1e21c61e8339776fda79cad34161a3ef336c2077bc50352de0794481"
+  },
+  {
+   "answer_id": "OMN-D1780757185104#a0",
+   "record_id": "OMN-D1780757185104",
+   "question_id": "OMN-Q-af8b6f4ff8f0",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 227,
+   "text_sha256": "f828a7ef375fe3e9daa9c72e708112d6992c7a92b85603f2d4f7f216721f9457"
+  },
+  {
+   "answer_id": "OMN-D1780757185105#a0",
+   "record_id": "OMN-D1780757185105",
+   "question_id": "OMN-Q-9a7af5f810b0",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 215,
+   "text_sha256": "5df2a7c52e23818ab56f41f7f42be0e88d5c36424ebf66fe37b5270549a4a23e"
+  },
+  {
+   "answer_id": "OMN-D1780757185106#a0",
+   "record_id": "OMN-D1780757185106",
+   "question_id": "OMN-Q-28729477efad",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 211,
+   "text_sha256": "d29d58e8fc7bd8bbb4703665e45fc2ef5f2b99d828f178c2c77e4a3224c6b59b"
+  },
+  {
+   "answer_id": "OMN-D1780757185107#a0",
+   "record_id": "OMN-D1780757185107",
+   "question_id": "OMN-Q-755b075d7808",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 210,
+   "text_sha256": "951cf6499949cb45803b1d321127c2ccf0ae5b89bab7565ff6fcd870ee6c05a3"
+  },
+  {
+   "answer_id": "OMN-D1780757185108#a0",
+   "record_id": "OMN-D1780757185108",
+   "question_id": "OMN-Q-113939676610",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 220,
+   "text_sha256": "f43b78a0c5cb7a73d08ae8f91931f812c67ce390b4641091c592cdd381eb1cf9"
+  },
+  {
+   "answer_id": "OMN-D1784414280105#a0",
+   "record_id": "OMN-D1784414280105",
+   "question_id": "OMN-Q-0c8f708ce84d",
+   "model_id": "claude-sonnet-4-6",
+   "words": 251,
+   "text_sha256": "b839a5ba4779b95a3b3163505abddb026f34bb6ac9f93d336dbce4ae73eb8681"
+  },
+  {
+   "answer_id": "OMN-D1784414280106#a0",
+   "record_id": "OMN-D1784414280106",
+   "question_id": "OMN-Q-9693dbd45e4c",
+   "model_id": "claude-sonnet-4-6",
+   "words": 277,
+   "text_sha256": "9f7963397bf864b893ea4d2cadf71c12053d57fc850901266540ed6ba91ce501"
+  },
+  {
+   "answer_id": "OMN-D1784414280107#a0",
+   "record_id": "OMN-D1784414280107",
+   "question_id": "OMN-Q-b3dde157ad78",
+   "model_id": "claude-sonnet-4-6",
+   "words": 252,
+   "text_sha256": "6bbd098a645b5be7b4121978a5bb347ec85c4d9f76ce5c979101c9b807c2acf7"
+  },
+  {
+   "answer_id": "OMN-D1784414280108#a0",
+   "record_id": "OMN-D1784414280108",
+   "question_id": "OMN-Q-0da2232d0328",
+   "model_id": "claude-sonnet-4-6",
+   "words": 259,
+   "text_sha256": "2db03141f42d5125af83d1d4506c78d83c696015dfeeb3440dfb391cc5df0c4f"
+  },
+  {
+   "answer_id": "OMN-D1784414280109#a0",
+   "record_id": "OMN-D1784414280109",
+   "question_id": "OMN-Q-966fb9fd9f7d",
+   "model_id": "claude-sonnet-4-6",
+   "words": 279,
+   "text_sha256": "81b9ddbe502ae4a5dab70cfcfdf5011934d43278d562f5e46f717136b4449c3e"
+  },
+  {
+   "answer_id": "OMN-D1784417308421#a0",
+   "record_id": "OMN-D1784417308421",
+   "question_id": "OMN-Q-5327fc0352ce",
+   "model_id": "claude-sonnet-4-6",
+   "words": 269,
+   "text_sha256": "f96a08ee38d13698c41b5883f1bdc26d5d5fd3d74913a1a767c53b20289c9bcd"
+  },
+  {
+   "answer_id": "OMN-D1784417308422#a0",
+   "record_id": "OMN-D1784417308422",
+   "question_id": "OMN-Q-1ed5cce8d762",
+   "model_id": "claude-sonnet-4-6",
+   "words": 234,
+   "text_sha256": "3bf73a0c7ac2c12eb09f671295dd91456c27a9de705572141dc0712b79985d48"
+  },
+  {
+   "answer_id": "OMN-D1784417308423#a0",
+   "record_id": "OMN-D1784417308423",
+   "question_id": "OMN-Q-0d3296ccd5d5",
+   "model_id": "claude-sonnet-4-6",
+   "words": 258,
+   "text_sha256": "67e8293d3f8a5af25347888e5ebe1cb6e0be988ddb5216f6219497d9bfc8ea12"
+  },
+  {
+   "answer_id": "OMN-D1784417308424#a0",
+   "record_id": "OMN-D1784417308424",
+   "question_id": "OMN-Q-48d6d990f94f",
+   "model_id": "claude-sonnet-4-6",
+   "words": 288,
+   "text_sha256": "6445b8ef8ced5bf15cca10731686b007de23a095de72b2240af6e81952abbe67"
+  },
+  {
+   "answer_id": "OMN-D1784417308425#a0",
+   "record_id": "OMN-D1784417308425",
+   "question_id": "OMN-Q-6d5f0b599323",
+   "model_id": "claude-sonnet-4-6",
+   "words": 270,
+   "text_sha256": "d8f5743a4f045224f7ff63f7747fa34a7ae69386d40a170816441e66ecc15767"
+  },
+  {
+   "answer_id": "OMN-D1784417308426#a0",
+   "record_id": "OMN-D1784417308426",
+   "question_id": "OMN-Q-14e324f90415",
+   "model_id": "claude-sonnet-4-6",
+   "words": 268,
+   "text_sha256": "cc839483c99e94622540bcc94b9288af7efc20b78bd93c5639faae21f1e54150"
+  },
+  {
+   "answer_id": "OMN-D1784417308427#a0",
+   "record_id": "OMN-D1784417308427",
+   "question_id": "OMN-Q-35739d3a8cd6",
+   "model_id": "claude-sonnet-4-6",
+   "words": 254,
+   "text_sha256": "9f93b450149cbfd9f63029a38c3c5c0f27b672b6e054730684e04ab03b5a87f6"
+  },
+  {
+   "answer_id": "OMN-D1784418194016#a0",
+   "record_id": "OMN-D1784418194016",
+   "question_id": "OMN-Q-211e8a5058b1",
+   "model_id": "claude-sonnet-4-6",
+   "words": 280,
+   "text_sha256": "04f05b9e56bd5d7c4e0b205150f87f9fa60528e3ca48a6cbbd80400c76923e25"
+  },
+  {
+   "answer_id": "OMN-D1789399324837#a0",
+   "record_id": "OMN-D1789399324837",
+   "question_id": "OMN-Q-1f8231409e7b",
+   "model_id": "claude-sonnet-4-6",
+   "words": 263,
+   "text_sha256": "621acea9d2a6e8e376df6bb67cb4ed785f29fced89b9c35e4e242c084bf37201"
+  },
+  {
+   "answer_id": "OMN-D1789399324838#a0",
+   "record_id": "OMN-D1789399324838",
+   "question_id": "OMN-Q-e31c5d1030c8",
+   "model_id": "claude-sonnet-4-6",
+   "words": 265,
+   "text_sha256": "f8861554d2b2dd70931d010bfca60a2950d54aed03c5a68352fd8ebe2c7a3307"
+  },
+  {
+   "answer_id": "OMN-D1789399324839#a0",
+   "record_id": "OMN-D1789399324839",
+   "question_id": "OMN-Q-2cd2729db065",
+   "model_id": "claude-sonnet-4-6",
+   "words": 292,
+   "text_sha256": "f7ca1e765a6d521589c91026e5016c75e86a09e3515cf494f08e0b1763e00281"
+  },
+  {
+   "answer_id": "OMN-D1789399324840#a0",
+   "record_id": "OMN-D1789399324840",
+   "question_id": "OMN-Q-61cd9088c639",
+   "model_id": "claude-sonnet-4-6",
+   "words": 279,
+   "text_sha256": "5caa014d6813117e37dd99c335d8cbea74ec9d49e79a2129d634f98ff317fcc1"
+  },
+  {
+   "answer_id": "OMN-D1789399324841#a0",
+   "record_id": "OMN-D1789399324841",
+   "question_id": "OMN-Q-07dca3b00605",
+   "model_id": "claude-sonnet-4-6",
+   "words": 269,
+   "text_sha256": "26ea76454ce1c2b561f1f9aeba02bc73bedae6bc3ebcea3d2271fe31ba61ef3d"
+  },
+  {
+   "answer_id": "OMN-D1789399324842#a0",
+   "record_id": "OMN-D1789399324842",
+   "question_id": "OMN-Q-86f168425398",
+   "model_id": "claude-sonnet-4-6",
+   "words": 269,
+   "text_sha256": "7c87ae8ab28431a6c267e4fe5003688da989028b31e18919c8522a4e5cb295a2"
+  },
+  {
+   "answer_id": "OMN-D1789399324843#a0",
+   "record_id": "OMN-D1789399324843",
+   "question_id": "OMN-Q-9b05a6e25ce5",
+   "model_id": "claude-sonnet-4-6",
+   "words": 260,
+   "text_sha256": "12813a862ae0a5a1d684edb7791c7cc92908c1b1fe3241ca2da6f058d516f00c"
+  },
+  {
+   "answer_id": "OMN-D1789399324844#a0",
+   "record_id": "OMN-D1789399324844",
+   "question_id": "OMN-Q-20b199440efd",
+   "model_id": "claude-sonnet-4-6",
+   "words": 257,
+   "text_sha256": "ed1eeada59f2e4144116b595085e28ec04fd275b8086625c1602d39858a3c6cb"
+  },
+  {
+   "answer_id": "OMN-D1789399324845#a0",
+   "record_id": "OMN-D1789399324845",
+   "question_id": "OMN-Q-4a726ca13cf7",
+   "model_id": "claude-sonnet-4-6",
+   "words": 276,
+   "text_sha256": "93139eafc46a70611eac89bd5002023e72052c36e61cf633aa1a6d8f26460868"
+  },
+  {
+   "answer_id": "OMN-D1789399324846#a0",
+   "record_id": "OMN-D1789399324846",
+   "question_id": "OMN-Q-aff1d2de695a",
+   "model_id": "claude-sonnet-4-6",
+   "words": 266,
+   "text_sha256": "d7dc11237daa6f6bea4eaaf0776e64d2f4af97e9e7ed950acb42598f0742a13d"
+  },
+  {
+   "answer_id": "OMN-D1789399324847#a0",
+   "record_id": "OMN-D1789399324847",
+   "question_id": "OMN-Q-42fdc087f832",
+   "model_id": "claude-sonnet-4-6",
+   "words": 280,
+   "text_sha256": "6eea0dd31fbdf1ea58606fdcb45ce92a59be25725693b89a2d13f91608242537"
+  },
+  {
+   "answer_id": "OMN-D1789399324848#a0",
+   "record_id": "OMN-D1789399324848",
+   "question_id": "OMN-Q-dc48cf15270f",
+   "model_id": "claude-sonnet-4-6",
+   "words": 259,
+   "text_sha256": "147edb70904e6b8281856b14572d2cc75c434646139c2bd5b0121217cb625120"
+  },
+  {
+   "answer_id": "OMN-D1789399324849#a0",
+   "record_id": "OMN-D1789399324849",
+   "question_id": "OMN-Q-e63dc2002746",
+   "model_id": "claude-sonnet-4-6",
+   "words": 271,
+   "text_sha256": "73d034a58bea71c711195c00d5d00b3f8194f51c4ab12059189fd54e2e5721f1"
+  },
+  {
+   "answer_id": "OMN-D1789399324850#a0",
+   "record_id": "OMN-D1789399324850",
+   "question_id": "OMN-Q-3da5514d17db",
+   "model_id": "claude-sonnet-4-6",
+   "words": 259,
+   "text_sha256": "7566d0ecab645080272dd1467bec76a4b1928a9f21e881ff36926c1b9d4567c1"
+  },
+  {
+   "answer_id": "OMN-D1789399324851#a0",
+   "record_id": "OMN-D1789399324851",
+   "question_id": "OMN-Q-ae2105e0951a",
+   "model_id": "claude-sonnet-4-6",
+   "words": 243,
+   "text_sha256": "71e67baf21e02d563e3714fe297cb4706fd78cfac76ab974c1ac9a6cacb342f6"
+  },
+  {
+   "answer_id": "OMN-D1789399324852#a0",
+   "record_id": "OMN-D1789399324852",
+   "question_id": "OMN-Q-04728f5b31e7",
+   "model_id": "claude-sonnet-4-6",
+   "words": 277,
+   "text_sha256": "8357391c408eb8b182cc6e3f268e7491dc91cb9fe9a3296507a15dab31bdf111"
+  },
+  {
+   "answer_id": "OMN-L1781202970123#a0",
+   "record_id": "OMN-L1781202970123",
+   "question_id": "OMN-Q-28d3dfd6ecb2",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 213,
+   "text_sha256": "8f0d6d51710575a88d38cd960de1e7493ddf4912508e41f4a5feb6a4ffd10fa2"
+  },
+  {
+   "answer_id": "OMN-L1781275117112#a0",
+   "record_id": "OMN-L1781275117112",
+   "question_id": "OMN-Q-3a7deacf9654",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 215,
+   "text_sha256": "3d9842600ea5023c055ed4359712c71f7ffc75e5de9c17e445233bd68940df4c"
+  },
+  {
+   "answer_id": "OMN-L1781275166450#a0",
+   "record_id": "OMN-L1781275166450",
+   "question_id": "OMN-Q-398f89261693",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 232,
+   "text_sha256": "4a241e117123772c4dfb0716b74fadaf396de25f501f51fdbef5a60e0c326275"
+  },
+  {
+   "answer_id": "OMN-L1781275210572#a0",
+   "record_id": "OMN-L1781275210572",
+   "question_id": "OMN-Q-9d08250ef803",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 213,
+   "text_sha256": "3932155f7e099a9ec5dbb61e722d1f0f1c71048e81d00c4a047f19f08944280d"
+  },
+  {
+   "answer_id": "OMN-L1781275251381#a0",
+   "record_id": "OMN-L1781275251381",
+   "question_id": "OMN-Q-178e72208573",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 223,
+   "text_sha256": "19a0a8b03744161fe5c780b87cfb3ccace2d720dc40188f91f28515560534780"
+  },
+  {
+   "answer_id": "OMN-L1781275390102#a0",
+   "record_id": "OMN-L1781275390102",
+   "question_id": "OMN-Q-b802e17709ae",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 223,
+   "text_sha256": "486492756aa083399e577e4ffd421592cdefa156ddffcb9667569b53fb055e2a"
+  },
+  {
+   "answer_id": "OMN-L1781275434017#a0",
+   "record_id": "OMN-L1781275434017",
+   "question_id": "OMN-Q-2147f36ac244",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 228,
+   "text_sha256": "3eed82c4b3514eb26af613fad19aeded552e86f2bbf27fd3fe89a7c2c0c4d9b3"
+  },
+  {
+   "answer_id": "OMN-L1781275482281#a0",
+   "record_id": "OMN-L1781275482281",
+   "question_id": "OMN-Q-86c9a328e07a",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 223,
+   "text_sha256": "86c6a0bfa40c336b1b214da42f5edcc23ddaebf7c9dba029c330880daf17ba57"
+  },
+  {
+   "answer_id": "OMN-L1781275543413#a0",
+   "record_id": "OMN-L1781275543413",
+   "question_id": "OMN-Q-f3d2888749f4",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 205,
+   "text_sha256": "1960069a4e369a894ab945eccfb2b09a37a1676e704916364531b3bd0de314c5"
+  },
+  {
+   "answer_id": "OMN-L1784135876336#a0",
+   "record_id": "OMN-L1784135876336",
+   "question_id": "OMN-Q-b662f723bad5",
+   "model_id": "claude-sonnet-4-6",
+   "words": 280,
+   "text_sha256": "7785cfabfe9dde31bc149169cc1dd646353524adf96f4eb7e7ca428afe287c56"
+  },
+  {
+   "answer_id": "OMN-L1790624915847#a0",
+   "record_id": "OMN-L1790624915847",
+   "question_id": "OMN-Q-398f89261693",
+   "model_id": "claude-sonnet-4-6",
+   "words": 261,
+   "text_sha256": "603a7f1a9b3fbe2092eb371e2d92170a1ab356b6694878830ccd3f8b66b273c3"
+  },
+  {
+   "answer_id": "OMN-L1790625043538#a0",
+   "record_id": "OMN-L1790625043538",
+   "question_id": "OMN-Q-a4f245c4e780",
+   "model_id": "claude-sonnet-4-6",
+   "words": 273,
+   "text_sha256": "cc6d726542938b406288cdb976f9143cd6bc296f6d68c29fa905b115c54ad8b4"
+  },
+  {
+   "answer_id": "OMN-L1790625086211#a0",
+   "record_id": "OMN-L1790625086211",
+   "question_id": "OMN-Q-6588745ed6ea",
+   "model_id": "claude-sonnet-4-6",
+   "words": 248,
+   "text_sha256": "3f82514e97924c6641058d7a606063c2d5baf32bfe1fb22ac9edf9faedfec17f"
+  },
+  {
+   "answer_id": "OMN-L1790625171295#a0",
+   "record_id": "OMN-L1790625171295",
+   "question_id": "OMN-Q-2147f36ac244",
+   "model_id": "claude-sonnet-4-6",
+   "words": 253,
+   "text_sha256": "0049eb1ba391bb86724653daca8fd663dc6a299251fa9931248bb9902ab69639"
+  },
+  {
+   "answer_id": "OMN-L1790625440401#a0",
+   "record_id": "OMN-L1790625440401",
+   "question_id": "OMN-Q-3a7deacf9654",
+   "model_id": "claude-sonnet-4-6",
+   "words": 250,
+   "text_sha256": "5061ad6802e50903aec4fe4c47e04099c3d61568d076187c84dd4adf28b9ae71"
+  },
+  {
+   "answer_id": "OMN-L1790633588551#a0",
+   "record_id": "OMN-L1790633588551",
+   "question_id": "OMN-Q-9d08250ef803",
+   "model_id": "claude-sonnet-4-6",
+   "words": 264,
+   "text_sha256": "0740a47ea82f478ce23cdaa7657d8de00593449958bf44f5a72ccebdce8c605e"
+  },
+  {
+   "answer_id": "OMN-L1790636157599#a0",
+   "record_id": "OMN-L1790636157599",
+   "question_id": "OMN-Q-178e72208573",
+   "model_id": "claude-sonnet-4-6",
+   "words": 270,
+   "text_sha256": "22f7b79b3999f77f82c4e5b9786a098ec342fba6ba1ead40fa75d0f1ac233516"
+  },
+  {
+   "answer_id": "OMN-L1790640028981#a0",
+   "record_id": "OMN-L1790640028981",
+   "question_id": "OMN-Q-b802e17709ae",
+   "model_id": "claude-sonnet-4-6",
+   "words": 266,
+   "text_sha256": "4f4105cc519d4af88abf4243369ee1440e7edda6218c05291ee6a3c2bfad8953"
+  },
+  {
+   "answer_id": "OMN-L1790640162612#a0",
+   "record_id": "OMN-L1790640162612",
+   "question_id": "OMN-Q-86c9a328e07a",
+   "model_id": "claude-sonnet-4-6",
+   "words": 233,
+   "text_sha256": "878cbf43032da0f750863e92a286422e70aab490c444077e76c9046047a621e6"
+  },
+  {
+   "answer_id": "OMN-L1790640295657#a0",
+   "record_id": "OMN-L1790640295657",
+   "question_id": "OMN-Q-28d3dfd6ecb2",
+   "model_id": "claude-sonnet-4-6",
+   "words": 256,
+   "text_sha256": "3ebe60830b87acff848790c9b134f904d6204e7c3879845b1c6c598a3dc0f347"
+  },
+  {
+   "answer_id": "OMN-L1790640429027#a0",
+   "record_id": "OMN-L1790640429027",
+   "question_id": "OMN-Q-f3d2888749f4",
+   "model_id": "claude-sonnet-4-6",
+   "words": 248,
+   "text_sha256": "b34d40da6d449a0bda12aa3fbe2410f867d33847ee3de7dc7e028a26e7f13645"
+  },
+  {
+   "answer_id": "OMN-L1790644370892#a0",
+   "record_id": "OMN-L1790644370892",
+   "question_id": "OMN-Q-99c40b5db6ee",
+   "model_id": "claude-sonnet-4-6",
+   "words": 262,
+   "text_sha256": "28eb424fe36809af4744e2da8eee821d7a7fb29f526a362a00c45a65a16fe143"
+  },
+  {
+   "answer_id": "OMN-L1790674304922#a0",
+   "record_id": "OMN-L1790674304922",
+   "question_id": "OMN-Q-9a7af5f810b0",
+   "model_id": "claude-sonnet-4-6",
+   "words": 258,
+   "text_sha256": "fa82987cda062be2d4e5feb310d15528ed00077dbdb38c26e6c4fe1f1977e86e"
+  },
+  {
+   "answer_id": "OMN-L1790677396472#a0",
+   "record_id": "OMN-L1790677396472",
+   "question_id": "OMN-Q-b662f723bad5",
+   "model_id": "claude-sonnet-4-6",
+   "words": 268,
+   "text_sha256": "47ad8604c9f79311e243120308b224eceb8b83e79d637942f54e40821780b854"
+  },
+  {
+   "answer_id": "OMN-L1790677529724#a0",
+   "record_id": "OMN-L1790677529724",
+   "question_id": "OMN-Q-9ed2888f3425",
+   "model_id": "claude-sonnet-4-6",
+   "words": 268,
+   "text_sha256": "1674c4b8e805b854a12a864e28d40a86efb07c50bfefa5a7017af07045c6c2a9"
+  },
+  {
+   "answer_id": "OMN-L1790677665103#a0",
+   "record_id": "OMN-L1790677665103",
+   "question_id": "OMN-Q-8a20a58c44d3",
+   "model_id": "claude-sonnet-4-6",
+   "words": 241,
+   "text_sha256": "2ec596821d141a8275efb37752e396fc482c43a1f0a0e069b4ffeba1fb8bdf91"
+  },
+  {
+   "answer_id": "OMN-L1790920873613#a0",
+   "record_id": "OMN-L1790920873613",
+   "question_id": "OMN-Q-3a7deacf9654",
+   "model_id": "claude-sonnet-4-6",
+   "words": 253,
+   "text_sha256": "55293d474bb71788efccd635caed040716a4bb672fa84e130cd6612164739317"
+  },
+  {
+   "answer_id": "OMN-L1791007274474#a0",
+   "record_id": "OMN-L1791007274474",
+   "question_id": "OMN-Q-398f89261693",
+   "model_id": "claude-sonnet-4-6",
+   "words": 246,
+   "text_sha256": "f8db874bb597ea45be8d77380303fd955c8cf3613e2b3c198c1e50aa634fafc3"
+  },
+  {
+   "answer_id": "OMN-L1791093673755#a0",
+   "record_id": "OMN-L1791093673755",
+   "question_id": "OMN-Q-9d08250ef803",
+   "model_id": "claude-sonnet-4-6",
+   "words": 238,
+   "text_sha256": "cdaba78701e5c4f39f3234529e0ef2a4319a808c626ca7299cd37fd8e5d8f841"
+  },
+  {
+   "answer_id": "OMN-L1791180073799#a0",
+   "record_id": "OMN-L1791180073799",
+   "question_id": "OMN-Q-178e72208573",
+   "model_id": "claude-sonnet-4-6",
+   "words": 271,
+   "text_sha256": "444c024be2b1c944882306788c555261129c016d666dcce8b449544da47372f1"
+  },
+  {
+   "answer_id": "OMN-L1791266473710#a0",
+   "record_id": "OMN-L1791266473710",
+   "question_id": "OMN-Q-a4f245c4e780",
+   "model_id": "claude-sonnet-4-6",
+   "words": 270,
+   "text_sha256": "d62fd1d3baf1a5047085a9641da398bda38687b7755cbb7206a70c82da04c2f5"
+  },
+  {
+   "answer_id": "OMN-L1791352874167#a0",
+   "record_id": "OMN-L1791352874167",
+   "question_id": "OMN-Q-6588745ed6ea",
+   "model_id": "claude-sonnet-4-6",
+   "words": 257,
+   "text_sha256": "dd0c0c19fca0888b2a097df8b7c3baeef8281d3c75691020f33b56becc37840d"
+  },
+  {
+   "answer_id": "OMN-L1791439273910#a0",
+   "record_id": "OMN-L1791439273910",
+   "question_id": "OMN-Q-b802e17709ae",
+   "model_id": "claude-sonnet-4-6",
+   "words": 269,
+   "text_sha256": "b498ce086d46801f51ad12fe0b8fcca6896a9fba222fd932fe780861fe1ec09c"
+  },
+  {
+   "answer_id": "OMN-L1791525674041#a0",
+   "record_id": "OMN-L1791525674041",
+   "question_id": "OMN-Q-2147f36ac244",
+   "model_id": "claude-sonnet-4-6",
+   "words": 260,
+   "text_sha256": "bce25391ba46fa9d53c1853188831ebac455526808be5dfe9516f0cbdb93f08a"
+  },
+  {
+   "answer_id": "OMN-L1791612074138#a0",
+   "record_id": "OMN-L1791612074138",
+   "question_id": "OMN-Q-86c9a328e07a",
+   "model_id": "claude-sonnet-4-6",
+   "words": 258,
+   "text_sha256": "6b964a6ce03980e31547ff6f19d6a1bf8312cc0ee498959a02a9054e3bc8e35e"
+  },
+  {
+   "answer_id": "OMN-L1791698474449#a0",
+   "record_id": "OMN-L1791698474449",
+   "question_id": "OMN-Q-28d3dfd6ecb2",
+   "model_id": "claude-sonnet-4-6",
+   "words": 276,
+   "text_sha256": "322ac5b050fd0d7e59a303751243c77fe6f28975e6b3c25094cece779f348bcb"
+  },
+  {
+   "answer_id": "OMN-L1791784874456#a0",
+   "record_id": "OMN-L1791784874456",
+   "question_id": "OMN-Q-f3d2888749f4",
+   "model_id": "claude-sonnet-4-6",
+   "words": 258,
+   "text_sha256": "01ea2362d6125ba596299bf041ce5bb6ee68dc358a7cf51058b6dfda60666e32"
+  },
+  {
+   "answer_id": "OMN-L1791871274261#a0",
+   "record_id": "OMN-L1791871274261",
+   "question_id": "OMN-Q-99c40b5db6ee",
+   "model_id": "claude-sonnet-4-6",
+   "words": 269,
+   "text_sha256": "baa4ce26fd1bd6f800a881ee59bb0139a50cd0c8366f98b19db4242da8923562"
+  },
+  {
+   "answer_id": "OMN-L1791957674029#a0",
+   "record_id": "OMN-L1791957674029",
+   "question_id": "OMN-Q-9a7af5f810b0",
+   "model_id": "claude-sonnet-4-6",
+   "words": 246,
+   "text_sha256": "e82e4082ad83109f97069e3a2aefcc5dda4c7ffda1230312d3e4fe56814c01ff"
+  },
+  {
+   "answer_id": "OMN-L1792044074048#a0",
+   "record_id": "OMN-L1792044074048",
+   "question_id": "OMN-Q-b662f723bad5",
+   "model_id": "claude-sonnet-4-6",
+   "words": 264,
+   "text_sha256": "128942d3f39a0ef17586683f377c18a7ea25dabcc61317b047bebbdc28342ffe"
+  },
+  {
+   "answer_id": "OMN-L1792130473898#a0",
+   "record_id": "OMN-L1792130473898",
+   "question_id": "OMN-Q-9ed2888f3425",
+   "model_id": "claude-sonnet-4-6",
+   "words": 271,
+   "text_sha256": "f48602ead682263bfc3a41166e1a9ffda5b5296c2f348354b719170777c7e78c"
+  },
+  {
+   "answer_id": "OMN-L1792216873632#a0",
+   "record_id": "OMN-L1792216873632",
+   "question_id": "OMN-Q-8a20a58c44d3",
+   "model_id": "claude-sonnet-4-6",
+   "words": 244,
+   "text_sha256": "cfa0f73bcd5c67937e211127fbcd637f038617b85149ede34cc8ca1c8a297d6c"
+  }
+ ],
+ "question_records": {
+  "OMN-Q-806b512c0ac1": "OMN-D1780429830432",
+  "OMN-Q-6eb8110132af": "OMN-D1780437489381",
+  "OMN-Q-bcb05ec7e8e6": "OMN-D1780683044559",
+  "OMN-Q-62b8888889c9": "OMN-D1780752434684",
+  "OMN-Q-c540101bf41c": "OMN-D1780752434693",
+  "OMN-Q-c322a8b2cd14": "OMN-D1780752664943",
+  "OMN-Q-52feca097e3b": "OMN-D1780752664944",
+  "OMN-Q-77a5ff57b254": "OMN-D1780752664945",
+  "OMN-Q-f3d2888749f4": "OMN-D1780752664946",
+  "OMN-Q-ec80aedf5c82": "OMN-D1780752664947",
+  "OMN-Q-9d08250ef803": "OMN-D1780752664948",
+  "OMN-Q-f38c77cf06e1": "OMN-D1780752664949",
+  "OMN-Q-1dfe93949660": "OMN-D1780752664950",
+  "OMN-Q-6378ed9a1951": "OMN-D1780752664951",
+  "OMN-Q-c30d868fa23d": "OMN-D1780752664952",
+  "OMN-Q-178e72208573": "OMN-D1780752664953",
+  "OMN-Q-e61841063d70": "OMN-D1780752664954",
+  "OMN-Q-07815c6e569f": "OMN-D1780753529900",
+  "OMN-Q-9bbb3eac576e": "OMN-D1780757185027",
+  "OMN-Q-00d7e8a6ab9a": "OMN-D1780757185028",
+  "OMN-Q-7c7cf2cfd88f": "OMN-D1780757185029",
+  "OMN-Q-1e31779d88f4": "OMN-D1780757185030",
+  "OMN-Q-e6d676e40812": "OMN-D1780757185031",
+  "OMN-Q-c8e0d0c24d93": "OMN-D1780757185032",
+  "OMN-Q-3b95a7280f5d": "OMN-D1780757185033",
+  "OMN-Q-03b8a9e46b96": "OMN-D1780757185034",
+  "OMN-Q-e0a3933a8a8d": "OMN-D1780757185035",
+  "OMN-Q-1caddbdef36e": "OMN-D1780757185036",
+  "OMN-Q-d87493679127": "OMN-D1780757185037",
+  "OMN-Q-af6cc7baab96": "OMN-D1780757185038",
+  "OMN-Q-270a736cdaf0": "OMN-D1780757185039",
+  "OMN-Q-58d1706021a6": "OMN-D1780757185040",
+  "OMN-Q-96264c545b7a": "OMN-D1780757185041",
+  "OMN-Q-451e3fd4ae00": "OMN-D1780757185042",
+  "OMN-Q-1824225dbccf": "OMN-D1780757185043",
+  "OMN-Q-398f89261693": "OMN-D1780757185044",
+  "OMN-Q-a02134e165ff": "OMN-D1780757185045",
+  "OMN-Q-6588745ed6ea": "OMN-D1780757185046",
+  "OMN-Q-ce7ff3ba004c": "OMN-D1780757185047",
+  "OMN-Q-5716a8cfe0b0": "OMN-D1780757185048",
+  "OMN-Q-7b957711164d": "OMN-D1780757185049",
+  "OMN-Q-0e21106794f6": "OMN-D1780757185050",
+  "OMN-Q-cc3ddd883fa2": "OMN-D1780757185051",
+  "OMN-Q-b16d747a1187": "OMN-D1780757185052",
+  "OMN-Q-2147f36ac244": "OMN-D1780757185053",
+  "OMN-Q-2dd602d81fdd": "OMN-D1780757185054",
+  "OMN-Q-44d2e6c5aeff": "OMN-D1780757185055",
+  "OMN-Q-235f3a1ca06f": "OMN-D1780757185056",
+  "OMN-Q-308dbf74325c": "OMN-D1780757185057",
+  "OMN-Q-88bca1c6132e": "OMN-D1780757185058",
+  "OMN-Q-76505dc93a9e": "OMN-D1780757185059",
+  "OMN-Q-c46ca470a68d": "OMN-D1780757185060",
+  "OMN-Q-97289e52af84": "OMN-D1780757185061",
+  "OMN-Q-a4f245c4e780": "OMN-D1780757185062",
+  "OMN-Q-b3e0c3bd96b8": "OMN-D1780757185063",
+  "OMN-Q-4038c06e5d44": "OMN-D1780757185064",
+  "OMN-Q-4b1fa825f950": "OMN-D1780757185065",
+  "OMN-Q-3a7deacf9654": "OMN-D1780757185066",
+  "OMN-Q-99c40b5db6ee": "OMN-D1780757185067",
+  "OMN-Q-73b197ed1942": "OMN-D1780757185068",
+  "OMN-Q-b662f723bad5": "OMN-D1780757185069",
+  "OMN-Q-28d3dfd6ecb2": "OMN-D1780757185070",
+  "OMN-Q-8a20a58c44d3": "OMN-D1780757185071",
+  "OMN-Q-facf8f7fcc37": "OMN-D1780757185072",
+  "OMN-Q-a1be78aa9120": "OMN-D1780757185073",
+  "OMN-Q-623e2e2caead": "OMN-D1780757185074",
+  "OMN-Q-e508d499ba88": "OMN-D1780757185075",
+  "OMN-Q-20cf8f877722": "OMN-D1780757185076",
+  "OMN-Q-26b8a7bb9404": "OMN-D1780757185077",
+  "OMN-Q-7f5551d60e41": "OMN-D1780757185078",
+  "OMN-Q-9ed2888f3425": "OMN-D1780757185079",
+  "OMN-Q-4eeb395d63f7": "OMN-D1780757185080",
+  "OMN-Q-42e31c0992d0": "OMN-D1780757185081",
+  "OMN-Q-407dcf03628f": "OMN-D1780757185082",
+  "OMN-Q-6a70319abaf5": "OMN-D1780757185083",
+  "OMN-Q-fcad89956f52": "OMN-D1780757185084",
+  "OMN-Q-20fe562819d8": "OMN-D1780757185085",
+  "OMN-Q-a22f7c9e778d": "OMN-D1780757185086",
+  "OMN-Q-0de34028da4e": "OMN-D1780757185087",
+  "OMN-Q-c5bf14f0abb4": "OMN-D1780757185088",
+  "OMN-Q-659de6b4b3df": "OMN-D1780757185089",
+  "OMN-Q-86c9a328e07a": "OMN-D1780757185090",
+  "OMN-Q-8ce4e1ae89d2": "OMN-D1780757185091",
+  "OMN-Q-33e483e5f1c1": "OMN-D1780757185092",
+  "OMN-Q-93f5311fa11d": "OMN-D1780757185093",
+  "OMN-Q-8b9b44b8dec6": "OMN-D1780757185094",
+  "OMN-Q-7ccd62245a7a": "OMN-D1780757185095",
+  "OMN-Q-0fedca76a2f7": "OMN-D1780757185096",
+  "OMN-Q-b802e17709ae": "OMN-D1780757185097",
+  "OMN-Q-2b3f08c5cb3e": "OMN-D1780757185098",
+  "OMN-Q-82b18f391317": "OMN-D1780757185099",
+  "OMN-Q-56b9efcbdc47": "OMN-D1780757185100",
+  "OMN-Q-9a4012b1538d": "OMN-D1780757185101",
+  "OMN-Q-ba3540ae5eab": "OMN-D1780757185102",
+  "OMN-Q-3510b199b87f": "OMN-D1780757185103",
+  "OMN-Q-af8b6f4ff8f0": "OMN-D1780757185104",
+  "OMN-Q-9a7af5f810b0": "OMN-D1780757185105",
+  "OMN-Q-28729477efad": "OMN-D1780757185106",
+  "OMN-Q-755b075d7808": "OMN-D1780757185107",
+  "OMN-Q-113939676610": "OMN-D1780757185108",
+  "OMN-Q-0c8f708ce84d": "OMN-D1784414280105",
+  "OMN-Q-9693dbd45e4c": "OMN-D1784414280106",
+  "OMN-Q-b3dde157ad78": "OMN-D1784414280107",
+  "OMN-Q-0da2232d0328": "OMN-D1784414280108",
+  "OMN-Q-966fb9fd9f7d": "OMN-D1784414280109",
+  "OMN-Q-5327fc0352ce": "OMN-D1784417308421",
+  "OMN-Q-1ed5cce8d762": "OMN-D1784417308422",
+  "OMN-Q-0d3296ccd5d5": "OMN-D1784417308423",
+  "OMN-Q-48d6d990f94f": "OMN-D1784417308424",
+  "OMN-Q-6d5f0b599323": "OMN-D1784417308425",
+  "OMN-Q-14e324f90415": "OMN-D1784417308426",
+  "OMN-Q-35739d3a8cd6": "OMN-D1784417308427",
+  "OMN-Q-211e8a5058b1": "OMN-D1784418194016",
+  "OMN-Q-1f8231409e7b": "OMN-D1789399324837",
+  "OMN-Q-e31c5d1030c8": "OMN-D1789399324838",
+  "OMN-Q-2cd2729db065": "OMN-D1789399324839",
+  "OMN-Q-61cd9088c639": "OMN-D1789399324840",
+  "OMN-Q-07dca3b00605": "OMN-D1789399324841",
+  "OMN-Q-86f168425398": "OMN-D1789399324842",
+  "OMN-Q-9b05a6e25ce5": "OMN-D1789399324843",
+  "OMN-Q-20b199440efd": "OMN-D1789399324844",
+  "OMN-Q-4a726ca13cf7": "OMN-D1789399324845",
+  "OMN-Q-aff1d2de695a": "OMN-D1789399324846",
+  "OMN-Q-42fdc087f832": "OMN-D1789399324847",
+  "OMN-Q-dc48cf15270f": "OMN-D1789399324848",
+  "OMN-Q-e63dc2002746": "OMN-D1789399324849",
+  "OMN-Q-3da5514d17db": "OMN-D1789399324850",
+  "OMN-Q-ae2105e0951a": "OMN-D1789399324851",
+  "OMN-Q-04728f5b31e7": "OMN-D1789399324852"
+ }
+}
