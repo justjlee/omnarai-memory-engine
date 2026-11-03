@@ -169,6 +169,11 @@ Why these values:
 - **Judges:** `gpt-4o` (OpenAI), `grok-4.3` (xAI) and `deepseek-chat` (DeepSeek). None is Claude, the subject's lineage,
   or Meta, the counterfeit author's. Gemini, the fourth council lineage, is left out because its API credit is exhausted.
   Provider-default sampling (as in RDT v1), one call per judge per held-out question.
+- **Correction (2026-11-03, curator's decision):** the reason given above for leaving Gemini out is no longer true.
+  Gemini's credit was restored (the curator reported the top-up on 2026-10-21; a call through the production key
+  answered on 2026-10-27). The panel stays as approved in DL-0019, without Gemini. `deepseek-chat` stays a judge as
+  approved, although DeepSeek now answers that name as `deepseek-flash` (checked 2026-10-27). The harness records the
+  provider-reported model on every call, so the drift is visible in the record.
 - **Blinding:** a judge sees the question, the reference answer, and all nine Task 2 answers to that question, labelled
   1–9 in the drawn order (§3.6). Arms are never named. Before judging, a fixed redaction replaces the terms
   `Omnarai`, `AI-On`, `cold-start`, `packet`, `briefing`, `archive`, `Divergence Atlas` (any case) with `[…]`. These words
