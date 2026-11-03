@@ -16,7 +16,7 @@ import { GROWN, RECORDS, Q1 } from "./lib/fixtures.mjs";
 import * as R from "../api/_registered.js";
 import { questionIdFor } from "../api/_footprints.js";
 import { buildOrientPacket } from "../api/_protocol.js";
-import { runItems, councilRunUsd, missingVoices, certifyArgs, certOutcome } from "./run-batch.mjs";
+import { runItems, councilRunUsd, missingVoices, certifyArgs, certOutcome, elicitStep } from "./run-batch.mjs";
 import { createTally, recordResponse, priceTally } from "./lib/usage-tally.mjs";
 import { envValue } from "./lib/env-value.mjs";
 
@@ -204,6 +204,42 @@ test("[B6] usage tally: provider-reported tokens per model, thinking billed as o
   assert.deepEqual(p.unpriced, ["no-such-model"]);
   const expect = (1000 * 3 + 500 * 15 + 1000 * 1.5 + 500 * 9 + 2000 * 0.25 + 1000 * 2 + 10000 * 0.02) / 1e6;
   assert.equal(p.usd, +expect.toFixed(5));
+});
+test("[B8] an elicitation item, end to end on the real record builder and store: stored, tagged, and the question becomes recorded", async () => {
+  fresh();
+  const { buildDivergenceRecord } = await import("../api/_council.js");
+  const { appendGrownEntry, loadGrownMemory } = await import("../api/_grown.js");
+  const q = REG.questions[0];
+  const batch = { id: "elicit-test", approved_in: "DL-0099", panel: R.FULL_PANEL };
+  const five = R.FULL_PANEL.map((model) => ({ model, lab: "x", model_id: model === "GPT-4o" ? "gpt-4o" : "claude-sonnet-4-6", date: "2026-11-03", text: `${model} takes a position.`, ok: true }));
+  let synthCalls = 0;
+  const deps = {
+    elicitCouncil: async () => five,
+    synthesizeCouncil: async () => { synthCalls++; return { narrative: "They split on duty.", tensions: [], deliberation_card: null }; },
+    buildDivergenceRecord, embedRecord: async () => null, appendGrownEntry, questionIdFor,
+  };
+  const r = await elicitStep(q, { batch, perItem: 0.12, registry: REG }, deps);
+  assert.equal(r.ok, true, r.error); assert.ok(r.usd > 0); assert.match(r.created, /^OMN-D\d+$/);
+  const stored = (await loadGrownMemory()).entries.find((e) => e.id === r.created);
+  assert.equal(stored.divergence.question, q.text, "verbatim");
+  assert.equal(stored.divergence.answers.length, 5);
+  assert.equal(stored.divergence.cycle, "elicit-test", "the batch survives the store's allowlist");
+  assert.equal(stored.divergence.question_provenance.registered_id, q.id);
+  assert.equal(stored.divergence.question_provenance.batch_approved_in, "DL-0099");
+  assert.equal(R.registeredQuestions(REG, [stored]).find((x) => x.id === q.id).state, "recorded");
+  // A missing voice stores nothing and skips the synthesis call.
+  fresh();
+  const ragged = await elicitStep(q, { batch, perItem: 0.12, registry: REG }, { ...deps, elicitCouncil: async () => five.map((a) => (a.model === "Grok" ? { ...a, ok: false, text: "" } : a)) });
+  assert.equal(ragged.ok, false); assert.match(ragged.error, /Grok/); assert.equal(synthCalls, 1);
+  assert.equal((await loadGrownMemory()).entries.filter((e) => e.type === "divergence" && e.divergence?.question === q.text).length, 0);
+});
+test("[B9] a step that throws is booked at its estimate and stops the batch: one item lost, not five, and the file still closes", async () => {
+  let calls = 0;
+  const r = await runItems([1, 2, 3], { perItemUsd: 0.12, wallUsd: 25, step: async () => { calls++; throw new Error("boom"); } });
+  assert.equal(calls, 1);
+  assert.equal(r.results[0].error, "boom"); assert.match(r.results[0].usd_basis, /^estimate/);
+  assert.deepEqual(r.results.slice(1).map((x) => x.skipped), ["stopped after an error: boom", "stopped after an error: boom"]);
+  assert.equal(r.spent_usd, 0.12);
 });
 test("[B7] env values are read as dotenv reads them: a Vercel-pulled key loses its quotes and its literal \\n", () => {
   assert.equal(envValue('"sk-proj-abc\\n"'), "sk-proj-abc", "the elicit-001 failure: a literal backslash-n kept in the key");

@@ -82,14 +82,51 @@ export function certOutcome(report, recordId, perItemUsd) {
   };
 }
 
+// One elicitation item. The council calls and the store come in as `deps`, so the hermetic suite runs this exact code
+// against the real record builder and the in-memory store. (On 2026-11-03 the inline version read record.divergence,
+// a shape buildDivergenceRecord does not produce, and threw after the first paid council run.)
+// The store keeps only allowlisted provenance keys (api/_grown.js normalizeEntry), so the batch is recorded in `cycle`
+// and the registration in `question_provenance`. Any other key would be dropped on write without a word.
+export async function elicitStep(q, { batch, perItem, registry = {}, panel = batch.panel }, deps) {
+  const { elicitCouncil, synthesizeCouncil, buildDivergenceRecord, embedRecord, appendGrownEntry, questionIdFor } = deps;
+  const basis = "list prices × measured text length";
+  const answers = await elicitCouncil(q.text, { timeoutMs: 45000 });
+  const missing = missingVoices(panel, answers);
+  if (missing.length) {
+    const spent = councilRunUsd(q.text, answers, "", { fallbackUsd: perItem });
+    return { ok: false, usd: spent.usd, usd_basis: basis, error: `ragged panel (${missing.join(", ")} did not answer): nothing stored; a batch runs on its full panel or not at all` };
+  }
+  const synthesis = await synthesizeCouncil(q.text, answers);
+  const cost = councilRunUsd(q.text, answers, synthesis?.narrative, { fallbackUsd: perItem });
+  const record = buildDivergenceRecord(q.text, answers, synthesis);
+  record.provenance = {
+    ...record.provenance,
+    cycle: batch.id,
+    question_provenance: {
+      registered_id: q.id, set: q.set, set_index: q.set_index, registered_at: q.registered_at, registered_by: q.registered_by,
+      registered_in: q.decision, source: registry.source ?? null, asked_by_batch: batch.id, batch_approved_in: batch.approved_in,
+    },
+  };
+  if (questionIdFor(record.provenance.question) !== q.id) return { ok: false, usd: cost.usd, usd_basis: basis, error: "asked text does not hash to the registered id; nothing stored" };
+  const embedding = await embedRecord(record).catch(() => null);
+  const count = await appendGrownEntry(record, embedding);
+  return { ok: count !== null, usd: cost.usd, usd_basis: basis, unpriced: cost.unpriced, created: count !== null ? record.id : null, ...(embedding ? {} : { note: "stored without an embedding" }) };
+}
+
 // Runs the items in order and stops before the one whose estimate would cross the wall. `step(item)` returns
-// {ok, usd, created?, error?}. Pure orchestration, so the wall and the bookkeeping are testable without spend.
+// {ok, usd, created?, error?}. A step that throws is recorded at its estimate and stops the batch, so a code fault
+// costs one item and the batch file still gets its bookkeeping. Pure orchestration, testable without spend.
 export async function runItems(items, { perItemUsd, wallUsd, step }) {
   const results = [];
-  let spent = 0;
+  let spent = 0, stopped = null;
   for (const item of items) {
+    if (stopped) { results.push({ item, skipped: `stopped after an error: ${stopped}` }); continue; }
     if (spent + perItemUsd > wallUsd + 1e-9) { results.push({ item, skipped: "wall" }); continue; }
-    const r = await step(item);
+    let r;
+    try { r = await step(item); } catch (e) {
+      stopped = String(e?.message || e).slice(0, 200);
+      r = { ok: false, usd: perItemUsd, usd_basis: "estimate: the step threw before it could measure", error: stopped };
+    }
     spent += Number(r.usd) || 0;
     results.push({ item, ...r });
   }
@@ -126,23 +163,8 @@ async function main() {
     const { appendGrownEntry } = await import("../api/_grown.js");
     const { questionIdFor } = await import("../api/_footprints.js");
     const byId = new Map(registry.questions.map((q) => [q.id, q]));
-    step = async (item) => {
-      const q = byId.get(item.question_id);
-      const answers = await elicitCouncil(q.text, { timeoutMs: 45000 });
-      const missing = missingVoices(batch.panel || R.FULL_PANEL, answers);
-      if (missing.length) {
-        const spent = councilRunUsd(q.text, answers, "", { fallbackUsd: perItem });
-        return { ok: false, usd: spent.usd, usd_basis: "list prices × measured text length", error: `ragged panel (${missing.join(", ")} did not answer): nothing stored; a batch runs on its full panel or not at all` };
-      }
-      const synthesis = await synthesizeCouncil(q.text, answers);
-      const record = buildDivergenceRecord(q.text, answers, synthesis);
-      record.provenance = { ...(record.provenance || {}), batch: batch.id, registered_question: q.id, decision: batch.approved_in };
-      if (questionIdFor(record.divergence.question) !== q.id) return { ok: false, usd: perItem, error: "asked text does not hash to the registered id; nothing stored" };
-      const embedding = await embedRecord(record).catch(() => null);
-      const count = await appendGrownEntry(record, embedding);
-      const cost = councilRunUsd(q.text, answers, synthesis?.narrative, { fallbackUsd: perItem });
-      return { ok: count !== null, usd: cost.usd, usd_basis: "list prices × measured text length", unpriced: cost.unpriced, created: count !== null ? record.id : null };
-    };
+    const deps = { elicitCouncil, synthesizeCouncil, buildDivergenceRecord, embedRecord, appendGrownEntry, questionIdFor };
+    step = (item) => elicitStep(byId.get(item.question_id), { batch, perItem, registry, panel: batch.panel || R.FULL_PANEL }, deps);
   } else {
     step = async (item) => {
       const reportFile = join(tmpdir(), `omnarai-${batch.id}-${item.record_id}-${Date.now()}.json`);
