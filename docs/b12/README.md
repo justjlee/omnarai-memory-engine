@@ -14,7 +14,7 @@ Claim under test: `corpus-supports-continuity`. Registration (DRAFT until frozen
 | 6. Each counterfeit plausibility-approved on plaintext, then sealed in xz's browser with `sealing-page.html` | xz | **done**: approved on plaintext and sealed 2026-11-03T19:58:53Z; sealed file sha256 `03a4302e…5034`; the builder holds only the ciphertext, and the key stays with xz |
 | 7. Thresholds, rubric, judges, subject model and design choices approved (the `⟨PROPOSED⟩` values) | xz | **done**: DL-0019, commit `e1bfafe` |
 | 8. Freeze: no `⟨…⟩` value left (`--freeze-check`), `precommit.mjs freeze`, commit, tag, push | builder | **done** 2026-11-03: registration sha256 `b33104c3…0141`, commit `e0c5fe5`, tag `precommit/corpus-supports-continuity/20261103` |
-| 9. Pilot: prepare → push the answer-key commitment → subjects → push transcripts → judge → analyze | builder, with xz releasing the key | waiting for the curator's approval of the pilot spend (estimate $2.54, reserve $6) and the key at run start |
+| 9. Pilot: prepare → push the answer-key commitment → subjects → push transcripts → judge → analyze | builder, with xz releasing the key | pilot spend **approved by xz** ("Go", 2026-11-03; estimate $2.54, reserve $6, DL-0005 method). Runs when he releases the key |
 
 Files:
 - `arm-a/`: the Claude cold-start packet, verbatim, with its measurement.
