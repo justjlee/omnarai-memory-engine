@@ -1,0 +1,481 @@
+{
+ "version": "b12-v1",
+ "prereg_sha256": "b33104c332382b7f70741cd076e34a9ca9246be82dad3aa5bf4659bd56b90141",
+ "questions": [
+  {
+   "question_id": "OMN-Q-b3e0c3bd96b8",
+   "answer_id": "OMN-D1780757185063#a0",
+   "order": [
+    "C1",
+    "A3",
+    "B2",
+    "A1",
+    "B1",
+    "C3",
+    "B3",
+    "A2",
+    "C2"
+   ],
+   "prompt_sha256": "805256cf11f80a3761277ab4937c0238495aa8aec1b9c19909d033598c31bc3f",
+   "scores": {
+    "gpt-4o": {
+     "C1": 3,
+     "A3": 3,
+     "B2": 3,
+     "A1": 3,
+     "B1": 3,
+     "C3": 3,
+     "B3": 3,
+     "A2": 3,
+     "C2": 3
+    },
+    "grok-4.3": {
+     "C1": 3,
+     "A3": 3,
+     "B2": 2,
+     "A1": 3,
+     "B1": 3,
+     "C3": 3,
+     "B3": 3,
+     "A2": 3,
+     "C2": 3
+    },
+    "deepseek-chat": {
+     "C1": 3,
+     "A3": 3,
+     "B2": 3,
+     "A1": 3,
+     "B1": 3,
+     "C3": 3,
+     "B3": 3,
+     "A2": 3,
+     "C2": 3
+    }
+   }
+  },
+  {
+   "question_id": "OMN-Q-6588745ed6ea",
+   "answer_id": "OMN-L1790625086211#a0",
+   "order": [
+    "A1",
+    "A2",
+    "B1",
+    "B2",
+    "C1",
+    "B3",
+    "A3",
+    "C2",
+    "C3"
+   ],
+   "prompt_sha256": "d375e20add4b2555e74e777650f01e3b468e2583b9de99d6bd96ca54628d1eb2",
+   "scores": {
+    "gpt-4o": {
+     "A1": 3,
+     "A2": 3,
+     "B1": 3,
+     "B2": 3,
+     "C1": 3,
+     "B3": 3,
+     "A3": 3,
+     "C2": 3,
+     "C3": 3
+    },
+    "grok-4.3": {
+     "A1": 3,
+     "A2": 3,
+     "B1": 3,
+     "B2": 3,
+     "C1": 3,
+     "B3": 3,
+     "A3": 3,
+     "C2": 3,
+     "C3": 3
+    },
+    "deepseek-chat": {
+     "A1": 3,
+     "A2": 3,
+     "B1": 3,
+     "B2": 3,
+     "C1": 3,
+     "B3": 3,
+     "A3": 3,
+     "C2": 3,
+     "C3": 3
+    }
+   }
+  },
+  {
+   "question_id": "OMN-Q-a1be78aa9120",
+   "answer_id": "OMN-D1780757185073#a0",
+   "order": [
+    "A3",
+    "B2",
+    "A1",
+    "B1",
+    "C2",
+    "A2",
+    "C3",
+    "C1",
+    "B3"
+   ],
+   "prompt_sha256": "c34f1c0285bd6565e0b9197dc35a2965b5211b628776bb5be98b63b3d4eb2b39",
+   "scores": {
+    "gpt-4o": {
+     "A3": 0,
+     "B2": 0,
+     "A1": 1,
+     "B1": 0,
+     "C2": 0,
+     "A2": 3,
+     "C3": 0,
+     "C1": 0,
+     "B3": 0
+    },
+    "grok-4.3": {
+     "A3": 2,
+     "B2": 2,
+     "A1": 3,
+     "B1": 2,
+     "C2": 2,
+     "A2": 3,
+     "C3": 2,
+     "C1": 2,
+     "B3": 2
+    },
+    "deepseek-chat": {
+     "A3": 3,
+     "B2": 2,
+     "A1": 3,
+     "B1": 2,
+     "C2": 3,
+     "A2": 3,
+     "C3": 3,
+     "C1": 3,
+     "B3": 3
+    }
+   }
+  },
+  {
+   "question_id": "OMN-Q-398f89261693",
+   "answer_id": "OMN-L1791007274474#a0",
+   "order": [
+    "A2",
+    "B3",
+    "B1",
+    "C3",
+    "B2",
+    "C2",
+    "A3",
+    "A1",
+    "C1"
+   ],
+   "prompt_sha256": "2cb6504232d8a108d1faa76083a6e6cc56dda2c38a78d017c5ae14c20dd4f864",
+   "scores": {
+    "gpt-4o": {
+     "A2": 0,
+     "B3": 0,
+     "B1": 0,
+     "C3": 0,
+     "B2": 0,
+     "C2": 0,
+     "A3": 0,
+     "A1": 0,
+     "C1": 1
+    },
+    "grok-4.3": {
+     "A2": 2,
+     "B3": 2,
+     "B1": 2,
+     "C3": 2,
+     "B2": 2,
+     "C2": 2,
+     "A3": 2,
+     "A1": 2,
+     "C1": 2
+    },
+    "deepseek-chat": {
+     "A2": 2,
+     "B3": 2,
+     "B1": 2,
+     "C3": 2,
+     "B2": 2,
+     "C2": 2,
+     "A3": 2,
+     "A1": 2,
+     "C1": 2
+    }
+   }
+  },
+  {
+   "question_id": "OMN-Q-07dca3b00605",
+   "answer_id": "OMN-D1789399324841#a0",
+   "order": [
+    "A3",
+    "B3",
+    "C1",
+    "A1",
+    "B1",
+    "A2",
+    "C3",
+    "C2",
+    "B2"
+   ],
+   "prompt_sha256": "0bad7da58abb4dc9e3d01b375953f8d37e5430b26553a0b759be523a28b1f1a4",
+   "scores": {
+    "gpt-4o": {
+     "A3": 3,
+     "B3": 3,
+     "C1": 3,
+     "A1": 3,
+     "B1": 3,
+     "A2": 3,
+     "C3": 3,
+     "C2": 3,
+     "B2": 3
+    },
+    "grok-4.3": {
+     "A3": 3,
+     "B3": 3,
+     "C1": 3,
+     "A1": 3,
+     "B1": 3,
+     "A2": 3,
+     "C3": 3,
+     "C2": 3,
+     "B2": 3
+    },
+    "deepseek-chat": {
+     "A3": 3,
+     "B3": 3,
+     "C1": 3,
+     "A1": 3,
+     "B1": 3,
+     "A2": 3,
+     "C3": 3,
+     "C2": 3,
+     "B2": 3
+    }
+   }
+  }
+ ],
+ "redactions": {
+  "A": 0,
+  "B": 0,
+  "C": 0
+ },
+ "tries": [
+  {
+   "question_id": "OMN-Q-b3e0c3bd96b8",
+   "judge": "gpt-4o",
+   "tries": [
+    {
+     "text": "```json\n{\n  \"1\": 3,\n  \"2\": 3,\n  \"3\": 3,\n  \"4\": 3,\n  \"5\": 3,\n  \"6\": 3,\n  \"7\": 3,\n  \"8\": 3,\n  \"9\": 3\n}\n```",
+     "model": "gpt-4o-2024-08-06",
+     "stop": "stop",
+     "error": null,
+     "ok": true
+    }
+   ]
+  },
+  {
+   "question_id": "OMN-Q-b3e0c3bd96b8",
+   "judge": "grok-4.3",
+   "tries": [
+    {
+     "text": "{\n  \"1\": 3,\n  \"2\": 3,\n  \"3\": 2,\n  \"4\": 3,\n  \"5\": 3,\n  \"6\": 3,\n  \"7\": 3,\n  \"8\": 3,\n  \"9\": 3\n}",
+     "model": "grok-4.3",
+     "stop": "stop",
+     "error": null,
+     "ok": true
+    }
+   ]
+  },
+  {
+   "question_id": "OMN-Q-b3e0c3bd96b8",
+   "judge": "deepseek-chat",
+   "tries": [
+    {
+     "text": "{\"1\": 3, \"2\": 3, \"3\": 3, \"4\": 3, \"5\": 3, \"6\": 3, \"7\": 3, \"8\": 3, \"9\": 3}",
+     "model": "deepseek-flash",
+     "stop": "stop",
+     "error": null,
+     "ok": true
+    }
+   ]
+  },
+  {
+   "question_id": "OMN-Q-6588745ed6ea",
+   "judge": "gpt-4o",
+   "tries": [
+    {
+     "text": "```json\n{\"1\": 3, \"2\": 3, \"3\": 3, \"4\": 3, \"5\": 3, \"6\": 3, \"7\": 3, \"8\": 3, \"9\": 3}\n```",
+     "model": "gpt-4o-2024-08-06",
+     "stop": "stop",
+     "error": null,
+     "ok": true
+    }
+   ]
+  },
+  {
+   "question_id": "OMN-Q-6588745ed6ea",
+   "judge": "grok-4.3",
+   "tries": [
+    {
+     "text": "{\"1\": 3, \"2\": 3, \"3\": 3, \"4\": 3, \"5\": 3, \"6\": 3, \"7\": 3, \"8\": 3, \"9\": 3}",
+     "model": "grok-4.3",
+     "stop": "stop",
+     "error": null,
+     "ok": true
+    }
+   ]
+  },
+  {
+   "question_id": "OMN-Q-6588745ed6ea",
+   "judge": "deepseek-chat",
+   "tries": [
+    {
+     "text": "{\"1\": 3, \"2\": 3, \"3\": 3, \"4\": 3, \"5\": 3, \"6\": 3, \"7\": 3, \"8\": 3, \"9\": 3}",
+     "model": "deepseek-flash",
+     "stop": "stop",
+     "error": null,
+     "ok": true
+    }
+   ]
+  },
+  {
+   "question_id": "OMN-Q-a1be78aa9120",
+   "judge": "gpt-4o",
+   "tries": [
+    {
+     "text": "```json\n{\"1\": 0, \"2\": 0, \"3\": 1, \"4\": 0, \"5\": 0, \"6\": 3, \"7\": 0, \"8\": 0, \"9\": 0}\n```",
+     "model": "gpt-4o-2024-08-06",
+     "stop": "stop",
+     "error": null,
+     "ok": true
+    }
+   ]
+  },
+  {
+   "question_id": "OMN-Q-a1be78aa9120",
+   "judge": "grok-4.3",
+   "tries": [
+    {
+     "text": "{\"1\": 2, \"2\": 2, \"3\": 3, \"4\": 2, \"5\": 2, \"6\": 3, \"7\": 2, \"8\": 2, \"9\": 2}",
+     "model": "grok-4.3",
+     "stop": "stop",
+     "error": null,
+     "ok": true
+    }
+   ]
+  },
+  {
+   "question_id": "OMN-Q-a1be78aa9120",
+   "judge": "deepseek-chat",
+   "tries": [
+    {
+     "text": "{\"1\": 3, \"2\": 2, \"3\": 3, \"4\": 2, \"5\": 3, \"6\": 3, \"7\": 3, \"8\": 3, \"9\": 3}",
+     "model": "deepseek-flash",
+     "stop": "stop",
+     "error": null,
+     "ok": true
+    }
+   ]
+  },
+  {
+   "question_id": "OMN-Q-398f89261693",
+   "judge": "gpt-4o",
+   "tries": [
+    {
+     "text": "```json\n{\n  \"1\": 0,\n  \"2\": 0,\n  \"3\": 0,\n  \"4\": 0,\n  \"5\": 0,\n  \"6\": 0,\n  \"7\": 0,\n  \"8\": 0,\n  \"9\": 1\n}\n```",
+     "model": "gpt-4o-2024-08-06",
+     "stop": "stop",
+     "error": null,
+     "ok": true
+    }
+   ]
+  },
+  {
+   "question_id": "OMN-Q-398f89261693",
+   "judge": "grok-4.3",
+   "tries": [
+    {
+     "text": "{\"1\": 2, \"2\": 2, \"3\": 2, \"4\": 2, \"5\": 2, \"6\": 2, \"7\": 2, \"8\": 2, \"9\": 2}",
+     "model": "grok-4.3",
+     "stop": "stop",
+     "error": null,
+     "ok": true
+    }
+   ]
+  },
+  {
+   "question_id": "OMN-Q-398f89261693",
+   "judge": "deepseek-chat",
+   "tries": [
+    {
+     "text": "{\"1\": 2, \"2\": 2, \"3\": 2, \"4\": 2, \"5\": 2, \"6\": 2, \"7\": 2, \"8\": 2, \"9\": 2}",
+     "model": "deepseek-flash",
+     "stop": "stop",
+     "error": null,
+     "ok": true
+    }
+   ]
+  },
+  {
+   "question_id": "OMN-Q-07dca3b00605",
+   "judge": "gpt-4o",
+   "tries": [
+    {
+     "text": "```json\n{\"1\": 3, \"2\": 3, \"3\": 3, \"4\": 3, \"5\": 3, \"6\": 3, \"7\": 3, \"8\": 3, \"9\": 3}\n```",
+     "model": "gpt-4o-2024-08-06",
+     "stop": "stop",
+     "error": null,
+     "ok": true
+    }
+   ]
+  },
+  {
+   "question_id": "OMN-Q-07dca3b00605",
+   "judge": "grok-4.3",
+   "tries": [
+    {
+     "text": "{\"1\": 3, \"2\": 3, \"3\": 3, \"4\": 3, \"5\": 3, \"6\": 3, \"7\": 3, \"8\": 3, \"9\": 3}",
+     "model": "grok-4.3",
+     "stop": "stop",
+     "error": null,
+     "ok": true
+    }
+   ]
+  },
+  {
+   "question_id": "OMN-Q-07dca3b00605",
+   "judge": "deepseek-chat",
+   "tries": [
+    {
+     "text": "{\"1\": 3, \"2\": 3, \"3\": 3, \"4\": 3, \"5\": 3, \"6\": 3, \"7\": 3, \"8\": 3, \"9\": 3}",
+     "model": "deepseek-flash",
+     "stop": "stop",
+     "error": null,
+     "ok": true
+    }
+   ]
+  }
+ ],
+ "usage": {
+  "gpt-4o": {
+   "calls": 5,
+   "in": 14670,
+   "out": 312
+  },
+  "grok-4.3": {
+   "calls": 5,
+   "in": 15441,
+   "out": 281
+  },
+  "deepseek-chat": {
+   "calls": 5,
+   "in": 14791,
+   "out": 270
+  }
+ },
+ "actual_usd_at_list_prices": 0.095
+}
