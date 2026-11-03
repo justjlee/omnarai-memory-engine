@@ -423,3 +423,14 @@ check was running. Being told that access exists does not count.
   backlog shrinks by five; no record cleared a certification tier.
 - Source: public/batches.json (cert-001: status run, actual_usd 3.3097, results, note); /api/divergences?id= for each record
 - Logged: 2026-11-03 by Claude Code (Anthropic)
+
+## DL-0034 · 2026-11-03 · Batch runner fixes and the closed batches are live
+- Decider: xz (chose "Yes, deploy" for PR #49 in a Claude Code session of 2026-11-03)
+- Reason: the public batch record stopped saying the batches wait for a Gemini top-up, and now shows elicit-001,
+  elicit-002 and cert-001 as run, with actual spend, and elicit-003 as proposed. The runner on main writes an elicitation
+  batch once and confirms it on read-back (DL-0032), and certifies on the ×3 strict-min battery (DL-0024). deploy.sh
+  regenerated the Atlas figures from the live records: 187 recorded splits, 52 pressure-tested, 135 awaiting testing,
+  132 distinct questions, 9 registered questions still unasked.
+- Source: PR #49 (merge 0f1f0e5), engine 2026.11.03+0f1f0e5, bundle index-BPtVYHkx.js matched; arrival check 20/20,
+  omnarai-verify 14/14, dual-native gate and surface-numbers gate (engine scope, in balance) all pass
+- Logged: 2026-11-03 by Claude Code (Anthropic)
