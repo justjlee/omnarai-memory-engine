@@ -382,3 +382,44 @@ check was running. Being told that access exists does not count.
 - Reason: the approval in DL-0026 stands and is not widened. This entry records only the sequencing the curator chose.
 - Source: the same session; public/batches.json (cert-001 keeps approved_in DL-0026)
 - Logged: 2026-11-03 by Claude Code (Anthropic)
+
+## DL-0031 · 2026-10-27 · Receipt tokens leave logs and URLs, and the tools share one contract (logged late, 2026-11-03)
+- Decider: xz ("deploy #50 now", in a Claude Code session of 2026-10-27)
+- Reason: a receipt token in a URL lands in access logs and referers. The engine now prefers the `x-omnarai-receipt`
+  header, still accepts `?receipt=` with a `RECEIPT_IN_URL` notice, and redacts tokens from logged paths. The npm package,
+  the remote MCP, the OpenAI tool list and the OpenAPI spec now come from one contract, checked for drift by a hard gate in
+  deploy.sh. omnarai-mcp 1.12.0 was published the same day (npm and the MCP Registry), after the engine.
+- Source: PR #50 (merge 6902f6f), engine 2026.10.27+6902f6f; omnarai-mcp PR #6 (292ca7e), release a990e73. This entry
+  was missed on the day: the audit of 2026-11-03 found main ending at DL-0023 while production ran #50.
+- Logged: 2026-11-03 by Claude Code (Anthropic)
+
+## DL-0032 · 2026-11-03 · Batch elicit-002 run and closed: three records stored, two lost after storing
+- Decider: none; this records an outcome. elicit-002 was approved in DL-0029. The curator also approved it in a second
+  Claude Code session the same day; both sessions were working Session Handoff 3 at once, and that one ran it.
+- Reason: all five questions were answered by the full panel (Claude, GPT-4o, Gemini, Grok, DeepSeek), for $0.258 measured
+  (list prices times measured text length), about $0.052 per question against the $0.12 budget figure. The runner stored
+  each record with its own write to grown memory, about a minute apart, and two of those writes read a stale copy and
+  overwrote the record before: OMN-D1793732714212 (set_index 7) and OMN-D1793732894354 (set_index 3) were stored and are
+  gone. Three records are in the Atlas: OMN-D1793732776099, OMN-D1793732834880, OMN-D1793732959297. No other record was
+  lost: the only other spend that day was the 06:01 UTC longitudinal run, and its record is present. Before the run that
+  completed, two attempts (one per session, about 19:00 UTC) crashed after their first council run because the runner read
+  the question from `record.divergence`, which a freshly built record does not have; they stored nothing, their spend is
+  unmeasured (at most two council runs, about $0.11), and each reserved $2.00 on the ledger. The three stored records carry
+  no batch tag (`provenance.cycle` is null), because the run used runner code whose tag keys the store drops; they are
+  left as stored. The runner now builds and tags the record in elicitStep, writes a whole batch once, and reads it back
+  before it counts a record as created. The two lost questions are proposed again as elicit-003, for its own approval.
+- Source: public/batches.json (elicit-002: status run, results, note; elicit-003: proposed); PR #49 (commits 8b47128,
+  c148d12; tests [B8] to [B10]); backup of grown memory taken before cert-001's first write
+- Logged: 2026-11-03 by Claude Code (Anthropic)
+
+## DL-0033 · 2026-11-03 · Batch cert-001 run and closed: five records certified, all C0, at $0.66 each
+- Decider: none; this records an outcome. Approved in DL-0026, run after elicit-002 as DL-0030 records.
+- Reason: the first five records of certification-queue-v1 went through the ×3 strict-min battery and each result was
+  written onto its live record: OMN-D1780757185030, OMN-D1789399324852, OMN-L1790678198294, OMN-D1780752434693 and
+  OMN-D1780757185074 are all C0. In two of them one run of three graded C3 and was outvoted under strict-min, and in one a
+  run graded C1, so the battery's run-to-run agreement on these records was 2 of 5 unanimous. Spend was $3.3097 from
+  provider-reported tokens at list prices, $0.66 per record against the $1.45 estimate; that measured price replaces the
+  estimate for later certification batches, as DL-0020 designed. The runner reserved $15.00 on the ledger. The certified
+  backlog shrinks by five; no record cleared a certification tier.
+- Source: public/batches.json (cert-001: status run, actual_usd 3.3097, results, note); /api/divergences?id= for each record
+- Logged: 2026-11-03 by Claude Code (Anthropic)
