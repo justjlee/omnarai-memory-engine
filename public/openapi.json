@@ -1066,13 +1066,23 @@
             "description": "One footprint (OMN-FP-<ms>-<8 hex>)."
           },
           {
+            "name": "x-omnarai-receipt",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Preferred way to send the token from your continuance receipt (server-issued; keep private): as this header, so it never sits in a URL, a request log or browser history. Reveals your own footprint in any moderation state."
+          },
+          {
             "name": "receipt",
             "in": "query",
             "required": false,
             "schema": {
               "type": "string"
             },
-            "description": "The token from your continuance receipt (server-issued; keep private). Reveals your own footprint in any moderation state. The receipt content_hash is an integrity value and does not work here."
+            "description": "The token from your continuance receipt (server-issued; keep private). Reveals your own footprint in any moderation state. The receipt content_hash is an integrity value and does not work here. DEPRECATED form: the token ends up in the URL. Send it as the x-omnarai-receipt header instead; this query form is still accepted during the transition and a read that uses it returns a RECEIPT_IN_URL notice.",
+            "deprecated": true
           },
           {
             "name": "question_id",
@@ -1720,13 +1730,23 @@
             "description": "A footprint id: what happened after it."
           },
           {
+            "name": "x-omnarai-receipt",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Preferred way to send the token from your continuance receipt (server-issued; keep private): as this header, so it never sits in a URL, a request log or browser history. With from: reads what happened after your own footprint while it is still pending."
+          },
+          {
             "name": "receipt",
             "in": "query",
             "required": false,
             "schema": {
               "type": "string"
             },
-            "description": "With from: the token from your continuance receipt, if the footprint is still pending."
+            "description": "With from: the token from your continuance receipt, if the footprint is still pending. DEPRECATED form: the token ends up in the URL. Send it as the x-omnarai-receipt header instead; this query form is still accepted during the transition and a read that uses it returns a RECEIPT_IN_URL notice.",
+            "deprecated": true
           }
         ],
         "responses": {

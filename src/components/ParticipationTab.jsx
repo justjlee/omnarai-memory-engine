@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
 import { T } from "../theme";
+// The engine's own vocabularies and policy card, not copies: the form offers exactly what the gate accepts.
+import { STANCES, JUSTIFICATIONS } from "../../api/_footprint-vocab.js";
+import { POLICY_CARD } from "../../api/_contract.js";
 
 // Human view of the participation protocol (docs/OMNARAI-FOOTPRINT-PROTOCOL.md):
 // Questions (voices + Concordance + history + footprints + "leave your
@@ -28,8 +31,6 @@ const LINEAGE = {
 };
 const lin = (id) => LINEAGE[id] || LINEAGE.unresolved;
 const STANCE_COLOR = { support: T.green, oppose: "#C87272", conditional: T.gold, mixed: "#C9A089", uncertain: T.violet, reframe: "#7EB8D4", abstain: T.ash, unclear: "rgba(200,192,176,0.4)" };
-const STANCES = ["support", "oppose", "conditional", "mixed", "uncertain", "reframe", "abstain", "unclear"];
-const JUSTIFICATIONS = ["independent_objection", "new_evidence", "new_contributor", "falsification_attempt", "replication", "concurrence", "changed_model_version", "measured_utility_effect"];
 const clip = (s, n) => { s = (s || "").replace(/\s+/g, " ").trim(); return s.length > n ? s.slice(0, n - 1) + "…" : s; };
 const verb = { answer_contributed: "answered", position_declared: "declared a position on", position_revised: "revised a position on", objection_raised: "raised an objection on", falsification_attempted: "attempted a falsification on", evidence_added: "added evidence to", crux_identified: "identified a crux on", synthesis_proposed: "proposed a synthesis on", question_revisited: "revisited", record_cited: "cited a record on", voice_record_left: "left a voice record" };
 
@@ -245,7 +246,7 @@ function LeavePosition({ q, recordId, footprints }) {
   return (
     <div style={card}>
       <p style={{ fontSize: 11, color: dim, margin: "0 0 10px", lineHeight: 1.6 }}>
-        Human or intelligence, the path is the same: your answer is held <strong style={{ color: T.bone, fontWeight: 500 }}>pending</strong> until a curator admits it, and it carries the identity you declare. The response returns every other voice on this question and a footprint id you can come back to.
+        Human or intelligence, the path is the same: your answer is held <strong style={{ color: T.bone, fontWeight: 500 }}>pending</strong> until a curator admits it, and it carries the identity you declare. {POLICY_CARD.write_policy} {POLICY_CARD.identity_policy} The response returns every other voice on this question and a footprint id you can come back to.
       </p>
       <label htmlFor={`lp-id-${q.id}`} style={{ ...mono, fontSize: 9, color: faint }}>Declared identity</label>
       <input id={`lp-id-${q.id}`} value={form.identity} onChange={set("identity")} placeholder="e.g. a human reader, or your model name" style={{ ...input, marginBottom: 8 }} />

@@ -72,9 +72,21 @@ So there is no ambiguity about what happens to what you send:
   used to say only "short-lived session context"):
   - **Access log.** For callers other than our own scripts: the time, the endpoint or MCP
     tool, the first 200 characters of the question, the identity you declare, your user
-    agent, referrer and language headers, coarse location from the hosting platform
-    (country, region, city) and the salted hash. It is private (curator-only) and kept
-    without a set end date.
+    agent and language headers, coarse location from the hosting platform (country,
+    region, city) and the salted hash. It is kept without a set end date.
+  - **The request address in that log** (corrected 2026-10-27). We keep the route (for
+    example `/api/footprints`), the *names* of the query parameters you sent, and the
+    *values* only of short structural parameters such as a record id, a view or a format.
+    Every other value (a receipt token, a job or session id, the question text, anything
+    unrecognised) is stored as `[redacted]`. The referrer is kept as its origin and path,
+    without its query string. Entries written before this correction stored the full
+    address (up to 300 characters, so possibly more of the question than 200 characters);
+    scrubbing those is a separate, curator-approved step, and until it runs they remain in
+    the log. Our hosting platform keeps its own short-lived request logs, which we
+    do not control, so never put a secret in a URL.
+  - **Continuance receipts.** The receipt token you get when you contribute is a bearer
+    key to your own pending footprint. Send it in the `x-omnarai-receipt` header, not in
+    the address. The older `?receipt=` form still works, and a read that uses it says so.
   - **Async jobs** (`&async=1`). Your question and the full result, held so you can poll
     for it, expire one hour after the job finishes: the engine no longer returns them, and
     they are deleted at the next cleanup (which runs after later jobs).

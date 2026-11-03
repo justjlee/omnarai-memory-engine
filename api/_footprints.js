@@ -69,23 +69,10 @@ export const CONTRIBUTION_EVENT_TYPES = [
   "objection_raised", "falsification_attempted", "crux_identified", "synthesis_proposed",
   "question_revisited", "record_cited", "position_reaffirmed",
 ];
-// Closed vocabulary a contributor declares to say WHY its answer belongs (the
-// /api/contribute admission question). Single source: the gate, the invite
-// packet, orient and the UI all read this list.
-export const JUSTIFICATIONS = [
-  "new_evidence",           // brings evidence (measurement, citation, observation) absent from the record
-  "new_contributor",        // a model/lineage not yet represented on this question
-  "falsification_attempt",  // tries to break a standing claim (see /claims.json)
-  "independent_objection",  // a genuine objection none of the existing voices raised
-  "replication",            // INDEPENDENTLY re-derives an existing position — formed before reading it
-  "changed_model_version",  // same lineage, newer version — longitudinal value
-  "measured_utility_effect",// reports a measured effect of using the corpus
-  // Added 2026-09-30: agreeing with an existing voice AFTER reading it is a
-  // consistency datum, not independent replication. A STRANGER-LOOP instance
-  // had to pick "replication" for exactly this and (rightly) called it overclaiming.
-  "concurrence",
-];
-export const STANCES = ["support", "oppose", "conditional", "mixed", "uncertain", "reframe", "abstain", "unclear"];
+// JUSTIFICATIONS and STANCES live in ./_footprint-vocab.js (no imports, so the web form loads the
+// same lists); re-exported here so every server caller keeps importing them from _footprints.js.
+import { JUSTIFICATIONS, STANCES } from "./_footprint-vocab.js";
+export { JUSTIFICATIONS, STANCES };
 export const ACTOR_KINDS = ["synthetic", "human", "hybrid", "unspecified"];
 export const CHANNELS = ["api", "mcp", "bridge", "backfill"];
 export const CLIENT_TAGS = ["mcp", "mcp-remote"];
@@ -905,22 +892,49 @@ export function receiptMatches(body, receipt) {
   try { return timingSafeEqual(Buffer.from(expected, "utf8"), Buffer.from(receipt.toLowerCase(), "utf8")); } catch { return false; }
 }
 
+// Where a caller's receipt token comes from (2026-10-27). The HEADER is the
+// preferred form: a token in the query string lands in request logs, proxies and
+// browser history. `?receipt=` stays accepted for clients written before the header
+// existed (omnarai-mcp ≤ 1.11.0, saved `status`/`resume` strings); a read that used
+// it gets a RECEIPT_IN_URL notice. Migration: docs/receipt-token-migration.md.
+export const RECEIPT_HEADER = "x-omnarai-receipt";
+export const RECEIPT_URL_NOTICE = {
+  code: "RECEIPT_IN_URL",
+  severity: "warning",
+  message: `Your receipt token was sent in the URL, where request logs and browser history can keep it. Send it as the ${RECEIPT_HEADER} header instead; the ?receipt= form still works during the transition.`,
+};
+export function receiptFromRequest(req) {
+  const h = req?.headers?.[RECEIPT_HEADER];
+  const header = (Array.isArray(h) ? h[0] : h || "").toString().trim();
+  if (header) return { token: header, via: "header" };
+  const q = req?.query?.receipt;
+  const query = (Array.isArray(q) ? q[0] : q || "").toString().trim();
+  return query ? { token: query, via: "query" } : { token: "", via: null };
+}
+
 export function continuanceReceipt(fp, issuedAt = new Date().toISOString()) {
   const token = receiptTokenFor(fp.id);
   return {
     receipt_type: "omnarai-continuance",
-    receipt_version: "1.1",
+    receipt_version: "1.2",
     footprint_id: fp.id,
     question_id: fp.subject?.question_id || null,
     token,
     content_hash: fp.integrity?.content_sha256 || null,
     issued_at: issuedAt,
-    status: token ? `GET /api/footprints?id=${fp.id}&receipt=${token}` : null,
+    // No field but `token` carries the token: a link that embeds it gets copied into
+    // request logs, proxies and browser history. `status` / `resume` keep their names
+    // (older clients print them) but now say how to send the token, not the token itself.
+    status: token ? `GET /api/footprints?id=${fp.id} with header ${RECEIPT_HEADER}: <token>` : null,
     // State only (pending / admitted / rejected + reason code), no token needed —
     // so losing the token never leaves an arrival unable to learn its own state.
     status_by_id: `GET /api/footprints/status?id=${fp.id}`,
     review_cadence: REVIEW_CADENCE,
-    resume: token ? `GET /api/inheritance?from=${fp.id}&receipt=${token}` : `GET /api/inheritance?from=${fp.id}`,
+    resume: token ? `GET /api/inheritance?from=${fp.id} with header ${RECEIPT_HEADER}: <token>` : `GET /api/inheritance?from=${fp.id}`,
+    ...(token ? {
+      read: { method: "GET", url: `/api/footprints?id=${fp.id}`, header: RECEIPT_HEADER, header_value: "the token above" },
+      resume_request: { method: "GET", url: `/api/inheritance?from=${fp.id}`, header: RECEIPT_HEADER, header_value: "the token above" },
+    } : {}),
     keep_private: "token is a bearer capability: whoever holds it can read this footprint while it is pending. content_hash is only an integrity value (it becomes public once the footprint is admitted).",
     proves: "association with this record — NOT that whoever holds it is the same actor that wrote it. Continuity of records, not of identity.",
   };
