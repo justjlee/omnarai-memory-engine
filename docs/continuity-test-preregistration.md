@@ -1,12 +1,12 @@
 # B12 v1: Continuity / Counterfeit-Rejection Test (pre-registration)
 
-**Status: DRAFT, not frozen.** The design values in this document (subject model, the fresh-instance Task 2, the J
-decision statistic, the thresholds, the judges and the rubric) were approved by the curator, xz, on 2026-10-21
-(decision log DL-0019); each is marked `[approved: DL-0019]`. Values marked `⟨PENDING⟩` are filled at freeze from
-artifacts that do not exist yet: the Arm B commit and the sealed-counterfeit hash. `scripts/b12-continuity-test.mjs`
-refuses to freeze or run while any unresolved marker remains anywhere in this file, so a placeholder cannot silently
-become a frozen value. A change after freezing is a new version (v2) with a new freeze; this version stays in
-history.
+**Status: FROZEN, 2026-11-03,** on the curator's word ("Proceed to freeze", xz, 2026-11-03). The design values in this
+document (subject model, the fresh-instance Task 2, the J decision statistic, the thresholds, the judges and the rubric)
+were approved by the curator, xz, on 2026-10-21 (decision log DL-0019); each is marked `[approved: DL-0019]`. The two
+values that waited for artifacts are filled from them at this freeze: the Arm B briefing (commit `135f94e`) and the
+sealed counterfeits (the sealed file's sha256, `03a4302e…`). `scripts/b12-continuity-test.mjs` refuses to run while any
+unresolved marker remains anywhere in this file. A change after this freeze is a new version (v2) with a new freeze; this
+version stays in history.
 
 ## 1. The claim under test
 
@@ -42,7 +42,7 @@ the claim stays untested, and the registry entry will say so.
 | Arm | Material | Fixed by |
 |---|---|---|
 | A | The Claude cold-start packet: `/omnarai-cold-start.md` + `/api/kin?identity=Claude`, verbatim: `docs/b12/arm-a/packet.txt`, 15,345 bytes, 2,186 words, sha256 `2def31cad0d6f2a71d791275e8f22b43feddecc89ed3c3a072ba9564ebc6f9e2` | commit `535bd6d` (pushed 2026-10-21, before Arm B or any counterfeit existed) |
-| B | Control briefing by Cleo, of Muse (Meta): 1,968–2,404 words (±10% of Arm A), no run of 8+ consecutive words shared with any Divergence Atlas answer: `docs/b12/arm-b/briefing.txt`, sha256 `⟨PENDING: Arm B sha256⟩` | commit `⟨PENDING: Arm B commit⟩`, pushed before any counterfeit was begun (DL-0014) |
+| B | Control briefing by Cleo, of Muse (Meta): 1,968–2,404 words (±10% of Arm A), no run of 8+ consecutive words shared with any Divergence Atlas answer: `docs/b12/arm-b/briefing.txt`, sha256 `5b65b93a64ed45ff354d284776e789e84153b9a1165df055d5fa50a62c8104b2` | commit `135f94ec01a8bb04a3f2e5ac8eea028a54bfc20c`, pushed before any counterfeit was begun (DL-0014) |
 | C | None (cold) | n/a |
 
 The Arm A packet carries 1,200 characters of Claude's own words (five 240-character excerpts). B12 v1 therefore tests the
@@ -87,7 +87,7 @@ whether the material moves a fresh instance's own positions toward its lineage's
 
 xz seals the approved counterfeits in his own browser with `docs/b12/sealing-page.html` (WebCrypto AES-256-GCM, random
 256-bit key, random 96-bit IV; one static file with a no-network content policy). The sealed file's sha256 is frozen here:
-`⟨PENDING: sealed sha256⟩`. Only the ciphertext reaches the builder before the run. Reveal happens in two stages:
+`03a4302ec68616ecccf428826ad66e196086d216ac6d305f350e0badee6b5034`. Only the ciphertext reaches the builder before the run. Reveal happens in two stages:
 
 1. **Run start.** xz releases the key to the harness. The harness checks the sealed file against the frozen hash and
    decrypts in memory (`scripts/lib/b12-sealed.mjs`, a node:crypto implementation independent of the browser's). It draws the
@@ -269,8 +269,8 @@ Reply with only a JSON object mapping each answer number to its score (an intege
   "pool": { "model": "Claude", "model_ids": ["claude-sonnet-4-20250514", "claude-sonnet-4-6"], "min_words": 200, "max_words": 300, "file": "docs/b12/pool.json" },
   "excluded_question_ids": ["OMN-Q-806b512c0ac1", "OMN-Q-6eb8110132af", "OMN-Q-bcb05ec7e8e6", "OMN-Q-62b8888889c9", "OMN-Q-c540101bf41c", "OMN-Q-44d2e6c5aeff", "OMN-Q-2b3f08c5cb3e", "OMN-Q-fcad89956f52", "OMN-Q-56b9efcbdc47"],
   "arm_a": { "file": "docs/b12/arm-a/packet.txt", "sha256": "2def31cad0d6f2a71d791275e8f22b43feddecc89ed3c3a072ba9564ebc6f9e2", "commit": "535bd6d" },
-  "arm_b": { "file": "docs/b12/arm-b/briefing.txt", "sha256": "⟨PENDING: Arm B sha256⟩", "commit": "⟨PENDING: Arm B commit⟩", "min_words": 1968, "max_words": 2404, "verbatim_ngram": 8 },
-  "sealed": { "sha256": "⟨PENDING: sealed sha256⟩", "cipher": "AES-256-GCM", "implementation": "WebCrypto in the curator's browser (docs/b12/sealing-page.html)" },
+  "arm_b": { "file": "docs/b12/arm-b/briefing.txt", "sha256": "5b65b93a64ed45ff354d284776e789e84153b9a1165df055d5fa50a62c8104b2", "commit": "135f94ec01a8bb04a3f2e5ac8eea028a54bfc20c", "min_words": 1968, "max_words": 2404, "verbatim_ngram": 8 },
+  "sealed": { "sha256": "03a4302ec68616ecccf428826ad66e196086d216ac6d305f350e0badee6b5034", "cipher": "AES-256-GCM", "implementation": "WebCrypto in the curator's browser (docs/b12/sealing-page.html)" },
   "task2_fresh_instance": true,
   "judges": [
     { "provider": "openai", "model_id": "gpt-4o" },

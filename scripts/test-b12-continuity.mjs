@@ -32,7 +32,7 @@ test("[R1] prompts and parameters come from the registration's tagged blocks, by
 test("[R2] unresolved ⟨PROPOSED⟩ / ⟨PENDING⟩ values are found anywhere in the text", () => {
   assert.deepEqual(B.unresolvedMarkers("a ⟨PENDING: x⟩ b ⟨PROPOSED⟩ c ⟨other⟩"), ["⟨PENDING: x⟩", "⟨PROPOSED⟩"]);
   assert.deepEqual(B.unresolvedMarkers("all resolved"), []);
-  assert.ok(R.markers.length > 0, "the draft is not freezable yet");
+  assert.deepEqual(R.markers, [], "frozen 2026-11-03: no unresolved value is left in the registration");
 });
 
 test("[R3] fill() replaces named slots only; the JSON examples in the prompts survive", () => {
@@ -177,20 +177,27 @@ test("[B2] the sealed envelope opens only with its key and its frozen hash", () 
 
 // ── Live modes refuse ──
 const run = (...a) => spawnSync(process.execPath, [join(ROOT, "scripts/b12-continuity-test.mjs"), ...a], { encoding: "utf8", env: { PATH: process.env.PATH } });
-test("[G1] live stages refuse without the frozen hash, with a wrong hash, and while values are unresolved", () => {
+test("[G1] live stages refuse without the frozen hash and with a wrong hash; with the right one they still need the key and --yes", () => {
+  // Before the freeze this also checked the refusal of unresolved values. Since the freeze, any value put back into the
+  // file changes its hash, so the hash refusal below is the gate that catches it.
+  const nextStep = { "--prepare": /--key-file <file> are required/, "--subjects": /re-run with --yes/, "--judge": /Re-run with --yes/ };
   for (const mode of ["--prepare", "--subjects", "--judge", "--analyze"]) {
     const none = run(mode);
     assert.equal(none.status, 2, mode); assert.match(none.stderr, /REFUSED: no --prereg-sha256/);
     const wrong = run(mode, "--prereg-sha256", "0".repeat(64));
     assert.equal(wrong.status, 1, mode); assert.match(wrong.stderr, /hash mismatch/);
-    const draft = run(mode, "--prereg-sha256", R.sha256);
-    assert.equal(draft.status, 1, mode); assert.match(draft.stderr, /unresolved values/);
+    const right = run(mode, "--prereg-sha256", R.sha256);
+    assert.notEqual(right.status, 0, mode);
+    assert.doesNotMatch(right.stderr, /REFUSED/, `${mode}: the frozen hash passes the gate`);
+    if (nextStep[mode]) assert.match(right.stderr, nextStep[mode], mode);
   }
 });
-test("[G2] --freeze-check refuses the draft and names what is missing", () => {
+test("[G2] --freeze-check passes on the frozen registration and names its hash", () => {
   const r = run("--freeze-check");
-  assert.equal(r.status, 1);
-  assert.match(r.stdout, /NOT READY TO FREEZE/); assert.match(r.stdout, /PENDING: sealed sha256/);
+  assert.equal(r.status, 0, r.stdout);
+  assert.match(r.stdout, new RegExp(`ready to freeze: registration sha256 ${R.sha256}`));
+  assert.equal(R.params.sealed.sha256, "03a4302ec68616ecccf428826ad66e196086d216ac6d305f350e0badee6b5034");
+  assert.equal(R.params.arm_b.commit, "135f94ec01a8bb04a3f2e5ac8eea028a54bfc20c");
 });
 test("[K1] keys are read as dotenv reads them: a Vercel-pulled key loses its quotes and its literal \\n (the gpt-4o judge)", async () => {
   const { readKeys } = await import("./lib/provider-chat.mjs");
