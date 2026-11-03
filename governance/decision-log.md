@@ -366,3 +366,19 @@ check was running. Being told that access exists does not count.
   gpt-4o judge depends on; it is fixed on the B12 branch before any pilot.
 - Source: public/batches.json (elicit-001: status run, actual_usd 0.0939, results, note); PR #49
 - Logged: 2026-10-27 by Claude Code (Anthropic)
+
+## DL-0029 · 2026-11-03 · Batch elicit-002 approved
+- Decider: xz (chose "Approve elicit-002" in the Claude Code session that opened on 2026-10-27; the answer was recorded on
+  2026-11-03)
+- Reason: the same five registered questions as elicit-001, which stored nothing because of the builder's key-reading
+  error (DL-0028). The panel and the $0.60 estimate are unchanged, under the $25 wall, run on the fixed key reader. All
+  five providers authenticated on free model-list calls on 2026-11-03 before the run. This approves this batch only.
+- Source: public/batches.json (elicit-002: status approved, approved_in DL-0029)
+- Logged: 2026-11-03 by Claude Code (Anthropic)
+
+## DL-0030 · 2026-11-03 · cert-001 to run after elicit-002, on the fixed key reader
+- Decider: xz (chose "Yes — run it after elicit-002"). He had approved cert-001 to "run after elicit-001" (DL-0026), and
+  elicit-001 failed, so he was asked again.
+- Reason: the approval in DL-0026 stands and is not widened. This entry records only the sequencing the curator chose.
+- Source: the same session; public/batches.json (cert-001 keeps approved_in DL-0026)
+- Logged: 2026-11-03 by Claude Code (Anthropic)

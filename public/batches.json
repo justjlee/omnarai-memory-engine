@@ -92,10 +92,10 @@
     {
       "id": "elicit-002",
       "kind": "elicitation",
-      "status": "proposed",
+      "status": "approved",
       "proposed_at": "2026-10-27",
       "proposed_by": "Claude Code (builder)",
-      "approved_in": null,
+      "approved_in": "DL-0029",
       "items": [
         {
           "question_id": "OMN-Q-bfc6e7e311f2",
