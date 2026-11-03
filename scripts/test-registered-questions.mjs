@@ -16,7 +16,7 @@ import { GROWN, RECORDS, Q1 } from "./lib/fixtures.mjs";
 import * as R from "../api/_registered.js";
 import { questionIdFor } from "../api/_footprints.js";
 import { buildOrientPacket } from "../api/_protocol.js";
-import { runItems, councilRunUsd, missingVoices, certifyArgs, certOutcome, elicitStep } from "./run-batch.mjs";
+import { runItems, councilRunUsd, missingVoices, certifyArgs, certOutcome, elicitStep, storeElicited } from "./run-batch.mjs";
 import { createTally, recordResponse, priceTally } from "./lib/usage-tally.mjs";
 import { envValue } from "./lib/env-value.mjs";
 
@@ -264,4 +264,19 @@ test("[B4] a shipped batch can run only on its own logged approval, and never tw
   }
   assert.ok(R.batchProblems({ ...doc.batches[0], status: "run" }, { registry: REG, divRecords: RECORDS, decisionLog: log }).some((x) => /not "approved"/.test(x)), "a batch that has run is refused: it cannot spend twice");
   assert.ok(R.batchProblems({ ...doc.batches[0], approved_in: "DL-9999" }, { registry: REG, divRecords: RECORDS, decisionLog: log }).some((x) => /not in the decision log/.test(x)));
+});
+test("[B10] elicitation stores every record in one write after the batch, confirms it on read-back, and reports what never showed", async () => {
+  const pending = [{ entry: { id: "A" } }, { entry: { id: "B" } }];
+  const results = [{ ok: true, created: "A" }, { ok: true, created: "B" }, { ok: false, error: "ragged", created: null }];
+  let writes = 0;
+  const ok = await storeElicited(results, pending, { append: async (p) => { writes++; assert.equal(p.length, 2); return 2; }, load: async () => ({ entries: [{ id: "A" }, { id: "B" }] }), sleep: async () => {} });
+  assert.equal(writes, 1, "one write for the whole batch");
+  assert.deepEqual(ok.map((r) => r.created), ["A", "B", null]);
+  let reads = 0;
+  const stale = await storeElicited(results, pending, { append: async () => 2, load: async () => (++reads < 3 ? { entries: [{ id: "A" }] } : { entries: [{ id: "A" }, { id: "B" }] }), sleep: async () => {} });
+  assert.deepEqual(stale.map((r) => r.created), ["A", "B", null], "a stale read-back is retried");
+  const lost = await storeElicited(results, pending, { append: async () => 2, load: async () => ({ entries: [{ id: "A" }] }), sleep: async () => {} });
+  assert.equal(lost[1].ok, false); assert.equal(lost[1].created, null); assert.match(lost[1].error, /not confirmed/);
+  const failed = await storeElicited(results, pending, { append: async () => null, load: async () => ({ entries: [] }), sleep: async () => {} });
+  assert.ok(failed.slice(0, 2).every((r) => !r.ok && /write failed/.test(r.error)));
 });

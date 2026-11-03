@@ -113,6 +113,29 @@ export async function elicitStep(q, { batch, perItem, registry = {}, panel = bat
   return { ok: count !== null, usd: cost.usd, usd_basis: basis, unpriced: cost.unpriced, created: count !== null ? record.id : null, ...(embedding ? {} : { note: "stored without an embedding" }) };
 }
 
+// Elicited records are stored in ONE write after the last item, never one write per question: grown memory is a single
+// read-modify-write blob, and serial writes about a minute apart can read a stale copy and overwrite the record before
+// (elicit-002 lost 2 of 5 that way, DL-0032). The write is then read back until every id is present. An id that never
+// shows is reported not created, so the batch file cannot claim a record the archive does not hold.
+export async function storeElicited(results, pending, { append, load, tries = 4, waitMs = 20000, sleep = (ms) => new Promise((r) => setTimeout(r, ms)) }) {
+  if (!pending.length) return results;
+  const ids = new Set(pending.map((p) => p.entry.id));
+  const count = await append(pending);
+  let seen = new Set();
+  if (count !== null) {
+    for (let i = 0; i < tries; i++) {
+      if (i) await sleep(waitMs);
+      const grown = await load().catch(() => null);
+      seen = new Set((grown?.entries || []).map((e) => e.id).filter((id) => ids.has(id)));
+      if (seen.size === ids.size) break;
+    }
+  }
+  return results.map((r) => {
+    if (!r.created || !ids.has(r.created) || seen.has(r.created)) return r;
+    return { ...r, ok: false, created: null, error: count === null ? "the single grown-memory write failed; nothing stored" : `stored but not confirmed on read-back after ${tries} reads: treat as not stored` };
+  });
+}
+
 // Runs the items in order and stops before the one whose estimate would cross the wall. `step(item)` returns
 // {ok, usd, created?, error?}. A step that throws is recorded at its estimate and stops the batch, so a code fault
 // costs one item and the batch file still gets its bookkeeping. Pure orchestration, testable without spend.
@@ -158,9 +181,14 @@ async function main() {
   if (pre.status !== 0) die("The budget preflight refused the reservation. Nothing was spent.");
 
   let step;
+  let storeAll = async (results) => results;
+  const pending = [];
   if (batch.kind === "elicitation") {
     const { elicitCouncil, synthesizeCouncil, buildDivergenceRecord, embedRecord } = await import("../api/_council.js");
-    const { appendGrownEntry } = await import("../api/_grown.js");
+    const { appendGrownEntries, loadGrownMemory } = await import("../api/_grown.js");
+    // elicitStep's store call only queues the record; storeElicited writes the queue once, after the last item.
+    const appendGrownEntry = async (entry, embedding) => { pending.push({ entry, embedding }); return pending.length; };
+    storeAll = (results) => storeElicited(results, pending, { append: appendGrownEntries, load: () => loadGrownMemory({ strict: true }) });
     const { questionIdFor } = await import("../api/_footprints.js");
     const byId = new Map(registry.questions.map((q) => [q.id, q]));
     const deps = { elicitCouncil, synthesizeCouncil, buildDivergenceRecord, embedRecord, appendGrownEntry, questionIdFor };
@@ -176,6 +204,7 @@ async function main() {
     };
   }
   const run = await runItems(batch.items, { perItemUsd: perItem, wallUsd: R.HARD_WALL_USD, step });
+  run.results = await storeAll(run.results);
   Object.assign(batch, { status: "run", run_at: new Date().toISOString(), actual_usd: run.spent_usd, actual_basis: batch.kind === "elicitation" ? "list prices × measured text length per council run (the council returns no provider usage)" : "provider-reported tokens × list prices (scripts/lib/model-prices.mjs), per record; see each result's usd_basis", results: run.results.map(({ item, ...r }) => ({ ...item, ...r })) });
   writeFileSync(join(ROOT, "public/batches.json"), JSON.stringify(batches, null, 2) + "\n");
   console.log(JSON.stringify({ batch: batch.id, ...run }, null, 1));
