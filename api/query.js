@@ -161,7 +161,7 @@ async function saveSession(sessionId, session) {
   try {
     await put(SESSION_PREFIX + sessionId + ".json", JSON.stringify(session), {
       access: "public",
-      addRandomSuffix: false,
+      addRandomSuffix: false, allowOverwrite: true,
       contentType: "application/json",
       cacheControlMaxAge: 0,
     });
@@ -226,7 +226,7 @@ async function writeJob(jobId, data) {
   // must not serve a stale "pending" after the result lands.
   await put(JOB_PREFIX + jobId + ".json", JSON.stringify(data), {
     access: "public",
-    addRandomSuffix: false,
+    addRandomSuffix: false, allowOverwrite: true,
     contentType: "application/json",
     cacheControlMaxAge: 0,
   });

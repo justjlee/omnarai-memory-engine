@@ -53,7 +53,7 @@ export async function addOpenItem({ text, category, priority } = {}) {
   };
   await put(PREFIX + item.id + ".json", JSON.stringify(item), {
     access: "public",
-    addRandomSuffix: false,
+    addRandomSuffix: false, allowOverwrite: true,
     contentType: "application/json",
   });
   return { item };
@@ -72,7 +72,7 @@ export async function setOpenItemStatus(id, status) {
   item.doneAt = item.status === "done" ? new Date().toISOString() : null;
   await put(PREFIX + id + ".json", JSON.stringify(item), {
     access: "public",
-    addRandomSuffix: false,
+    addRandomSuffix: false, allowOverwrite: true,
     contentType: "application/json",
   });
   return { item };
@@ -126,7 +126,7 @@ export async function writeScorecard(sc) {
   }
   const body = JSON.stringify(sc);
   if (Buffer.byteLength(body) > SC_MAX_BYTES) return { error: "scorecard too large (>200KB)" };
-  const opts = { access: "public", addRandomSuffix: false, contentType: "application/json" };
+  const opts = { access: "public", addRandomSuffix: false, allowOverwrite: true, contentType: "application/json" };
   await put(SC_LATEST, body, opts);
   await put(`home/scorecard/${sc.generated.slice(0, 10)}.json`, body, opts);
   return { ok: true, generated: sc.generated, bytes: Buffer.byteLength(body) };

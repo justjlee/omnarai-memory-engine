@@ -146,7 +146,7 @@ async function storeResults(results, summary) {
   const key = `${EVAL_BLOB_PREFIX}${ts.replace(/[:.]/g, "-")}.json`;
   await put(key, JSON.stringify({ ranAt: ts, summary, results }, null, 2), {
     access: "public",
-    addRandomSuffix: false,
+    addRandomSuffix: false, allowOverwrite: true,
     contentType: "application/json",
   });
   return key;

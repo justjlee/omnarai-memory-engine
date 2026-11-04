@@ -158,7 +158,7 @@ export async function recordCouncilRun(hash, { day = today() } = {}) {
     await put(key, JSON.stringify({ at: new Date().toISOString() }), {
       access: "public",
       contentType: "application/json",
-      addRandomSuffix: false,
+      addRandomSuffix: false, allowOverwrite: true,
     });
     return true;
   } catch {
@@ -203,7 +203,7 @@ export async function checkContributionQuota(req) {
 export async function recordContributionUse(hash) {
   if (!hash) return false;
   try {
-    await put(`${CONTRIB_PREFIX}${today()}/${hash}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.json`, JSON.stringify({ at: new Date().toISOString() }), { access: "public", contentType: "application/json", addRandomSuffix: false });
+    await put(`${CONTRIB_PREFIX}${today()}/${hash}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.json`, JSON.stringify({ at: new Date().toISOString() }), { access: "public", contentType: "application/json", addRandomSuffix: false, allowOverwrite: true });
     return true;
   } catch {
     return false;
@@ -230,7 +230,7 @@ export async function findDuplicateContribution(fp) {
 
 export async function recordContributionFingerprint(fp, contributionId) {
   try {
-    await put(`${DEDUPE_PREFIX}${fp}__${contributionId}.json`, JSON.stringify({ at: new Date().toISOString() }), { access: "public", contentType: "application/json", addRandomSuffix: false });
+    await put(`${DEDUPE_PREFIX}${fp}__${contributionId}.json`, JSON.stringify({ at: new Date().toISOString() }), { access: "public", contentType: "application/json", addRandomSuffix: false, allowOverwrite: true });
     return true;
   } catch {
     return false;

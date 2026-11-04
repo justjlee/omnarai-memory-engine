@@ -59,6 +59,6 @@ if (!updated) { console.log("nothing to write."); process.exit(0); }
 
 grown.updatedAt = new Date().toISOString();
 await put("memory/grown.json", JSON.stringify(grown), {
-  access: "public", addRandomSuffix: false, contentType: "application/json",
+  access: "public", addRandomSuffix: false, allowOverwrite: true, contentType: "application/json",
 });
 console.log("written.");

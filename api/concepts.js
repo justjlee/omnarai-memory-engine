@@ -255,7 +255,7 @@ async function saveConceptProposal(proposal) {
   const key = CP_PREFIX + proposal.sourceId + ".json";
   await put(key, JSON.stringify(proposal, null, 2), {
     access: "public",
-    addRandomSuffix: false,
+    addRandomSuffix: false, allowOverwrite: true,
     contentType: "application/json",
   });
 }
