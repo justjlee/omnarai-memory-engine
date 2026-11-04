@@ -97,5 +97,5 @@ for (const r of good) {
   added++;
 }
 grown.updatedAt = new Date().toISOString();
-await put(GROWN_KEY, JSON.stringify(grown), { access: "public", addRandomSuffix: false, contentType: "application/json" });
+await put(GROWN_KEY, JSON.stringify(grown), { access: "public", addRandomSuffix: false, allowOverwrite: true, contentType: "application/json" });
 console.log(`\n=== WROTE ONCE · added ${added} · grown entries now ${grown.entries.length} · vectors ${Object.keys(grown.vectors).length} ===`);

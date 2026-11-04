@@ -83,7 +83,7 @@ export async function appendAnnotation(recordId, annotation) {
   existing.annotations.push(annotation);
   await put(`${ANNOTATION_PREFIX}${recordId}.json`, JSON.stringify(existing), {
     access: "public",
-    addRandomSuffix: false,
+    addRandomSuffix: false, allowOverwrite: true,
     contentType: "application/json",
   });
   return existing;

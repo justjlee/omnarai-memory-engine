@@ -127,7 +127,7 @@ async function loadContribution(id) {
 async function saveContribution(c) {
   await put(CONTRIB_PREFIX + c.id + ".json", JSON.stringify(c), {
     access: "public",
-    addRandomSuffix: false,
+    addRandomSuffix: false, allowOverwrite: true,
     contentType: "application/json",
   });
 }

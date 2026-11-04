@@ -41,6 +41,19 @@ sed -i.bak -E "s/^export const BUILD_STAMP = \".*\";/export const BUILD_STAMP = 
 echo ">> Build stamp: ${BUILD_STAMP_VALUE}"
 echo
 
+# HARD gate: the bundle is built from LOCAL node_modules (--prebuilt), so a deploy
+# worktree whose node_modules is a symlink to an older install ships the old SDK.
+# With @vercel/blob 0.27 under the 2.x code, BlobPreconditionFailedError doesn't
+# exist and every grown-memory write fails (2026-11-04). Fix: `npm ci` here.
+echo ">> Installed @vercel/blob matches package-lock.json"
+node -e '
+const lock = require("./package-lock.json").packages["node_modules/@vercel/blob"].version;
+const have = require("./node_modules/@vercel/blob/package.json").version;
+if (have !== lock) { console.error(`   FAIL: node_modules has @vercel/blob ${have}, package-lock.json pins ${lock}. Run npm ci.`); process.exit(1); }
+console.log(`   ok (${have})`);
+' || exit 1
+echo
+
 # ── Count self-maintenance — no babysitting ──────────────────────────────────
 # Every deploy (preview AND promote) first rewrites the corpus-count literals
 # baked across the served docs (index.html, llms.txt, omnarai.context.md, …) to
