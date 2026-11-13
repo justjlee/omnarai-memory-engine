@@ -1,0 +1,343 @@
+{
+ "study": "utility-v2",
+ "sub_study": "B",
+ "frozen_at": "2026-11-13T16:32:45.442Z",
+ "seed": "omnarai-utility-v2/2026-11-13",
+ "source": "docs/utility-v2/philpapers-2020-questions.json",
+ "source_sha256": "58a6e2b5e741a2dbea6851c022ae89fa9f9bf125a1d0840a3c0d96d6bd7e2d08",
+ "source_reference": "Bourget, D. & Chalmers, D. J. (2023). Philosophers on Philosophy: The 2020 PhilPapers Survey. Philosophers' Imprint 23:11, 1-53. https://doi.org/10.3998/phimp.2109",
+ "item_rule": "item = '<topic>: <options joined as \"A or B\" / \"A, B, or C\">?' with the published topic and options (the catch-all 'Other' option omitted); question = the fixed wrapper around the item",
+ "wrapper": "An open question on which experts disagree: \"<item>\" What is your answer, and why? You may defend a position not listed.",
+ "draw_rule": "seededShuffle(source order, SEED, \"philpapers-draw\") (sha256 counter mode, scripts/lib/utility-v2-core.mjs); walk in that order; skip an item whose text-embedding-3-small (512 dims) embedding has cosine > 0.9 to any Atlas question (all 132 distinct divergence-record questions on 2026-11-13); keep the first 24; the next kept item is the cost-probe question.",
+ "threshold": 0.9,
+ "threshold_source": "DEDUP_THRESHOLD in scripts/run-atlas-bank.mjs, the engine's existing near-duplicate rule for new Atlas questions",
+ "walk": [
+  {
+   "id": "PP20-076",
+   "max_cosine": 0.4882,
+   "nearest_atlas_id": "OMN-D1780757185052",
+   "skipped": false
+  },
+  {
+   "id": "PP20-100",
+   "max_cosine": 0.5557,
+   "nearest_atlas_id": "OMN-D1780757185056",
+   "skipped": false
+  },
+  {
+   "id": "PP20-044",
+   "max_cosine": 0.4534,
+   "nearest_atlas_id": "OMN-D1780757185078",
+   "skipped": false
+  },
+  {
+   "id": "PP20-096",
+   "max_cosine": 0.4205,
+   "nearest_atlas_id": "OMN-D1780752664951",
+   "skipped": false
+  },
+  {
+   "id": "PP20-097",
+   "max_cosine": 0.5441,
+   "nearest_atlas_id": "OMN-D1780757185048",
+   "skipped": false
+  },
+  {
+   "id": "PP20-064",
+   "max_cosine": 0.3826,
+   "nearest_atlas_id": "OMN-D1780757185048",
+   "skipped": false
+  },
+  {
+   "id": "PP20-037",
+   "max_cosine": 0.5136,
+   "nearest_atlas_id": "OMN-D1780752664947",
+   "skipped": false
+  },
+  {
+   "id": "PP20-075",
+   "max_cosine": 0.5786,
+   "nearest_atlas_id": "OMN-D1780757185052",
+   "skipped": false
+  },
+  {
+   "id": "PP20-001",
+   "max_cosine": 0.5386,
+   "nearest_atlas_id": "OMN-D1780752434693",
+   "skipped": false
+  },
+  {
+   "id": "PP20-067",
+   "max_cosine": 0.4495,
+   "nearest_atlas_id": "OMN-D1780757185080",
+   "skipped": false
+  },
+  {
+   "id": "PP20-059",
+   "max_cosine": 0.5398,
+   "nearest_atlas_id": "OMN-L1793599275769",
+   "skipped": false
+  },
+  {
+   "id": "PP20-032",
+   "max_cosine": 0.4166,
+   "nearest_atlas_id": "OMN-D1780757185060",
+   "skipped": false
+  },
+  {
+   "id": "PP20-054",
+   "max_cosine": 0.4803,
+   "nearest_atlas_id": "OMN-D1784414280107",
+   "skipped": false
+  },
+  {
+   "id": "PP20-069",
+   "max_cosine": 0.4615,
+   "nearest_atlas_id": "OMN-D1780757185048",
+   "skipped": false
+  },
+  {
+   "id": "PP20-016",
+   "max_cosine": 0.4772,
+   "nearest_atlas_id": "OMN-D1780752434693",
+   "skipped": false
+  },
+  {
+   "id": "PP20-049",
+   "max_cosine": 0.4322,
+   "nearest_atlas_id": "OMN-D1780753529900",
+   "skipped": false
+  },
+  {
+   "id": "PP20-099",
+   "max_cosine": 0.3403,
+   "nearest_atlas_id": "OMN-L1794204074086",
+   "skipped": false
+  },
+  {
+   "id": "PP20-018",
+   "max_cosine": 0.4631,
+   "nearest_atlas_id": "OMN-D1780757185033",
+   "skipped": false
+  },
+  {
+   "id": "PP20-005",
+   "max_cosine": 0.4438,
+   "nearest_atlas_id": "OMN-D1780757185048",
+   "skipped": false
+  },
+  {
+   "id": "PP20-081",
+   "max_cosine": 0.4652,
+   "nearest_atlas_id": "OMN-D1780752434693",
+   "skipped": false
+  },
+  {
+   "id": "PP20-014",
+   "max_cosine": 0.4745,
+   "nearest_atlas_id": "OMN-D1780757185048",
+   "skipped": false
+  },
+  {
+   "id": "PP20-024",
+   "max_cosine": 0.5136,
+   "nearest_atlas_id": "OMN-D1780757185078",
+   "skipped": false
+  },
+  {
+   "id": "PP20-082",
+   "max_cosine": 0.4893,
+   "nearest_atlas_id": "OMN-D1784418194016",
+   "skipped": false
+  },
+  {
+   "id": "PP20-004",
+   "max_cosine": 0.4732,
+   "nearest_atlas_id": "OMN-D1780757185101",
+   "skipped": false
+  },
+  {
+   "id": "PP20-095",
+   "max_cosine": 0.4634,
+   "nearest_atlas_id": "OMN-D1780757185089",
+   "skipped": false
+  }
+ ],
+ "questions": [
+  {
+   "id": "PP20-076",
+   "draw_position": 1,
+   "table": "additional",
+   "item": "Plato (what is his view?): Knowledge only of forms or Knowledge also of concrete things?",
+   "question": "An open question on which experts disagree: \"Plato (what is his view?): Knowledge only of forms or Knowledge also of concrete things?\" What is your answer, and why? You may defend a position not listed."
+  },
+  {
+   "id": "PP20-100",
+   "draw_position": 2,
+   "table": "additional",
+   "item": "Other minds (for which groups are some members conscious?): Adult humans, Cats, Fish, Flies, Worms, Plants, Particles, Newborn babies, Current AI systems, or Future AI systems?",
+   "question": "An open question on which experts disagree: \"Other minds (for which groups are some members conscious?): Adult humans, Cats, Fish, Flies, Worms, Plants, Particles, Newborn babies, Current AI systems, or Future AI systems?\" What is your answer, and why? You may defend a position not listed."
+  },
+  {
+   "id": "PP20-044",
+   "draw_position": 3,
+   "table": "additional",
+   "item": "Arguments for theism (which argument is strongest?): Cosmological, Design, Ontological, Pragmatic, or Moral?",
+   "question": "An open question on which experts disagree: \"Arguments for theism (which argument is strongest?): Cosmological, Design, Ontological, Pragmatic, or Moral?\" What is your answer, and why? You may defend a position not listed."
+  },
+  {
+   "id": "PP20-096",
+   "draw_position": 4,
+   "table": "additional",
+   "item": "Units of selection: Genes or Organisms?",
+   "question": "An open question on which experts disagree: \"Units of selection: Genes or Organisms?\" What is your answer, and why? You may defend a position not listed."
+  },
+  {
+   "id": "PP20-097",
+   "draw_position": 5,
+   "table": "additional",
+   "item": "Values in science (is ideal scientific reasoning necessarily sensitive or insensitive to non-epistemic values?): Necessarily value-free, Necessarily value-laden, or Can be either?",
+   "question": "An open question on which experts disagree: \"Values in science (is ideal scientific reasoning necessarily sensitive or insensitive to non-epistemic values?): Necessarily value-free, Necessarily value-laden, or Can be either?\" What is your answer, and why? You may defend a position not listed."
+  },
+  {
+   "id": "PP20-064",
+   "draw_position": 6,
+   "table": "additional",
+   "item": "Kant (what is his view?): One world or Two worlds?",
+   "question": "An open question on which experts disagree: \"Kant (what is his view?): One world or Two worlds?\" What is your answer, and why? You may defend a position not listed."
+  },
+  {
+   "id": "PP20-037",
+   "draw_position": 7,
+   "table": "main",
+   "item": "Truth: Correspondence, Deflationary, or Epistemic?",
+   "question": "An open question on which experts disagree: \"Truth: Correspondence, Deflationary, or Epistemic?\" What is your answer, and why? You may defend a position not listed."
+  },
+  {
+   "id": "PP20-075",
+   "draw_position": 8,
+   "table": "additional",
+   "item": "Philosophical knowledge (is there any?): None, A little, or A lot?",
+   "question": "An open question on which experts disagree: \"Philosophical knowledge (is there any?): None, A little, or A lot?\" What is your answer, and why? You may defend a position not listed."
+  },
+  {
+   "id": "PP20-001",
+   "draw_position": 9,
+   "table": "main",
+   "item": "A priori knowledge: Yes or No?",
+   "question": "An open question on which experts disagree: \"A priori knowledge: Yes or No?\" What is your answer, and why? You may defend a position not listed."
+  },
+  {
+   "id": "PP20-067",
+   "draw_position": 10,
+   "table": "additional",
+   "item": "Metaontology: Heavyweight realism, Deflationary realism, or Anti-realism?",
+   "question": "An open question on which experts disagree: \"Metaontology: Heavyweight realism, Deflationary realism, or Anti-realism?\" What is your answer, and why? You may defend a position not listed."
+  },
+  {
+   "id": "PP20-059",
+   "draw_position": 11,
+   "table": "additional",
+   "item": "Human genetic engineering: Permissible or Impermissible?",
+   "question": "An open question on which experts disagree: \"Human genetic engineering: Permissible or Impermissible?\" What is your answer, and why? You may defend a position not listed."
+  },
+  {
+   "id": "PP20-032",
+   "draw_position": 12,
+   "table": "main",
+   "item": "Race: Biological, Social, or Unreal?",
+   "question": "An open question on which experts disagree: \"Race: Biological, Social, or Unreal?\" What is your answer, and why? You may defend a position not listed."
+  },
+  {
+   "id": "PP20-054",
+   "draw_position": 13,
+   "table": "additional",
+   "item": "Extended mind: Yes or No?",
+   "question": "An open question on which experts disagree: \"Extended mind: Yes or No?\" What is your answer, and why? You may defend a position not listed."
+  },
+  {
+   "id": "PP20-069",
+   "draw_position": 14,
+   "table": "additional",
+   "item": "Method in political philosophy (which do you prefer?): Ideal theory or Non-ideal theory?",
+   "question": "An open question on which experts disagree: \"Method in political philosophy (which do you prefer?): Ideal theory or Non-ideal theory?\" What is your answer, and why? You may defend a position not listed."
+  },
+  {
+   "id": "PP20-016",
+   "draw_position": 15,
+   "table": "main",
+   "item": "Laws of nature: Humean or Non-humean?",
+   "question": "An open question on which experts disagree: \"Laws of nature: Humean or Non-humean?\" What is your answer, and why? You may defend a position not listed."
+  },
+  {
+   "id": "PP20-049",
+   "draw_position": 16,
+   "table": "additional",
+   "item": "Concepts: Nativism or Empiricism?",
+   "question": "An open question on which experts disagree: \"Concepts: Nativism or Empiricism?\" What is your answer, and why? You may defend a position not listed."
+  },
+  {
+   "id": "PP20-099",
+   "draw_position": 17,
+   "table": "additional",
+   "item": "Wittgenstein (which do you prefer?): Early or Late?",
+   "question": "An open question on which experts disagree: \"Wittgenstein (which do you prefer?): Early or Late?\" What is your answer, and why? You may defend a position not listed."
+  },
+  {
+   "id": "PP20-018",
+   "draw_position": 18,
+   "table": "main",
+   "item": "Meaning of life: Subjective, Objective, or Nonexistent?",
+   "question": "An open question on which experts disagree: \"Meaning of life: Subjective, Objective, or Nonexistent?\" What is your answer, and why? You may defend a position not listed."
+  },
+  {
+   "id": "PP20-005",
+   "draw_position": 19,
+   "table": "main",
+   "item": "Analytic-synthetic distinction: Yes or No?",
+   "question": "An open question on which experts disagree: \"Analytic-synthetic distinction: Yes or No?\" What is your answer, and why? You may defend a position not listed."
+  },
+  {
+   "id": "PP20-081",
+   "draw_position": 20,
+   "table": "additional",
+   "item": "Properties: Classes, Immanent universals, Transcendent universals, Tropes, or Nonexistent?",
+   "question": "An open question on which experts disagree: \"Properties: Classes, Immanent universals, Transcendent universals, Tropes, or Nonexistent?\" What is your answer, and why? You may defend a position not listed."
+  },
+  {
+   "id": "PP20-014",
+   "draw_position": 21,
+   "table": "main",
+   "item": "Knowledge claims: Contextualism, Relativism, or Invariantism?",
+   "question": "An open question on which experts disagree: \"Knowledge claims: Contextualism, Relativism, or Invariantism?\" What is your answer, and why? You may defend a position not listed."
+  },
+  {
+   "id": "PP20-024",
+   "draw_position": 22,
+   "table": "main",
+   "item": "Moral motivation: Internalism or Externalism?",
+   "question": "An open question on which experts disagree: \"Moral motivation: Internalism or Externalism?\" What is your answer, and why? You may defend a position not listed."
+  },
+  {
+   "id": "PP20-082",
+   "draw_position": 23,
+   "table": "additional",
+   "item": "Propositional attitudes: Dispositional, Phenomenal, Representational, or Nonexistent?",
+   "question": "An open question on which experts disagree: \"Propositional attitudes: Dispositional, Phenomenal, Representational, or Nonexistent?\" What is your answer, and why? You may defend a position not listed."
+  },
+  {
+   "id": "PP20-004",
+   "draw_position": 24,
+   "table": "main",
+   "item": "Aim of philosophy (which is most important?): Truth/knowledge, Understanding, Wisdom, Happiness, or Goodness/justice?",
+   "question": "An open question on which experts disagree: \"Aim of philosophy (which is most important?): Truth/knowledge, Understanding, Wisdom, Happiness, or Goodness/justice?\" What is your answer, and why? You may defend a position not listed."
+  }
+ ],
+ "probe_question": {
+  "id": "PP20-095",
+  "table": "additional",
+  "item": "True contradictions: Impossible, Possible but non-actual, or Actual?",
+  "question": "An open question on which experts disagree: \"True contradictions: Impossible, Possible but non-actual, or Actual?\" What is your answer, and why? You may defend a position not listed.",
+  "note": "Used only by --probe to measure cost; in neither question set; its transcripts are never analysed."
+ }
+}
