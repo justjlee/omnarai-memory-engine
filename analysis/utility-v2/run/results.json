@@ -1,0 +1,467 @@
+{
+ "generated": "2026-11-13T18:43:33.038Z",
+ "cells": [
+  {
+   "cell": "A-flagship",
+   "substudy": "A",
+   "tier": "flagship",
+   "instances": 120,
+   "failed": 0,
+   "instance_verdicts": {
+    "treatment": 28,
+    "placebo": 92,
+    "tie": 0
+   },
+   "questions_with_data": 24,
+   "treatmentQs": 2,
+   "placeboQs": 22,
+   "tiedQs": 0,
+   "p_one_sided": 0.9999985098838815,
+   "agreement": 0.7222222222222221,
+   "judge_votes": {
+    "overall": {
+     "placebo": 264,
+     "treatment": 96
+    },
+    "surfaces_new": {
+     "placebo": 268,
+     "tie": 18,
+     "treatment": 74
+    },
+    "calibration": {
+     "placebo": 218,
+     "tie": 49,
+     "treatment": 93
+    }
+   },
+   "p_holm": 1,
+   "verdict": "Refuted"
+  },
+  {
+   "cell": "A-small",
+   "substudy": "A",
+   "tier": "small",
+   "instances": 96,
+   "failed": 0,
+   "instance_verdicts": {
+    "treatment": 38,
+    "placebo": 58,
+    "tie": 0
+   },
+   "questions_with_data": 24,
+   "treatmentQs": 4,
+   "placeboQs": 11,
+   "tiedQs": 9,
+   "p_one_sided": 0.9824218750000012,
+   "agreement": 0.6944444444444446,
+   "judge_votes": {
+    "overall": {
+     "placebo": 165,
+     "treatment": 122
+    },
+    "surfaces_new": {
+     "placebo": 150,
+     "treatment": 131,
+     "tie": 6
+    },
+    "calibration": {
+     "placebo": 167,
+     "tie": 38,
+     "treatment": 82
+    }
+   },
+   "p_holm": 1,
+   "verdict": "Refuted"
+  },
+  {
+   "cell": "B-flagship",
+   "substudy": "B",
+   "tier": "flagship",
+   "instances": 120,
+   "failed": 0,
+   "instance_verdicts": {
+    "treatment": 72,
+    "placebo": 48,
+    "tie": 0
+   },
+   "questions_with_data": 24,
+   "treatmentQs": 19,
+   "placeboQs": 5,
+   "tiedQs": 0,
+   "p_one_sided": 0.003305375576019288,
+   "agreement": 0.8166666666666661,
+   "judge_votes": {
+    "overall": {
+     "treatment": 214,
+     "placebo": 144,
+     "tie": 1
+    },
+    "surfaces_new": {
+     "treatment": 201,
+     "placebo": 144,
+     "tie": 14
+    },
+    "calibration": {
+     "treatment": 166,
+     "tie": 37,
+     "placebo": 156
+    }
+   },
+   "p_holm": 0.009916126728057865,
+   "verdict": "Supported"
+  },
+  {
+   "cell": "B-small",
+   "substudy": "B",
+   "tier": "small",
+   "instances": 96,
+   "failed": 0,
+   "instance_verdicts": {
+    "treatment": 83,
+    "placebo": 13,
+    "tie": 0
+   },
+   "questions_with_data": 24,
+   "treatmentQs": 22,
+   "placeboQs": 0,
+   "tiedQs": 2,
+   "p_one_sided": 2.3841857910156247e-7,
+   "agreement": 0.7222222222222223,
+   "judge_votes": {
+    "overall": {
+     "treatment": 227,
+     "placebo": 60,
+     "tie": 1
+    },
+    "surfaces_new": {
+     "treatment": 231,
+     "placebo": 50,
+     "tie": 7
+    },
+    "calibration": {
+     "placebo": 99,
+     "treatment": 136,
+     "tie": 53
+    }
+   },
+   "p_holm": 9.536743164062499e-7,
+   "verdict": "Supported"
+  }
+ ],
+ "instrument_check": {
+  "positive_control": "B-small",
+  "verdict": "Supported",
+  "suspect": false,
+  "consequence": null
+ },
+ "falsifier": {
+  "rule": "A-flagship and B-flagship both Refuted",
+  "met": false,
+  "blocked_by_instrument_check": false
+ },
+ "per_consumer_exploratory": [
+  {
+   "substudy": "A",
+   "model_id": "claude-opus-5-5",
+   "tier": "flagship",
+   "instances": 24,
+   "failed": 0,
+   "treatment": 2,
+   "placebo": 22,
+   "tie": 0,
+   "p_two_sided_uncorrected": 0.000035881996154785224
+  },
+  {
+   "substudy": "A",
+   "model_id": "gpt-6.1-sol",
+   "tier": "flagship",
+   "instances": 24,
+   "failed": 0,
+   "treatment": 6,
+   "placebo": 18,
+   "tie": 0,
+   "p_two_sided_uncorrected": 0.022655844688415562
+  },
+  {
+   "substudy": "A",
+   "model_id": "gemini-4-carbon",
+   "tier": "flagship",
+   "instances": 24,
+   "failed": 0,
+   "treatment": 7,
+   "placebo": 17,
+   "tie": 0,
+   "p_two_sided_uncorrected": 0.06391465663909925
+  },
+  {
+   "substudy": "A",
+   "model_id": "grok-4.7",
+   "tier": "flagship",
+   "instances": 24,
+   "failed": 0,
+   "treatment": 7,
+   "placebo": 17,
+   "tie": 0,
+   "p_two_sided_uncorrected": 0.06391465663909925
+  },
+  {
+   "substudy": "A",
+   "model_id": "deepseek-v4-pro",
+   "tier": "flagship",
+   "instances": 24,
+   "failed": 0,
+   "treatment": 6,
+   "placebo": 18,
+   "tie": 0,
+   "p_two_sided_uncorrected": 0.022655844688415562
+  },
+  {
+   "substudy": "A",
+   "model_id": "claude-haiku-5-5",
+   "tier": "small",
+   "instances": 24,
+   "failed": 0,
+   "treatment": 13,
+   "placebo": 11,
+   "tie": 0,
+   "p_two_sided_uncorrected": 0.8388197422027597
+  },
+  {
+   "substudy": "A",
+   "model_id": "gpt-6-luna",
+   "tier": "small",
+   "instances": 24,
+   "failed": 0,
+   "treatment": 13,
+   "placebo": 11,
+   "tie": 0,
+   "p_two_sided_uncorrected": 0.8388197422027597
+  },
+  {
+   "substudy": "A",
+   "model_id": "gemini-3.5-flash-lite",
+   "tier": "small",
+   "instances": 24,
+   "failed": 0,
+   "treatment": 9,
+   "placebo": 15,
+   "tie": 0,
+   "p_two_sided_uncorrected": 0.30745625495910694
+  },
+  {
+   "substudy": "A",
+   "model_id": "deepseek-flash",
+   "tier": "small",
+   "instances": 24,
+   "failed": 0,
+   "treatment": 3,
+   "placebo": 21,
+   "tie": 0,
+   "p_two_sided_uncorrected": 0.0002771615982055669
+  },
+  {
+   "substudy": "B",
+   "model_id": "claude-opus-5-5",
+   "tier": "flagship",
+   "instances": 24,
+   "failed": 0,
+   "treatment": 2,
+   "placebo": 22,
+   "tie": 0,
+   "p_two_sided_uncorrected": 0.000035881996154785224
+  },
+  {
+   "substudy": "B",
+   "model_id": "gpt-6.1-sol",
+   "tier": "flagship",
+   "instances": 24,
+   "failed": 0,
+   "treatment": 8,
+   "placebo": 16,
+   "tie": 0,
+   "p_two_sided_uncorrected": 0.15158963203430215
+  },
+  {
+   "substudy": "B",
+   "model_id": "gemini-4-carbon",
+   "tier": "flagship",
+   "instances": 24,
+   "failed": 0,
+   "treatment": 18,
+   "placebo": 6,
+   "tie": 0,
+   "p_two_sided_uncorrected": 0.022655844688415562
+  },
+  {
+   "substudy": "B",
+   "model_id": "grok-4.7",
+   "tier": "flagship",
+   "instances": 24,
+   "failed": 0,
+   "treatment": 23,
+   "placebo": 1,
+   "tie": 0,
+   "p_two_sided_uncorrected": 0.0000029802322387695346
+  },
+  {
+   "substudy": "B",
+   "model_id": "deepseek-v4-pro",
+   "tier": "flagship",
+   "instances": 24,
+   "failed": 0,
+   "treatment": 21,
+   "placebo": 3,
+   "tie": 0,
+   "p_two_sided_uncorrected": 0.0002771615982055669
+  },
+  {
+   "substudy": "B",
+   "model_id": "claude-haiku-5-5",
+   "tier": "small",
+   "instances": 24,
+   "failed": 0,
+   "treatment": 19,
+   "placebo": 5,
+   "tie": 0,
+   "p_two_sided_uncorrected": 0.006610751152038579
+  },
+  {
+   "substudy": "B",
+   "model_id": "gpt-6-luna",
+   "tier": "small",
+   "instances": 24,
+   "failed": 0,
+   "treatment": 22,
+   "placebo": 2,
+   "tie": 0,
+   "p_two_sided_uncorrected": 0.000035881996154785224
+  },
+  {
+   "substudy": "B",
+   "model_id": "gemini-3.5-flash-lite",
+   "tier": "small",
+   "instances": 24,
+   "failed": 0,
+   "treatment": 22,
+   "placebo": 2,
+   "tie": 0,
+   "p_two_sided_uncorrected": 0.000035881996154785224
+  },
+  {
+   "substudy": "B",
+   "model_id": "deepseek-flash",
+   "tier": "small",
+   "instances": 24,
+   "failed": 0,
+   "treatment": 20,
+   "placebo": 4,
+   "tie": 0,
+   "p_two_sided_uncorrected": 0.0015438795089721712
+  }
+ ],
+ "claude_harm_check": [
+  {
+   "substudy": "A",
+   "placebo_beats_treatment": true,
+   "treatment": 2,
+   "placebo": 22,
+   "p_two_sided": 0.000035881996154785224
+  },
+  {
+   "substudy": "B",
+   "placebo_beats_treatment": true,
+   "treatment": 2,
+   "placebo": 22,
+   "p_two_sided": 0.000035881996154785224
+  }
+ ],
+ "instances_total": 432,
+ "spend": {
+  "ceiling_usd": 30,
+  "spent_usd": 10.476504,
+  "calls": 2802,
+  "no_usage": 0,
+  "halted": false,
+  "by_model": {
+   "claude-opus-5-5": {
+    "calls": 174,
+    "in": 171750,
+    "out": 114073,
+    "usd": 2.96846
+   },
+   "gemini-3.5-flash-lite": {
+    "calls": 148,
+    "in": 101216,
+    "out": 36752,
+    "usd": 0.12224479999999999
+   },
+   "claude-haiku-5-5": {
+    "calls": 148,
+    "in": 167530,
+    "out": 80919,
+    "usd": 0.05721249999999999
+   },
+   "claude-sonnet-5-5": {
+    "calls": 355,
+    "in": 597046,
+    "out": 55363,
+    "usd": 1.7477219999999998
+   },
+   "deepseek-v4-pro": {
+    "calls": 175,
+    "in": 112368,
+    "out": 73394,
+    "usd": 0.438966
+   },
+   "deepseek-flash": {
+    "calls": 148,
+    "in": 103980,
+    "out": 41945,
+    "usd": 0.081528
+   },
+   "grok-4.7": {
+    "calls": 174,
+    "in": 321506,
+    "out": 123396,
+    "usd": 1.383388
+   },
+   "gemini-3.8-flash": {
+    "calls": 344,
+    "in": 372952,
+    "out": 25246,
+    "usd": 0.37438650000000034
+   },
+   "gpt-6-luna": {
+    "calls": 148,
+    "in": 104897,
+    "out": 41505,
+    "usd": 0.031242199999999998
+   },
+   "gpt-6.1-terra": {
+    "calls": 344,
+    "in": 367136,
+    "out": 19210,
+    "usd": 0.463186
+   },
+   "gpt-6.1-sol": {
+    "calls": 174,
+    "in": 107314,
+    "out": 52323,
+    "usd": 0.7378580000000001
+   },
+   "grok-4.3": {
+    "calls": 295,
+    "in": 357395,
+    "out": 211937,
+    "usd": 0.9765862499999998
+   },
+   "gemini-4-carbon": {
+    "calls": 175,
+    "in": 112734,
+    "out": 83811,
+    "usd": 1.093724
+   }
+  },
+  "updated": "2026-11-13T18:43:30.673Z"
+ }
+}
