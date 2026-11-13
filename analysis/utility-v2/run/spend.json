@@ -1,15 +1,15 @@
 {
  "ceiling_usd": 30,
- "spent_usd": 0.297107,
- "calls": 78,
+ "spent_usd": 1.591313,
+ "calls": 199,
  "no_usage": 0,
  "halted": false,
  "by_model": {
   "claude-opus-5-5": {
-   "calls": 6,
-   "in": 3814,
-   "out": 3213,
-   "usd": 0.079516
+   "calls": 30,
+   "in": 8402,
+   "out": 25907,
+   "usd": 0.5517479999999999
   },
   "gemini-3.5-flash-lite": {
    "calls": 4,
@@ -30,10 +30,10 @@
    "usd": 0.03449
   },
   "deepseek-v4-pro": {
-   "calls": 6,
-   "in": 2639,
-   "out": 1994,
-   "usd": 0.01137972
+   "calls": 31,
+   "in": 7763,
+   "out": 28180,
+   "usd": 0.12183996
   },
   "deepseek-flash": {
    "calls": 4,
@@ -42,10 +42,10 @@
    "usd": 0.0017553
   },
   "grok-4.7": {
-   "calls": 6,
-   "in": 9909,
-   "out": 2670,
-   "usd": 0.035837999999999995
+   "calls": 30,
+   "in": 42672,
+   "out": 31377,
+   "usd": 0.273606
   },
   "gemini-3.8-flash": {
    "calls": 8,
@@ -66,10 +66,10 @@
    "usd": 0.009662
   },
   "gpt-6.1-sol": {
-   "calls": 6,
-   "in": 2461,
-   "out": 1310,
-   "usd": 0.018022
+   "calls": 30,
+   "in": 5600,
+   "out": 11277,
+   "usd": 0.12397
   },
   "grok-4.3": {
    "calls": 7,
@@ -78,11 +78,11 @@
    "usd": 0.020921250000000002
   },
   "gemini-4-carbon": {
-   "calls": 7,
-   "in": 2656,
-   "out": 3830,
-   "usd": 0.073758
+   "calls": 31,
+   "in": 6525,
+   "out": 39836,
+   "usd": 0.441556
   }
  },
- "updated": "2026-11-13T18:12:20.307Z"
+ "updated": "2026-11-13T18:16:07.494Z"
 }
