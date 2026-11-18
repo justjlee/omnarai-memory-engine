@@ -1,4 +1,4 @@
-import { put } from "@vercel/blob";
+import { put } from "./_blob.js";
 
 // ── Shared proposal helpers ───────────────────────────────────────────────────
 // store.js builds proposals inline from a deliberation; this module builds the

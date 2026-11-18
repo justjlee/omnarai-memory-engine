@@ -1,4 +1,4 @@
-import { list, put } from "@vercel/blob";
+import { list, put, blobFetch } from "./_blob.js";
 import { createHash, randomBytes } from "crypto";
 
 // ── Access telemetry ──────────────────────────────────────────────────────────
@@ -62,7 +62,9 @@ export function ipHash(req) {
   const fwd = (req.headers?.["x-forwarded-for"] || "").toString();
   const ip = fwd.split(",")[0].trim() || req.socket?.remoteAddress || "";
   if (!ip) return null;
-  const salt = process.env.INGEST_SECRET || "omnarai";
+  // VISITOR_HASH_SALT holds the salt every stored hash was made with, so the curator
+  // key can be rotated without making every returning visitor look new.
+  const salt = (process.env.VISITOR_HASH_SALT || "").trim() || process.env.INGEST_SECRET || "omnarai";
   return createHash("sha256").update(salt + ip).digest("hex").slice(0, 12);
 }
 
@@ -245,7 +247,7 @@ async function loadLog() {
   try {
     const { blobs } = await list({ prefix: LOG_KEY });
     if (!blobs.length) return emptyLog();
-    const res = await fetch(`${blobs[0].url}?ts=${Date.now()}`, { cache: "no-store" });
+    const res = await blobFetch(`${blobs[0].url}?ts=${Date.now()}`, { cache: "no-store" });
     if (!res.ok) return emptyLog();
     const data = await res.json();
     return { ...emptyLog(), ...data };
@@ -421,7 +423,7 @@ export async function readDayEvents(day, { limit = DAY_BODY_LIMIT } = {}) {
       const batch = await Promise.all(
         wanted.slice(i, i + BODY_FETCH_CONCURRENCY).map(async (b) => {
           try {
-            const r = await fetch(`${b.url}?ts=${Date.now()}`, { cache: "no-store" });
+            const r = await blobFetch(`${b.url}?ts=${Date.now()}`, { cache: "no-store" });
             return r.ok ? await r.json() : null;
           } catch {
             return null;

@@ -24,7 +24,7 @@
 //       exactly what the scrub wrote. Dry run unless --apply.
 // Needs BLOB_READ_WRITE_TOKEN (source .env.local). Tests: scripts/test-receipt-hygiene.mjs [H9, H10].
 
-import { list, put } from "@vercel/blob";
+import { list, put, blobFetch } from "../api/_blob.js";
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 import { existsSync, openSync, writeSync, closeSync, readFileSync, statSync, realpathSync } from "node:fs";
 import { dirname, isAbsolute, resolve, join } from "node:path";
@@ -77,7 +77,7 @@ const pick = (ev) => ({ path: ev?.path ?? null, referer: ev?.referer ?? null });
 const sameFields = (ev, f) => (ev?.path ?? null) === f.path && (ev?.referer ?? null) === f.referer;
 
 async function fetchJson(url) {
-  const r = await fetch(`${url}?ts=${Date.now()}`, { cache: "no-store" });
+  const r = await blobFetch(`${url}?ts=${Date.now()}`, { cache: "no-store" });
   if (!r.ok) throw new Error(`fetch ${r.status}`);
   return r.json();
 }

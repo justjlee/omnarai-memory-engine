@@ -35,7 +35,7 @@
 //     simultaneous runs before the true $100 could be touched. The unbypassable
 //     floor is still provider-side spend limits — this is the graceful layer.
 
-import { list, put } from "@vercel/blob";
+import { list, put, blobFetch } from "./_blob.js";
 
 const PREFIX = "budget/spend/";
 const CONFIG_KEY = "budget/config.json"; // runtime override — adjust the cap without a redeploy
@@ -82,7 +82,7 @@ export async function readBudgetConfig() {
   try {
     const { blobs } = await list({ prefix: CONFIG_KEY });
     if (!blobs.length) return {};
-    const res = await fetch(`${blobs[0].url}?ts=${Date.now()}`, { cache: "no-store" });
+    const res = await blobFetch(`${blobs[0].url}?ts=${Date.now()}`, { cache: "no-store" });
     if (!res.ok) return {};
     const cfg = await res.json();
     return cfg && typeof cfg === "object" ? cfg : {};

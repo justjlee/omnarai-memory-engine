@@ -31,8 +31,9 @@
 //     allowed rather than guessed at. The cap is cost control, not security; the
 //     worst case it protects against is a bill, and a bill is recoverable.
 
-import { list, put } from "@vercel/blob";
+import { list, put } from "./_blob.js";
 import { createHash, timingSafeEqual } from "node:crypto";
+import { secretEquals } from "./_operator.js";
 import { ipHash } from "./_telemetry.js";
 
 const PREFIX = "council-usage/";
@@ -91,8 +92,8 @@ function trustedOriginHash(req) {
 function exemptReason(req) {
   if (req.headers?.["x-omnarai-self"]) return "self";
   const auth = (req.headers?.authorization || "").replace(/^Bearer\s+/i, "").trim();
-  if (auth && process.env.INGEST_SECRET && auth === process.env.INGEST_SECRET) return "curator";
-  if (auth && process.env.CRON_SECRET && auth === process.env.CRON_SECRET) return "cron";
+  if (auth && secretEquals(auth, (process.env.INGEST_SECRET || "").trim())) return "curator";
+  if (auth && secretEquals(auth, (process.env.CRON_SECRET || "").trim())) return "cron";
   return null;
 }
 

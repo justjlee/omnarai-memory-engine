@@ -14,20 +14,43 @@
 // Mirrors @vercel/blob 2.x put semantics: every blob carries an ETag; a put onto
 // an existing pathname throws unless `allowOverwrite: true` or `ifMatch` is set;
 // an `ifMatch` that isn't the current ETag throws BlobPreconditionFailedError.
+//
+// Two stores, as in production: the default PUBLIC store (mem.blob.test, readable
+// by plain fetch) and a PRIVATE store (private.mem.blob.test), selected by passing
+// `token` equal to PRIVATE_BLOB_READ_WRITE_TOKEN. A private URL is never readable
+// by fetch (403, like the real host without credentials); only get() reads it.
+// Each store refuses a put whose `access` doesn't match its mode.
 import { createHash } from "node:crypto";
 
 export const MEM_ORIGIN = "https://mem.blob.test/";
+export const MEM_PRIVATE_ORIGIN = "https://private.mem.blob.test/";
 
 const S = (globalThis.__MEM_BLOB__ ||= {
-  files: new Map(),       // pathname -> { body, uploadedAt, contentType }
-  putLog: [],             // every put, in order: { pathname, at }
+  files: new Map(),       // PUBLIC store: pathname -> { body, uploadedAt, contentType }
+  pfiles: new Map(),      // PRIVATE store, same shape
+  putLog: [],             // every public put, in order: { pathname, at }
+  privatePutLog: [],      // every private put
   faults: { put: null, list: null, staleList: 0, staleRead: null },
 });
+S.pfiles ||= new Map();
+S.privatePutLog ||= [];
+
+// Which store a call reaches: the private one only with the private token.
+function storeFor(opts = {}) {
+  const pt = (process.env.PRIVATE_BLOB_READ_WRITE_TOKEN || "").trim();
+  const isPrivate = Boolean(pt) && opts.token === pt;
+  if (opts.token && !isPrivate) throw new BlobError("mem-blob: unknown store token");
+  return isPrivate
+    ? { files: S.pfiles, origin: MEM_PRIVATE_ORIGIN, log: S.privatePutLog, mode: "private" }
+    : { files: S.files, origin: MEM_ORIGIN, log: S.putLog, mode: "public" };
+}
 
 export const __faults = S.faults;
 export function __reset() {
   S.files.clear();
+  S.pfiles.clear();
   S.putLog.length = 0;
+  S.privatePutLog.length = 0;
   S.faults.put = null;
   S.faults.list = null;
   S.faults.staleList = 0;
@@ -38,6 +61,8 @@ export function __reset() {
 // from one admitted prior footprint). Bodies are strings, so a shallow copy of the map is a true snapshot.
 export function __snapshot() { return new Map(S.files); }
 export function __restore(snap) { S.files.clear(); for (const [k, v] of snap) S.files.set(k, v); }
+export function __snapshotPrivate() { return new Map(S.pfiles); }
+export function __restorePrivate(snap) { S.pfiles.clear(); for (const [k, v] of snap) S.pfiles.set(k, v); }
 const etagOf = (text) => `"${createHash("md5").update(text).digest("hex")}"`;
 
 export function __seed(pathname, value) {
@@ -52,6 +77,18 @@ export function __read(pathname) {
   return f ? JSON.parse(f.body) : null;
 }
 export const __putLog = S.putLog;
+export const __privatePutLog = S.privatePutLog;
+export function __seedPrivate(pathname, value) {
+  const body = typeof value === "string" ? value : JSON.stringify(value);
+  S.pfiles.set(pathname, { body, etag: etagOf(body), uploadedAt: new Date(0), contentType: "application/json" });
+}
+export function __dumpPrivate(prefix = "") {
+  return [...S.pfiles.keys()].filter((k) => k.startsWith(prefix)).sort();
+}
+export function __readPrivate(pathname) {
+  const f = S.pfiles.get(pathname);
+  return f ? JSON.parse(f.body) : null;
+}
 
 const rand = () => Math.random().toString(36).slice(2, 10);
 
@@ -62,42 +99,65 @@ export class BlobPreconditionFailedError extends BlobError {
 
 export async function put(pathname, body, opts = {}) {
   if (S.faults.put && S.faults.put(pathname)) throw new Error(`mem-blob: injected put failure for ${pathname}`);
+  const st = storeFor(opts);
+  if ((opts.access || "public") !== st.mode) throw new BlobError(`mem-blob: access "${opts.access}" does not match the ${st.mode} store`);
   let path = pathname;
   if (opts.addRandomSuffix) {
     const dot = path.lastIndexOf(".");
     path = dot > 0 ? `${path.slice(0, dot)}-${rand()}${path.slice(dot)}` : `${path}-${rand()}`;
   }
   const text = typeof body === "string" ? body : Buffer.isBuffer(body) ? body.toString("utf8") : String(body);
-  const cur = S.files.get(path);
+  const cur = st.files.get(path);
   if (opts.ifMatch !== undefined && (!cur || cur.etag !== opts.ifMatch)) throw new BlobPreconditionFailedError();
   if (cur && !opts.allowOverwrite && opts.ifMatch === undefined) {
     throw new BlobError("Vercel Blob: This blob already exists, use `allowOverwrite: true` if you want to overwrite it.");
   }
   const etag = etagOf(text);
-  S.files.set(path, { body: text, etag, prev: cur ? { body: cur.body, etag: cur.etag } : null, uploadedAt: new Date(), contentType: opts.contentType || "application/octet-stream" });
-  S.putLog.push({ pathname: path, at: Date.now() });
-  return { url: MEM_ORIGIN + path, downloadUrl: MEM_ORIGIN + path, pathname: path, contentType: opts.contentType, etag };
+  st.files.set(path, { body: text, etag, prev: cur ? { body: cur.body, etag: cur.etag } : null, uploadedAt: new Date(), contentType: opts.contentType || "application/octet-stream" });
+  st.log.push({ pathname: path, at: Date.now() });
+  return { url: st.origin + path, downloadUrl: st.origin + path, pathname: path, contentType: opts.contentType, etag };
 }
 
-export async function list({ prefix = "", cursor, limit = 1000 } = {}) {
+export async function list({ prefix = "", cursor, limit = 1000, token } = {}) {
   if (S.faults.list && S.faults.list(prefix)) throw new Error(`mem-blob: injected list failure for ${prefix}`);
+  const st = storeFor({ token });
+  const files = st.files;
   const lagged = S.faults.staleList && prefix.startsWith(S.faults.stalePrefix || "");
   const cutoff = lagged ? Date.now() - S.faults.staleList : Infinity;
-  const keys = [...S.files.keys()]
-    .filter((k) => k.startsWith(prefix) && S.files.get(k).uploadedAt.getTime() <= cutoff)
+  const keys = [...files.keys()]
+    .filter((k) => k.startsWith(prefix) && files.get(k).uploadedAt.getTime() <= cutoff)
     .sort();
   const start = cursor ? Number(cursor) : 0;
   const page = keys.slice(start, start + limit);
   const next = start + limit < keys.length ? String(start + limit) : undefined;
   return {
-    blobs: page.map((k) => ({ pathname: k, url: MEM_ORIGIN + k, downloadUrl: MEM_ORIGIN + k, size: S.files.get(k).body.length, uploadedAt: S.files.get(k).uploadedAt, etag: S.files.get(k).etag })),
+    blobs: page.map((k) => ({ pathname: k, url: st.origin + k, downloadUrl: st.origin + k, size: files.get(k).body.length, uploadedAt: files.get(k).uploadedAt, etag: files.get(k).etag })),
     cursor: next,
     hasMore: Boolean(next),
   };
 }
 
-export async function del(urls) {
-  for (const u of [].concat(urls)) S.files.delete(String(u).replace(MEM_ORIGIN, "").split("?")[0]);
+export async function del(urls, opts = {}) {
+  const st = storeFor(opts);
+  for (const u of [].concat(urls)) {
+    const s = String(u);
+    if (/^https?:\/\//.test(s) && !s.startsWith(st.origin)) throw new BlobError("mem-blob: URL is not in this store");
+    st.files.delete(s.replace(st.origin, "").split("?")[0]);
+  }
+}
+
+// get(): the only way to read a private object. Mirrors 2.x: access is required and
+// must match the store; returns null when missing.
+export async function get(urlOrPathname, opts = {}) {
+  const st = storeFor(opts);
+  if (opts.access !== st.mode) throw new BlobError(`mem-blob: get access "${opts.access}" does not match the ${st.mode} store`);
+  const s = String(urlOrPathname);
+  if (/^https?:\/\//.test(s) && !s.startsWith(st.origin)) throw new BlobError("mem-blob: URL is not in this store");
+  const k = decodeURIComponent(s.replace(st.origin, "").split("?")[0]);
+  const f = st.files.get(k);
+  if (!f) return null;
+  const body = new Response(f.body).body;
+  return { statusCode: 200, stream: body, headers: new Headers({ "content-type": f.contentType }), blob: { url: st.origin + k, downloadUrl: st.origin + k, pathname: k, contentType: f.contentType, size: f.body.length, etag: f.etag, uploadedAt: f.uploadedAt } };
 }
 
 export async function head(url) {
@@ -116,6 +176,7 @@ export function installFetch() {
   globalThis.__MEM_FETCH_INSTALLED__ = true;
   globalThis.fetch = async (input, init) => {
     const url = typeof input === "string" ? input : input?.url || String(input);
+    if (url.startsWith(MEM_PRIVATE_ORIGIN)) return new Response("Forbidden", { status: 403 });
     if (url.startsWith(MEM_ORIGIN)) {
       const k = decodeURIComponent(url.slice(MEM_ORIGIN.length).split("?")[0]);
       const f = S.files.get(k);

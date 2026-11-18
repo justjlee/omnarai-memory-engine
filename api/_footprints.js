@@ -25,7 +25,7 @@
 // in-memory store and a future database adapter implements the same calls
 // without touching the protocol. Underscore module ⇒ not a deployed function.
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
-import { list as blobList, put as blobPut } from "@vercel/blob";
+import { list as blobList, put as blobPut, blobFetch } from "./_blob.js";
 import { findFamily } from "./_lineages.js";
 
 export const FOOTPRINT_SCHEMA = "footprint/1.0";
@@ -629,7 +629,7 @@ export class ReviewInputError extends Error {
 
 // ── Store adapter ──────────────────────────────────────────────────────────────
 // Five calls a future database adapter would implement verbatim.
-export function createFootprintStore({ list = blobList, put = blobPut, fetchImpl = (...a) => fetch(...a) } = {}) {
+export function createFootprintStore({ list = blobList, put = blobPut, fetchImpl = (...a) => blobFetch(...a) } = {}) {
   async function listAll(prefix) {
     const out = [];
     let cursor;

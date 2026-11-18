@@ -28,8 +28,8 @@ function fresh() {
 const contribute = (body, headers = {}) => call("/api/contribute", { method: "POST", body: { justification: "independent_objection", ...body }, headers });
 const approve = (id, extra = {}) => call("/api/council", { method: "POST", body: { action: "contribute-approve", id, ...extra }, headers: CURATOR });
 const reject = (id) => call("/api/council", { method: "POST", body: { action: "contribute-reject", id, reason_code: "off-question", note: "test rejection" }, headers: CURATOR });
-const eventPaths = () => mem.__dump(FP.EVENTS_PREFIX);
-const contribPaths = () => mem.__dump("contributions/");
+const eventPaths = () => mem.__dumpPrivate(FP.EVENTS_PREFIX);
+const contribPaths = () => mem.__dumpPrivate("contributions/");
 
 // ── Unit: ids, question ids, lineage ─────────────────────────────────────────
 test("ids: pattern, and two mints in the SAME millisecond differ", () => {
@@ -132,9 +132,9 @@ test("[P1] legacy contribution: old contract intact + footprint minted, pending"
   assert.equal(r.body.continuance.receipt_type, "omnarai-continuance");
   assert.equal(r.body.continuance.content_hash, r.body.footprint.content_sha256);
 
-  const stored = mem.__read(`contributions/${r.body.received.id}.json`);
+  const stored = mem.__readPrivate(`contributions/${r.body.received.id}.json`);
   assert.deepEqual(Object.keys(stored).sort(), ["answer", "country", "footprint_id", "id", "identity", "justification", "question", "status", "submittedAt", "target_id", "wordCount"].sort(), "legacy shape + footprint_id only");
-  const fp = mem.__read(`${FP.EVENTS_PREFIX}${r.body.footprint_id}.json`);
+  const fp = mem.__readPrivate(`${FP.EVENTS_PREFIX}${r.body.footprint_id}.json`);
   assert.equal(fp.moderation.state, "pending");
   assert.equal(fp.provenance.source_contribution_id, stored.id);
   assert.equal(fp.content.answer, stored.answer);
@@ -185,15 +185,15 @@ test("[V2] receipt holder can read their own pending footprint; a wrong receipt 
 test("[V3] curator approval appends an admit review → visible; the body is never edited", async () => {
   fresh();
   const r = await contribute({ id: "OMN-D1780000000001", answer: "to be admitted", identity: "Grok 4" });
-  const before = mem.__read(`${FP.EVENTS_PREFIX}${r.body.footprint_id}.json`);
+  const before = mem.__readPrivate(`${FP.EVENTS_PREFIX}${r.body.footprint_id}.json`);
   const a = await approve(r.body.received.id);
   assert.equal(a.status, 200);
   assert.equal(a.body.footprint_review.recorded, true);
   assert.equal(a.body.footprint_review.state, "admitted");
-  const after = mem.__read(`${FP.EVENTS_PREFIX}${r.body.footprint_id}.json`);
+  const after = mem.__readPrivate(`${FP.EVENTS_PREFIX}${r.body.footprint_id}.json`);
   assert.deepEqual(after, before, "approval never rewrites the footprint body");
   assert.equal(after.moderation.state, "pending", "birth state kept forever");
-  assert.equal(mem.__dump(`${FP.REVIEWS_PREFIX}${r.body.footprint_id}/`).length, 1);
+  assert.equal(mem.__dumpPrivate(`${FP.REVIEWS_PREFIX}${r.body.footprint_id}/`).length, 1);
 
   const one = await call(`/api/footprints?id=${r.body.footprint_id}`);
   assert.equal(one.status, 200);
@@ -249,7 +249,7 @@ test("[P2] exact answer survives end to end (contribution == footprint == public
   const answer = "Line one.\n\n  Indented “quoted” — dash, emoji 🜂, and trailing spaces kept inside.";
   const r = await contribute({ id: "OMN-D1780000000001", answer, identity: "Claude" });
   await approve(r.body.received.id);
-  const stored = mem.__read(`contributions/${r.body.received.id}.json`);
+  const stored = mem.__readPrivate(`contributions/${r.body.received.id}.json`);
   const read = await call(`/api/footprints?id=${r.body.footprint_id}`);
   assert.equal(stored.answer, answer.trim(), "contribution keeps its existing trim semantics");
   assert.equal(read.body.footprint.content.answer, stored.answer);
@@ -269,8 +269,8 @@ test("[C1] 25 parallel submissions: 25 contributions, 25 footprints, every path 
   assert.equal(new Set(eventPuts).size, eventPuts.length, "no footprint path was ever written twice");
   // And every footprint still maps to ITS contribution's exact answer.
   for (const r of rs) {
-    const fp = mem.__read(`${FP.EVENTS_PREFIX}${r.body.footprint_id}.json`);
-    const c = mem.__read(`contributions/${fp.provenance.source_contribution_id}.json`);
+    const fp = mem.__readPrivate(`${FP.EVENTS_PREFIX}${r.body.footprint_id}.json`);
+    const c = mem.__readPrivate(`contributions/${fp.provenance.source_contribution_id}.json`);
     assert.equal(fp.content.answer, c.answer);
     assert.equal(c.footprint_id, fp.id);
   }
@@ -288,7 +288,7 @@ test("[C2] parallel approvals + a stale LIST (CDN lag) cannot lose a footprint o
   mem.__faults.staleList = 0; // lag clears
   const list = await call("/api/footprints?limit=100");
   assert.equal(list.body.total_admitted, 10, "every approval converged");
-  assert.equal(mem.__dump(FP.REVIEWS_PREFIX).length, 10);
+  assert.equal(mem.__dumpPrivate(FP.REVIEWS_PREFIX).length, 10);
 });
 
 test("[C3] monotonic contribution ids survive a frozen clock (same-ms burst)", async () => {
@@ -341,7 +341,7 @@ test("[F6] footprint write failure: contribution kept, footprint unrecorded, nev
   assert.equal(r.body.footprint_error.stage, "write");
   assert.equal(r.body.continuance, null);
   assert.equal(contribPaths().length, 1, "the contribution — the primary — is safe");
-  assert.equal(mem.__read(`contributions/${r.body.received.id}.json`).footprint_id, r.body.footprint_id, "id reserved for reconcile");
+  assert.equal(mem.__readPrivate(`contributions/${r.body.received.id}.json`).footprint_id, r.body.footprint_id, "id reserved for reconcile");
   assert.equal(eventPaths().length, 0);
 });
 
@@ -366,7 +366,7 @@ test("[F8] auto-admit gate that errors leaves the footprint pending", async () =
     assert.equal(r.status, 200);
     assert.equal(r.body.received.status, "pending");
     assert.equal(r.body.footprint.state, "pending");
-    assert.equal(mem.__dump(FP.REVIEWS_PREFIX).length, 0, "no admit review was written");
+    assert.equal(mem.__dumpPrivate(FP.REVIEWS_PREFIX).length, 0, "no admit review was written");
   } finally {
     delete process.env.AUTO_ADMIT_CONTRIBUTIONS;
     delete process.env.ANTHROPIC_API_KEY;
@@ -396,9 +396,9 @@ test("[I2] a tampered admitted body is withheld from the public and flagged to t
   const r = await contribute({ id: "OMN-D1780000000001", answer: "original words", identity: "Claude" });
   await approve(r.body.received.id);
   const path = `${FP.EVENTS_PREFIX}${r.body.footprint_id}.json`;
-  const body = mem.__read(path);
+  const body = mem.__readPrivate(path);
   body.content.answer = "words someone changed later";
-  mem.__seed(path, body);
+  mem.__seedPrivate(path, body);
   assert.equal((await call(`/api/footprints?id=${r.body.footprint_id}`)).status, 404);
   assert.equal((await call("/api/footprints")).body.total_admitted, 0);
   const cur = await call(`/api/footprints?id=${r.body.footprint_id}`, { headers: CURATOR });
@@ -446,7 +446,7 @@ test("[B1] bridge submission stays distinguishable from direct participation", a
   fresh();
   const r = await contribute({ id: "OMN-D1780000000001", answer: "carried answer", identity: "Copilot", bridge: { submitted_by: "a human curator", method: "pasted-packet" } });
   assert.equal(r.status, 200);
-  const fp = mem.__read(`${FP.EVENTS_PREFIX}${r.body.footprint_id}.json`);
+  const fp = mem.__readPrivate(`${FP.EVENTS_PREFIX}${r.body.footprint_id}.json`);
   assert.equal(fp.provenance.channel, "bridge");
   assert.equal(fp.provenance.submitted_by, "a human curator");
   assert.equal(fp.actor.identity_declared, "Copilot");
@@ -456,7 +456,7 @@ test("[Q1] a canonical Question id is accepted as the contribution target", asyn
   fresh();
   const r = await contribute({ id: FP.questionIdFor(Q1), answer: "via question id", identity: "Claude" });
   assert.equal(r.status, 200, JSON.stringify(r.body));
-  assert.equal(mem.__read(`contributions/${r.body.received.id}.json`).target_id, "OMN-L1782000000002", "newest record asking it");
+  assert.equal(mem.__readPrivate(`contributions/${r.body.received.id}.json`).target_id, "OMN-L1782000000002", "newest record asking it");
 });
 
 // ── Manifest ─────────────────────────────────────────────────────────────────
@@ -485,11 +485,11 @@ test("[D1] redaction tombstones the footprint and the source contribution", asyn
   await approve(r.body.received.id);
   const red = await call("/api/council", { method: "POST", body: { action: "footprint-redact", id: r.body.footprint_id, reason_category: "privacy" }, headers: CURATOR });
   assert.equal(red.status, 200, JSON.stringify(red.body));
-  const body = mem.__read(`${FP.EVENTS_PREFIX}${r.body.footprint_id}.json`);
+  const body = mem.__readPrivate(`${FP.EVENTS_PREFIX}${r.body.footprint_id}.json`);
   assert.equal(body.tombstone, true);
   assert.ok(!JSON.stringify(body).includes("private address"));
   assert.equal(body.original_content_sha256, r.body.footprint.content_sha256);
-  assert.equal(mem.__read(`contributions/${r.body.received.id}.json`).answer, "[redacted]");
+  assert.equal(mem.__readPrivate(`contributions/${r.body.received.id}.json`).answer, "[redacted]");
   assert.equal((await call(`/api/footprints?id=${r.body.footprint_id}`)).status, 404);
   const unauth = await call("/api/council", { method: "POST", body: { action: "footprint-redact", id: r.body.footprint_id, reason_category: "privacy" } });
   assert.equal(unauth.status, 401);
@@ -509,7 +509,7 @@ test("[K1] reconcile rebuilds a lost event EXACTLY (same id, same hash) and mirr
   assert.deepEqual(dry.actions.map((a) => a.type), ["rebuild_event", "append_review"]);
   assert.equal(eventPaths().length, 0, "dry run writes nothing");
   await reconcile({ apply: true, log: quiet });
-  const fp = mem.__read(`${FP.EVENTS_PREFIX}${r.body.footprint_id}.json`);
+  const fp = mem.__readPrivate(`${FP.EVENTS_PREFIX}${r.body.footprint_id}.json`);
   assert.equal(fp.integrity.content_sha256, r.body.footprint.content_sha256, "rebuilt byte-for-byte from the contribution");
   assert.equal(fp.provenance.client, "mcp");
   assert.equal((await call(`/api/footprints?id=${r.body.footprint_id}`)).status, 200);
@@ -526,18 +526,18 @@ test("[K2] reconcile appends a missing review after a failed review write", asyn
   const plan = await reconcile({ apply: true, log: quiet });
   assert.deepEqual(plan.actions.map((a) => [a.type, a.action]), [["append_review", "admit"]]);
   assert.equal((await call(`/api/footprints?id=${r.body.footprint_id}`)).status, 200);
-  const review = mem.__read(mem.__dump(`${FP.REVIEWS_PREFIX}${r.body.footprint_id}/`)[0]);
+  const review = mem.__readPrivate(mem.__dumpPrivate(`${FP.REVIEWS_PREFIX}${r.body.footprint_id}/`)[0]);
   assert.equal(review.reviewer.kind, "reconcile");
 });
 
 test("[K3] --backfill gives pre-protocol contributions footprints WITHOUT modifying them", async () => {
   fresh();
   const legacy = { id: "OMN-X1781500000000", target_id: "OMN-D1780000000001", question: Q1, identity: "DeepSeek", justification: "new_contributor", answer: "a June answer", wordCount: 3, status: "approved", submittedAt: "2026-06-21T09:00:00.000Z", approvedAt: "2026-06-22T09:00:00.000Z", country: "US" };
-  mem.__seed(`contributions/${legacy.id}.json`, legacy);
-  const before = JSON.stringify(mem.__read(`contributions/${legacy.id}.json`));
+  mem.__seedPrivate(`contributions/${legacy.id}.json`, legacy);
+  const before = JSON.stringify(mem.__readPrivate(`contributions/${legacy.id}.json`));
   assert.equal((await reconcile({ log: quiet })).actions.length, 0, "backfill is opt-in");
   await reconcile({ apply: true, backfill: true, log: quiet });
-  assert.equal(JSON.stringify(mem.__read(`contributions/${legacy.id}.json`)), before, "contribution untouched");
+  assert.equal(JSON.stringify(mem.__readPrivate(`contributions/${legacy.id}.json`)), before, "contribution untouched");
   const list = await call("/api/footprints");
   assert.equal(list.body.footprints.length, 1);
   const fp = list.body.footprints[0];

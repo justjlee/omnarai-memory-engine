@@ -3,7 +3,7 @@ import { checkBudget, recordSpend, budgetExceededBody } from "./_budget.js";
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
-import { list, put, del } from "@vercel/blob";
+import { list, put, del, blobFetch } from "./_blob.js";
 import { waitUntil } from "@vercel/functions";
 import { randomUUID, createHash } from "crypto";
 import { persistTension } from "./tensions.js";
@@ -163,7 +163,7 @@ async function loadSession(sessionId) {
     const blob = await findExactBlob(SESSION_PREFIX + sessionId + ".json");
     if (!blob) return null;
     // Cache-bust: the blob is overwritten on every exchange.
-    const res = await fetch(blob.url + "?t=" + Date.now(), { cache: "no-store" });
+    const res = await blobFetch(blob.url + "?t=" + Date.now(), { cache: "no-store" });
     const session = await res.json();
     const age = Date.now() - new Date(session.lastActiveAt).getTime();
     if (!(age <= SESSION_TTL_MS)) {   // also catches a missing/invalid lastActiveAt
@@ -270,7 +270,7 @@ async function readJob(jobId) {
     // Expired (the GC only runs after a later deliberation): same as unknown.
     if (Date.now() - new Date(blob.uploadedAt).getTime() > JOB_TTL_MS) return null;
     // Cache-bust the CDN read so a freshly-overwritten result isn't masked.
-    const res = await fetch(blob.url + "?t=" + Date.now(), { cache: "no-store" });
+    const res = await blobFetch(blob.url + "?t=" + Date.now(), { cache: "no-store" });
     return await res.json();
   } catch {
     return null;
