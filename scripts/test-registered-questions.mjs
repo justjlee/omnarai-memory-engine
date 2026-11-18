@@ -16,7 +16,9 @@ import { GROWN, RECORDS, Q1 } from "./lib/fixtures.mjs";
 import * as R from "../api/_registered.js";
 import { questionIdFor } from "../api/_footprints.js";
 import { buildOrientPacket } from "../api/_protocol.js";
-import { runItems, councilRunUsd } from "./run-batch.mjs";
+import { runItems, councilRunUsd, missingVoices, certifyArgs, certOutcome, elicitStep, storeElicited } from "./run-batch.mjs";
+import { createTally, recordResponse, priceTally } from "./lib/usage-tally.mjs";
+import { envValue } from "./lib/env-value.mjs";
 
 process.env.INGEST_SECRET = "test-curator-secret";
 const CURATOR = { authorization: "Bearer test-curator-secret" };
@@ -118,8 +120,9 @@ test("[H4] the manifest keeps canonical_questions and adds the registry, the bat
   assert.equal(q.registered_unasked, 12);
   assert.equal(q.by_state.registered, 12);
   assert.equal(q.certification_queue.rule, "certification-queue-v1");
-  assert.equal(q.elicitation.proposed, 1);
-  assert.equal(q.elicitation.run, 0);
+  // The batch counts are read from public/batches.json as shipped, so they follow its statuses rather than pin them.
+  const shipped = JSON.parse(readFileSync(new URL("../public/batches.json", import.meta.url), "utf8")).batches.filter((b) => b.kind === "elicitation");
+  for (const s of ["proposed", "approved", "run"]) assert.equal(q.elicitation[s], shipped.filter((b) => b.status === s).length, s);
 });
 
 // ── Batches and the queue ──
@@ -162,8 +165,118 @@ test("[B3] the runner stops before the item that would cross the wall, and price
   assert.deepEqual(c.unpriced, []);
   assert.deepEqual(councilRunUsd("Q?", [{ ok: true, model_id: "no-such-model", text: "a" }], "s", { fallbackUsd: 0.12 }).unpriced, ["no-such-model"]);
 });
-test("[B4] the shipped batches are proposals: nothing in public/batches.json can run today", () => {
+test("[B5] the runner keeps the design: full panel or nothing; certification is ×3, written, reserved once, priced from usage", () => {
+  const five = ["Claude", "GPT-4o", "Gemini", "Grok", "DeepSeek"].map((model) => ({ model, ok: true }));
+  assert.deepEqual(missingVoices(R.FULL_PANEL, five), []);
+  assert.deepEqual(missingVoices(R.FULL_PANEL, five.map((a) => (a.model === "Gemini" ? { ...a, ok: false } : a))), ["Gemini"], "a failed voice is a missing voice");
+  assert.deepEqual(missingVoices(R.FULL_PANEL, five.filter((a) => a.model !== "Grok")), ["Grok"]);
+  const args = certifyArgs("cert-001", "OMN-D1", "/tmp/r.json");
+  assert.equal(args[args.indexOf("--runs") + 1], "3", "the ×3 strict-min battery, not the legacy single run");
+  assert.ok(args.includes("--write"), "the certification reaches the live record");
+  assert.equal(args[args.indexOf("--reserved-by") + 1], "batch cert-001", "reserved once, by the batch");
+  assert.equal(args[args.indexOf("--report-out") + 1], "/tmp/r.json");
+  assert.equal(args[args.indexOf("--ids") + 1], "OMN-D1");
+  const report = { method: "tier3-perturbation-v3-consensus-x3", write: true, written: 1, certified: [{ id: "OMN-D1", tier: "C1" }], failed: [], usage: { usd: 1.234, unpriced: [], no_usage: 0 } };
+  const good = certOutcome(report, "OMN-D1", 1.45);
+  assert.equal(good.ok, true); assert.equal(good.usd, 1.234, "the measured price, not the estimate"); assert.equal(good.created, "OMN-D1"); assert.equal(good.tier, "C1");
+  assert.match(good.usd_basis, /^provider-reported tokens/);
+  const unwritten = certOutcome({ ...report, written: null }, "OMN-D1", 1.45);
+  assert.equal(unwritten.ok, false); assert.equal(unwritten.created, null); assert.match(unwritten.error, /not written/);
+  const dry = certOutcome({ ...report, write: false }, "OMN-D1", 1.45);
+  assert.equal(dry.ok, false, "a dry run is not a certification");
+  const failed = certOutcome({ ...report, certified: [], failed: [{ id: "OMN-D1", error: "boom" }] }, "OMN-D1", 1.45);
+  assert.equal(failed.ok, false); assert.equal(failed.error, "boom");
+  const none = certOutcome(null, "OMN-D1", 1.45);
+  assert.equal(none.ok, false); assert.equal(none.usd, 1.45); assert.match(none.usd_basis, /^estimate/);
+  assert.match(certOutcome({ ...report, usage: { usd: 1, unpriced: ["x-model"], no_usage: 2 } }, "OMN-D1", 1.45).usd_basis, /no price on file for x-model; 2 response\(s\) reported no usage/);
+});
+test("[B6] usage tally: provider-reported tokens per model, thinking billed as output, priced at list prices", () => {
+  const t = createTally();
+  recordResponse(t, "anthropic", "claude-sonnet-4-6", { usage: { input_tokens: 1000, output_tokens: 500 } });
+  recordResponse(t, "gemini", "gemini-3.5-flash", { usageMetadata: { promptTokenCount: 1000, candidatesTokenCount: 100, thoughtsTokenCount: 400 } });
+  recordResponse(t, "openai", "gpt-5-mini", { usage: { prompt_tokens: 2000, completion_tokens: 1000 } });
+  recordResponse(t, "embedding", "text-embedding-3-small", { usage: { prompt_tokens: 10000, total_tokens: 10000 } });
+  recordResponse(t, "deepseek", "deepseek-chat", { choices: [] });
+  recordResponse(t, "openai", "no-such-model", { usage: { prompt_tokens: 1, completion_tokens: 1 } });
+  const p = priceTally(t);
+  assert.equal(t.by_model["gemini-3.5-flash"].out, 500, "Gemini's thoughts are output tokens");
+  assert.equal(p.no_usage, 1); assert.equal(p.calls, 5);
+  assert.deepEqual(p.unpriced, ["no-such-model"]);
+  const expect = (1000 * 3 + 500 * 15 + 1000 * 1.5 + 500 * 9 + 2000 * 0.25 + 1000 * 2 + 10000 * 0.02) / 1e6;
+  assert.equal(p.usd, +expect.toFixed(5));
+});
+test("[B8] an elicitation item, end to end on the real record builder and store: stored, tagged, and the question becomes recorded", async () => {
+  fresh();
+  const { buildDivergenceRecord } = await import("../api/_council.js");
+  const { appendGrownEntry, loadGrownMemory } = await import("../api/_grown.js");
+  const q = REG.questions[0];
+  const batch = { id: "elicit-test", approved_in: "DL-0099", panel: R.FULL_PANEL };
+  const five = R.FULL_PANEL.map((model) => ({ model, lab: "x", model_id: model === "GPT-4o" ? "gpt-4o" : "claude-sonnet-4-6", date: "2026-11-03", text: `${model} takes a position.`, ok: true }));
+  let synthCalls = 0;
+  const deps = {
+    elicitCouncil: async () => five,
+    synthesizeCouncil: async () => { synthCalls++; return { narrative: "They split on duty.", tensions: [], deliberation_card: null }; },
+    buildDivergenceRecord, embedRecord: async () => null, appendGrownEntry, questionIdFor,
+  };
+  const r = await elicitStep(q, { batch, perItem: 0.12, registry: REG }, deps);
+  assert.equal(r.ok, true, r.error); assert.ok(r.usd > 0); assert.match(r.created, /^OMN-D\d+$/);
+  const stored = (await loadGrownMemory()).entries.find((e) => e.id === r.created);
+  assert.equal(stored.divergence.question, q.text, "verbatim");
+  assert.equal(stored.divergence.answers.length, 5);
+  assert.equal(stored.divergence.cycle, "elicit-test", "the batch survives the store's allowlist");
+  assert.equal(stored.divergence.question_provenance.registered_id, q.id);
+  assert.equal(stored.divergence.question_provenance.batch_approved_in, "DL-0099");
+  assert.equal(R.registeredQuestions(REG, [stored]).find((x) => x.id === q.id).state, "recorded");
+  // A missing voice stores nothing and skips the synthesis call.
+  fresh();
+  const ragged = await elicitStep(q, { batch, perItem: 0.12, registry: REG }, { ...deps, elicitCouncil: async () => five.map((a) => (a.model === "Grok" ? { ...a, ok: false, text: "" } : a)) });
+  assert.equal(ragged.ok, false); assert.match(ragged.error, /Grok/); assert.equal(synthCalls, 1);
+  assert.equal((await loadGrownMemory()).entries.filter((e) => e.type === "divergence" && e.divergence?.question === q.text).length, 0);
+});
+test("[B9] a step that throws is booked at its estimate and stops the batch: one item lost, not five, and the file still closes", async () => {
+  let calls = 0;
+  const r = await runItems([1, 2, 3], { perItemUsd: 0.12, wallUsd: 25, step: async () => { calls++; throw new Error("boom"); } });
+  assert.equal(calls, 1);
+  assert.equal(r.results[0].error, "boom"); assert.match(r.results[0].usd_basis, /^estimate/);
+  assert.deepEqual(r.results.slice(1).map((x) => x.skipped), ["stopped after an error: boom", "stopped after an error: boom"]);
+  assert.equal(r.spent_usd, 0.12);
+});
+test("[B7] env values are read as dotenv reads them: a Vercel-pulled key loses its quotes and its literal \\n", () => {
+  assert.equal(envValue('"sk-proj-abc\\n"'), "sk-proj-abc", "the elicit-001 failure: a literal backslash-n kept in the key");
+  assert.equal(envValue('  "tok"  '), "tok");
+  assert.equal(envValue("'sk-single'"), "sk-single");
+  assert.equal(envValue("bare-value "), "bare-value");
+  assert.equal(envValue('"'), '"', "a lone quote is not a quoted value");
+  assert.equal(envValue(""), "");
+});
+test("[B4] a shipped batch can run only on its own logged approval, and never twice", () => {
   const doc = JSON.parse(readFileSync(new URL("../public/batches.json", import.meta.url), "utf8"));
+  const log = readFileSync(new URL("../governance/decision-log.md", import.meta.url), "utf8");
   assert.ok(doc.batches.length >= 2);
-  for (const b of doc.batches) assert.notDeepEqual(R.batchProblems(b, { registry: REG, divRecords: RECORDS, decisionLog: "" }), [], b.id);
+  const approvals = doc.batches.map((b) => b.approved_in).filter(Boolean);
+  assert.equal(new Set(approvals).size, approvals.length, "one decision-log entry per batch: approving one is not approving another");
+  for (const b of doc.batches) {
+    const p = R.batchProblems(b, { registry: REG, divRecords: RECORDS, decisionLog: log });
+    if (b.status === "approved") {
+      assert.ok(!p.some((x) => /approved|decision log/.test(x)), `${b.id}: ${p}`);
+      assert.match(log, new RegExp(`^## ${b.approved_in} · .*\\b${b.id}\\b.*approved`, "m"), `${b.approved_in} is the entry that approves ${b.id}`);
+    } else assert.ok(p.some((x) => /not "approved"/.test(x)), `${b.id} (${b.status}) must be refused`);
+  }
+  assert.ok(R.batchProblems({ ...doc.batches[0], status: "run" }, { registry: REG, divRecords: RECORDS, decisionLog: log }).some((x) => /not "approved"/.test(x)), "a batch that has run is refused: it cannot spend twice");
+  assert.ok(R.batchProblems({ ...doc.batches[0], approved_in: "DL-9999" }, { registry: REG, divRecords: RECORDS, decisionLog: log }).some((x) => /not in the decision log/.test(x)));
+});
+test("[B10] elicitation stores every record in one write after the batch, confirms it on read-back, and reports what never showed", async () => {
+  const pending = [{ entry: { id: "A" } }, { entry: { id: "B" } }];
+  const results = [{ ok: true, created: "A" }, { ok: true, created: "B" }, { ok: false, error: "ragged", created: null }];
+  let writes = 0;
+  const ok = await storeElicited(results, pending, { append: async (p) => { writes++; assert.equal(p.length, 2); return 2; }, load: async () => ({ entries: [{ id: "A" }, { id: "B" }] }), sleep: async () => {} });
+  assert.equal(writes, 1, "one write for the whole batch");
+  assert.deepEqual(ok.map((r) => r.created), ["A", "B", null]);
+  let reads = 0;
+  const stale = await storeElicited(results, pending, { append: async () => 2, load: async () => (++reads < 3 ? { entries: [{ id: "A" }] } : { entries: [{ id: "A" }, { id: "B" }] }), sleep: async () => {} });
+  assert.deepEqual(stale.map((r) => r.created), ["A", "B", null], "a stale read-back is retried");
+  const lost = await storeElicited(results, pending, { append: async () => 2, load: async () => ({ entries: [{ id: "A" }] }), sleep: async () => {} });
+  assert.equal(lost[1].ok, false); assert.equal(lost[1].created, null); assert.match(lost[1].error, /not confirmed/);
+  const failed = await storeElicited(results, pending, { append: async () => null, load: async () => ({ entries: [] }), sleep: async () => {} });
+  assert.ok(failed.slice(0, 2).every((r) => !r.ok && /write failed/.test(r.error)));
 });

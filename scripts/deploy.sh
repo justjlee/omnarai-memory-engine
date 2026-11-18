@@ -90,6 +90,22 @@ echo ">> Claims-registry integrity (schema + append-only against what is publish
 node scripts/check-claims-registry.mjs
 echo
 
+# HARD gate: the tool contract (2026-10-27). api/_contract.js is byte-identical to
+# omnarai-mcp/contract.js, and the npm tools, the remote MCP tools/list, openai-tools.json
+# and public/openapi.json all agree with it (modes, annotations, routes, parameter schemas,
+# reviewed descriptions). It NEEDS the omnarai-mcp checkout this release pairs with — the
+# sibling ../omnarai-mcp, or OMNARAI_MCP_DIR — and fails (never skips) without it.
+echo ">> Tool-contract parity (npm · remote MCP · OpenAI · OpenAPI)"
+node scripts/check-tool-contract.mjs
+echo
+
+# HARD gate: the omnarai_response envelope (2026-11-18). api/_response-envelope.js, its JSON Schema,
+# public/openapi.json, llms.txt, agent-entry and the handlers name the same protocol, kinds and
+# covered routes, and each trust token still matches its POLICY_CARD sentence. Offline.
+echo ">> Response-envelope parity (schema · OpenAPI · llms.txt · agent-entry · handlers)"
+node scripts/check-response-envelope.mjs
+echo
+
 if [[ "${1:-}" == "--promote" ]]; then
   # IMPORTANT: promotion is a real PRODUCTION deployment, not a preview alias.
   # Production-scoped env vars (OPENAI_API_KEY, YOUTUBE_API_KEY) are NOT injected

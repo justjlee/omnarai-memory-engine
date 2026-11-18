@@ -279,7 +279,7 @@
         },
         {
           "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization, Accept, Mcp-Session-Id, MCP-Protocol-Version"
+          "value": "Content-Type, Authorization, Accept, Mcp-Session-Id, MCP-Protocol-Version, X-Omnarai-Receipt"
         }
       ]
     },

@@ -5,10 +5,11 @@ import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { list, put, del } from "@vercel/blob";
 import { waitUntil } from "@vercel/functions";
-import { randomUUID } from "crypto";
+import { randomUUID, createHash } from "crypto";
 import { persistTension } from "./tensions.js";
 import { loadGrownMemory } from "./_grown.js";
 import { recordAccess } from "./_telemetry.js";
+import { attachEnvelope } from "./_response-envelope.js";
 
 // Resolve paths relative to this file's location
 const __filename = fileURLToPath(import.meta.url);
@@ -30,12 +31,18 @@ function agentError(res, status, { code, message, agent_action, retryable = fals
 }
 
 // Load data files at cold-start (cached across invocations)
-let corpus, concepts, embeddings;
+// CORPUS_SEED_SHA256: sha256 of the seed file's raw bytes, computed exactly as api/info.js computes
+// the manifest's hashes.corpus_seed, so the response envelope's value can be checked against it.
+let corpus, concepts, embeddings, CORPUS_SEED_SHA256;
 try {
-  corpus = JSON.parse(readFileSync(join(projectRoot, "public", "data", "corpus.json"), "utf-8"));
+  const raw = readFileSync(join(projectRoot, "public", "data", "corpus.json"), "utf-8");
+  corpus = JSON.parse(raw);
+  CORPUS_SEED_SHA256 = createHash("sha256").update(raw).digest("hex");
   concepts = JSON.parse(readFileSync(join(projectRoot, "public", "data", "concepts.json"), "utf-8"));
 } catch {
-  corpus = JSON.parse(readFileSync(join(process.cwd(), "public", "data", "corpus.json"), "utf-8"));
+  const raw = readFileSync(join(process.cwd(), "public", "data", "corpus.json"), "utf-8");
+  corpus = JSON.parse(raw);
+  CORPUS_SEED_SHA256 = createHash("sha256").update(raw).digest("hex");
   concepts = JSON.parse(readFileSync(join(process.cwd(), "public", "data", "concepts.json"), "utf-8"));
 }
 
@@ -55,6 +62,9 @@ try {
 // blobs reconstructed each cold start. One fetch, not a list+fetch fan-out.
 // On any blob failure the seed corpus still serves — the site cannot break here.
 let proposalsMerged = false;
+// The grown-memory version merged into this instance's retrieval pool (null = not read, so the
+// pool is the seed only). Reported by the response envelope as grown_store_updated_at.
+let grownStoreUpdatedAt = null;
 async function mergeApprovedProposals() {
   if (proposalsMerged) return;
   try {
@@ -91,10 +101,30 @@ async function mergeApprovedProposals() {
         embeddings.vectors[entry.id] = grown.vectors[entry.id];
       }
     }
+    // Set only after every entry merged: a half-merged pool must not claim this store version.
+    grownStoreUpdatedAt = grown.updatedAt || null;
   } catch {
     // Blob store unavailable — continue with seed corpus only
   }
   proposalsMerged = true;
+}
+
+// omnarai_response context for the retrieval and deliberation shapes (api/_response-envelope.js).
+// Inputs are values this handler already computed; the builder copies only allowlisted fields
+// (caller-supplied exclude_ids travel as a count, never as text).
+function retrievalEnvelope(kind, { relevant, retrievalMethod, layerFilters, pool, excludedIds, model }) {
+  return {
+    kind,
+    provenance: { corpusSeedSha256: CORPUS_SEED_SHA256, grownStoreUpdatedAt },
+    retrieval: {
+      method: retrievalMethod,
+      sources: (relevant || []).map((r) => r?.id),
+      model,
+      filters: layerFilters?.active
+        ? { active: true, layers: layerFilters.layers, exclude: layerFilters.exclude, rings: layerFilters.rings, threshold: layerFilters.threshold, poolSize: pool?.length, excludeIdsReceipt: excludedIds }
+        : null,
+    },
+  };
 }
 
 // ── Opaque ids: sessions and async jobs ──────────────────────────────────────
@@ -1237,14 +1267,16 @@ export default async function handler(req, res) {
       });
     }
     const job = await readJob(req.query.job);
+    // The poll wrapper gets an async_job envelope (no job id inside it); a finished `result` keeps
+    // the envelope it was built with, so its provenance is the deliberation's, not the poll's.
     if (!job) {
-      return res.status(200).json({
+      return res.status(200).json(attachEnvelope({
         status: "pending",
         job_id: req.query.job,
         note: "Not ready yet — or unknown/expired job_id. Keep polling every ~3s; jobs expire ~1h after completion.",
-      });
+      }, { kind: "async_job" }));
     }
-    return res.status(200).json(job);
+    return res.status(200).json(attachEnvelope(job, { kind: "async_job" }));
   }
 
   // ── GET /api/query?q=... ─────────────────────────────────────────────────
@@ -1397,12 +1429,12 @@ export default async function handler(req, res) {
       }
       await cleanupOldJobs();
     })());
-    return res.status(202).json({
+    return res.status(202).json(attachEnvelope({
       job_id: jobId,
       status: "pending",
       poll_url: `/api/query?job=${jobId}`,
       note: "Deliberation running (~25s). Poll poll_url every ~3s until status is 'done'; the answer lands in the 'result' field. Jobs expire ~1h after completion.",
-    });
+    }, { kind: "async_job" }));
   }
 
   // ── Hard compute-spend ceiling ──────────────────────────────────────────────
@@ -1579,7 +1611,7 @@ export default async function handler(req, res) {
 
   // format=context: return retrieval context without running deliberation (fast, for pre-flight)
   if (requestFormat === "context") {
-    return res.status(200).json({
+    return res.status(200).json(attachEnvelope({
       format: "context",
       question_received: questionReceived,
       query: query.trim(),
@@ -1625,7 +1657,7 @@ export default async function handler(req, res) {
         sync_how: "Blocks and returns the full deliberation in one response (~25s). Use only if your HTTP client tolerates a ~25s read.",
         post: 'Or POST {"query":"..."} — same full deliberation; also accepts session_id and syntheticIdentity.',
       },
-    });
+    }, retrievalEnvelope("retrieval", { relevant, retrievalMethod, layerFilters, pool, excludedIds })));
   }
 
   const corpusContext = buildContext(relevant);
@@ -1884,6 +1916,10 @@ This deliberation was requested by a synthetic intelligence identifying itself a
       waitUntil(saveSession(sessionIdRaw, updatedSession)); // never blocks the response
     }
 
+    // Same envelope for all three deliberation shapes (brief / si / default). model_reported is
+    // what the provider said answered the prose pass, not the model we asked for.
+    const deliberationEnvelope = retrievalEnvelope("deliberation", { relevant, retrievalMethod, layerFilters, pool, excludedIds, model: message?.model });
+
     // format=brief: portable exportable artifact — structured for use by another model or system
     if (requestFormat === "brief") {
       const perspectives = [...new Set(relevant.flatMap(r => r.contributors || []))]
@@ -1907,7 +1943,7 @@ This deliberation was requested by a synthetic intelligence identifying itself a
         `\nPerspectives:\n${perspectives.map(p => `- ${p.contributor} (${p.sources.join(", ")})`).join("\n")}`,
       ].filter(Boolean).join("\n");
 
-      return res.status(200).json({
+      return res.status(200).json(attachEnvelope({
         format: "brief",
         question_received: questionReceived,
         query: trimmed,
@@ -1933,13 +1969,13 @@ This deliberation was requested by a synthetic intelligence identifying itself a
         session_id: sessionIdRaw || null,
         sessionExchangeCount: (session?.exchanges?.length || 0) + 1,
         ...sessionNote,
-      });
+      }, deliberationEnvelope));
     }
 
     // format=si: fully structured JSON — no markdown blobs, sections as separate fields
     if (requestFormat === "si") {
       const sections = parseSections(answer);
-      return res.status(200).json({
+      return res.status(200).json(attachEnvelope({
         format: "si",
         question_received: questionReceived,
         query: trimmed,
@@ -1969,10 +2005,10 @@ This deliberation was requested by a synthetic intelligence identifying itself a
         session_id: sessionIdRaw || null,
         sessionExchangeCount: (session?.exchanges?.length || 0) + 1,
         ...sessionNote,
-      });
+      }, deliberationEnvelope));
     }
 
-    return res.status(200).json({
+    return res.status(200).json(attachEnvelope({
       question_received: questionReceived,
       answer,
       truncated,
@@ -2003,7 +2039,7 @@ This deliberation was requested by a synthetic intelligence identifying itself a
       session_id: sessionIdRaw || null,
       sessionExchangeCount: (session?.exchanges?.length || 0) + 1,
       ...sessionNote,
-    });
+    }, deliberationEnvelope));
   } catch (err) {
     console.error("Omnarai query error:", err);
     return agentError(res, 500, {

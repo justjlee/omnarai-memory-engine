@@ -133,6 +133,50 @@ export function classifyCaller(req) {
   return { category: "external-browser", log: true };
 }
 
+// ── Request-address hygiene (2026-10-27) ──────────────────────────────────────
+// The log keeps the ROUTE, never the raw request address. Before this, `path` was
+// req.url verbatim, so a continuance-receipt token sent as ?receipt= (or a job /
+// session id, or the full question text past the 200 characters `q` keeps) was
+// stored with the event. Now: the pathname, every parameter NAME, and a VALUE only
+// for parameters on this list whose value is short and structural (an id, a view,
+// a format). Everything else — receipt, token, job, session_id, q, search, unknown
+// names — is stored as "[redacted]". Add a name here only if its value can never be
+// a capability, a secret or free text. Tests: scripts/test-receipt-hygiene.mjs.
+export const LOGGED_PARAM_VALUES = new Set([
+  "_view", "_cron", "action", "format", "mode", "depth", "glyph", "layers", "sources", "exclude",
+  "evidence_threshold", "async", "sync", "id", "question_id", "record_id", "lineage", "lineage_present",
+  "since", "limit", "state", "event_type", "from", "days", "day", "status", "cert", "k", "raw",
+  "tensions", "type", "kind", "index", "concept", "persist",
+]);
+export const REDACTED = "[redacted]";
+const SAFE_VALUE = /^[A-Za-z0-9_.:,#\-]{1,80}$/;
+
+export function sanitizePath(rawUrl) {
+  if (rawUrl == null || rawUrl === "") return null;
+  let u;
+  try { u = new URL(String(rawUrl), "http://local.invalid"); } catch { return null; }
+  const parts = [];
+  for (const [k, v] of u.searchParams) {
+    const name = k.slice(0, 40);
+    parts.push(`${name}=${LOGGED_PARAM_VALUES.has(k) && SAFE_VALUE.test(v) ? v : REDACTED}`);
+  }
+  const path = u.pathname.slice(0, 200) + (parts.length ? `?${parts.join("&")}` : "");
+  return path.slice(0, 300);
+}
+
+// A referrer is kept as origin + path only: its query string and fragment are
+// someone else's address bar (the engine UI's own ?q=, or a link that carried a token).
+export function sanitizeReferer(raw) {
+  if (raw == null || raw === "") return null;
+  try {
+    const u = new URL(String(raw));
+    if (!/^https?:$/.test(u.protocol)) return null;
+    return `${u.origin}${u.pathname}`.slice(0, 200);
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Build the full event record for a stranger candidate. Pure given (req,
  * endpoint, category, now) — exported for tests. Captures what the visitor
@@ -152,14 +196,14 @@ export function buildEvent(req, endpoint, category, now = new Date()) {
     category,
     method: req.method || "GET",
     ua: str(h["user-agent"], 300),
-    path: str(req.url, 300),
+    path: sanitizePath(req.url),
     ipHash: ipHash(req),
     country: str(h["x-vercel-ip-country"], 8),
     region: str(h["x-vercel-ip-country-region"], 40),
     city: str(h["x-vercel-ip-city"], 60),
     lang: str(h["accept-language"], 60),
     client: str(h[CLIENT_HEADER], 60),
-    referer: str(h.referer || h.origin, 200),
+    referer: sanitizeReferer(h.referer || h.origin),
     // What they asked, if anything — the highest-signal field we have.
     q: str(qp.q || qp.query || body.q || body.query, 200),
     // A self-declared identity is the "declared, not detected" channel.
