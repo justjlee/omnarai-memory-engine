@@ -112,6 +112,13 @@ echo ">> Tool-contract parity (npm · remote MCP · OpenAI · OpenAPI)"
 node scripts/check-tool-contract.mjs
 echo
 
+# HARD gate: the omnarai_response envelope (2026-11-18). api/_response-envelope.js, its JSON Schema,
+# public/openapi.json, llms.txt, agent-entry and the handlers name the same protocol, kinds and
+# covered routes, and each trust token still matches its POLICY_CARD sentence. Offline.
+echo ">> Response-envelope parity (schema · OpenAPI · llms.txt · agent-entry · handlers)"
+node scripts/check-response-envelope.mjs
+echo
+
 if [[ "${1:-}" == "--promote" ]]; then
   # IMPORTANT: promotion is a real PRODUCTION deployment, not a preview alias.
   # Production-scoped env vars (OPENAI_API_KEY, YOUTUBE_API_KEY) are NOT injected

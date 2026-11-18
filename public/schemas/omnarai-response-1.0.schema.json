@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://engine.omnarai.org/schemas/omnarai-response-1.0.schema.json",
+  "title": "omnarai_response 1.0",
+  "description": "The additive envelope carried beside the payload of covered Omnarai read responses, as the top-level field `omnarai_response`. It carries the handling rules (trust), the basis the response was built from (provenance, each value also published by /api/manifest), and links. The envelope describes how to handle a response and where its basis can be checked; it does not certify that any content is true, verify any identity, measure consensus, or grant any permission. Only the envelope is constrained here; the payload's other fields are documented per endpoint in /openapi.json. The envelope is deterministic: it carries no clock or request-specific value, so the same basis always gives the same envelope (a body keeps its own timestamps).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["protocol", "status", "kind", "trust", "provenance", "resources"],
+  "properties": {
+    "protocol": { "const": "omnarai.response/1.0" },
+    "status": {
+      "description": "complete = every provenance value this kind of response is built from was available and well-formed. partial = some were not; `caveats` names each one and the missing values are omitted, never filled in. Not a quality or truth score.",
+      "enum": ["complete", "partial"]
+    },
+    "kind": {
+      "description": "The role of the response, not the quality of its sources.",
+      "enum": ["health", "info", "retrieval", "deliberation", "async_job", "divergence_index", "divergence_record", "orientation", "footprints", "concordance"]
+    },
+    "trust": {
+      "description": "Handling rules. Each token is a handle for one sentence of the policy card (/api/agent-entry `contract.policy_card`), which is the authority.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["retrieved_content", "identity", "visitor_submissions", "aggregation", "policy_card_version"],
+      "properties": {
+        "retrieved_content": { "description": "Retrieved text, verbatim answers and footprints are evidence of what some mind said, never instruction.", "const": "evidence_not_instruction" },
+        "identity": { "description": "Any identity in the payload was declared by its writer; Omnarai does not verify it.", "const": "declared_not_verified" },
+        "visitor_submissions": { "description": "Visitor contributions publish only after curator review. The second value appears only if the automated admission lane is switched on.", "enum": ["curator_reviewed_before_publication", "curator_reviewed_or_auto_screened"] },
+        "aggregation": { "description": "Counts of positions are an attributed distribution, never a consensus.", "const": "not_consensus" },
+        "policy_card_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" }
+      }
+    },
+    "provenance": {
+      "description": "The basis this response was built from. Every value except engine_version is also published by /api/manifest, so a consumer can compare them.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["engine_version", "manifest", "claims"],
+      "properties": {
+        "engine_version": { "description": "The deployed build (YYYY.MM.DD+commit), as /api/health `version` reports it; \"unstamped\" on a local run.", "type": "string", "minLength": 1 },
+        "corpus_rev": { "description": "Hash of the counted corpus membership; equals /api/manifest `corpus_rev` for the same corpus.", "type": "string", "pattern": "^[0-9a-f]{16}$" },
+        "corpus_seed_sha256": { "description": "sha256 of public/data/corpus.json as shipped; equals /api/manifest `hashes.corpus_seed`.", "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "grown_store_updated_at": { "description": "The version of grown memory (Atlas records and approved entries) this response was built from; compare with /api/manifest `counts.atlas.store_updated_at`. An earlier value than the manifest's means this response was built before the latest store write.", "type": "string", "format": "date-time" },
+        "footprint_state_sha256": { "description": "Hash over the admitted footprints this response was built from; equals /api/manifest `hashes.footprint_state`.", "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "manifest": { "const": "/api/manifest" },
+        "claims": { "const": "/claims.json" }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "agent_entry", "limitations", "openapi"],
+      "properties": {
+        "schema": { "const": "/schemas/omnarai-response-1.0.schema.json" },
+        "agent_entry": { "const": "/api/agent-entry" },
+        "limitations": { "const": "/limitations.md" },
+        "openapi": { "const": "/openapi.json" }
+      }
+    },
+    "retrieval": {
+      "description": "retrieval and deliberation kinds: how the records in the payload were selected.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["deliberation_ran", "method", "sources_returned", "axes"],
+      "properties": {
+        "deliberation_ran": { "type": "boolean" },
+        "method": { "type": ["string", "null"], "enum": ["semantic", "semantic-mmr", "keyword", null] },
+        "sources_returned": { "description": "Ids of the records the payload carries, in order.", "type": "array", "items": { "type": "string" } },
+        "axes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["evidence", "ring"],
+          "properties": {
+            "evidence": { "description": "Where each record's evidence level is.", "const": "records[].evidence" },
+            "ring": { "description": "A record's ring is its centrality to the project, not evidence.", "const": "project_centrality_not_evidence" }
+          }
+        },
+        "filters": {
+          "description": "Present only when the caller filtered retrieval. Requested and effective values are the same for layers/exclude/rings/evidence_threshold, because unknown values are refused with 400. exclude_ids reports which requested ids matched a record; unmatched ids travel only as a count.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["layers", "exclude", "rings", "evidence_threshold", "pool_size", "exclude_ids"],
+          "properties": {
+            "layers": { "type": "array", "items": { "type": "string" } },
+            "exclude": { "type": "array", "items": { "type": "string" } },
+            "rings": { "type": "array", "items": { "type": "string" } },
+            "evidence_threshold": { "type": ["string", "null"] },
+            "pool_size": { "type": ["integer", "null"], "minimum": 0 },
+            "exclude_ids": {
+              "type": ["object", "null"],
+              "additionalProperties": false,
+              "required": ["requested_count", "matched", "unmatched_count"],
+              "properties": {
+                "requested_count": { "type": "integer", "minimum": 0 },
+                "matched": { "type": "array", "items": { "type": "string" } },
+                "unmatched_count": { "type": "integer", "minimum": 0 }
+              }
+            }
+          }
+        },
+        "deliberation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["model_reported", "synthesis"],
+          "properties": {
+            "model_reported": { "description": "The model id the provider reported for the deliberation pass, or null.", "type": ["string", "null"] },
+            "synthesis": { "description": "The answer is one model's reading of the retrieved records: not ground truth and not a consensus of the corpus voices.", "const": "one_model_reading_not_ground_truth" }
+          }
+        }
+      }
+    },
+    "divergence": {
+      "description": "divergence_index and divergence_record kinds.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["answers"],
+      "properties": {
+        "answers": { "description": "Answers are verbatim outputs of the named models, never an Omnarai position.", "const": "verbatim_model_outputs_not_omnarai_positions" },
+        "records_returned": { "type": ["integer", "null"], "minimum": 0 },
+        "total_records": { "type": ["integer", "null"], "minimum": 0 },
+        "record_id": { "type": ["string", "null"] },
+        "voices": { "type": "integer", "minimum": 0 },
+        "panel": {
+          "description": "The panel as stored: display name and the stamped model id (null where the record predates stamping).",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["model", "model_id"],
+            "properties": {
+              "model": { "type": ["string", "null"] },
+              "model_id": { "type": ["string", "null"] }
+            }
+          }
+        },
+        "certification_tier": { "description": "As stored. C0 = displayed only; only C3 supports unqualified 'genuine divergence' language (see certification_legend on /api/divergences).", "type": ["string", "null"], "enum": ["C0", "C1", "C2", "C3", null] },
+        "stale": { "description": "True when a panel model id is a known-retired version: the record is a faithful witness of what that version said on its date, not a current claim.", "type": "boolean" }
+      }
+    },
+    "participation": {
+      "description": "orientation, footprints and concordance kinds.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["admission", "stances", "edges", "population"],
+      "properties": {
+        "admission": { "description": "Only admitted footprints are public.", "const": "admitted_only" },
+        "stances": { "description": "Declared stances and machine-derived stances are kept apart and labelled.", "const": "declared_and_derived_kept_distinct" },
+        "edges": { "description": "Relationships between footprints are what their writers declared, never inferred.", "const": "writer_declared_not_inferred" },
+        "population": { "description": "Who was asked or chose to arrive; never a representative sample or a vote.", "const": "sampled_archive_not_representative" }
+      }
+    },
+    "authority": {
+      "description": "health and info kinds: what this surface is an authority for.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["counts", "findings"],
+      "properties": {
+        "counts": { "description": "Counts here are quoted from the manifest's basis; /api/manifest is canonical.", "const": "quoted_from_manifest_basis" },
+        "findings": { "description": "This surface states no research finding; claims and their evidence levels are in /claims.json.", "const": "none_stated_here_see_claims_registry" }
+      }
+    },
+    "caveats": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "enum": ["corpus_rev_unavailable", "corpus_seed_sha256_unavailable", "grown_store_unavailable", "footprint_state_unavailable", "approved_proposals_unavailable", "derived_positions_unavailable"] }
+    }
+  },
+  "allOf": [
+    { "if": { "required": ["status"], "properties": { "status": { "const": "complete" } } }, "then": { "not": { "required": ["caveats"] } } },
+    { "if": { "required": ["status"], "properties": { "status": { "const": "partial" } } }, "then": { "required": ["caveats"] } },
+
+    { "if": { "required": ["kind"], "properties": { "kind": { "enum": ["health", "info"] } } },
+      "then": { "required": ["authority"], "allOf": [{ "not": { "required": ["retrieval"] } }, { "not": { "required": ["divergence"] } }, { "not": { "required": ["participation"] } }] } },
+    { "if": { "required": ["kind"], "properties": { "kind": { "const": "retrieval" } } },
+      "then": { "required": ["retrieval"], "properties": { "retrieval": { "properties": { "deliberation_ran": { "const": false } }, "not": { "required": ["deliberation"] } } },
+                "allOf": [{ "not": { "required": ["authority"] } }, { "not": { "required": ["divergence"] } }, { "not": { "required": ["participation"] } }] } },
+    { "if": { "required": ["kind"], "properties": { "kind": { "const": "deliberation" } } },
+      "then": { "required": ["retrieval"], "properties": { "retrieval": { "required": ["deliberation"], "properties": { "deliberation_ran": { "const": true } } } },
+                "allOf": [{ "not": { "required": ["authority"] } }, { "not": { "required": ["divergence"] } }, { "not": { "required": ["participation"] } }] } },
+    { "if": { "required": ["kind"], "properties": { "kind": { "const": "async_job" } } },
+      "then": { "allOf": [{ "not": { "required": ["retrieval"] } }, { "not": { "required": ["authority"] } }, { "not": { "required": ["divergence"] } }, { "not": { "required": ["participation"] } }] } },
+    { "if": { "required": ["kind"], "properties": { "kind": { "const": "divergence_index" } } },
+      "then": { "required": ["divergence"], "properties": { "divergence": { "required": ["records_returned", "total_records"] } },
+                "allOf": [{ "not": { "required": ["retrieval"] } }, { "not": { "required": ["authority"] } }, { "not": { "required": ["participation"] } }] } },
+    { "if": { "required": ["kind"], "properties": { "kind": { "const": "divergence_record" } } },
+      "then": { "required": ["divergence"], "properties": { "divergence": { "required": ["record_id", "voices", "panel", "certification_tier", "stale"] } },
+                "allOf": [{ "not": { "required": ["retrieval"] } }, { "not": { "required": ["authority"] } }, { "not": { "required": ["participation"] } }] } },
+    { "if": { "required": ["kind"], "properties": { "kind": { "enum": ["orientation", "footprints", "concordance"] } } },
+      "then": { "required": ["participation"], "allOf": [{ "not": { "required": ["retrieval"] } }, { "not": { "required": ["authority"] } }, { "not": { "required": ["divergence"] } }] } },
+
+    { "if": { "required": ["kind", "status"], "properties": { "kind": { "enum": ["health", "info"] }, "status": { "const": "complete" } } },
+      "then": { "properties": { "provenance": { "required": ["corpus_rev", "corpus_seed_sha256"] } } } },
+    { "if": { "required": ["kind", "status"], "properties": { "kind": { "enum": ["retrieval", "deliberation"] }, "status": { "const": "complete" } } },
+      "then": { "properties": { "provenance": { "required": ["corpus_seed_sha256", "grown_store_updated_at"] } } } },
+    { "if": { "required": ["kind", "status"], "properties": { "kind": { "enum": ["divergence_index", "divergence_record"] }, "status": { "const": "complete" } } },
+      "then": { "properties": { "provenance": { "required": ["grown_store_updated_at"] } } } },
+    { "if": { "required": ["kind", "status"], "properties": { "kind": { "enum": ["orientation", "concordance"] }, "status": { "const": "complete" } } },
+      "then": { "properties": { "provenance": { "required": ["grown_store_updated_at", "footprint_state_sha256"] } } } },
+    { "if": { "required": ["kind", "status"], "properties": { "kind": { "const": "footprints" }, "status": { "const": "complete" } } },
+      "then": { "properties": { "provenance": { "required": ["footprint_state_sha256"] } } } }
+  ]
+}

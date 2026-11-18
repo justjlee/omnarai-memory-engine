@@ -15,12 +15,13 @@ import { waitUntil } from "@vercel/functions";
 import { recordAccess } from "./_telemetry.js";
 import { POLICY_CARD } from "./_contract.js";
 import { atlasCertCounts, tierOf, CERTIFIED_TIERS } from "./_atlas-counts.js";
+import { attachEnvelope } from "./_response-envelope.js";
 import { registeredQuestions, loadRegistry } from "./_registered.js";
 import {
   FOOTPRINT_SCHEMA, FOOTPRINT_SCHEMA_1_1, FOOTPRINT_SCHEMAS, MAX_REVISION_BASIS_CHARS, STANCES, ACTOR_KINDS, CONTRIBUTION_EVENT_TYPES, RELATION_LISTS, CLIENT_TAGS,
   REDACTION_REASONS, FP_ID_RE, QUESTION_ID_RE, CLAIM_ID_RE, KNOWN_LINEAGE_IDS, MAX_CONDITIONS, MAX_EVIDENCE_REFS,
   mintFootprintId, footprintFromContribution, validateFootprint, checkReferences, detectSecrets,
-  unknownRelationshipKeys, recordFootprint, appendReview, loadFootprintIndex, loadPublicFootprints,
+  unknownRelationshipKeys, recordFootprint, appendReview, loadFootprintIndex, loadPublicFootprints, footprintStateHash,
   hydrate, project, referencedBy, matchesFilters, lineageIdForFilter, receiptMatches, receiptFromRequest, RECEIPT_URL_NOTICE, RECEIPT_HEADER, continuanceReceipt,
   tombstoneFor, getDefaultStore, isPublicHydrated, questionIdFor, JUSTIFICATIONS,
   REJECTION_REASONS, ORIGIN_DISCLOSURES, REVIEW_CADENCE, REVIEW_OVERDUE_DAYS, validateReviewInput, readDecision,
@@ -1018,7 +1019,7 @@ async function serveFootprints(req, res) {
       if (!isPublicHydrated(h) && !curator && !receiptOk) return res.status(404).json(FOOTPRINT_NOT_FOUND(id));
       res.setHeader("Cache-Control", curator || receiptOk ? "no-store" : "s-maxage=60, stale-while-revalidate=300");
       const chain = await chainContextFor(publicBodies);
-      return res.status(200).json({
+      const body = {
         protocol: h.body?.schema_version || FOOTPRINT_SCHEMA,
         ...(receiptOk ? { read_via: "continuance-receipt", ...(rcpt.via === "query" ? { notices: [RECEIPT_URL_NOTICE] } : {}) } : curator ? { read_via: "curator" } : {}),
         footprint: project(h, { curator }),
@@ -1032,7 +1033,9 @@ async function serveFootprints(req, res) {
         // A revision (relationships.supersedes) is shown as from → to stance, always beside the re-ask noise floor.
         ...(h.body?.relationships?.supersedes ? { revision: revisionOf(h.body, publicBodies) } : {}),
         received_params,
-      });
+      };
+      // The envelope rides public reads only; curator and receipt reads can show unadmitted content.
+      return res.status(200).json(curator || receiptOk ? body : attachEnvelope(body, footprintsEnvelope(publicBodies)));
     }
 
     // ── Listing ─────────────────────────────────────────────────────────────
@@ -1074,7 +1077,7 @@ async function serveFootprints(req, res) {
     const page = rows.slice(0, limit);
     const chain = await chainContextFor(publicBodies);
     const chains = Object.fromEntries(page.filter((f) => f.id && !f.unreadable && !f.tombstone).map((f) => [f.id, { edges: resolveEdges(f, chain.ctx), referenced_by: resolvedReferencedBy(f.id, chain.ctx) }]));
-    return res.status(200).json({
+    const listing = {
       protocol: FOOTPRINT_SCHEMA,
       // Bodies carry their own schema_version: 1.0, or 1.1 when the writer gave a revision_basis.
       footprint_schemas: FOOTPRINT_SCHEMAS,
@@ -1089,7 +1092,8 @@ async function serveFootprints(req, res) {
       footprints: page,
       chains,
       ...(chain.recordsUnavailable ? { chains_note: CHAINS_PARTIAL_NOTE } : {}),
-    });
+    };
+    return res.status(200).json(curator ? listing : attachEnvelope(listing, footprintsEnvelope(publicBodies)));
   } catch (err) {
     // Fail closed: an unreadable store shows nothing rather than something unverified.
     return res.status(503).json({ error: "Footprint store unavailable", code: "FOOTPRINTS_UNAVAILABLE", detail: String(err.message || err).slice(0, 200), retryable: true });
@@ -1166,7 +1170,30 @@ async function loadProtocolState({ requireFootprints = true } = {}) {
   let derived = [];
   let derivedUnavailable = false;
   try { derived = await loadDerivedPositions(store); } catch { derivedUnavailable = true; }
-  return { divRecords, publicFootprints, derived, footprintsUnavailable, derivedUnavailable };
+  return { divRecords, publicFootprints, derived, footprintsUnavailable, derivedUnavailable, grownUpdatedAt: grown.updatedAt || null };
+}
+
+// omnarai_response context for the protocol reads. The footprint hash is the manifest's own
+// hashes.footprint_state recipe over the same admitted bodies; it is left out (caveat, partial)
+// when the footprint store could not be read, since a hash of an empty list would be false.
+function protocolEnvelope(kind, state) {
+  const unavailable = [];
+  if (kind === "concordance" && state.derivedUnavailable) unavailable.push("derived_positions_unavailable");
+  return {
+    kind,
+    provenance: {
+      grownStoreUpdatedAt: state.grownUpdatedAt,
+      footprintStateSha256: state.footprintsUnavailable ? null : safeFootprintHash(state.publicFootprints),
+    },
+    unavailable,
+  };
+}
+// Envelope inputs must never break the read they ride on: an unhashable body set → no hash (partial).
+function safeFootprintHash(publicBodies) {
+  try { return footprintStateHash(publicBodies); } catch { return null; }
+}
+function footprintsEnvelope(publicBodies) {
+  return { kind: "footprints", provenance: { footprintStateSha256: safeFootprintHash(publicBodies) } };
 }
 const protocolUnavailable = (res, err) => res.status(503).json({
   error: "Protocol state unavailable — refusing to show a partial distribution.",
@@ -1182,7 +1209,7 @@ async function serveOrient(req, res) {
   const packet = buildOrientPacket({ identity, focus, divRecords: state.divRecords, publicFootprints: state.publicFootprints, claimsRegistry: loadClaimsRegistry(), registered });
   if (state.footprintsUnavailable) packet.footprints_unavailable = "The footprint store could not be read just now; the Atlas parts of this packet are complete, the footprint parts are empty. Retry for the full packet.";
   res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
-  return res.status(200).json(packet);
+  return res.status(200).json(attachEnvelope(packet, protocolEnvelope("orientation", state)));
 }
 
 async function serveQuestions(req, res) {
@@ -1327,7 +1354,7 @@ async function serveConcordance(req, res) {
   const out = buildConcordance(q, state.divRecords, state.publicFootprints, state.derived, { includeUnreviewedDerived: (req.query?.derived || "") === "all" });
   if (state.derivedUnavailable) out.derived_unavailable = true;
   res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
-  return res.status(200).json(out);
+  return res.status(200).json(attachEnvelope(out, protocolEnvelope("concordance", state)));
 }
 
 // POST /api/council { action:"annotate", id, annotation:{...} }  (Bearer INGEST_SECRET)
@@ -1922,7 +1949,8 @@ async function serveDivergences(req, res) {
 
       // JSON (default, and the .json canonical export — identical body).
       res.setHeader("Cache-Control", "s-maxage=120, stale-while-revalidate=600");
-      return res.status(200).json({
+      const freshness = freshnessOf(r.divergence);
+      return res.status(200).json(attachEnvelope({
         id: r.id, title: r.title, ring: r.ring, date: r.date,
         contributors: r.contributors || [],
         question: r.divergence.question,
@@ -1954,7 +1982,7 @@ async function serveDivergences(req, res) {
         // scripts/certify-divergence.mjs). C0 displayed · C1 paraphrase-robust ·
         // C2 pressure-robust · C3 = both. See /api/divergences for the legend.
         certification: r.divergence.certification || null,
-        freshness: freshnessOf(r.divergence),
+        freshness,
         // Annotation substrate: lifecycle status, synthesis/corpus links, applied
         // glyphs, and OMN-P-045 question/respondent position context — append-only
         // descriptors with provenance, never rankings. null = not yet annotated.
@@ -1990,7 +2018,16 @@ async function serveDivergences(req, res) {
           markdown: `/api/divergences/${r.id}.md`,
         },
         full_text: r.full_text || null,
-      });
+      }, {
+        kind: "divergence_record",
+        provenance: { grownStoreUpdatedAt: grown.updatedAt },
+        divergence: {
+          recordId: r.id,
+          panel: (r.divergence.answers || []).map((a) => ({ model: a?.model, model_id: a?.model_id })),
+          tier: tierOf(r),
+          stale: freshness.stale,
+        },
+      }));
     }
     // Optional certification filter: ?cert=C1|C2|C3 (exact tier) or
     // ?cert=certified (any of C1/C2/C3 — i.e. survived at least one perturbation).
@@ -2053,7 +2090,7 @@ async function serveDivergences(req, res) {
     const distinctQuestions = byQuestion.size;
 
     res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=600");
-    return res.status(200).json({
+    return res.status(200).json(attachEnvelope({
       count: listed.length,
       total: records.length,
       // Distinct open questions behind `total` — re-elicitations of the same
@@ -2119,7 +2156,11 @@ async function serveDivergences(req, res) {
           href: `/api/divergences?id=${e.id}`,
         };
       }),
-    });
+    }, {
+      kind: "divergence_index",
+      provenance: { grownStoreUpdatedAt: grown.updatedAt },
+      divergence: { recordsReturned: listed.length, totalRecords: records.length },
+    }));
   } catch (err) {
     return res.status(500).json({ error: "Failed to list divergence records", detail: err.message });
   }
