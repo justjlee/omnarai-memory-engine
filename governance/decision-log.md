@@ -434,3 +434,17 @@ check was running. Being told that access exists does not count.
 - Source: PR #49 (merge 0f1f0e5), engine 2026.11.03+0f1f0e5, bundle index-BPtVYHkx.js matched; arrival check 20/20,
   omnarai-verify 14/14, dual-native gate and surface-numbers gate (engine scope, in balance) all pass
 - Logged: 2026-11-03 by Claude Code (Anthropic)
+
+## DL-0040 · 2026-11-18 · The omnarai_response envelope (omnarai.response/1.0) is live on eight read routes
+- Decider: xz (said "Deploy it" for PR #54 in a Claude Code session of 2026-11-18)
+- Reason: covered reads (health, info, query, divergences, orient, footprints, concordance) now carry the handling rules
+  and the basis each response was built from, so they travel with a copied response. The envelope is additive and
+  deterministic; every provenance value is one /api/manifest also publishes, and a value that cannot be supplied is left
+  out and named, never filled in. It certifies nothing: not truth, identity, consensus or permission. deploy.sh
+  regenerated the Atlas figures from the live records: 202 recorded splits, 52 pressure-tested, 150 awaiting testing,
+  132 distinct questions.
+- Source: PR #54 (merge f665405), engine 2026.11.18+f665405, bundle index-BPtVYHkx.js matched; arrival check 20/20,
+  omnarai-verify 14/14, dual-native 14/14, surface-numbers gate (engine scope) in balance, new response-envelope gate
+  green; scripts/smoke-response-envelope.mjs 7/7 free reads complete and consistent with /api/manifest
+- Note: DL-0035 to DL-0038 are held by open PR #52 and DL-0039 by the drafted utility v2 entry, so this takes DL-0040.
+- Logged: 2026-11-18 by Claude Code (Anthropic)
