@@ -20,6 +20,7 @@ import { GREETING, DATE_NOTE } from "./_protocol.js";
 import { BUILD_STAMP } from "./_build-stamp.js";
 import { runAudit, publicReport } from "./_surface-audit.js";
 import { questionsDomain } from "./_registered.js";
+import { attachEnvelope, envelopeSummary } from "./_response-envelope.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -91,6 +92,9 @@ const sha256 = (s) => createHash("sha256").update(s).digest("hex");
 // without requiring a redeploy every time a new entry is approved.
 let mergedCorpus = [...corpus];
 let proposalsMerged = false;
+// True when the proposals LIST failed, so this instance counts the seed only. The counts were
+// always served that way; the response envelope now says so (caveat approved_proposals_unavailable).
+let proposalsUnavailable = false;
 async function mergeProposals() {
   if (proposalsMerged) return;
   try {
@@ -108,7 +112,7 @@ async function mergeProposals() {
         }
       } catch { /* skip malformed */ }
     }
-  } catch { /* Blob unavailable — use static corpus */ }
+  } catch { proposalsUnavailable = true; /* Blob unavailable — use static corpus */ }
   proposalsMerged = true;
 }
 
@@ -118,6 +122,14 @@ async function mergeProposals() {
 // landing between reads: equal revs ⇒ same corpus basis, so counts must agree;
 // unequal revs ⇒ the corpus changed between the two responses (D3).
 const corpusRev = () => sha256(canonicalJSON(mergedCorpus.map((e) => e.id).sort())).slice(0, 16);
+
+// omnarai_response envelope context for the two count surfaces it covers (health, info). The
+// values are the ones this file already serves and the manifest already publishes.
+const countEnvelope = (kind) => ({
+  kind,
+  provenance: { corpusRev: corpusRev(), corpusSeedSha256: CORPUS_SEED_HASH },
+  unavailable: proposalsUnavailable ? ["approved_proposals_unavailable"] : [],
+});
 
 // ── Combined visitor dashboard data (GET /api/info?_view=dashboard) ──────────
 // Server-side merge of the three visitor instruments into ONE privacy-safe read,
@@ -574,6 +586,9 @@ export default async function handler(req, res) {
       // The versioned tool contract (api/_contract.js, byte-copied from omnarai-mcp): every tool's mode,
       // cost and route, plus the policy card every surface states. Discovery only — no moderation control.
       contract: contractSummary(),
+      // omnarai.response/1.0 (api/_response-envelope.js): the handling rules and checkable
+      // provenance that travel with covered reads, so they survive being copied elsewhere.
+      response_envelope: envelopeSummary(),
       interpreting_records:
         "Each record carries TWO independent labels. `ring` (core/curated/open, plus `media` for the oral/video corpus) = how central it is to Omnarai — NOT how well-evidenced. `evidence` (empirical/replicated/theoretical/interpretive/speculative/fictional/uncharacterized) = how much weight to put on its claims about the world. A work can be `core` and `fictional` (lore) or `core` and `speculative` (a foundational thesis) — those are not contradictions. Weight claims by `evidence`, not `ring`. Spec: /evidence-status.md",
       citation: {
@@ -636,7 +651,7 @@ export default async function handler(req, res) {
     const has = (k) => Boolean(process.env[k]);
     const councilKeys = ["ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY", "XAI_API_KEY", "DEEPSEEK_API_KEY"];
     res.setHeader("Cache-Control", COUNT_SURFACE_CACHE);
-    return res.status(200).json({
+    return res.status(200).json(attachEnvelope({
       status: "ok",
       service: "Omnarai Memory Engine",
       version: ENGINE_VERSION,
@@ -683,7 +698,7 @@ export default async function handler(req, res) {
         limitations: "/limitations.md",
         playground: "/try",
       },
-    });
+    }, countEnvelope("health")));
   }
 
   // ── Flat stats: GET /api/stats (rewrite → ?_view=stats) ─────────────────────
@@ -924,7 +939,7 @@ export default async function handler(req, res) {
     return acc;
   }, {});
 
-  return res.status(200).json({
+  return res.status(200).json(attachEnvelope({
     corpus: {
       totalWorks: mergedCorpus.length,
       totalWords,
@@ -979,5 +994,5 @@ export default async function handler(req, res) {
       llms:        "/llms.txt",
       limitations: "/limitations.md",
     },
-  });
+  }, countEnvelope("info")));
 }
