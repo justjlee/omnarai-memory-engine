@@ -33,8 +33,10 @@ export const COUNCIL = [
 // The frontier track (longitudinal, track "frontier"): each lab's current flagship
 // on the same frozen canon, so the record shows what NEWER minds say, not only what
 // the standing council (fixed ids since 2026-06, a noise floor) re-says. Ids checked
-// against each provider's model list on 2026-10-23; PROPOSED until the curator sets
-// FRONTIER_TRACK=on. Reasoning models spend thinking tokens out of the same output
+// against each provider's model list on 2026-10-23 and again on 2026-11-18; the same
+// five flagships utility v2 used (2026-11-13). Gemini is Carbon, which Google calls its
+// most capable Gemini 4 model (Argon is its efficient one). PROPOSED until the curator
+// sets FRONTIER_TRACK=on. Reasoning models spend thinking tokens out of the same output
 // cap, so each member carries its own request settings (`body` / `generationConfig`).
 // No refusal fallback on any member: a fallback would put another model's words
 // under this model's name in a record that cannot be redone.
@@ -43,7 +45,7 @@ export const FRONTIER_COUNCIL = [
     body: { max_tokens: 4000, output_config: { effort: "medium" } } },
   { model: "GPT",      lab: "OpenAI",    model_id: "gpt-6.1-sol",     provider: "openai",    env: "OPENAI_API_KEY",
     body: { max_completion_tokens: 2400, reasoning_effort: "medium" } },
-  { model: "Gemini",   lab: "Google",    model_id: "gemini-4-argon",  provider: "gemini",    env: "GEMINI_API_KEY",
+  { model: "Gemini",   lab: "Google",    model_id: "gemini-4-carbon", provider: "gemini",    env: "GEMINI_API_KEY",
     generationConfig: { maxOutputTokens: 4096 } },
   { model: "Grok",     lab: "xAI",       model_id: "grok-4.7",        provider: "xai",       env: "XAI_API_KEY",
     body: { max_tokens: 2400 } },
