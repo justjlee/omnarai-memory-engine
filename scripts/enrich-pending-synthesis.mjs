@@ -101,7 +101,7 @@ if (DRY) {
 } else if (changed) {
   grown.updatedAt = new Date().toISOString();
   await put("memory/grown.json", JSON.stringify(grown), {
-    access: "public", addRandomSuffix: false, contentType: "application/json",
+    access: "public", addRandomSuffix: false, allowOverwrite: true, contentType: "application/json",
   });
   console.log(`\n✓ enriched ${changed} record(s) → memory/grown.json rewritten`);
 } else {

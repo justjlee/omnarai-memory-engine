@@ -116,7 +116,7 @@ async function main() {
   grown.updatedAt = new Date().toISOString();
   await put(GROWN_KEY, JSON.stringify(grown), {
     access: "public",
-    addRandomSuffix: false,
+    addRandomSuffix: false, allowOverwrite: true,
     contentType: "application/json",
   });
   console.log(`Wrote ${GROWN_KEY} — ${grown.entries.length} grown entries.`);

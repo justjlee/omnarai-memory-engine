@@ -102,7 +102,7 @@ export async function writeBudgetConfig(patch) {
   await put(CONFIG_KEY, JSON.stringify(next), {
     access: "public",
     contentType: "application/json",
-    addRandomSuffix: false,
+    addRandomSuffix: false, allowOverwrite: true,
   });
   return next;
 }
@@ -114,7 +114,7 @@ export async function resetBudgetConfig() {
   await put(CONFIG_KEY, JSON.stringify({ updated_at: new Date().toISOString() }), {
     access: "public",
     contentType: "application/json",
-    addRandomSuffix: false,
+    addRandomSuffix: false, allowOverwrite: true,
   });
   return {};
 }
@@ -261,7 +261,7 @@ export async function recordSpend(kind, { usd } = {}) {
     await put(key, JSON.stringify({ at: now.toISOString(), kind, usd: cost }), {
       access: "public",
       contentType: "application/json",
-      addRandomSuffix: false,
+      addRandomSuffix: false, allowOverwrite: true,
     });
     return true;
   } catch {

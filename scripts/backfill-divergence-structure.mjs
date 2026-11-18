@@ -39,7 +39,7 @@ for (const e of grown.entries) {
 
 if (changed) {
   grown.updatedAt = new Date().toISOString();
-  await put("memory/grown.json", JSON.stringify(grown), { access: "public", addRandomSuffix: false, contentType: "application/json" });
+  await put("memory/grown.json", JSON.stringify(grown), { access: "public", addRandomSuffix: false, allowOverwrite: true, contentType: "application/json" });
   console.log(`\n✓ backfilled ${changed} record(s) into grown.json`);
 } else {
   console.log("\nno changes (already backfilled)");

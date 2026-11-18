@@ -197,7 +197,7 @@ async function saveProposal(proposal) {
   const key = BLOB_PREFIX + proposal.id + ".json";
   await put(key, JSON.stringify(proposal, null, 2), {
     access: "public",
-    addRandomSuffix: false,
+    addRandomSuffix: false, allowOverwrite: true,
     contentType: "application/json",
   });
 }
@@ -317,7 +317,7 @@ export default async function handler(req, res) {
           status: "pending",
           nodes: conceptProposal.nodes,
           edges: conceptProposal.edges,
-        }), { access: "public", addRandomSuffix: false, contentType: "application/json" });
+        }), { access: "public", addRandomSuffix: false, allowOverwrite: true, contentType: "application/json" });
       }
 
       return res.status(200).json({

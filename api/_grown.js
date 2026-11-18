@@ -1,4 +1,4 @@
-import { list, put } from "@vercel/blob";
+import { list, put, BlobPreconditionFailedError } from "@vercel/blob";
 
 // ── Durable grown-memory layer ────────────────────────────────────────────────
 // The organism's growth — approved syntheses and their embeddings — lives here,
@@ -11,10 +11,13 @@ import { list, put } from "@vercel/blob";
 // this blob over it. If the blob store is unreachable, the seed still serves —
 // the live site cannot break from a grown-memory failure.
 //
-// Single blob (not one-per-proposal) is deliberate: approvals are curator-gated
-// and infrequent, so a read-modify-write on one object is safe. The old
-// per-proposal scheme existed to avoid races on concurrent *proposal* writes —
-// a different, high-frequency path. Growth is written only on *approve*.
+// Single blob (not one-per-proposal) is deliberate. Every write is a
+// read-modify-write of the whole file, made safe by a CONDITIONAL put: the write
+// carries the ETag of the copy it read and is refused if the blob has changed
+// since, then retried from a fresh read (see writeGrown). Before 2026-11-04 the
+// put was unconditional, and a writer that read a stale or concurrently-updated
+// copy silently erased the records written in between (2 of 5 elicit-002 records,
+// 2026-11-03; 4 of 8 in a 2026-09-28 batch).
 
 const GROWN_KEY = "memory/grown.json";
 
@@ -57,38 +60,89 @@ export function normalizeRing(ring) {
 // blob is also an error in strict mode: the store was seeded 2026-06, so "no
 // grown.json" now means a failed or inconsistent LIST, not a fresh store.
 export async function loadGrownMemory({ strict = false } = {}) {
+  return (await readGrown({ strict })).grown;
+}
+
+// The read behind loadGrownMemory, plus the ETag of the copy actually served.
+// The ETag travels with the body: a lagging CDN edge serves an old body WITH its
+// old ETag, so a conditional put based on it is refused rather than applied.
+async function readGrown({ strict = false } = {}) {
   try {
     const { blobs } = await list({ prefix: GROWN_KEY });
     if (!blobs.length) {
       if (strict) throw new Error("grown.json not listed — refusing to treat the store as empty");
-      return emptyGrown();
+      return { grown: emptyGrown(), etag: null };
     }
     // Cache-bust: the public Blob URL is served via CDN, which can return a STALE
     // copy for a short window after a put(). A unique query string forces a CDN
     // miss → origin read → the just-written content. Without this, even SERIAL
     // read-modify-write sequences silently lose updates (observed: 13/14 records
-    // dropped in a rapid batch). NB 2026-09-28: this is no longer sufficient —
-    // serial writes ~43s apart still lost 4 of 8 records, and one 90s gap still
-    // read stale. Space rapid writes out; a real fix is still open.
+    // dropped in a rapid batch). It is not sufficient on its own (serial writes
+    // ~43s apart still read stale, 2026-09-28), which is why writers also put
+    // conditionally on the ETag of what they read.
     const res = await fetch(`${blobs[0].url}?ts=${Date.now()}`, { cache: "no-store" });
     if (!res.ok) {
       if (strict) throw new Error(`grown.json read failed: HTTP ${res.status}`);
-      return emptyGrown();
+      return { grown: emptyGrown(), etag: null };
     }
+    const etag = res.headers.get("etag");
     const data = await res.json();
     if (strict && !Array.isArray(data.entries)) throw new Error("grown.json has no entries array");
     const entries = Array.isArray(data.entries) ? data.entries : [];
     for (const e of entries) e.ring = normalizeRing(e.ring);
-    return {
+    const grown = {
       version: data.version || 1,
       updatedAt: data.updatedAt || null,
       entries,
       vectors: data.vectors && typeof data.vectors === "object" ? data.vectors : {},
     };
+    return { grown, etag };
   } catch (err) {
     if (strict) throw err;
-    return emptyGrown();
+    return { grown: emptyGrown(), etag: null };
   }
+}
+
+// The one write path for grown memory. `mutate(grown)` edits a fresh copy and
+// returns { value, write }; `write: false` skips the put (nothing changed). The
+// put is conditional on the ETag of that copy. If another writer got there first,
+// or the read was stale, the put is refused and the whole read-mutate-put runs
+// again on a fresh read, so a lost race costs a retry instead of records.
+// Returns `value`, or null when the store is unreadable, carries no ETag, a put
+// fails, or every attempt loses the race: in each case nothing is written.
+const WRITE_ATTEMPTS = 6;
+
+async function writeGrown(mutate) {
+  const backoffMs = Number(process.env.GROWN_WRITE_BACKOFF_MS ?? 250);
+  for (let attempt = 1; attempt <= WRITE_ATTEMPTS; attempt++) {
+    let snap;
+    try {
+      snap = await readGrown({ strict: true });
+    } catch {
+      return null; // unreadable store: write nothing rather than write back "empty"
+    }
+    if (!snap.etag) return null; // can't write conditionally, so don't write at all
+    const { value, write } = mutate(snap.grown);
+    if (!write) return value;
+    snap.grown.updatedAt = new Date().toISOString();
+    try {
+      await put(GROWN_KEY, JSON.stringify(snap.grown), {
+        access: "public",
+        addRandomSuffix: false,
+        ifMatch: snap.etag,
+        contentType: "application/json",
+      });
+      return value;
+    } catch (err) {
+      if (!(err instanceof BlobPreconditionFailedError)) return null;
+      if (attempt < WRITE_ATTEMPTS) {
+        // Jittered exponential backoff from 250 ms (about 8 s over all attempts,
+        // inside the 60 s function limit), so racing writers don't collide again.
+        await new Promise((r) => setTimeout(r, backoffMs * 2 ** (attempt - 1) * (0.5 + Math.random())));
+      }
+    }
+  }
+  return null;
 }
 
 // Build the stored shape for one entry: strip transient fields, and preserve the
@@ -164,32 +218,17 @@ function normalizeEntry(entry) {
 export async function appendGrownEntries(items) {
   const list_ = Array.isArray(items) ? items.filter((it) => it?.entry?.id) : [];
   if (!list_.length) return null;
-  let grown;
-  try {
-    grown = await loadGrownMemory({ strict: true });
-  } catch {
-    return null; // unreadable store: write nothing rather than write back "empty"
-  }
-  const have = new Set(grown.entries.map((e) => e.id));
-  for (const { entry, embedding } of list_) {
-    if (!have.has(entry.id)) {
-      grown.entries.push(normalizeEntry(entry));
-      have.add(entry.id);
+  return writeGrown((grown) => {
+    const have = new Set(grown.entries.map((e) => e.id));
+    for (const { entry, embedding } of list_) {
+      if (!have.has(entry.id)) {
+        grown.entries.push(normalizeEntry(entry));
+        have.add(entry.id);
+      }
+      if (embedding) grown.vectors[entry.id] = embedding;
     }
-    if (embedding) grown.vectors[entry.id] = embedding;
-  }
-  grown.updatedAt = new Date().toISOString();
-
-  try {
-    await put(GROWN_KEY, JSON.stringify(grown), {
-      access: "public",
-      addRandomSuffix: false,
-      contentType: "application/json",
-    });
-    return grown.entries.length;
-  } catch {
-    return null;
-  }
+    return { value: grown.entries.length, write: true };
+  });
 }
 
 // Append one approved entry (and its embedding, if available) to durable grown
@@ -210,39 +249,26 @@ export async function appendGrownEntry(entry, embedding) {
 export async function patchGrownCertifications(certs) {
   const ids = certs && typeof certs === "object" ? Object.keys(certs) : [];
   if (!ids.length) return null;
-  let grown;
-  try {
-    grown = await loadGrownMemory({ strict: true });
-  } catch {
-    return null;
-  }
-  let updated = 0;
-  for (const e of grown.entries) {
-    if (e.type === "divergence" && e.divergence && certs[e.id]) {
-      // Append-only discipline (2026-07-18): a re-certification must not erase
-      // the evidence of what the instrument previously graded. The superseded
-      // block (minus its own history, which is carried forward flat) moves into
-      // the new block's `history[]`, oldest first — so any reader can see the
-      // grade's full lineage, including demotions.
-      const prior = e.divergence.certification;
-      if (prior) {
-        const { history: priorHistory, ...priorCompact } = prior;
-        certs[e.id].history = [...(priorHistory || []), priorCompact];
+  return writeGrown((grown) => {
+    let updated = 0;
+    for (const e of grown.entries) {
+      if (e.type === "divergence" && e.divergence && certs[e.id]) {
+        // Append-only discipline (2026-07-18): a re-certification must not erase
+        // the evidence of what the instrument previously graded. The superseded
+        // block (minus its own history, which is carried forward flat) moves into
+        // the new block's `history[]`, oldest first — so any reader can see the
+        // grade's full lineage, including demotions. Built from a copy, so a
+        // retried attempt recomputes history from its own fresh read.
+        const prior = e.divergence.certification;
+        const next = { ...certs[e.id] };
+        if (prior) {
+          const { history: priorHistory, ...priorCompact } = prior;
+          next.history = [...(priorHistory || []), priorCompact];
+        }
+        e.divergence.certification = next;
+        updated++;
       }
-      e.divergence.certification = certs[e.id];
-      updated++;
     }
-  }
-  if (!updated) return 0;
-  grown.updatedAt = new Date().toISOString();
-  try {
-    await put(GROWN_KEY, JSON.stringify(grown), {
-      access: "public",
-      addRandomSuffix: false,
-      contentType: "application/json",
-    });
-    return updated;
-  } catch {
-    return null;
-  }
+    return { value: updated, write: updated > 0 };
+  });
 }

@@ -213,7 +213,7 @@ export async function recordPlay(rec) {
   try {
     await put(playKey(rec), JSON.stringify(rec), {
       access: "public",
-      addRandomSuffix: false,
+      addRandomSuffix: false, allowOverwrite: true,
       contentType: "application/json",
     });
     return true;

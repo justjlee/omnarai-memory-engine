@@ -10,10 +10,12 @@ import { test, mock } from "node:test";
 import assert from "node:assert/strict";
 
 const state = { listImpl: null, puts: [] };
+class BlobPreconditionFailedError extends Error {}
 mock.module("@vercel/blob", {
   namedExports: {
     list: async (...a) => state.listImpl(...a),
-    put: async (key, body) => { state.puts.push({ key, body: JSON.parse(body) }); return { url: "x" }; },
+    put: async (key, body, opts) => { state.puts.push({ key, body: JSON.parse(body), opts }); return { url: "x" }; },
+    BlobPreconditionFailedError,
   },
 });
 const { loadGrownMemory, appendGrownEntry, patchGrownCertifications } = await import("../api/_grown.js");
@@ -23,7 +25,9 @@ const stored = { version: 1, updatedAt: "2026-09-29", vectors: {}, entries: [
   { id: "OMN-A", ring: "open", type: "divergence", divergence: { tensions: [] } },
   { id: "OMN-B", ring: "open" },
 ] };
-const respond = (status, body) => async () => new Response(typeof body === "string" ? body : JSON.stringify(body), { status });
+const ETAG = '"etag-of-stored"';
+const respond = (status, body, headers = { etag: ETAG }) => async () =>
+  new Response(typeof body === "string" ? body : JSON.stringify(body), { status, headers });
 const newEntry = { id: "OMN-NEW", title: "t", ring: "open" };
 
 function setup(listImpl, fetchImpl) {
@@ -39,6 +43,9 @@ const failures = {
   "read returns invalid JSON": [listed, respond(200, "{truncated")],
   "read has no entries array": [listed, respond(200, { version: 1 })],
   "fetch throws": [listed, async () => { throw new Error("socket hang up"); }],
+  // Without an ETag the put can't be conditional, and an unconditional put is
+  // exactly what erased records before 2026-11-04.
+  "read carries no ETag": [listed, respond(200, stored, {})],
 };
 
 for (const [name, [l, f]] of Object.entries(failures)) {
@@ -52,7 +59,7 @@ for (const [name, [l, f]] of Object.entries(failures)) {
     assert.equal(await patchGrownCertifications({ "OMN-A": { tier: "C1" } }), null);
     assert.equal(state.puts.length, 0);
   });
-  test(`reader: ${name} → still fail-soft (empty, no throw)`, async () => {
+  if (name !== "read carries no ETag") test(`reader: ${name} → still fail-soft (empty, no throw)`, async () => {
     setup(l, f);
     const g = await loadGrownMemory();
     assert.deepEqual(g.entries, []);
@@ -64,6 +71,7 @@ test("append happy path: keeps existing entries and adds the new one, in one put
   assert.equal(await appendGrownEntry(newEntry), 3);
   assert.equal(state.puts.length, 1);
   assert.deepEqual(state.puts[0].body.entries.map((e) => e.id), ["OMN-A", "OMN-B", "OMN-NEW"]);
+  assert.equal(state.puts[0].opts.ifMatch, ETAG, "the put is conditional on the ETag of the copy it read");
 });
 
 test("append is idempotent by id", async () => {

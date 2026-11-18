@@ -648,7 +648,7 @@ export function createFootprintStore({ list = blobList, put = blobPut, fetchImpl
     if (!res.ok) return null;
     return res.json();
   }
-  const opts = { access: "public", addRandomSuffix: false, contentType: "application/json" };
+  const opts = { access: "public", addRandomSuffix: false, allowOverwrite: true, contentType: "application/json" };
   return {
     listEventBlobs: () => listAll(EVENTS_PREFIX),
     listReviewBlobs: (footprintId = "") => listAll(REVIEWS_PREFIX + (footprintId ? `${footprintId}/` : "")),

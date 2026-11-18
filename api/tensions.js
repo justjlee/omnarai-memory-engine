@@ -134,7 +134,7 @@ export async function persistTension(tension, query, sources) {
 
   await put(blobKey, JSON.stringify(record, null, 2), {
     access: "public",
-    addRandomSuffix: false,
+    addRandomSuffix: false, allowOverwrite: true,
     contentType: "application/json",
   });
 
@@ -161,7 +161,7 @@ async function loadTension(key) {
 async function saveTension(record) {
   await put(BLOB_PREFIX + record.key + ".json", JSON.stringify(record, null, 2), {
     access: "public",
-    addRandomSuffix: false,
+    addRandomSuffix: false, allowOverwrite: true,
     contentType: "application/json",
   });
 }

@@ -151,7 +151,7 @@ const main = async () => {
   }
   await put(LOG_KEY, JSON.stringify(data), {
     access: "public",
-    addRandomSuffix: false,
+    addRandomSuffix: false, allowOverwrite: true,
     contentType: "application/json",
   });
   console.log("\n  ✓ aggregate log written\n");

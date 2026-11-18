@@ -300,7 +300,7 @@ export async function recordAccess(req, endpoint) {
       const eventKey = `${EVENTS_PREFIX}${day}/${event.at.replace(/[:.]/g, "")}-${randomBytes(3).toString("hex")}.json`;
       await put(eventKey, JSON.stringify(event), {
         access: "public",
-        addRandomSuffix: false,
+        addRandomSuffix: false, allowOverwrite: true,
         contentType: "application/json",
       });
 
@@ -322,7 +322,7 @@ export async function recordAccess(req, endpoint) {
       if (data.recent.length > RECENT_CAP) data.recent.length = RECENT_CAP;
       await put(LOG_KEY, JSON.stringify(data), {
         access: "public",
-        addRandomSuffix: false,
+        addRandomSuffix: false, allowOverwrite: true,
         contentType: "application/json",
       });
     })(), 4000);

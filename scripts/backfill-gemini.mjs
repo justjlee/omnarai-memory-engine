@@ -124,7 +124,7 @@ for (let i = 0; i < grown.entries.length; i++) {
   if (r) { grown.entries[i] = norm(r.entry); if (r.embedding) grown.vectors[r.id] = r.embedding; }
 }
 grown.updatedAt = new Date().toISOString();
-await put(GROWN_KEY, JSON.stringify(grown), { access: "public", addRandomSuffix: false, contentType: "application/json" });
+await put(GROWN_KEY, JSON.stringify(grown), { access: "public", addRandomSuffix: false, allowOverwrite: true, contentType: "application/json" });
 console.log(`\n=== DONE === repaired ${fixed.length}/${targets.length} · grown entries ${grown.entries.length}`);
 const errs = results.filter((r) => !r.ok);
 if (errs.length) console.log(`errors: ${errs.length}`);
