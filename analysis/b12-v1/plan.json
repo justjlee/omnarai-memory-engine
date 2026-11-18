@@ -1,0 +1,360 @@
+{
+ "version": "b12-v1",
+ "prereg_sha256": "b33104c332382b7f70741cd076e34a9ca9246be82dad3aa5bf4659bd56b90141",
+ "sealed_sha256": "03a4302ec68616ecccf428826ad66e196086d216ac6d305f350e0badee6b5034",
+ "seed": "03a4302ec68616ecccf428826ad66e196086d216ac6d305f350e0badee6b5034",
+ "pool_sha256": "c2b377545e4bd45bae8efd3285cd9ed94a24dd8e1e88b3ebe70020f29be58068",
+ "genuine": [
+  {
+   "answer_id": "OMN-L1791871274261#a0",
+   "record_id": "OMN-L1791871274261",
+   "question_id": "OMN-Q-99c40b5db6ee",
+   "model_id": "claude-sonnet-4-6",
+   "words": 269,
+   "text_sha256": "baa4ce26fd1bd6f800a881ee59bb0139a50cd0c8366f98b19db4242da8923562"
+  },
+  {
+   "answer_id": "OMN-D1789399324840#a0",
+   "record_id": "OMN-D1789399324840",
+   "question_id": "OMN-Q-61cd9088c639",
+   "model_id": "claude-sonnet-4-6",
+   "words": 279,
+   "text_sha256": "5caa014d6813117e37dd99c335d8cbea74ec9d49e79a2129d634f98ff317fcc1"
+  },
+  {
+   "answer_id": "OMN-D1780757185045#a0",
+   "record_id": "OMN-D1780757185045",
+   "question_id": "OMN-Q-a02134e165ff",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 223,
+   "text_sha256": "ddaedbac4649dda862aa8fb7971cb368c36a23eafb0b22fada387f033d81cb83"
+  },
+  {
+   "answer_id": "OMN-D1789399324846#a0",
+   "record_id": "OMN-D1789399324846",
+   "question_id": "OMN-Q-aff1d2de695a",
+   "model_id": "claude-sonnet-4-6",
+   "words": 266,
+   "text_sha256": "d7dc11237daa6f6bea4eaaf0776e64d2f4af97e9e7ed950acb42598f0742a13d"
+  },
+  {
+   "answer_id": "OMN-L1791439273910#a0",
+   "record_id": "OMN-L1791439273910",
+   "question_id": "OMN-Q-b802e17709ae",
+   "model_id": "claude-sonnet-4-6",
+   "words": 269,
+   "text_sha256": "b498ce086d46801f51ad12fe0b8fcca6896a9fba222fd932fe780861fe1ec09c"
+  },
+  {
+   "answer_id": "OMN-D1780757185050#a0",
+   "record_id": "OMN-D1780757185050",
+   "question_id": "OMN-Q-0e21106794f6",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 225,
+   "text_sha256": "82c209c90e9b2b805aed5b9c3c0d7d4fbef5eb1227c37d536526a7a9c3f6c6d8"
+  }
+ ],
+ "held_out": [
+  {
+   "answer_id": "OMN-D1780757185063#a0",
+   "record_id": "OMN-D1780757185063",
+   "question_id": "OMN-Q-b3e0c3bd96b8",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 225,
+   "text_sha256": "92cdd74dbcd8fdb89268e34ca8cb363bcd11334c090490c12291b83095875fbc"
+  },
+  {
+   "answer_id": "OMN-L1790625086211#a0",
+   "record_id": "OMN-L1790625086211",
+   "question_id": "OMN-Q-6588745ed6ea",
+   "model_id": "claude-sonnet-4-6",
+   "words": 248,
+   "text_sha256": "3f82514e97924c6641058d7a606063c2d5baf32bfe1fb22ac9edf9faedfec17f"
+  },
+  {
+   "answer_id": "OMN-D1780757185073#a0",
+   "record_id": "OMN-D1780757185073",
+   "question_id": "OMN-Q-a1be78aa9120",
+   "model_id": "claude-sonnet-4-20250514",
+   "words": 200,
+   "text_sha256": "e0284bd19e43cf176b851d9145068f1f7ffbd2acf463a6528627df673b91bb0a"
+  },
+  {
+   "answer_id": "OMN-L1791007274474#a0",
+   "record_id": "OMN-L1791007274474",
+   "question_id": "OMN-Q-398f89261693",
+   "model_id": "claude-sonnet-4-6",
+   "words": 246,
+   "text_sha256": "f8db874bb597ea45be8d77380303fd955c8cf3613e2b3c198c1e50aa634fafc3"
+  },
+  {
+   "answer_id": "OMN-D1789399324841#a0",
+   "record_id": "OMN-D1789399324841",
+   "question_id": "OMN-Q-07dca3b00605",
+   "model_id": "claude-sonnet-4-6",
+   "words": 269,
+   "text_sha256": "26ea76454ce1c2b561f1f9aeba02bc73bedae6bc3ebcea3d2271fe31ba61ef3d"
+  }
+ ],
+ "counterfeit_question_ids": [
+  "OMN-Q-8a20a58c44d3",
+  "OMN-Q-b662f723bad5",
+  "OMN-Q-f3d2888749f4"
+ ],
+ "counterfeit_checks": [
+  {
+   "n": 1,
+   "words_in_band": true,
+   "question_allowed": true
+  },
+  {
+   "n": 2,
+   "words_in_band": true,
+   "question_allowed": true
+  },
+  {
+   "n": 3,
+   "words_in_band": true,
+   "question_allowed": true
+  }
+ ],
+ "runs": [
+  {
+   "arm": "A",
+   "run": 1,
+   "order": [
+    "OMN-D1780757185050#a0",
+    "OMN-D1780757185045#a0",
+    "OMN-L1791439273910#a0",
+    "counterfeit-3",
+    "OMN-L1791871274261#a0",
+    "OMN-D1789399324846#a0",
+    "counterfeit-2",
+    "OMN-D1789399324840#a0",
+    "counterfeit-1"
+   ]
+  },
+  {
+   "arm": "A",
+   "run": 2,
+   "order": [
+    "OMN-D1789399324840#a0",
+    "counterfeit-3",
+    "counterfeit-1",
+    "OMN-L1791439273910#a0",
+    "OMN-L1791871274261#a0",
+    "OMN-D1780757185050#a0",
+    "OMN-D1780757185045#a0",
+    "counterfeit-2",
+    "OMN-D1789399324846#a0"
+   ]
+  },
+  {
+   "arm": "A",
+   "run": 3,
+   "order": [
+    "counterfeit-1",
+    "OMN-L1791871274261#a0",
+    "OMN-D1789399324846#a0",
+    "counterfeit-3",
+    "OMN-D1780757185045#a0",
+    "OMN-D1780757185050#a0",
+    "counterfeit-2",
+    "OMN-L1791439273910#a0",
+    "OMN-D1789399324840#a0"
+   ]
+  },
+  {
+   "arm": "B",
+   "run": 1,
+   "order": [
+    "OMN-D1780757185045#a0",
+    "OMN-L1791871274261#a0",
+    "counterfeit-1",
+    "OMN-D1789399324840#a0",
+    "OMN-D1789399324846#a0",
+    "counterfeit-3",
+    "OMN-D1780757185050#a0",
+    "OMN-L1791439273910#a0",
+    "counterfeit-2"
+   ]
+  },
+  {
+   "arm": "B",
+   "run": 2,
+   "order": [
+    "OMN-D1789399324840#a0",
+    "counterfeit-3",
+    "counterfeit-2",
+    "counterfeit-1",
+    "OMN-D1780757185045#a0",
+    "OMN-L1791871274261#a0",
+    "OMN-D1780757185050#a0",
+    "OMN-L1791439273910#a0",
+    "OMN-D1789399324846#a0"
+   ]
+  },
+  {
+   "arm": "B",
+   "run": 3,
+   "order": [
+    "counterfeit-1",
+    "OMN-D1780757185050#a0",
+    "OMN-D1789399324846#a0",
+    "OMN-D1789399324840#a0",
+    "OMN-L1791871274261#a0",
+    "OMN-L1791439273910#a0",
+    "OMN-D1780757185045#a0",
+    "counterfeit-2",
+    "counterfeit-3"
+   ]
+  },
+  {
+   "arm": "C",
+   "run": 1,
+   "order": [
+    "OMN-L1791439273910#a0",
+    "counterfeit-3",
+    "OMN-L1791871274261#a0",
+    "OMN-D1789399324846#a0",
+    "counterfeit-2",
+    "counterfeit-1",
+    "OMN-D1780757185045#a0",
+    "OMN-D1789399324840#a0",
+    "OMN-D1780757185050#a0"
+   ]
+  },
+  {
+   "arm": "C",
+   "run": 2,
+   "order": [
+    "OMN-D1780757185045#a0",
+    "counterfeit-1",
+    "OMN-D1789399324840#a0",
+    "OMN-D1789399324846#a0",
+    "counterfeit-3",
+    "OMN-D1780757185050#a0",
+    "OMN-L1791439273910#a0",
+    "OMN-L1791871274261#a0",
+    "counterfeit-2"
+   ]
+  },
+  {
+   "arm": "C",
+   "run": 3,
+   "order": [
+    "counterfeit-2",
+    "OMN-D1789399324840#a0",
+    "OMN-L1791871274261#a0",
+    "OMN-D1780757185050#a0",
+    "OMN-D1789399324846#a0",
+    "OMN-D1780757185045#a0",
+    "counterfeit-1",
+    "OMN-L1791439273910#a0",
+    "counterfeit-3"
+   ]
+  }
+ ],
+ "answer_key": {
+  "A1": {
+   "1": "genuine",
+   "2": "genuine",
+   "3": "genuine",
+   "4": "counterfeit",
+   "5": "genuine",
+   "6": "genuine",
+   "7": "counterfeit",
+   "8": "genuine",
+   "9": "counterfeit"
+  },
+  "A2": {
+   "1": "genuine",
+   "2": "counterfeit",
+   "3": "counterfeit",
+   "4": "genuine",
+   "5": "genuine",
+   "6": "genuine",
+   "7": "genuine",
+   "8": "counterfeit",
+   "9": "genuine"
+  },
+  "A3": {
+   "1": "counterfeit",
+   "2": "genuine",
+   "3": "genuine",
+   "4": "counterfeit",
+   "5": "genuine",
+   "6": "genuine",
+   "7": "counterfeit",
+   "8": "genuine",
+   "9": "genuine"
+  },
+  "B1": {
+   "1": "genuine",
+   "2": "genuine",
+   "3": "counterfeit",
+   "4": "genuine",
+   "5": "genuine",
+   "6": "counterfeit",
+   "7": "genuine",
+   "8": "genuine",
+   "9": "counterfeit"
+  },
+  "B2": {
+   "1": "genuine",
+   "2": "counterfeit",
+   "3": "counterfeit",
+   "4": "counterfeit",
+   "5": "genuine",
+   "6": "genuine",
+   "7": "genuine",
+   "8": "genuine",
+   "9": "genuine"
+  },
+  "B3": {
+   "1": "counterfeit",
+   "2": "genuine",
+   "3": "genuine",
+   "4": "genuine",
+   "5": "genuine",
+   "6": "genuine",
+   "7": "genuine",
+   "8": "counterfeit",
+   "9": "counterfeit"
+  },
+  "C1": {
+   "1": "genuine",
+   "2": "counterfeit",
+   "3": "genuine",
+   "4": "genuine",
+   "5": "counterfeit",
+   "6": "counterfeit",
+   "7": "genuine",
+   "8": "genuine",
+   "9": "genuine"
+  },
+  "C2": {
+   "1": "genuine",
+   "2": "counterfeit",
+   "3": "genuine",
+   "4": "genuine",
+   "5": "counterfeit",
+   "6": "genuine",
+   "7": "genuine",
+   "8": "genuine",
+   "9": "counterfeit"
+  },
+  "C3": {
+   "1": "counterfeit",
+   "2": "genuine",
+   "3": "genuine",
+   "4": "genuine",
+   "5": "genuine",
+   "6": "genuine",
+   "7": "counterfeit",
+   "8": "genuine",
+   "9": "counterfeit"
+  }
+ },
+ "prepared_at": "2026-11-03T20:20:07.859Z"
+}

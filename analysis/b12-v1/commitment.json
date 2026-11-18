@@ -1,0 +1,9 @@
+{
+ "version": "b12-v1",
+ "plan_sha256": "ecd396927904a5edc9d1802bf109900b5d451ebcad0f8b429d49b56276f5a658",
+ "answer_key_sha256": "3ec2477ca658e24d1029610e69682d1b96759fe91976c4c06924c79a8df12ce7",
+ "prereg_sha256": "b33104c332382b7f70741cd076e34a9ca9246be82dad3aa5bf4659bd56b90141",
+ "sealed_sha256": "03a4302ec68616ecccf428826ad66e196086d216ac6d305f350e0badee6b5034",
+ "committed_at": "2026-11-03T20:20:07.862Z",
+ "note": "Commit and push this file BEFORE --subjects. The plan and answer key are opened only after the transcripts are pushed."
+}
