@@ -118,7 +118,7 @@ export default async function handler(req, res) {
   try {
     await put(`proposals/${id}.json`, JSON.stringify(entry, null, 2), {
       access: "public",
-      addRandomSuffix: false,
+      addRandomSuffix: false, allowOverwrite: true,
       contentType: "application/json",
     });
   } catch (err) {
