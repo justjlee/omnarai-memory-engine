@@ -1501,6 +1501,9 @@ async function runLongitudinal(req, res) {
 
     // Frontier members think before answering, so they get longer; whatever that
     // costs comes out of the droppable synthesis budget below, never the primaries.
+    // Measured 2026-11-18: slowest voice 25.1 s; synthesis over frontier answers took
+    // 50 s, so on frontier days it is usually left pending for
+    // scripts/enrich-pending-synthesis.mjs. The verbatim answers always commit.
     const answers = await elicitCouncil(canon.question, { timeoutMs: track === "frontier" ? 32000 : 25000, panel });
     const answered = answers.filter((a) => a.ok);
     if (answered.length < 2) {
