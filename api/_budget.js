@@ -50,6 +50,12 @@ const WINDOW_DAYS = 30;
 const COST_USD = {
   council: 0.12, // 5 frontier members + synthesis pass + moderation gate
   cron: 0.12, //    the daily longitudinal council run (same shape as council)
+  // The frontier-track run: five flagship reasoning models + synthesis. Booked at a
+  // worst-case bound, not the typical cost. Measured 2026-11-18 (one run of
+  // `scripts/test-council.js --frontier`): about $0.09 (members $0.045, Sonnet
+  // synthesis $0.04), about $0.10 at Gemini 4's 2026-12-01 prices. The bound from
+  // each member's output cap at those prices is about $0.27.
+  cron_frontier: 0.35,
   trace: 0.08, //   baseline + augmented + delta = 3 Sonnet passes
   query: 0.04, //   one Sonnet deliberation (+ Haiku classifier)
 };
