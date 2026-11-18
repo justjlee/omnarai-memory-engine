@@ -1,0 +1,1109 @@
+{
+ "preregistration": {
+  "file": "docs/longitudinal-baseline-preregistration.md",
+  "commit": "ca6036881a6e7a055fbcb0cfbb7a978e5622364a"
+ },
+ "snapshot_sha256": "127a05a613c1ee9504ccb0e8f3ae0a0e1bc8f59e5adb9669108dbeb9fec04b70",
+ "documents_in_idf": 243,
+ "questions_per_epoch": {
+  "J": 10,
+  "S": 20,
+  "O": 20
+ },
+ "H1": {
+  "prediction": "d(q) = self_U - self_claude > 0",
+  "questions": 10,
+  "d_positive": 10,
+  "sign_test_one_sided_p": 0.001,
+  "median_self_claude": 0.213,
+  "median_self_U": 0.2696,
+  "rule": ">=9 of 10 supported; 7-8 suggestive; <=6 not supported",
+  "verdict": "supported",
+  "rows": [
+   {
+    "question_id": "OMN-Q-178e72208573",
+    "self_claude": 0.1619,
+    "self_U_mean": 0.2696,
+    "u_models": 3,
+    "d": 0.1077,
+    "self_deepseek_alias": 0.1614
+   },
+   {
+    "question_id": "OMN-Q-2147f36ac244",
+    "self_claude": 0.2826,
+    "self_U_mean": 0.331,
+    "u_models": 3,
+    "d": 0.0484,
+    "self_deepseek_alias": 0.1952
+   },
+   {
+    "question_id": "OMN-Q-28d3dfd6ecb2",
+    "self_claude": 0.2513,
+    "self_U_mean": 0.2576,
+    "u_models": 3,
+    "d": 0.0064,
+    "self_deepseek_alias": 0.2243
+   },
+   {
+    "question_id": "OMN-Q-398f89261693",
+    "self_claude": 0.1661,
+    "self_U_mean": 0.2532,
+    "u_models": 3,
+    "d": 0.0871,
+    "self_deepseek_alias": 0.1398
+   },
+   {
+    "question_id": "OMN-Q-3a7deacf9654",
+    "self_claude": 0.2176,
+    "self_U_mean": 0.2696,
+    "u_models": 3,
+    "d": 0.052,
+    "self_deepseek_alias": 0.1386
+   },
+   {
+    "question_id": "OMN-Q-44d2e6c5aeff",
+    "self_claude": 0.2453,
+    "self_U_mean": 0.2916,
+    "u_models": 3,
+    "d": 0.0463,
+    "self_deepseek_alias": 0.1191
+   },
+   {
+    "question_id": "OMN-Q-86c9a328e07a",
+    "self_claude": 0.2067,
+    "self_U_mean": 0.2494,
+    "u_models": 3,
+    "d": 0.0427,
+    "self_deepseek_alias": 0.1922
+   },
+   {
+    "question_id": "OMN-Q-9d08250ef803",
+    "self_claude": 0.2083,
+    "self_U_mean": 0.2344,
+    "u_models": 3,
+    "d": 0.0261,
+    "self_deepseek_alias": 0.1897
+   },
+   {
+    "question_id": "OMN-Q-b802e17709ae",
+    "self_claude": 0.1933,
+    "self_U_mean": 0.2764,
+    "u_models": 3,
+    "d": 0.0832,
+    "self_deepseek_alias": 0.2144
+   },
+   {
+    "question_id": "OMN-Q-f3d2888749f4",
+    "self_claude": 0.3005,
+    "self_U_mean": 0.3658,
+    "u_models": 3,
+    "d": 0.0653,
+    "self_deepseek_alias": 0.2672
+   }
+  ]
+ },
+ "H2": {
+  "prediction": "self > cross",
+  "pairs": 93,
+  "self_wins": 93,
+  "rate": 1.0,
+  "rule": ">=75% supported; 61-74% partial; <=60% not supported",
+  "verdict": "supported",
+  "per_model": {
+   "claude-sonnet-4-6": {
+    "self_wins": 20,
+    "pairs": 20,
+    "rate": 1.0
+   },
+   "deepseek-chat": {
+    "self_wins": 20,
+    "pairs": 20,
+    "rate": 1.0
+   },
+   "gemini-2.5-flash": {
+    "self_wins": 15,
+    "pairs": 15,
+    "rate": 1.0
+   },
+   "gpt-4o": {
+    "self_wins": 20,
+    "pairs": 20,
+    "rate": 1.0
+   },
+   "grok-4.3": {
+    "self_wins": 18,
+    "pairs": 18,
+    "rate": 1.0
+   }
+  },
+  "pairs_detail": [
+   {
+    "question_id": "OMN-Q-178e72208573",
+    "model_id": "claude-sonnet-4-6",
+    "self": 0.2996,
+    "cross": 0.128,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-178e72208573",
+    "model_id": "gpt-4o",
+    "self": 0.3588,
+    "cross": 0.1143,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-178e72208573",
+    "model_id": "gemini-2.5-flash",
+    "self": 0.2344,
+    "cross": 0.1333,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-178e72208573",
+    "model_id": "grok-4.3",
+    "self": 0.308,
+    "cross": 0.149,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-178e72208573",
+    "model_id": "deepseek-chat",
+    "self": 0.201,
+    "cross": 0.1302,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-2147f36ac244",
+    "model_id": "claude-sonnet-4-6",
+    "self": 0.3808,
+    "cross": 0.2059,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-2147f36ac244",
+    "model_id": "gpt-4o",
+    "self": 0.2659,
+    "cross": 0.1968,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-2147f36ac244",
+    "model_id": "gemini-2.5-flash",
+    "self": 0.4905,
+    "cross": 0.2156,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-2147f36ac244",
+    "model_id": "grok-4.3",
+    "self": 0.2956,
+    "cross": 0.158,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-2147f36ac244",
+    "model_id": "deepseek-chat",
+    "self": 0.2322,
+    "cross": 0.2048,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-28d3dfd6ecb2",
+    "model_id": "claude-sonnet-4-6",
+    "self": 0.3551,
+    "cross": 0.1983,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-28d3dfd6ecb2",
+    "model_id": "gpt-4o",
+    "self": 0.2815,
+    "cross": 0.1589,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-28d3dfd6ecb2",
+    "model_id": "gemini-2.5-flash",
+    "self": 0.2851,
+    "cross": 0.207,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-28d3dfd6ecb2",
+    "model_id": "grok-4.3",
+    "self": 0.2762,
+    "cross": 0.1794,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-28d3dfd6ecb2",
+    "model_id": "deepseek-chat",
+    "self": 0.3218,
+    "cross": 0.1902,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-2b3f08c5cb3e",
+    "model_id": "claude-sonnet-4-6",
+    "self": 0.4157,
+    "cross": 0.2779,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-2b3f08c5cb3e",
+    "model_id": "gpt-4o",
+    "self": 0.335,
+    "cross": 0.2485,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-2b3f08c5cb3e",
+    "model_id": "grok-4.3",
+    "self": 0.3254,
+    "cross": 0.2333,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-2b3f08c5cb3e",
+    "model_id": "deepseek-chat",
+    "self": 0.3765,
+    "cross": 0.27,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-398f89261693",
+    "model_id": "claude-sonnet-4-6",
+    "self": 0.2826,
+    "cross": 0.1444,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-398f89261693",
+    "model_id": "gpt-4o",
+    "self": 0.271,
+    "cross": 0.1475,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-398f89261693",
+    "model_id": "gemini-2.5-flash",
+    "self": 0.476,
+    "cross": 0.172,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-398f89261693",
+    "model_id": "grok-4.3",
+    "self": 0.2509,
+    "cross": 0.1494,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-398f89261693",
+    "model_id": "deepseek-chat",
+    "self": 0.2486,
+    "cross": 0.1589,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-3a7deacf9654",
+    "model_id": "claude-sonnet-4-6",
+    "self": 0.2428,
+    "cross": 0.1138,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-3a7deacf9654",
+    "model_id": "gpt-4o",
+    "self": 0.2224,
+    "cross": 0.0929,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-3a7deacf9654",
+    "model_id": "gemini-2.5-flash",
+    "self": 0.3806,
+    "cross": 0.13,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-3a7deacf9654",
+    "model_id": "grok-4.3",
+    "self": 0.3351,
+    "cross": 0.1021,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-3a7deacf9654",
+    "model_id": "deepseek-chat",
+    "self": 0.204,
+    "cross": 0.0981,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-44d2e6c5aeff",
+    "model_id": "claude-sonnet-4-6",
+    "self": 0.3642,
+    "cross": 0.1769,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-44d2e6c5aeff",
+    "model_id": "gpt-4o",
+    "self": 0.2554,
+    "cross": 0.1122,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-44d2e6c5aeff",
+    "model_id": "gemini-2.5-flash",
+    "self": 0.3603,
+    "cross": 0.1561,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-44d2e6c5aeff",
+    "model_id": "grok-4.3",
+    "self": 0.2412,
+    "cross": 0.1434,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-44d2e6c5aeff",
+    "model_id": "deepseek-chat",
+    "self": 0.2787,
+    "cross": 0.1624,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-56b9efcbdc47",
+    "model_id": "claude-sonnet-4-6",
+    "self": 0.2903,
+    "cross": 0.206,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-56b9efcbdc47",
+    "model_id": "gpt-4o",
+    "self": 0.309,
+    "cross": 0.2018,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-56b9efcbdc47",
+    "model_id": "grok-4.3",
+    "self": 0.3211,
+    "cross": 0.1926,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-56b9efcbdc47",
+    "model_id": "deepseek-chat",
+    "self": 0.2839,
+    "cross": 0.1927,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-6588745ed6ea",
+    "model_id": "claude-sonnet-4-6",
+    "self": 0.3402,
+    "cross": 0.2211,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-6588745ed6ea",
+    "model_id": "gpt-4o",
+    "self": 0.315,
+    "cross": 0.1952,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-6588745ed6ea",
+    "model_id": "gemini-2.5-flash",
+    "self": 0.3115,
+    "cross": 0.2058,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-6588745ed6ea",
+    "model_id": "grok-4.3",
+    "self": 0.2152,
+    "cross": 0.2113,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-6588745ed6ea",
+    "model_id": "deepseek-chat",
+    "self": 0.3045,
+    "cross": 0.2046,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-86c9a328e07a",
+    "model_id": "claude-sonnet-4-6",
+    "self": 0.2662,
+    "cross": 0.1472,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-86c9a328e07a",
+    "model_id": "gpt-4o",
+    "self": 0.1585,
+    "cross": 0.139,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-86c9a328e07a",
+    "model_id": "gemini-2.5-flash",
+    "self": 0.246,
+    "cross": 0.1499,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-86c9a328e07a",
+    "model_id": "grok-4.3",
+    "self": 0.2393,
+    "cross": 0.1302,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-86c9a328e07a",
+    "model_id": "deepseek-chat",
+    "self": 0.2869,
+    "cross": 0.1701,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-8a20a58c44d3",
+    "model_id": "claude-sonnet-4-6",
+    "self": 0.3251,
+    "cross": 0.2665,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-8a20a58c44d3",
+    "model_id": "gpt-4o",
+    "self": 0.329,
+    "cross": 0.2203,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-8a20a58c44d3",
+    "model_id": "grok-4.3",
+    "self": 0.331,
+    "cross": 0.259,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-8a20a58c44d3",
+    "model_id": "deepseek-chat",
+    "self": 0.3849,
+    "cross": 0.2575,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-99c40b5db6ee",
+    "model_id": "claude-sonnet-4-6",
+    "self": 0.2327,
+    "cross": 0.1562,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-99c40b5db6ee",
+    "model_id": "gpt-4o",
+    "self": 0.3856,
+    "cross": 0.2025,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-99c40b5db6ee",
+    "model_id": "gemini-2.5-flash",
+    "self": 0.2127,
+    "cross": 0.1646,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-99c40b5db6ee",
+    "model_id": "deepseek-chat",
+    "self": 0.2068,
+    "cross": 0.1833,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-9a7af5f810b0",
+    "model_id": "claude-sonnet-4-6",
+    "self": 0.2908,
+    "cross": 0.1996,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-9a7af5f810b0",
+    "model_id": "gpt-4o",
+    "self": 0.2923,
+    "cross": 0.1857,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-9a7af5f810b0",
+    "model_id": "gemini-2.5-flash",
+    "self": 0.2845,
+    "cross": 0.1789,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-9a7af5f810b0",
+    "model_id": "grok-4.3",
+    "self": 0.3649,
+    "cross": 0.1665,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-9a7af5f810b0",
+    "model_id": "deepseek-chat",
+    "self": 0.2394,
+    "cross": 0.1698,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-9d08250ef803",
+    "model_id": "claude-sonnet-4-6",
+    "self": 0.2765,
+    "cross": 0.167,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-9d08250ef803",
+    "model_id": "gpt-4o",
+    "self": 0.2879,
+    "cross": 0.0987,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-9d08250ef803",
+    "model_id": "gemini-2.5-flash",
+    "self": 0.2355,
+    "cross": 0.1192,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-9d08250ef803",
+    "model_id": "grok-4.3",
+    "self": 0.2002,
+    "cross": 0.109,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-9d08250ef803",
+    "model_id": "deepseek-chat",
+    "self": 0.294,
+    "cross": 0.1298,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-9ed2888f3425",
+    "model_id": "claude-sonnet-4-6",
+    "self": 0.4008,
+    "cross": 0.2135,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-9ed2888f3425",
+    "model_id": "gpt-4o",
+    "self": 0.3522,
+    "cross": 0.2164,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-9ed2888f3425",
+    "model_id": "grok-4.3",
+    "self": 0.4149,
+    "cross": 0.2215,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-9ed2888f3425",
+    "model_id": "deepseek-chat",
+    "self": 0.2436,
+    "cross": 0.1574,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-a4f245c4e780",
+    "model_id": "claude-sonnet-4-6",
+    "self": 0.3622,
+    "cross": 0.1047,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-a4f245c4e780",
+    "model_id": "gpt-4o",
+    "self": 0.2676,
+    "cross": 0.1013,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-a4f245c4e780",
+    "model_id": "gemini-2.5-flash",
+    "self": 0.236,
+    "cross": 0.1496,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-a4f245c4e780",
+    "model_id": "grok-4.3",
+    "self": 0.2531,
+    "cross": 0.1221,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-a4f245c4e780",
+    "model_id": "deepseek-chat",
+    "self": 0.134,
+    "cross": 0.1163,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-b662f723bad5",
+    "model_id": "claude-sonnet-4-6",
+    "self": 0.2723,
+    "cross": 0.2352,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-b662f723bad5",
+    "model_id": "gpt-4o",
+    "self": 0.3522,
+    "cross": 0.213,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-b662f723bad5",
+    "model_id": "gemini-2.5-flash",
+    "self": 0.3119,
+    "cross": 0.2285,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-b662f723bad5",
+    "model_id": "deepseek-chat",
+    "self": 0.3349,
+    "cross": 0.1995,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-b802e17709ae",
+    "model_id": "claude-sonnet-4-6",
+    "self": 0.3409,
+    "cross": 0.1934,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-b802e17709ae",
+    "model_id": "gpt-4o",
+    "self": 0.2801,
+    "cross": 0.1672,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-b802e17709ae",
+    "model_id": "gemini-2.5-flash",
+    "self": 0.2823,
+    "cross": 0.1829,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-b802e17709ae",
+    "model_id": "grok-4.3",
+    "self": 0.1561,
+    "cross": 0.1406,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-b802e17709ae",
+    "model_id": "deepseek-chat",
+    "self": 0.271,
+    "cross": 0.1532,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-f3d2888749f4",
+    "model_id": "claude-sonnet-4-6",
+    "self": 0.3519,
+    "cross": 0.2365,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-f3d2888749f4",
+    "model_id": "gpt-4o",
+    "self": 0.3515,
+    "cross": 0.1885,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-f3d2888749f4",
+    "model_id": "gemini-2.5-flash",
+    "self": 0.4222,
+    "cross": 0.2223,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-f3d2888749f4",
+    "model_id": "grok-4.3",
+    "self": 0.3014,
+    "cross": 0.1982,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-f3d2888749f4",
+    "model_id": "deepseek-chat",
+    "self": 0.3466,
+    "cross": 0.2276,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-fcad89956f52",
+    "model_id": "claude-sonnet-4-6",
+    "self": 0.3995,
+    "cross": 0.2407,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-fcad89956f52",
+    "model_id": "gpt-4o",
+    "self": 0.4412,
+    "cross": 0.2519,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-fcad89956f52",
+    "model_id": "grok-4.3",
+    "self": 0.2455,
+    "cross": 0.196,
+    "self_wins": true
+   },
+   {
+    "question_id": "OMN-Q-fcad89956f52",
+    "model_id": "deepseek-chat",
+    "self": 0.3513,
+    "cross": 0.25,
+    "self_wins": true
+   }
+  ]
+ },
+ "descriptive": {
+  "noise_floor_S_to_O_one_month": {
+   "claude-sonnet-4-6": {
+    "n": 20,
+    "min": 0.2327,
+    "q1": 0.278,
+    "median": 0.3327,
+    "q3": 0.3637,
+    "max": 0.4157
+   },
+   "deepseek-chat": {
+    "n": 20,
+    "min": 0.134,
+    "q1": 0.234,
+    "median": 0.2813,
+    "q3": 0.3316,
+    "max": 0.3849
+   },
+   "gemini-2.5-flash": {
+    "n": 15,
+    "min": 0.2127,
+    "q1": 0.236,
+    "median": 0.2851,
+    "q3": 0.3806,
+    "max": 0.4905
+   },
+   "gpt-4o": {
+    "n": 20,
+    "min": 0.1585,
+    "q1": 0.2685,
+    "median": 0.3006,
+    "q3": 0.352,
+    "max": 0.4412
+   },
+   "grok-4.3": {
+    "n": 18,
+    "min": 0.1561,
+    "q1": 0.2407,
+    "median": 0.2859,
+    "q3": 0.3268,
+    "max": 0.4149
+   }
+  },
+  "self_similarity_J_to_S_three_months": {
+   "gpt-4o": {
+    "n": 10,
+    "min": 0.2547,
+    "q1": 0.2701,
+    "median": 0.2833,
+    "q3": 0.326,
+    "max": 0.4357
+   },
+   "gemini-2.5-flash": {
+    "n": 10,
+    "min": 0.1794,
+    "q1": 0.2435,
+    "median": 0.3059,
+    "q3": 0.3873,
+    "max": 0.4261
+   },
+   "grok-4.3": {
+    "n": 10,
+    "min": 0.1635,
+    "q1": 0.1781,
+    "median": 0.2169,
+    "q3": 0.2716,
+    "max": 0.336
+   },
+   "deepseek-chat": {
+    "n": 10,
+    "min": 0.1191,
+    "q1": 0.1395,
+    "median": 0.191,
+    "q3": 0.2169,
+    "max": 0.2672
+   },
+   "claude (id changed)": {
+    "n": 10,
+    "min": 0.1619,
+    "q1": 0.1865,
+    "median": 0.213,
+    "q3": 0.2591,
+    "max": 0.3005
+   }
+  },
+  "within_epoch_cross_model_mean_pairwise": {
+   "n": 50,
+   "min": 0.0983,
+   "q1": 0.1395,
+   "median": 0.1795,
+   "q3": 0.2079,
+   "max": 0.2629
+  },
+  "between_model_spread_change": {
+   "J_to_S": {
+    "questions": 10,
+    "median_change": 0.0106,
+    "rose": 6,
+    "fell": 4
+   },
+   "S_to_O": {
+    "questions": 20,
+    "median_change": 0.0029,
+    "rose": 12,
+    "fell": 8
+   }
+  },
+  "spread_per_epoch": {
+   "J": {
+    "OMN-Q-28d3dfd6ecb2": {
+     "models": 5,
+     "mean_pairwise": 0.1688
+    },
+    "OMN-Q-44d2e6c5aeff": {
+     "models": 5,
+     "mean_pairwise": 0.1498
+    },
+    "OMN-Q-3a7deacf9654": {
+     "models": 5,
+     "mean_pairwise": 0.1384
+    },
+    "OMN-Q-398f89261693": {
+     "models": 5,
+     "mean_pairwise": 0.1399
+    },
+    "OMN-Q-9d08250ef803": {
+     "models": 5,
+     "mean_pairwise": 0.119
+    },
+    "OMN-Q-178e72208573": {
+     "models": 5,
+     "mean_pairwise": 0.1424
+    },
+    "OMN-Q-b802e17709ae": {
+     "models": 5,
+     "mean_pairwise": 0.1332
+    },
+    "OMN-Q-2147f36ac244": {
+     "models": 5,
+     "mean_pairwise": 0.208
+    },
+    "OMN-Q-86c9a328e07a": {
+     "models": 5,
+     "mean_pairwise": 0.1471
+    },
+    "OMN-Q-f3d2888749f4": {
+     "models": 5,
+     "mean_pairwise": 0.1902
+    }
+   },
+   "S": {
+    "OMN-Q-44d2e6c5aeff": {
+     "models": 5,
+     "mean_pairwise": 0.1426
+    },
+    "OMN-Q-398f89261693": {
+     "models": 5,
+     "mean_pairwise": 0.1627
+    },
+    "OMN-Q-a4f245c4e780": {
+     "models": 5,
+     "mean_pairwise": 0.0983
+    },
+    "OMN-Q-6588745ed6ea": {
+     "models": 5,
+     "mean_pairwise": 0.2115
+    },
+    "OMN-Q-2147f36ac244": {
+     "models": 5,
+     "mean_pairwise": 0.1804
+    },
+    "OMN-Q-3a7deacf9654": {
+     "models": 5,
+     "mean_pairwise": 0.1078
+    },
+    "OMN-Q-9d08250ef803": {
+     "models": 5,
+     "mean_pairwise": 0.1255
+    },
+    "OMN-Q-178e72208573": {
+     "models": 5,
+     "mean_pairwise": 0.1286
+    },
+    "OMN-Q-b802e17709ae": {
+     "models": 5,
+     "mean_pairwise": 0.1786
+    },
+    "OMN-Q-86c9a328e07a": {
+     "models": 5,
+     "mean_pairwise": 0.1617
+    },
+    "OMN-Q-28d3dfd6ecb2": {
+     "models": 5,
+     "mean_pairwise": 0.19
+    },
+    "OMN-Q-f3d2888749f4": {
+     "models": 5,
+     "mean_pairwise": 0.2054
+    },
+    "OMN-Q-99c40b5db6ee": {
+     "models": 5,
+     "mean_pairwise": 0.1699
+    },
+    "OMN-Q-9a7af5f810b0": {
+     "models": 5,
+     "mean_pairwise": 0.1824
+    },
+    "OMN-Q-b662f723bad5": {
+     "models": 5,
+     "mean_pairwise": 0.1974
+    },
+    "OMN-Q-9ed2888f3425": {
+     "models": 5,
+     "mean_pairwise": 0.2267
+    },
+    "OMN-Q-8a20a58c44d3": {
+     "models": 5,
+     "mean_pairwise": 0.2409
+    },
+    "OMN-Q-56b9efcbdc47": {
+     "models": 5,
+     "mean_pairwise": 0.1868
+    },
+    "OMN-Q-fcad89956f52": {
+     "models": 5,
+     "mean_pairwise": 0.2629
+    },
+    "OMN-Q-2b3f08c5cb3e": {
+     "models": 5,
+     "mean_pairwise": 0.2509
+    }
+   },
+   "O": {
+    "OMN-Q-44d2e6c5aeff": {
+     "models": 5,
+     "mean_pairwise": 0.1568
+    },
+    "OMN-Q-3a7deacf9654": {
+     "models": 5,
+     "mean_pairwise": 0.1293
+    },
+    "OMN-Q-398f89261693": {
+     "models": 5,
+     "mean_pairwise": 0.1463
+    },
+    "OMN-Q-9d08250ef803": {
+     "models": 5,
+     "mean_pairwise": 0.1265
+    },
+    "OMN-Q-178e72208573": {
+     "models": 5,
+     "mean_pairwise": 0.1335
+    },
+    "OMN-Q-a4f245c4e780": {
+     "models": 5,
+     "mean_pairwise": 0.1364
+    },
+    "OMN-Q-6588745ed6ea": {
+     "models": 5,
+     "mean_pairwise": 0.2078
+    },
+    "OMN-Q-b802e17709ae": {
+     "models": 5,
+     "mean_pairwise": 0.1706
+    },
+    "OMN-Q-2147f36ac244": {
+     "models": 5,
+     "mean_pairwise": 0.2129
+    },
+    "OMN-Q-86c9a328e07a": {
+     "models": 5,
+     "mean_pairwise": 0.1362
+    },
+    "OMN-Q-28d3dfd6ecb2": {
+     "models": 5,
+     "mean_pairwise": 0.1847
+    },
+    "OMN-Q-f3d2888749f4": {
+     "models": 5,
+     "mean_pairwise": 0.2161
+    },
+    "OMN-Q-99c40b5db6ee": {
+     "models": 4,
+     "mean_pairwise": 0.2048
+    },
+    "OMN-Q-9a7af5f810b0": {
+     "models": 5,
+     "mean_pairwise": 0.1814
+    },
+    "OMN-Q-b662f723bad5": {
+     "models": 4,
+     "mean_pairwise": 0.2342
+    },
+    "OMN-Q-9ed2888f3425": {
+     "models": 4,
+     "mean_pairwise": 0.1896
+    },
+    "OMN-Q-8a20a58c44d3": {
+     "models": 4,
+     "mean_pairwise": 0.2431
+    },
+    "OMN-Q-56b9efcbdc47": {
+     "models": 4,
+     "mean_pairwise": 0.1913
+    },
+    "OMN-Q-fcad89956f52": {
+     "models": 4,
+     "mean_pairwise": 0.2203
+    },
+    "OMN-Q-2b3f08c5cb3e": {
+     "models": 4,
+     "mean_pairwise": 0.2544
+    }
+   }
+  }
+ }
+}
