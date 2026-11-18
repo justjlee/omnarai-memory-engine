@@ -9,6 +9,10 @@
     {
       "path": "/api/cron-longitudinal",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron-longitudinal-frontier",
+      "schedule": "0 18 * * *"
     }
   ],
   "redirects": [
@@ -35,7 +39,7 @@
       "statusCode": 301
     },
     {
-      "source": "/api/:path((?!cron-longitudinal$).*)?",
+      "source": "/api/:path((?!cron-longitudinal(?:-frontier)?$).*)?",
       "has": [
         {
           "type": "host",
@@ -46,7 +50,7 @@
       "statusCode": 308
     },
     {
-      "source": "/:path((?!api/cron-longitudinal$).*)",
+      "source": "/:path((?!api/cron-longitudinal(?:-frontier)?$).*)",
       "has": [
         {
           "type": "host",
@@ -57,7 +61,7 @@
       "statusCode": 301
     },
     {
-      "source": "/api/:path((?!cron-longitudinal$).*)?",
+      "source": "/api/:path((?!cron-longitudinal(?:-frontier)?$).*)?",
       "has": [
         {
           "type": "host",
@@ -68,7 +72,7 @@
       "statusCode": 308
     },
     {
-      "source": "/:path((?!api/cron-longitudinal$).*)",
+      "source": "/:path((?!api/cron-longitudinal(?:-frontier)?$).*)",
       "has": [
         {
           "type": "host",
@@ -223,6 +227,10 @@
     {
       "source": "/api/cron-longitudinal",
       "destination": "/api/council?_cron=longitudinal"
+    },
+    {
+      "source": "/api/cron-longitudinal-frontier",
+      "destination": "/api/council?_cron=longitudinal&track=frontier"
     },
     {
       "source": "/arrive",
