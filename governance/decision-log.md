@@ -448,3 +448,31 @@ check was running. Being told that access exists does not count.
   green; scripts/smoke-response-envelope.mjs 7/7 free reads complete and consistent with /api/manifest
 - Note: DL-0035 to DL-0038 are held by open PR #52 and DL-0039 by the drafted utility v2 entry, so this takes DL-0040.
 - Logged: 2026-11-18 by Claude Code (Anthropic)
+
+## DL-0041 · 2026-11-18 · The frontier track is live and switched on: five current flagships re-ask the frozen canon
+- Decider: xz (approved the panel and one paid test with "Yes, approve + test", then said "Deploy + switch on" for
+  PR #48, in a Claude Code session of 2026-11-18)
+- Reason: the standing council (claude-sonnet-4-6, gpt-4o, gemini-2.5-flash, grok-4.3, deepseek-chat) is one to three
+  generations behind every lab, so the monthly re-ask records a noise floor. The frontier track asks claude-opus-5-5,
+  gpt-6.1-sol, gemini-4-carbon, grok-4.7 and deepseek-v4-pro the same 20 frozen canon questions at 18:00 UTC on days
+  1-20 of each month (idle on days 21-31, like the control track). This is the five-flagship panel utility v2 tested on
+  2026-11-13. Gemini is Carbon, which Google calls its most capable Gemini 4 model, not Argon (its efficient one). Every
+  council answer, on both tracks and in the live council, now stores model_resolved: the model the provider reports
+  having run, a claim by the provider rather than a verification. Google routes gemini-2.5-flash (the control's Gemini)
+  to Gemini 3.5 Flash-Lite from 2026-12-01; the record will show it if Google's own report does. FRONTIER_TRACK=on was
+  set in Production on 2026-11-18.
+- Cost: one paid test on 2026-11-18 (scripts/test-council.js --frontier, wrote nothing; $0.35 reserved on the ledger
+  first). 5/5 voices answered, each provider reported the requested model, none truncated, slowest 25.1 s. About $0.09
+  per run, about $0.10 at Gemini 4's 2026-12-01 prices. The ledger books cron_frontier at a $0.35 bound (about $7 a
+  month). Synthesis over frontier answers took 50 s, so frontier-day syntheses will usually be stored pending and
+  enriched later; the verbatim answers commit first.
+- Source: PR #48 (merge ad05ecc), engine 2026.11.18+ad05ecc, bundle index-BPtVYHkx.js matched, crons registered on this
+  build; arrival check 20/20, omnarai-verify 14/14, dual-native 14/14, surface-numbers gate (engine scope) in balance; a
+  free curator probe of the frontier route with a day index outside the canon answered idle (not disabled), so the
+  switch is live. The first scheduled frontier run is 2026-11-19 (canon question 19).
+- Not decided here: whether November's other 18 canon questions are asked by hand. The generation-gap comparison must be
+  preregistered and pushed before the first frontier epoch is analysed. PR #47 (the longitudinal baseline the track's
+  docs point at) is still open.
+- Note: DL-0035 to DL-0038 are held by open PR #52, DL-0039 by the drafted utility v2 entry and DL-0040 is the envelope
+  deploy, so this takes DL-0041.
+- Logged: 2026-11-18 by Claude Code (Anthropic)
