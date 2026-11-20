@@ -30,7 +30,9 @@ node --import ./scripts/lib/register-mem-blob.mjs --test scripts/test-inheritanc
 2. `BASELINE.md`: repository heads, test baseline, what is reused, and the conflicts that were reconciled.
 3. `SESSION-REPORT-2026-11-20.md`: what was built, what passed, what is unproven, and what the first live pilot needs.
 4. `DECISIONS_REQUIRED.md`: what only xz can decide, with recommendations and safe defaults.
-5. `pilot/PILOT-BUDGET.md`: projected calls and dollars for the proposed pilot.
+5. `pilot/PROVIDER-CAPS.md`: what each provider documents about bounding billed output (why Grok left the panel), then
+   `pilot/PILOT-BUDGET.md`: projected calls and dollars for the proposed pilot, and `pilot/IS1-PROBE-CAL-002-plan.json`: the
+   pre-committed plan of calibration probe 2.
 6. `examples/`: the offline demo outputs (`plan.json`, `snapshot.json`, `trials.jsonl`, `summary.json`, `REPORT.md`, …) and the
    instrument validation over synthetic worlds.
 

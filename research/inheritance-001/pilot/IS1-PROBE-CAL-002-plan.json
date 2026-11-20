@@ -1,0 +1,624 @@
+{
+  "schema_version": "omnarai.inheritance-study.plan/0.1",
+  "study_id": "IS1-PROBE-CAL-002",
+  "kind": "calibration-probe",
+  "arm": "A",
+  "seed": "calibration-probe-2-2026-11-20",
+  "steps": 4,
+  "families": [
+    {
+      "schema_version": "omnarai.inheritance-study.task_family/0.1",
+      "id": "IS1-FAM-b03b6b0f4c",
+      "study_id": "IS1-PROBE-CAL-002",
+      "domain": "str",
+      "role": "calibration",
+      "generation": 0,
+      "n_steps": 4,
+      "template_commitment_sha256": "30cd76d853fa636b85837f3957f4f3e9e4dccf474bdbeb3ad57c1dcffa7081c1",
+      "generator": {
+        "name": "is1-program-induction",
+        "version": "0.1.0"
+      },
+      "verification": {
+        "kind": "deterministic-dsl",
+        "cost_class": "cheap"
+      },
+      "contamination_class": "synthetic-novel",
+      "sha256": "5c37f0eb9a9b9a1096f443d904730d94536d31ef5d0f19171a7f941f3bd5d63c"
+    },
+    {
+      "schema_version": "omnarai.inheritance-study.task_family/0.1",
+      "id": "IS1-FAM-db439a6726",
+      "study_id": "IS1-PROBE-CAL-002",
+      "domain": "str",
+      "role": "calibration",
+      "generation": 0,
+      "n_steps": 4,
+      "template_commitment_sha256": "7af8561222a0648d85d1bd3afcf7dce1ee2d7c0eeec91bb7270a5aad2e0c7e68",
+      "generator": {
+        "name": "is1-program-induction",
+        "version": "0.1.0"
+      },
+      "verification": {
+        "kind": "deterministic-dsl",
+        "cost_class": "cheap"
+      },
+      "contamination_class": "synthetic-novel",
+      "sha256": "f0f7b1b68e463428b033fefe76b33a86bd0f5345e6f2dbc95182a05e2abb1769"
+    },
+    {
+      "schema_version": "omnarai.inheritance-study.task_family/0.1",
+      "id": "IS1-FAM-218f40b6ea",
+      "study_id": "IS1-PROBE-CAL-002",
+      "domain": "str",
+      "role": "calibration",
+      "generation": 0,
+      "n_steps": 4,
+      "template_commitment_sha256": "c56ee45f7d5bac3baef101052cac57c1ec8b7583952f45e8453bad87c1c688cd",
+      "generator": {
+        "name": "is1-program-induction",
+        "version": "0.1.0"
+      },
+      "verification": {
+        "kind": "deterministic-dsl",
+        "cost_class": "cheap"
+      },
+      "contamination_class": "synthetic-novel",
+      "sha256": "77941735c879c67cef44c7dd51b301982082c26f7805abcfe1c041544641e3da"
+    },
+    {
+      "schema_version": "omnarai.inheritance-study.task_family/0.1",
+      "id": "IS1-FAM-150a44667a",
+      "study_id": "IS1-PROBE-CAL-002",
+      "domain": "str",
+      "role": "calibration",
+      "generation": 0,
+      "n_steps": 4,
+      "template_commitment_sha256": "5a85766d6384b81f67256df4559fc039f5ed6510d62f5ad1acd27ea32a3ff943",
+      "generator": {
+        "name": "is1-program-induction",
+        "version": "0.1.0"
+      },
+      "verification": {
+        "kind": "deterministic-dsl",
+        "cost_class": "cheap"
+      },
+      "contamination_class": "synthetic-novel",
+      "sha256": "1f7bb1795c81f62344dae6a9e481f3d7edf33aaf16062e7dac3e061f765f043b"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "IS1-TASK-c6441d7ac02e",
+      "family_id": "IS1-FAM-b03b6b0f4c",
+      "sealed_commitment_sha256": "563981ed2ff73e9677cf134d8e0ee3481c66f39948c7064ea3002b309be69887"
+    },
+    {
+      "id": "IS1-TASK-4d0fb2c44409",
+      "family_id": "IS1-FAM-b03b6b0f4c",
+      "sealed_commitment_sha256": "fe64a398efd8e24cf1d8d6feb223c13d131edf1aa127ee8e72e8410f2184d16d"
+    },
+    {
+      "id": "IS1-TASK-da53399d46b8",
+      "family_id": "IS1-FAM-b03b6b0f4c",
+      "sealed_commitment_sha256": "81558f1a2e71470e8505e19c66d00a466f81110f89967cdaa938516bce56ca63"
+    },
+    {
+      "id": "IS1-TASK-cc2f87d9d316",
+      "family_id": "IS1-FAM-db439a6726",
+      "sealed_commitment_sha256": "01be2a553b6c499f8ea73c11e408966468d166fc83cc2f9cd0de7a43939909b5"
+    },
+    {
+      "id": "IS1-TASK-dae86a8f374a",
+      "family_id": "IS1-FAM-db439a6726",
+      "sealed_commitment_sha256": "7f1a325abc88c9a159a26efc907efbffb508097330b29613075de29b2db1d247"
+    },
+    {
+      "id": "IS1-TASK-c1ab96003ea7",
+      "family_id": "IS1-FAM-db439a6726",
+      "sealed_commitment_sha256": "a93692a7b307de6a3855032587173cbe560beb44220f3df2bedcacde21459994"
+    },
+    {
+      "id": "IS1-TASK-2d17586c3464",
+      "family_id": "IS1-FAM-218f40b6ea",
+      "sealed_commitment_sha256": "e35edc9c29b680769f6de019bcdf3b6719e1e35a99195f1a33e0d93099048ef6"
+    },
+    {
+      "id": "IS1-TASK-d2e9e7d4164e",
+      "family_id": "IS1-FAM-218f40b6ea",
+      "sealed_commitment_sha256": "56c402c9dbc60d239df00cf92e28bd6fbd2456ea6805702008e1b012096204eb"
+    },
+    {
+      "id": "IS1-TASK-32a09e56c61d",
+      "family_id": "IS1-FAM-218f40b6ea",
+      "sealed_commitment_sha256": "e2d6168011fca6754d82eb3550b51cc631f2c2fd302f23faee974bbf01a00a15"
+    },
+    {
+      "id": "IS1-TASK-f47bda1965e1",
+      "family_id": "IS1-FAM-150a44667a",
+      "sealed_commitment_sha256": "1f6e16fcc2c9caab4e3af70c0454a52ce026f8bf4f9eb801290d9acae9966e29"
+    },
+    {
+      "id": "IS1-TASK-9f49974d84f5",
+      "family_id": "IS1-FAM-150a44667a",
+      "sealed_commitment_sha256": "db0a94ffef5756d40fd1f8ea0f4315b7c9c27d853dd9d09524e5849dacc4694e"
+    },
+    {
+      "id": "IS1-TASK-c4a3e6930a78",
+      "family_id": "IS1-FAM-150a44667a",
+      "sealed_commitment_sha256": "91b7e572b7c4f71080c25ed29945fb2ebf1221f9a9e449fd1475ee4ba111704e"
+    }
+  ],
+  "models": [
+    {
+      "model_id": "claude-sonnet-5-5",
+      "provider": "anthropic",
+      "role": "consumer",
+      "controls": {
+        "output_config": {
+          "effort": "medium"
+        }
+      },
+      "output_cap": {
+        "field": "max_tokens",
+        "enforced": true,
+        "status": "verified-from-docs",
+        "sources": [
+          "https://platform.claude.com/docs/en/build-with-claude/thinking",
+          "https://platform.claude.com/docs/en/build-with-claude/effort"
+        ]
+      }
+    },
+    {
+      "model_id": "gpt-6.1-sol",
+      "provider": "openai",
+      "role": "consumer",
+      "controls": {
+        "reasoning_effort": "medium"
+      },
+      "output_cap": {
+        "field": "max_completion_tokens",
+        "enforced": true,
+        "status": "verified-from-docs",
+        "sources": [
+          "https://developers.openai.com/api/reference/resources/chat",
+          "https://developers.openai.com/api/docs/guides/reasoning"
+        ]
+      }
+    },
+    {
+      "model_id": "deepseek-v4-pro",
+      "provider": "deepseek",
+      "role": "producer",
+      "controls": {
+        "thinking": {
+          "type": "disabled"
+        }
+      },
+      "output_cap": {
+        "field": "max_tokens",
+        "enforced": true,
+        "status": "verified-from-docs (thinking disabled only)",
+        "sources": [
+          "https://api-docs.deepseek.com/api/create-chat-completion",
+          "https://api-docs.deepseek.com/guides/thinking_mode"
+        ]
+      }
+    },
+    {
+      "model_id": "gemini-4-carbon",
+      "provider": "gemini",
+      "role": "producer",
+      "controls": {
+        "thinking_level": "low"
+      },
+      "output_cap": {
+        "field": "generation_config.max_output_tokens",
+        "enforced": true,
+        "status": "verified-from-docs (Interactions API only)",
+        "sources": [
+          "https://aistudio.google.com/docs/thinking",
+          "https://aistudio.google.com/api-reference/interactions"
+        ]
+      }
+    }
+  ],
+  "calls": [
+    {
+      "call_id": "PRB-ea12f17c9d09",
+      "task_id": "IS1-TASK-da53399d46b8",
+      "family_id": "IS1-FAM-b03b6b0f4c",
+      "model_id": "gpt-6.1-sol",
+      "provider": "openai",
+      "role": "consumer",
+      "expected_family": "openai-gpt"
+    },
+    {
+      "call_id": "PRB-d8af52f875de",
+      "task_id": "IS1-TASK-da53399d46b8",
+      "family_id": "IS1-FAM-b03b6b0f4c",
+      "model_id": "claude-sonnet-5-5",
+      "provider": "anthropic",
+      "role": "consumer",
+      "expected_family": "anthropic-claude"
+    },
+    {
+      "call_id": "PRB-423fff873700",
+      "task_id": "IS1-TASK-dae86a8f374a",
+      "family_id": "IS1-FAM-db439a6726",
+      "model_id": "gpt-6.1-sol",
+      "provider": "openai",
+      "role": "consumer",
+      "expected_family": "openai-gpt"
+    },
+    {
+      "call_id": "PRB-c3691c063005",
+      "task_id": "IS1-TASK-d2e9e7d4164e",
+      "family_id": "IS1-FAM-218f40b6ea",
+      "model_id": "gpt-6.1-sol",
+      "provider": "openai",
+      "role": "consumer",
+      "expected_family": "openai-gpt"
+    },
+    {
+      "call_id": "PRB-6f6daa37ba61",
+      "task_id": "IS1-TASK-4d0fb2c44409",
+      "family_id": "IS1-FAM-b03b6b0f4c",
+      "model_id": "claude-sonnet-5-5",
+      "provider": "anthropic",
+      "role": "consumer",
+      "expected_family": "anthropic-claude"
+    },
+    {
+      "call_id": "PRB-a057326d4e3b",
+      "task_id": "IS1-TASK-9f49974d84f5",
+      "family_id": "IS1-FAM-150a44667a",
+      "model_id": "claude-sonnet-5-5",
+      "provider": "anthropic",
+      "role": "consumer",
+      "expected_family": "anthropic-claude"
+    },
+    {
+      "call_id": "PRB-1d833afd49ba",
+      "task_id": "IS1-TASK-c6441d7ac02e",
+      "family_id": "IS1-FAM-b03b6b0f4c",
+      "model_id": "claude-sonnet-5-5",
+      "provider": "anthropic",
+      "role": "consumer",
+      "expected_family": "anthropic-claude"
+    },
+    {
+      "call_id": "PRB-ca6d84121cb5",
+      "task_id": "IS1-TASK-f47bda1965e1",
+      "family_id": "IS1-FAM-150a44667a",
+      "model_id": "claude-sonnet-5-5",
+      "provider": "anthropic",
+      "role": "consumer",
+      "expected_family": "anthropic-claude"
+    },
+    {
+      "call_id": "PRB-b9e7bf21a525",
+      "task_id": "IS1-TASK-cc2f87d9d316",
+      "family_id": "IS1-FAM-db439a6726",
+      "model_id": "gpt-6.1-sol",
+      "provider": "openai",
+      "role": "consumer",
+      "expected_family": "openai-gpt"
+    },
+    {
+      "call_id": "PRB-003597158f86",
+      "task_id": "IS1-TASK-c6441d7ac02e",
+      "family_id": "IS1-FAM-b03b6b0f4c",
+      "model_id": "deepseek-v4-pro",
+      "provider": "deepseek",
+      "role": "producer",
+      "expected_family": "deepseek"
+    },
+    {
+      "call_id": "PRB-94d54ded71c3",
+      "task_id": "IS1-TASK-2d17586c3464",
+      "family_id": "IS1-FAM-218f40b6ea",
+      "model_id": "gemini-4-carbon",
+      "provider": "gemini",
+      "role": "producer",
+      "expected_family": "google-gemini"
+    },
+    {
+      "call_id": "PRB-c19b4d3e73f6",
+      "task_id": "IS1-TASK-2d17586c3464",
+      "family_id": "IS1-FAM-218f40b6ea",
+      "model_id": "claude-sonnet-5-5",
+      "provider": "anthropic",
+      "role": "consumer",
+      "expected_family": "anthropic-claude"
+    },
+    {
+      "call_id": "PRB-b543035353a5",
+      "task_id": "IS1-TASK-c4a3e6930a78",
+      "family_id": "IS1-FAM-150a44667a",
+      "model_id": "gpt-6.1-sol",
+      "provider": "openai",
+      "role": "consumer",
+      "expected_family": "openai-gpt"
+    },
+    {
+      "call_id": "PRB-ed3c86502641",
+      "task_id": "IS1-TASK-cc2f87d9d316",
+      "family_id": "IS1-FAM-db439a6726",
+      "model_id": "claude-sonnet-5-5",
+      "provider": "anthropic",
+      "role": "consumer",
+      "expected_family": "anthropic-claude"
+    },
+    {
+      "call_id": "PRB-89fcb22941b4",
+      "task_id": "IS1-TASK-2d17586c3464",
+      "family_id": "IS1-FAM-218f40b6ea",
+      "model_id": "gpt-6.1-sol",
+      "provider": "openai",
+      "role": "consumer",
+      "expected_family": "openai-gpt"
+    },
+    {
+      "call_id": "PRB-047c35e150f5",
+      "task_id": "IS1-TASK-cc2f87d9d316",
+      "family_id": "IS1-FAM-db439a6726",
+      "model_id": "deepseek-v4-pro",
+      "provider": "deepseek",
+      "role": "producer",
+      "expected_family": "deepseek"
+    },
+    {
+      "call_id": "PRB-abccefa07050",
+      "task_id": "IS1-TASK-c1ab96003ea7",
+      "family_id": "IS1-FAM-db439a6726",
+      "model_id": "gpt-6.1-sol",
+      "provider": "openai",
+      "role": "consumer",
+      "expected_family": "openai-gpt"
+    },
+    {
+      "call_id": "PRB-523a497dd2c4",
+      "task_id": "IS1-TASK-2d17586c3464",
+      "family_id": "IS1-FAM-218f40b6ea",
+      "model_id": "deepseek-v4-pro",
+      "provider": "deepseek",
+      "role": "producer",
+      "expected_family": "deepseek"
+    },
+    {
+      "call_id": "PRB-1bb96b061063",
+      "task_id": "IS1-TASK-9f49974d84f5",
+      "family_id": "IS1-FAM-150a44667a",
+      "model_id": "gpt-6.1-sol",
+      "provider": "openai",
+      "role": "consumer",
+      "expected_family": "openai-gpt"
+    },
+    {
+      "call_id": "PRB-9b53944b2849",
+      "task_id": "IS1-TASK-cc2f87d9d316",
+      "family_id": "IS1-FAM-db439a6726",
+      "model_id": "gemini-4-carbon",
+      "provider": "gemini",
+      "role": "producer",
+      "expected_family": "google-gemini"
+    },
+    {
+      "call_id": "PRB-32cfdd0cee1b",
+      "task_id": "IS1-TASK-dae86a8f374a",
+      "family_id": "IS1-FAM-db439a6726",
+      "model_id": "claude-sonnet-5-5",
+      "provider": "anthropic",
+      "role": "consumer",
+      "expected_family": "anthropic-claude"
+    },
+    {
+      "call_id": "PRB-9c0711020a23",
+      "task_id": "IS1-TASK-f47bda1965e1",
+      "family_id": "IS1-FAM-150a44667a",
+      "model_id": "gpt-6.1-sol",
+      "provider": "openai",
+      "role": "consumer",
+      "expected_family": "openai-gpt"
+    },
+    {
+      "call_id": "PRB-bf4d658f21ef",
+      "task_id": "IS1-TASK-32a09e56c61d",
+      "family_id": "IS1-FAM-218f40b6ea",
+      "model_id": "claude-sonnet-5-5",
+      "provider": "anthropic",
+      "role": "consumer",
+      "expected_family": "anthropic-claude"
+    },
+    {
+      "call_id": "PRB-cb538a6840b1",
+      "task_id": "IS1-TASK-32a09e56c61d",
+      "family_id": "IS1-FAM-218f40b6ea",
+      "model_id": "gpt-6.1-sol",
+      "provider": "openai",
+      "role": "consumer",
+      "expected_family": "openai-gpt"
+    },
+    {
+      "call_id": "PRB-f11940841a6e",
+      "task_id": "IS1-TASK-d2e9e7d4164e",
+      "family_id": "IS1-FAM-218f40b6ea",
+      "model_id": "claude-sonnet-5-5",
+      "provider": "anthropic",
+      "role": "consumer",
+      "expected_family": "anthropic-claude"
+    },
+    {
+      "call_id": "PRB-e34449dd3c04",
+      "task_id": "IS1-TASK-c6441d7ac02e",
+      "family_id": "IS1-FAM-b03b6b0f4c",
+      "model_id": "gpt-6.1-sol",
+      "provider": "openai",
+      "role": "consumer",
+      "expected_family": "openai-gpt"
+    },
+    {
+      "call_id": "PRB-419114b18964",
+      "task_id": "IS1-TASK-c4a3e6930a78",
+      "family_id": "IS1-FAM-150a44667a",
+      "model_id": "claude-sonnet-5-5",
+      "provider": "anthropic",
+      "role": "consumer",
+      "expected_family": "anthropic-claude"
+    },
+    {
+      "call_id": "PRB-6e9f80a73e27",
+      "task_id": "IS1-TASK-f47bda1965e1",
+      "family_id": "IS1-FAM-150a44667a",
+      "model_id": "deepseek-v4-pro",
+      "provider": "deepseek",
+      "role": "producer",
+      "expected_family": "deepseek"
+    },
+    {
+      "call_id": "PRB-ef9838c31380",
+      "task_id": "IS1-TASK-c6441d7ac02e",
+      "family_id": "IS1-FAM-b03b6b0f4c",
+      "model_id": "gemini-4-carbon",
+      "provider": "gemini",
+      "role": "producer",
+      "expected_family": "google-gemini"
+    },
+    {
+      "call_id": "PRB-ebe2e4a61ac4",
+      "task_id": "IS1-TASK-4d0fb2c44409",
+      "family_id": "IS1-FAM-b03b6b0f4c",
+      "model_id": "gpt-6.1-sol",
+      "provider": "openai",
+      "role": "consumer",
+      "expected_family": "openai-gpt"
+    },
+    {
+      "call_id": "PRB-1f24d3209210",
+      "task_id": "IS1-TASK-c1ab96003ea7",
+      "family_id": "IS1-FAM-db439a6726",
+      "model_id": "claude-sonnet-5-5",
+      "provider": "anthropic",
+      "role": "consumer",
+      "expected_family": "anthropic-claude"
+    },
+    {
+      "call_id": "PRB-8ea7f237c2f0",
+      "task_id": "IS1-TASK-f47bda1965e1",
+      "family_id": "IS1-FAM-150a44667a",
+      "model_id": "gemini-4-carbon",
+      "provider": "gemini",
+      "role": "producer",
+      "expected_family": "google-gemini"
+    }
+  ],
+  "params": {
+    "max_output_tokens": 3000,
+    "base_reasoning_tokens": 1024,
+    "timeout_ms": 600000,
+    "max_attempts": 1,
+    "timeouts_charged_at_worst_case": true
+  },
+  "projection": {
+    "price_date": "2026-12-01",
+    "calls": 32,
+    "by_model": [
+      {
+        "model_id": "claude-sonnet-5-5",
+        "role": "consumer",
+        "calls": 12,
+        "tokens_in_est": 2936,
+        "max_output_tokens_per_call": 3000,
+        "price_per_m": {
+          "in": 2,
+          "out": 10
+        },
+        "usd_worst": 0.3659
+      },
+      {
+        "model_id": "gpt-6.1-sol",
+        "role": "consumer",
+        "calls": 12,
+        "tokens_in_est": 2936,
+        "max_output_tokens_per_call": 3000,
+        "price_per_m": {
+          "in": 2,
+          "out": 10
+        },
+        "usd_worst": 0.3659
+      },
+      {
+        "model_id": "deepseek-v4-pro",
+        "role": "producer",
+        "calls": 4,
+        "tokens_in_est": 981,
+        "max_output_tokens_per_call": 3000,
+        "price_per_m": {
+          "in": 1.32,
+          "out": 3.96
+        },
+        "usd_worst": 0.0488
+      },
+      {
+        "model_id": "gemini-4-carbon",
+        "role": "producer",
+        "calls": 4,
+        "tokens_in_est": 981,
+        "max_output_tokens_per_call": 3000,
+        "price_per_m": {
+          "in": 4,
+          "out": 20
+        },
+        "usd_worst": 0.2439
+      }
+    ],
+    "usd_worst": 1.0245
+  },
+  "decision_rule": {
+    "difficulty": [
+      {
+        "when": "every consumer's arm-A pass rate >= 0.75",
+        "then": "still too easy (ceiling): do not register; xz chooses 5-step families or 2 examples per task, then re-probe"
+      },
+      {
+        "when": "every consumer's arm-A pass rate <= 0.10",
+        "then": "too hard (floor): do not register; xz chooses 3-step families (near the ceiling in probe 1) or 4-step at higher effort, then re-probe"
+      },
+      {
+        "when": "every consumer between 0.15 and 0.70",
+        "then": "keep 4-step families for the sealed draw"
+      },
+      {
+        "when": "anything else (consumers disagree)",
+        "then": "keep 4-step; report the asymmetry; xz decides before registration"
+      }
+    ],
+    "producers": {
+      "when": "a producer passes 0 of its calibration calls",
+      "then": "its verified work in the pilot would be thin or empty: xz decides whether to keep it (C would rest on the other producer) or replace it before registration"
+    },
+    "output_cap": {
+      "when": "for any model, more than 10% of its completed calls stop at the output cap",
+      "then": "raise max_output_tokens to 4500 for the pilot and re-project its cost before asking for pilot approval"
+    },
+    "cap_enforcement": {
+      "when": "any completed call bills more output than the requested cap, a DeepSeek call reports reasoning tokens, or an OpenAI call reports more reasoning tokens than completion tokens",
+      "then": "that model's cap is not enforced as documented: set cap_enforced false in lib/caps.mjs (the live gate then refuses it) and replace it before the pilot"
+    },
+    "latency": {
+      "when": "a model has more than one call time out at 600 s",
+      "then": "that model is unsuitable for the pilot as configured: xz decides"
+    },
+    "identity": {
+      "when": "a provider returns a model id whose family differs from the expected family",
+      "then": "exclude that model from the pilot until explained"
+    },
+    "parsing": {
+      "when": "a model completes a call without stopping at the cap but no answer text is parsed from it",
+      "then": "check the response parser against that provider's response before reading that model's pass rate (Gemini's Interactions API is beta)"
+    },
+    "note": "Probe tasks are public calibration tasks, drawn from a seed never used before and excluded from the sealed draw. A pass rate here is not a result about inheritance."
+  },
+  "plan_sha256": "346b0cf3e99724bc7e0cb5cfad387a79b7fb7c636a03b49f24facfa5cb4e5a3a"
+}
