@@ -1,0 +1,11 @@
+{
+  "study_id": "IS1-STUDY-PILOT-001",
+  "status": "registered",
+  "registered_commit_sha": "d24005d044c7c6b3fe4b582d5960a572073ef1b6",
+  "registered_at": "2026-11-20T22:10:45Z",
+  "pushed_before_any_pilot_call": true,
+  "preregistration_path": "research/inheritance-001/preregistration.draft.yaml",
+  "plan_sha256": "4a2364af95cab18c6d27bde6a7860309594f449e1cad50b923b6edd1921d882b",
+  "instrument_commit": "7bb04c9",
+  "recorded_at": "2026-11-20T22:11:21Z"
+}
