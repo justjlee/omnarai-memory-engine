@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://engine.omnarai.org/research/inheritance-001/schemas/run-0.1.schema.json",
+  "title": "Inheritance Study 001 run record (research draft; not a Footprint, not a public contract)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "study_id",
+    "kind",
+    "adapter",
+    "started_at",
+    "finished_at",
+    "plan_sha256",
+    "counters",
+    "spend",
+    "events_head_sha256",
+    "status",
+    "sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "omnarai.inheritance-study.run/0.1"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^IS1-RUN-[0-9a-f]{12}$"
+    },
+    "study_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "kind": {
+      "enum": [
+        "offline-mock",
+        "live"
+      ]
+    },
+    "adapter": {
+      "enum": [
+        "mock",
+        "live"
+      ]
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "finished_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "plan_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "counters": {
+      "type": "object"
+    },
+    "spend": {
+      "type": "object"
+    },
+    "events_head_sha256": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "status": {
+      "enum": [
+        "completed",
+        "aborted",
+        "partial"
+      ]
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

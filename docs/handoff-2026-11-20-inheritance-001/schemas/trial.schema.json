@@ -1,0 +1,24 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://omnarai.org/research/schemas/inheritance-trial-0.1-draft",
+  "title":"Inheritance study trial (research draft)",
+  "type":"object", "additionalProperties":false,
+  "required":["schema_version","trial_id","study_id","generation","task_id","task_family","consumer","arm","snapshot_sha256","context_sha256","outcome","score","simulation"],
+  "properties":{
+    "schema_version":{"const":"omnarai.inheritance-trial/0.1-draft"},
+    "trial_id":{"type":"string","minLength":1},
+    "study_id":{"type":"string","minLength":1},
+    "generation":{"type":"integer","minimum":1},
+    "task_id":{"type":"string","minLength":1},
+    "task_family":{"type":"string","minLength":1},
+    "consumer":{"type":"object","required":["provider","model_id","family"],"properties":{"provider":{"type":"string"},"model_id":{"type":"string"},"family":{"type":"string"}}},
+    "arm":{"enum":["A","A+","B","C","D","E"]},
+    "snapshot_sha256":{"type":"string","pattern":"^[a-f0-9]{64}$"},
+    "context_sha256":{"type":"string","pattern":"^[a-f0-9]{64}$"},
+    "outcome":{"enum":["pass","fail","timeout","error"]},
+    "score":{"type":"number","minimum":0,"maximum":1},
+    "simulation":{"type":"boolean"},
+    "usage":{"type":"object"},
+    "provenance":{"type":"object"}
+  }
+}

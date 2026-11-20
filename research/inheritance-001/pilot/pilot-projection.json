@@ -1,0 +1,141 @@
+{
+  "projection_only": true,
+  "stand_in_families": "public draw 'public-projection-only' — the sealed set is drawn at registration",
+  "plan_sha256_of_projection": "8a24daa5c711a0963e575e52bc817f2c0937719f00f29e134a170e410004bcaa",
+  "calibration_stage": {
+    "calls": 32,
+    "usd_worst": 0.5376
+  },
+  "projection": {
+    "prices_as_of": "2026-11-13 / 2026-11-18 provider pages (re-verify before any live run)",
+    "price_date": "2026-12-01",
+    "assumptions": {
+      "expected_output_tokens": 700,
+      "max_output_tokens": 2000,
+      "max_attempts": 2,
+      "tokens_per_char": 0.25
+    },
+    "calls_first_attempt": 344,
+    "calls_max_with_retries": 688,
+    "usd_expected": 3.2029,
+    "usd_worst_first_attempts": 6.8215,
+    "usd_worst_with_retries": 13.643,
+    "models": [
+      {
+        "model_id": "claude-sonnet-5-5",
+        "provider": "anthropic",
+        "calls": 144,
+        "tokens_in": 176958,
+        "tokens_out_expected": 136800,
+        "tokens_out_max": 331200,
+        "by_kind": {
+          "consumer-A": 24,
+          "consumer-A+": 24,
+          "consumer-BCDE": 96
+        },
+        "price_per_m": {
+          "in": 2,
+          "out": 10
+        },
+        "usd_expected": 1.7219,
+        "usd_worst_first_attempts": 3.6659,
+        "usd_worst_with_retries": 7.3318
+      },
+      {
+        "model_id": "deepseek-v4-pro",
+        "provider": "deepseek",
+        "calls": 28,
+        "tokens_in": 9849,
+        "tokens_out_expected": 19600,
+        "tokens_out_max": 56000,
+        "by_kind": {
+          "producer-work": 24,
+          "producer-placebo": 4
+        },
+        "price_per_m": {
+          "in": 1.32,
+          "out": 3.96
+        },
+        "usd_expected": 0.0906,
+        "usd_worst_first_attempts": 0.2348,
+        "usd_worst_with_retries": 0.4696
+      },
+      {
+        "model_id": "gpt-6.1-sol",
+        "provider": "openai",
+        "calls": 28,
+        "tokens_in": 9849,
+        "tokens_out_expected": 19600,
+        "tokens_out_max": 56000,
+        "by_kind": {
+          "producer-work": 24,
+          "producer-placebo": 4
+        },
+        "price_per_m": {
+          "in": 2,
+          "out": 10
+        },
+        "usd_expected": 0.2157,
+        "usd_worst_first_attempts": 0.5797,
+        "usd_worst_with_retries": 1.1594
+      },
+      {
+        "model_id": "grok-4.7",
+        "provider": "xai",
+        "calls": 144,
+        "tokens_in": 176958,
+        "tokens_out_expected": 136800,
+        "tokens_out_max": 331200,
+        "by_kind": {
+          "consumer-A": 24,
+          "consumer-A+": 24,
+          "consumer-BCDE": 96
+        },
+        "price_per_m": {
+          "in": 2,
+          "out": 6
+        },
+        "usd_expected": 1.1747,
+        "usd_worst_first_attempts": 2.3411,
+        "usd_worst_with_retries": 4.6822
+      }
+    ]
+  },
+  "blocks": 48,
+  "producer_calls": 56,
+  "power_at_8_families": [
+    {
+      "families": 8,
+      "tasks_per_family": 3,
+      "consumers": 2,
+      "base_rate": 0.4,
+      "true_effect": 0.1,
+      "family_sd": 0.1,
+      "sims": 400,
+      "power": 0.237,
+      "wrong_sign_rate": 0.003
+    },
+    {
+      "families": 8,
+      "tasks_per_family": 3,
+      "consumers": 2,
+      "base_rate": 0.4,
+      "true_effect": 0.15,
+      "family_sd": 0.1,
+      "sims": 400,
+      "power": 0.375,
+      "wrong_sign_rate": 0.003
+    },
+    {
+      "families": 8,
+      "tasks_per_family": 3,
+      "consumers": 2,
+      "base_rate": 0.4,
+      "true_effect": 0.2,
+      "family_sd": 0.1,
+      "sims": 400,
+      "power": 0.588,
+      "wrong_sign_rate": 0
+    }
+  ]
+}

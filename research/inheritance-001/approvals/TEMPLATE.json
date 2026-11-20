@@ -1,0 +1,11 @@
+{
+  "study_id": "IS1-STUDY-PILOT-001",
+  "plan_sha256": "<plan.plan_sha256 of the exact plan to run>",
+  "approved_by": "xz",
+  "approved_at": "<ISO time of xz's message>",
+  "approval_words": "<xz's words, verbatim>",
+  "models": ["gpt-6.1-sol", "deepseek-v4-pro", "claude-sonnet-5-5", "grok-4.7"],
+  "max_calls": 720,
+  "max_usd": 10,
+  "per_provider_usd": { "anthropic": 5, "xai": 4, "openai": 2, "deepseek": 1 }
+}

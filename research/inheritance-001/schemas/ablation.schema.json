@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://engine.omnarai.org/research/inheritance-001/schemas/ablation-0.1.schema.json",
+  "title": "Inheritance Study 001 ablation record (research draft; not a Footprint, not a public contract)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "study_id",
+    "generation",
+    "artifact_id",
+    "blocks_where_artifact_was_shown",
+    "delta",
+    "flag",
+    "note",
+    "sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "omnarai.inheritance-study.ablation/0.1"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^IS1-ABL-[0-9a-f]{12}$"
+    },
+    "study_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "artifact_id": {
+      "type": "string",
+      "pattern": "^IS1-ART-g\\d{1,3}-[0-9a-f]{12}$"
+    },
+    "blocks_where_artifact_was_shown": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "delta": {
+      "type": "object"
+    },
+    "flag": {
+      "type": "string",
+      "minLength": 1
+    },
+    "note": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

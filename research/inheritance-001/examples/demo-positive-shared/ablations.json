@@ -1,0 +1,110 @@
+[
+  {
+    "schema_version": "omnarai.inheritance-study.ablation/0.1",
+    "id": "IS1-ABL-653bab3c3453",
+    "study_id": "IS1-STUDY-DEMO-POSITIVE-SHARED",
+    "generation": 1,
+    "artifact_id": "IS1-ART-g0-0d3566f4201a",
+    "blocks_where_artifact_was_shown": 24,
+    "delta": {
+      "estimate": 0,
+      "ci_low": -0.125,
+      "ci_high": 0.125,
+      "n_clusters": 4,
+      "n_pairs": 24
+    },
+    "flag": "nonpositive (flagged, not deleted)",
+    "note": "delta = C(full) − C(without this artifact) on the same blocks. Interactions between artifacts are not separated.",
+    "sha256": "74cacd8953819b515eb124aa6ce2cb8ef61e12e14d0793ef7a37d3c4eb83b5ca"
+  },
+  {
+    "schema_version": "omnarai.inheritance-study.ablation/0.1",
+    "id": "IS1-ABL-a8b769bf40c6",
+    "study_id": "IS1-STUDY-DEMO-POSITIVE-SHARED",
+    "generation": 1,
+    "artifact_id": "IS1-ART-g0-d05b3deaded0",
+    "blocks_where_artifact_was_shown": 24,
+    "delta": {
+      "estimate": -0.0833,
+      "ci_low": -0.1667,
+      "ci_high": 0,
+      "n_clusters": 4,
+      "n_pairs": 24
+    },
+    "flag": "nonpositive (flagged, not deleted)",
+    "note": "delta = C(full) − C(without this artifact) on the same blocks. Interactions between artifacts are not separated.",
+    "sha256": "86ba026c7c38dbcdfe6f7f7980d85a7b495c30fceecd36e8168b8f886b113722"
+  },
+  {
+    "schema_version": "omnarai.inheritance-study.ablation/0.1",
+    "id": "IS1-ABL-7d0912b1c19a",
+    "study_id": "IS1-STUDY-DEMO-POSITIVE-SHARED",
+    "generation": 2,
+    "artifact_id": "IS1-ART-g0-0d3566f4201a",
+    "blocks_where_artifact_was_shown": 18,
+    "delta": {
+      "estimate": -0.0833,
+      "ci_low": -0.1667,
+      "ci_high": 0,
+      "n_clusters": 4,
+      "n_pairs": 24
+    },
+    "flag": "nonpositive (flagged, not deleted)",
+    "note": "delta = C(full) − C(without this artifact) on the same blocks. Interactions between artifacts are not separated.",
+    "sha256": "3dfa1c678e5942763789e214c27234642ee5e49cad6f94d540abf8ef99332a37"
+  },
+  {
+    "schema_version": "omnarai.inheritance-study.ablation/0.1",
+    "id": "IS1-ABL-16ffeac2700a",
+    "study_id": "IS1-STUDY-DEMO-POSITIVE-SHARED",
+    "generation": 2,
+    "artifact_id": "IS1-ART-g0-5fcc07515177",
+    "blocks_where_artifact_was_shown": 16,
+    "delta": {
+      "estimate": -0.1667,
+      "ci_low": -0.2917,
+      "ci_high": -0.0417,
+      "n_clusters": 4,
+      "n_pairs": 24
+    },
+    "flag": "nonpositive (flagged, not deleted)",
+    "note": "delta = C(full) − C(without this artifact) on the same blocks. Interactions between artifacts are not separated.",
+    "sha256": "5716a1d7fe800e1ae29a19ec8e8ec8cd95525a441bbc0afc6fe24a9a22a0e98d"
+  },
+  {
+    "schema_version": "omnarai.inheritance-study.ablation/0.1",
+    "id": "IS1-ABL-afce92e29d0f",
+    "study_id": "IS1-STUDY-DEMO-POSITIVE-SHARED",
+    "generation": 3,
+    "artifact_id": "IS1-ART-g1-eb4c11cd9498",
+    "blocks_where_artifact_was_shown": 17,
+    "delta": {
+      "estimate": 0.0417,
+      "ci_low": -0.25,
+      "ci_high": 0.3333,
+      "n_clusters": 4,
+      "n_pairs": 24
+    },
+    "flag": "inconclusive",
+    "note": "delta = C(full) − C(without this artifact) on the same blocks. Interactions between artifacts are not separated.",
+    "sha256": "bd323e76e01b49fef04e108e6836bfed7a75d62aef75d2b2d947d290aa5d46fc"
+  },
+  {
+    "schema_version": "omnarai.inheritance-study.ablation/0.1",
+    "id": "IS1-ABL-2b36532a8804",
+    "study_id": "IS1-STUDY-DEMO-POSITIVE-SHARED",
+    "generation": 3,
+    "artifact_id": "IS1-ART-g2-e67d0d13d69b",
+    "blocks_where_artifact_was_shown": 16,
+    "delta": {
+      "estimate": 0.0417,
+      "ci_low": -0.0833,
+      "ci_high": 0.1667,
+      "n_clusters": 4,
+      "n_pairs": 24
+    },
+    "flag": "inconclusive",
+    "note": "delta = C(full) − C(without this artifact) on the same blocks. Interactions between artifacts are not separated.",
+    "sha256": "9dd240be9741bb3a32d3cecfde27822ff9d8cb7f56ed1b327b951b2441b1293a"
+  }
+]

@@ -1,0 +1,15 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://omnarai.org/research/schemas/inheritance-study-report-0.1-draft",
+  "title":"Inheritance study report (research draft)",
+  "type":"object", "additionalProperties":false,
+  "required":["protocol","study_id","status","simulation","comparisons","limitations"],
+  "properties":{
+    "protocol":{"const":"omnarai.inheritance-study/0.1-draft"},
+    "study_id":{"type":"string"},
+    "status":{"enum":["offline_simulation","pilot_exploratory","preregistered_confirmatory"]},
+    "simulation":{"type":"boolean"},
+    "comparisons":{"type":"array","items":{"type":"object","required":["generation","n_pairs","mean_C_minus_A_plus","ci_low","ci_high"],"properties":{"generation":{"type":"integer"},"n_pairs":{"type":"integer"},"mean_C_minus_A_plus":{"type":"number"},"ci_low":{"type":["number","null"]},"ci_high":{"type":["number","null"]}}}},
+    "limitations":{"type":"array","items":{"type":"string"}}
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://engine.omnarai.org/research/inheritance-001/schemas/study-0.1.schema.json",
+  "title": "Inheritance Study 001 study record (research draft; not a Footprint, not a public contract)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "protocol",
+    "status",
+    "simulation",
+    "title",
+    "preregistration",
+    "config",
+    "plan_sha256",
+    "created_at",
+    "sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "omnarai.inheritance-study.study/0.1"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^IS1-STUDY-[A-Z0-9-]{3,60}$"
+    },
+    "protocol": {
+      "const": "omnarai.inheritance-study/0.1"
+    },
+    "status": {
+      "enum": [
+        "draft_unregistered",
+        "registered",
+        "closed"
+      ]
+    },
+    "simulation": {
+      "type": "boolean"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "preregistration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "status",
+        "registered_commit_sha"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "draft_unregistered",
+            "registered"
+          ]
+        },
+        "registered_commit_sha": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "config": {
+      "type": "object"
+    },
+    "plan_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

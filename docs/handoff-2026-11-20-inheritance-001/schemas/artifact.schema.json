@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omnarai.org/research/schemas/inheritance-artifact-0.1-draft",
+  "title": "Inheritance study artifact (research draft, not Footprint)",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "id", "generation", "producer", "family", "body", "method_key", "verification", "relations", "sha256"],
+  "properties": {
+    "schema_version": {"const": "omnarai.inheritance-artifact/0.1-draft"},
+    "id": {"type": "string", "pattern": "^LAB-[A-Z0-9-]+$"},
+    "generation": {"type": "integer", "minimum": 0},
+    "producer": {"type": "object", "additionalProperties": false, "required": ["provider", "model_id", "family"], "properties": {"provider":{"type":"string","minLength":1},"model_id":{"type":"string","minLength":1},"family":{"type":"string","minLength":1}}},
+    "family": {"type": "string", "minLength": 1},
+    "body": {"type": "string", "minLength": 1},
+    "method_key": {"type": "string", "minLength": 1},
+    "verification": {"type": "object", "additionalProperties": false, "required": ["status", "verifier_id", "evidence_id"], "properties": {"status":{"enum":["passed","failed","pending"]},"verifier_id":{"type":"string"},"evidence_id":{"type":"string"}}},
+    "relations": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  }
+}
