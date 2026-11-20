@@ -12,7 +12,7 @@ import { runStudy } from "./inheritance-001/lib/runner.mjs";
 import { createSpendGuard } from "./inheritance-001/lib/adapters.mjs";
 import { drawFamilySet, setKey } from "./inheritance-001/lib/families.mjs";
 import { calibrationOpSets } from "./inheritance-001/lib/probe.mjs";
-import { PILOT_MODELS, pilotStudy, projectionFamilies, SEALED_DRAW } from "./inheritance-001/fixtures/pilot-001.mjs";
+import { PILOT_MODELS, pilotStudy, projectionFamilies, SEALED_DRAW, sealedPilotStudy } from "./inheritance-001/fixtures/pilot-001.mjs";
 import { familyOfModelId } from "./inheritance-001/lib/identity.mjs";
 
 const PANEL = [...PILOT_MODELS.producers, ...PILOT_MODELS.consumers];
@@ -141,4 +141,69 @@ test("[K7] the runner sends each model's own cap (Gemini 4500, the rest 3000), a
   assert.ok(sent.every((r) => r.timeout_ms === 600000));
   const g = createSpendGuard({ maxCalls: 5, maxUsd: 5, onDate: "2026-12-01" });
   assert.equal(g.precheck({ provider: "anthropic", model_id: "claude-sonnet-5-5", tokensIn: 1000, maxOut: 0 }).worst_usd, (1000 * 2 * 2) / 1e6, "input counted at twice the estimate");
+});
+
+// ── [K8] the pilot's live path end to end, with fake provider responses in each provider's real shape ─────────────────
+import { mkdtempSync, existsSync as fileExists, readFileSync as readFile } from "node:fs";
+import { tmpdir } from "node:os";
+import { join as joinPath } from "node:path";
+import { createLiveAdapter } from "./inheritance-001/lib/adapters.mjs";
+import { createMemoryLabStore, exportRun } from "./inheritance-001/lib/store.mjs";
+import { summarizeDir } from "./inheritance-001/lib/pipeline.mjs";
+
+function livePilot(maxUsd) {
+  const study = pilotStudy({ families: projectionFamilies(), salt: "k8" });
+  const { plan, tasks } = buildPlan(study);
+  const byQuery = tasks.map((t) => [`"query":${JSON.stringify(t.public.prompt.query)}`, t.sealed]);
+  let k = 0;
+  const transport = async (req) => {
+    const s = byQuery.find(([q]) => req.input.user.includes(q))?.[1];
+    const right = s && k++ % 3 !== 0;
+    const text = `<answer>${right ? s.expected : "nope"}</answer>${s && right ? `\n\`\`\`program\n${JSON.stringify(s.program)}\n\`\`\`` : ""}`;
+    if (req.provider === "anthropic") return { status: 200, headers: { "request-id": "a" }, json: { model: req.model_id, stop_reason: "end_turn", content: [{ type: "text", text }], usage: { input_tokens: 400, output_tokens: 800 } }, duration_ms: 3 };
+    if (req.provider === "gemini") return { status: 200, headers: {}, json: { id: "g", model: req.model_id, status: "completed", steps: [{ type: "thought", content: [] }, { type: "model_output", content: [{ type: "text", text }] }], usage: { total_input_tokens: 400, total_output_tokens: 100, total_thought_tokens: 900, total_tokens: 1400 } }, duration_ms: 3 };
+    return { status: 200, headers: { "x-request-id": "o" }, json: { model: req.model_id, choices: [{ finish_reason: "stop", message: { content: text } }], usage: { prompt_tokens: 400, completion_tokens: 600, completion_tokens_details: { reasoning_tokens: req.provider === "openai" ? 500 : 0 } } }, duration_ms: 3 };
+  };
+  const approval = { study_id: plan.study_id, plan_sha256: plan.plan_sha256, approved_by: "xz", approved_at: "2026-11-21T00:00:00Z", approval_words: "Approved", max_calls: 688, max_usd: maxUsd, models: plan.models.map((m) => m.model_id) };
+  const authorization = { approval, preregistration: { status: "registered", registered_commit_sha: "abc1234" }, plan, planSha256: plan.plan_sha256, argv: ["--live", "--yes", "--experiment", plan.study_id, "--max-usd", String(maxUsd), "--max-calls", "688"], env: { OMNARAI_LAB_LIVE: "1" } };
+  const adapter = createLiveAdapter({ authorization, keys: { ANTHROPIC_API_KEY: "sk-ant-x-0000000000", OPENAI_API_KEY: "sk-x-000000000000000000", DEEPSEEK_API_KEY: "sk-y-000000000000000000", GEMINI_API_KEY: "AIza-x-0000000000000000000" }, transport });
+  const guard = createSpendGuard({ maxCalls: 688, maxUsd, onDate: study.price_date });
+  return { study: { ...study, budget: { max_paid_calls: 688, max_usd: maxUsd } }, plan, adapter, guard };
+}
+
+test("[K8] a live-shaped pilot run (fake providers) completes, verifies producer work, exports and summarizes; a budget stop still exports", async () => {
+  const L = livePilot(17);
+  const store = createMemoryLabStore(), outputs = [];
+  const result = await runStudy({ study: L.study, adapter: L.adapter, guard: L.guard, clock: () => "2026-11-21T00:00:00.000Z", store, outputs });
+  assert.equal(result.store, store, "the caller's store is the run's store");
+  assert.ok(store.list("artifact").length > 0 && store.list("evaluation").length > 0, "producer work was verified");
+  assert.ok(L.guard.state.usd > 0 && L.guard.state.usd <= 17, String(L.guard.state.usd));
+  const dir = mkdtempSync(joinPath(tmpdir(), "is1-k8-"));
+  exportRun(store, dir, { plan: result.plan, sealed: { tasks: result.sealed.tasks, outputs }, sealedDir: joinPath(dir, "sealed") });
+  summarizeDir(dir);
+  assert.ok(fileExists(joinPath(dir, "summary.json")) && fileExists(joinPath(dir, "REPORT.md")));
+
+  const S = livePilot(0.5);
+  const partial = createMemoryLabStore();
+  await assert.rejects(runStudy({ study: S.study, adapter: S.adapter, guard: S.guard, clock: () => "2026-11-21T00:00:00.000Z", store: partial, outputs: [] }), /BUDGET_EXHAUSTED/);
+  assert.ok(S.guard.state.usd <= 0.5);
+  const pdir = mkdtempSync(joinPath(tmpdir(), "is1-k8p-"));
+  exportRun(partial, pdir, { plan: S.plan, sealed: { tasks: [], outputs: [] }, sealedDir: joinPath(pdir, "sealed") });
+  assert.ok(partial.list("artifact").length > 0, "what ran before the stop is kept");
+  assert.ok(readFile(joinPath(pdir, "events.ndjson"), "utf8").length > 0);
+});
+
+test("[K9] the plan a live pilot is approved for is the plan it records: caps inside the hash, registration outside it", async () => {
+  const sealed = { families: projectionFamilies(), salt: "k9" };
+  const draft = sealedPilotStudy(sealed, { maxCalls: 688, maxUsd: 17 });
+  const reg = sealedPilotStudy(sealed, { maxCalls: 688, maxUsd: 17, registration: { status: "registered", registered_commit_sha: "abc1234" } });
+  const h = buildPlan(draft).plan.plan_sha256;
+  assert.equal(buildPlan(reg).plan.plan_sha256, h, "registering does not change the plan");
+  assert.notEqual(buildPlan(sealedPilotStudy(sealed, { maxCalls: 688, maxUsd: 18 })).plan.plan_sha256, h, "a different cap is a different plan");
+  assert.equal(reg.preregistration.status, "registered");
+  assert.equal(sealedPilotStudy(sealed, { registration: { status: "registered", registered_commit_sha: "not-a-sha" } }).preregistration.status, "draft_unregistered");
+  const adapter = { kind: "fake", billable: false, async call(req) { return { provider_returned_model_id: req.model_id, output: "<answer>q</answer>", usage: { in: 1, out: 1 }, request_id: "r", duration_ms: 1, provider_response_metadata: {}, error: null }; } };
+  const r = await runStudy({ study: reg, adapter, guard: createSpendGuard({ mock: true }) });
+  assert.equal(r.run.plan_sha256, h, "the run records the approved hash");
+  assert.equal(r.store.list("study")[0].preregistration.status, "registered", "the analysis sees the registration");
 });

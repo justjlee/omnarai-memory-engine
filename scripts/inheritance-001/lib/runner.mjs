@@ -42,11 +42,10 @@ export function poisonFixtures({ study, families, tasksByFamily, clock }) {
   return out;
 }
 
-export async function runStudy({ study, adapter, clock = fixedClock(study.start_at), guard = null, timer = null, onProgress = () => {} }) {
+export async function runStudy({ study, adapter, clock = fixedClock(study.start_at), guard = null, timer = null, onProgress = () => {}, store = createMemoryLabStore(), outputs = [] }) {
   const mock = adapter.kind === "mock";
   const spend = guard || createSpendGuard({ mock, maxCalls: study.budget.max_paid_calls, maxUsd: study.budget.max_usd, onDate: study.price_date });
   const { plan, families, tasks } = buildPlan(study);
-  const store = createMemoryLabStore();
   const famById = new Map(families.map((f) => [f.record.id, f]));
   const tasksByFamily = new Map();
   for (const t of tasks) (tasksByFamily.get(t.public.family_id) || tasksByFamily.set(t.public.family_id, []).get(t.public.family_id)).push(t);
@@ -55,7 +54,6 @@ export async function runStudy({ study, adapter, clock = fixedClock(study.start_
   const evalSealed = tasks.filter((t) => ["eval-anchor", "eval-generation"].includes(t.public.role)).map((t) => t.sealed);
   const leakIdx = leakIndex(evalSealed);
   const runId = `IS1-RUN-${hexId({ s: study.study_id, plan: plan.plan_sha256, adapter: adapter.kind }, 12)}`;
-  const outputs = [];
 
   // the study record: everything a reader needs to know was fixed before outcomes — minus sealed templates and salt
   // eslint-disable-next-line no-unused-vars

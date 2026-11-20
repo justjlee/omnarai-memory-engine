@@ -13,13 +13,16 @@
 //   plan --world W --out FILE             write a demo plan only
 // Gated commands:
 //   draw-sealed --out FILE                draw the sealed held-out families from a fresh secret seed (FILE outside the repo)
+//   pilot-plan --sealed FILE --max-calls N --max-usd N
+//                                         offline: the exact plan hash a live pilot with these caps would run, its projection,
+//                                         and the public registries the preregistration needs (no sealed content printed)
 //   run-models --sealed FILE --approval FILE --out DIR [--live --yes --experiment ID --max-usd N --max-calls N]
 //                                         REFUSES unless every live-run condition holds (see lib/adapters.mjs)
 //   probe [--probe ID] [--out DIR]        stage-0 calibration probe (default: the latest, IS1-PROBE-CAL-002): offline it
 //                                         prints the plan, hash, per-model bounds and worst-case cost;
 //         --live --yes --experiment ID --max-usd N --max-calls N --approval FILE --env-file FILE --out DIR
 //                                         runs it (arm A, public calibration families) under the same gate, minus registration
-import { mkdirSync, writeFileSync, readFileSync, existsSync, realpathSync } from "node:fs";
+import { mkdirSync, writeFileSync, readFileSync, existsSync, realpathSync, appendFileSync } from "node:fs";
 import { join, resolve, dirname, relative, isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomBytes } from "node:crypto";
@@ -29,11 +32,14 @@ import { runDemo, summarizeDir } from "./lib/pipeline.mjs";
 import { verifyRunDir, exportRun } from "./lib/store.mjs";
 import { buildPlan, outputCapFor } from "./lib/plan.mjs";
 import { runStudy } from "./lib/runner.mjs";
+import { createMemoryLabStore } from "./lib/store.mjs";
 import { createMockAdapter } from "./lib/mock-model.mjs";
 import { analyze } from "./lib/analyze.mjs";
 import { simulatePower } from "./lib/stats.mjs";
 import { demoStudy, WORLDS } from "./fixtures/worlds.mjs";
-import { pilotStudy, projectionFamilies, PILOT_MODELS, SEALED_DRAW } from "./fixtures/pilot-001.mjs";
+import { pilotStudy, projectionFamilies, PILOT_MODELS, SEALED_DRAW, sealedPilotStudy } from "./fixtures/pilot-001.mjs";
+import { VERIFIER } from "./lib/verify.mjs";
+import { ORACLE } from "./lib/oracle.mjs";
 import { drawFamilySet } from "./lib/families.mjs";
 import { familyRecord } from "./lib/tasks.mjs";
 import { checkLiveAuthorization, createLiveAdapter, createSpendGuard } from "./lib/adapters.mjs";
@@ -50,7 +56,7 @@ const opt = (name, dflt = undefined) => { const i = argv.indexOf(name); return i
 const insideRepo = (p) => { const r = relative(ROOT, resolve(p)); return !r.startsWith("..") && !isAbsolute(r); };
 const out = (...a) => process.stdout.write(a.join(" ") + "\n");
 
-const OFFLINE = ["demo", "summarize", "verify", "validate-instrument", "budget", "plan", "draw-sealed"];
+const OFFLINE = ["demo", "summarize", "verify", "validate-instrument", "budget", "plan", "draw-sealed", "pilot-plan"];
 if (OFFLINE.includes(cmd) || (cmd === "probe" && !argv.includes("--live"))) installNetworkGuard();
 
 async function demo() {
@@ -167,6 +173,32 @@ function drawSealed() {
   for (const r of records) out(`  ${r.id} ${r.role} ${r.template_commitment_sha256}`);
 }
 
+function pilotPlanCmd() {
+  const sealedFile = opt("--sealed");
+  if (!sealedFile || !existsSync(sealedFile)) { out("pilot-plan needs --sealed FILE (from draw-sealed)"); process.exit(2); }
+  if (insideRepo(realpathSync(sealedFile))) { out("REFUSED: the sealed file is inside the repository."); process.exit(2); }
+  const sealed = JSON.parse(readFileSync(sealedFile, "utf8"));
+  const study = sealedPilotStudy(sealed, { maxCalls: Number(opt("--max-calls", 0)), maxUsd: Number(opt("--max-usd", 0)) });
+  const { plan } = buildPlan(study);
+  const P = plan.projection;
+  out(JSON.stringify({
+    study_id: plan.study_id,
+    plan_sha256: plan.plan_sha256,
+    caps: plan.budget,
+    calls_first_attempt: P.calls_first_attempt,
+    calls_max_with_retries: P.calls_max_with_retries,
+    usd_expected: P.usd_expected,
+    usd_worst_first_attempts: P.usd_worst_first_attempts,
+    models: plan.models,
+    task_manifest_sha256: plan.task_manifest_sha256,
+    family_template_commitments: plan.families.map((f) => ({ id: f.id, role: f.role, n_steps: f.n_steps, template_commitment_sha256: f.template_commitment_sha256 })),
+    verifier_code_sha256: VERIFIER.code_sha256,
+    oracle_code_sha256: ORACLE.code_sha256,
+  }, null, 2));
+}
+
+const KEY_ENV = { anthropic: "ANTHROPIC_API_KEY", openai: "OPENAI_API_KEY", gemini: "GEMINI_API_KEY", xai: "XAI_API_KEY", deepseek: "DEEPSEEK_API_KEY" };
+
 async function runModels() {
   const sealedFile = opt("--sealed"), approvalFile = opt("--approval"), outDir = opt("--out");
   const problems = [];
@@ -176,10 +208,11 @@ async function runModels() {
   else if (insideRepo(outDir)) problems.push("results of a live run are private until review: --out must be outside the repository");
   if (problems.length) { out(`REFUSED: ${problems.join("; ")}`); process.exit(3); }
   const sealed = JSON.parse(readFileSync(sealedFile, "utf8"));
-  const study = pilotStudy({ families: sealed.families, salt: sealed.salt });
-  const { plan } = buildPlan(study);
   const registration = existsSync(join(RESEARCH, "registration.json")) ? JSON.parse(readFileSync(join(RESEARCH, "registration.json"), "utf8")) : { status: "draft_unregistered" };
   const approval = approvalFile && existsSync(approvalFile) ? JSON.parse(readFileSync(approvalFile, "utf8")) : null;
+  // The approved caps are part of the plan: the hash the approval names is the hash the run records.
+  const study = sealedPilotStudy(sealed, { maxCalls: approval?.max_calls ?? 0, maxUsd: approval?.max_usd ?? 0, registration });
+  const { plan } = buildPlan(study);
   const authorization = { approval, preregistration: registration, plan, planSha256: plan.plan_sha256, argv: process.argv, env: process.env };
   const missing = checkLiveAuthorization(authorization);
   if (missing.length) {
@@ -192,19 +225,47 @@ async function runModels() {
   const envFile = opt("--env-file");
   const keys = {};
   // envValue: the engine's own reader (vercel env pull writes quoted values, some with a literal \n — see its header)
-  if (envFile) for (const line of readFileSync(envFile, "utf8").split("\n")) { const m = /^\s*([A-Z_]+)\s*=\s*(.*)$/.exec(line); if (m) keys[m[1]] = envValue(m[2]); }
+  if (!envFile || !existsSync(envFile)) { out("REFUSED: --env-file FILE with the provider keys is required. Nothing was reserved or called."); process.exit(3); }
+  for (const line of readFileSync(envFile, "utf8").split("\n")) { const m = /^\s*([A-Z_]+)\s*=\s*(.*)$/.exec(line); if (m) keys[m[1]] = envValue(m[2]); }
+  const needKeys = [...new Set(plan.models.map((m) => KEY_ENV[m.provider])), "BLOB_READ_WRITE_TOKEN"];
+  const absent = needKeys.filter((k) => !keys[k]);
+  if (absent.length) { out(`REFUSED: ${absent.join(", ")} not found in the env file. Nothing was reserved or called.`); process.exit(3); }
   const reserve = spawnSync(process.execPath, [join(ROOT, "scripts/budget-preflight.mjs"), "--reserve", String(approval.max_usd), "--label", `inheritance-001 ${plan.study_id}`], { env: { ...process.env, BLOB_READ_WRITE_TOKEN: keys.BLOB_READ_WRITE_TOKEN || "" }, stdio: "inherit" });
   if (reserve.status !== 0) { out("REFUSED: the shared budget ledger did not accept the reservation."); process.exit(3); }
   const killFile = join(RESEARCH, "KILL");
   const guard = createSpendGuard({ maxCalls: approval.max_calls, maxUsd: approval.max_usd, perProviderUsd: approval.per_provider_usd || {}, onDate: study.price_date, killSwitch: () => existsSync(killFile) });
-  const adapter = createLiveAdapter({ authorization, keys });
-  const result = await runStudy({ study: { ...study, budget: { max_paid_calls: approval.max_calls, max_usd: approval.max_usd } }, adapter, guard, clock: () => new Date().toISOString(), timer: () => performance.now() });
-  exportRun(result.store, outDir, { plan: result.plan, sealed: result.sealed, sealedDir: join(outDir, "sealed") });
-  summarizeDir(outDir);
-  out(`Live run finished: ${guard.state.calls} calls, $${guard.state.usd.toFixed(4)}. Results (private): ${outDir}`);
+  // Only the provider keys reach the adapter.
+  const providerKeys = Object.fromEntries(Object.entries(keys).filter(([k]) => Object.values(KEY_ENV).includes(k)));
+  const live = createLiveAdapter({ authorization, keys: providerKeys });
+  // Every call is appended to calls.log.jsonl as it returns (metadata only, no model text), so the spend record survives
+  // anything that happens later in the run.
+  mkdirSync(resolve(outDir), { recursive: true });
+  const callLog = join(resolve(outDir), "calls.log.jsonl");
+  let n = 0;
+  const adapter = { ...live, async call(req) {
+    const r = await live.call(req);
+    n++;
+    appendFileSync(callLog, JSON.stringify({ n, at: new Date().toISOString(), tracing_id: req.tracing_id, model_id: req.model_id, max_output_tokens: req.max_output_tokens, returned: r.provider_returned_model_id ?? null, error: r.error?.code ?? null, usage: r.usage ?? null, stop: r.provider_response_metadata?.stop_reason || r.provider_response_metadata?.finish_reason || null, duration_ms: r.duration_ms ?? null }) + "\n");
+    out(`  ${n} ${req.tracing_id} ${req.model_id} -> ${r.error ? r.error.code : "ok"} out=${r.usage?.out ?? "?"} (guard $${guard.state.usd.toFixed(4)})`);
+    return r;
+  } };
+  // The caller holds the store, so a run that stops early (budget, kill switch, an unexpected error) is still exported.
+  const store = createMemoryLabStore(), outputs = [];
+  let result = null, failure = null;
+  try {
+    result = await runStudy({ study, adapter, guard, clock: () => new Date().toISOString(), timer: () => performance.now(), onProgress: (m) => out(`  [progress] ${m}`), store, outputs });
+  } catch (e) {
+    failure = { code: e.code || "ERROR", message: String(e.message).slice(0, 300) };
+    out(`STOPPED EARLY: ${failure.code} ${failure.message}`);
+  }
+  exportRun(store, outDir, { plan: result?.plan ?? plan, sealed: { tasks: result?.sealed.tasks ?? [], outputs }, sealedDir: join(outDir, "sealed") });
+  writeFileSync(join(resolve(outDir), "guard-state.json"), JSON.stringify({ ...guard.state, failure, finished_at: new Date().toISOString() }, null, 2) + "\n");
+  if (result) {
+    try { summarizeDir(outDir); } catch (e) { out(`summary failed (records are saved): ${String(e.message).slice(0, 200)}`); }
+  }
+  out(`Live run ${result ? "finished" : "STOPPED"}: ${guard.state.calls} calls, $${guard.state.usd.toFixed(4)} recorded (of which $${guard.state.assumedUsd.toFixed(4)} assumed for timeouts). Results (private): ${outDir}`);
+  if (!result) process.exit(4);
 }
-
-const KEY_ENV = { anthropic: "ANTHROPIC_API_KEY", openai: "OPENAI_API_KEY", gemini: "GEMINI_API_KEY", xai: "XAI_API_KEY", deepseek: "DEEPSEEK_API_KEY" };
 
 async function probe() {
   const id = opt("--probe", LATEST_PROBE_ID);
@@ -258,6 +319,6 @@ function planCmd() {
   out(`plan ${plan.plan_sha256} → ${file}`);
 }
 
-const COMMANDS = { demo, summarize: () => { const d = resolve(opt("--out")); const r = summarizeDir(d); out(`summary ${r.id} → ${d}/summary.json, REPORT.md`); }, verify: () => { const r = verifyRunDir(resolve(opt("--out"))); out(JSON.stringify(r)); if (!r.ok) process.exit(1); }, "validate-instrument": validateInstrument, budget, plan: planCmd, "draw-sealed": drawSealed, "run-models": runModels, probe };
+const COMMANDS = { demo, summarize: () => { const d = resolve(opt("--out")); const r = summarizeDir(d); out(`summary ${r.id} → ${d}/summary.json, REPORT.md`); }, verify: () => { const r = verifyRunDir(resolve(opt("--out"))); out(JSON.stringify(r)); if (!r.ok) process.exit(1); }, "validate-instrument": validateInstrument, budget, plan: planCmd, "draw-sealed": drawSealed, "run-models": runModels, probe, "pilot-plan": pilotPlanCmd };
 if (!COMMANDS[cmd]) { out(`usage: lab.mjs <${Object.keys(COMMANDS).join("|")}> [options]`); process.exit(2); }
 await COMMANDS[cmd]();

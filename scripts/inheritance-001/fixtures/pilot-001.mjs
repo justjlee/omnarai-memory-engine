@@ -75,3 +75,16 @@ export const projectionFamilies = () => drawFamilySet({ seed: "public-projection
 // tasks can be pitched off the floor and the ceiling. Their results never enter the study, and their op sets are excluded
 // from the sealed draw (lib/probe.mjs calibrationOpSets). Probe 2 (IS1-PROBE-CAL-002) runs this exact panel.
 export const CALIBRATION = { probe: "IS1-PROBE-CAL-002", arm: "A", note: "public calibration families, never reused in the sealed set" };
+
+// The study a live pilot runs: the sealed families, the approved caps (they are part of the plan, so the plan hash xz
+// approves is the hash the run records), and, once registered, the registration (the analysis reads it). Registration
+// does not change the plan hash.
+export function sealedPilotStudy(sealed, { maxCalls = 0, maxUsd = 0, registration = null } = {}) {
+  const base = pilotStudy({ families: sealed.families, salt: sealed.salt });
+  const registered = registration?.status === "registered" && /^[0-9a-f]{7,40}$/.test(registration.registered_commit_sha || "");
+  return {
+    ...base,
+    budget: { max_paid_calls: maxCalls, max_usd: maxUsd },
+    ...(registered ? { status: "registered", preregistration: { ...base.preregistration, status: "registered", registered_commit_sha: registration.registered_commit_sha } } : {}),
+  };
+}
