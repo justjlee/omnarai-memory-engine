@@ -242,3 +242,19 @@ export function createLiveAdapter({ authorization, keys, transport = null }) {
 // Same-family check on what the PROVIDER said it ran.
 export const returnedFamily = (r) => familyOfModelId(r?.provider_returned_model_id);
 export const approvalDigest = (approval) => sha256(approval);
+
+// What is left of an approval after earlier attempts of the same plan (their guard-state.json files): the recorded spend,
+// calls and per-provider spend come off the caps, so every attempt together stays inside what xz approved.
+export function remainingCaps({ maxCalls, maxUsd, perProviderUsd = {} }, priorStates = []) {
+  const usd = priorStates.reduce((s, g) => s + (g.usd || 0), 0);
+  const calls = priorStates.reduce((s, g) => s + (g.calls || 0), 0);
+  const byProvider = {};
+  for (const g of priorStates) for (const [p, v] of Object.entries(g.byProvider || {})) byProvider[p] = (byProvider[p] || 0) + v;
+  const left = (x) => Math.max(0, +x.toFixed(6));
+  return {
+    maxCalls: Math.max(0, maxCalls - calls),
+    maxUsd: left(maxUsd - usd),
+    perProviderUsd: Object.fromEntries(Object.entries(perProviderUsd).map(([p, cap]) => [p, left(cap - (byProvider[p] || 0))])),
+    prior: { attempts: priorStates.length, usd: +usd.toFixed(6), calls, byProvider },
+  };
+}

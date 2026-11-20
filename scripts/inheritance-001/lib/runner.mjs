@@ -13,7 +13,7 @@
 import { schemaVersion, seal, sha256, hexId, PROTOCOL } from "./canon.mjs";
 import { publicView } from "./tasks.mjs";
 import { buildContext, buildProducerContext, citedRefs, SYSTEM_PROMPT, ARM_LABELS } from "./context.mjs";
-import { makeArtifact, familyOfModelId } from "./artifacts.mjs";
+import { makeArtifact, familyOfModelId, validateArtifactSemantics } from "./artifacts.mjs";
 import { verifyArtifact } from "./verify.mjs";
 import { scoreOutput, ORACLE } from "./oracle.mjs";
 import { leakIndex, scanText } from "./leak.mjs";
@@ -92,6 +92,15 @@ export async function runStudy({ study, adapter, clock = fixedClock(study.start_
         production: { tokens_in: used.in, tokens_out: used.out, usd: mock ? 0 : usd, cost_status: mock ? "mock-zero" : usd === null ? "unknown" : "priced" },
         createdAt: clock(),
       });
+      // Admission check (Pilot 001, first attempt 2026-11-20: a 8,877-character DeepSeek output passed here and then stopped
+      // the generation-1 freeze). An output that breaks a content rule is set aside here and listed in the run record; it
+      // could never have been shown anyway (the context budget is smaller than the text limit).
+      const problems = validateArtifactSemantics(a);
+      if (problems.length) {
+        counters.producer_inadmissible = (counters.producer_inadmissible || 0) + 1;
+        (counters.inadmissible ||= []).push({ call_id: tracing_id, model_id: c.model_id, reason: String(problems[0]).slice(0, 120), text_chars: a.content.text.length });
+        continue;
+      }
       addArtifact(a);
       addEvaluation(verifyArtifact(a, sealedIndex, { recordedAt: clock(), timer }));
     }

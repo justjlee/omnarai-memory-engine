@@ -42,7 +42,7 @@ import { VERIFIER } from "./lib/verify.mjs";
 import { ORACLE } from "./lib/oracle.mjs";
 import { drawFamilySet } from "./lib/families.mjs";
 import { familyRecord } from "./lib/tasks.mjs";
-import { checkLiveAuthorization, createLiveAdapter, createSpendGuard } from "./lib/adapters.mjs";
+import { checkLiveAuthorization, createLiveAdapter, createSpendGuard, remainingCaps } from "./lib/adapters.mjs";
 import { priceFor, PRICES_AS_OF } from "./lib/prices.mjs";
 import { envValue } from "../lib/env-value.mjs";
 import { buildProbe, runProbe, renderProbe, PROBES, LATEST_PROBE_ID, calibrationOpSets } from "./lib/probe.mjs";
@@ -206,6 +206,7 @@ async function runModels() {
   else if (insideRepo(realpathSync(sealedFile))) problems.push("the sealed file is inside the repository");
   if (!outDir) problems.push("--out DIR for private results is required");
   else if (insideRepo(outDir)) problems.push("results of a live run are private until review: --out must be outside the repository");
+  if (outDir && existsSync(join(resolve(outDir), "plan.json"))) problems.push("--out already holds a run; a new attempt writes to a new directory, never over an earlier one");
   if (problems.length) { out(`REFUSED: ${problems.join("; ")}`); process.exit(3); }
   const sealed = JSON.parse(readFileSync(sealedFile, "utf8"));
   const registration = existsSync(join(RESEARCH, "registration.json")) ? JSON.parse(readFileSync(join(RESEARCH, "registration.json"), "utf8")) : { status: "draft_unregistered" };
@@ -230,10 +231,25 @@ async function runModels() {
   const needKeys = [...new Set(plan.models.map((m) => KEY_ENV[m.provider])), "BLOB_READ_WRITE_TOKEN"];
   const absent = needKeys.filter((k) => !keys[k]);
   if (absent.length) { out(`REFUSED: ${absent.join(", ")} not found in the env file. Nothing was reserved or called.`); process.exit(3); }
-  const reserve = spawnSync(process.execPath, [join(ROOT, "scripts/budget-preflight.mjs"), "--reserve", String(approval.max_usd), "--label", `inheritance-001 ${plan.study_id}`], { env: { ...process.env, BLOB_READ_WRITE_TOKEN: keys.BLOB_READ_WRITE_TOKEN || "" }, stdio: "inherit" });
-  if (reserve.status !== 0) { out("REFUSED: the shared budget ledger did not accept the reservation."); process.exit(3); }
+  // A re-run under the same approval names its earlier attempts; their recorded spend comes off every cap.
+  const priorStates = [];
+  for (const p of approval.prior_attempts || []) {
+    const f = join(resolve(p.out_dir), "guard-state.json");
+    if (!existsSync(f)) { out(`REFUSED: earlier attempt ${p.out_dir} has no guard-state.json; its spend cannot be counted. Nothing was reserved or called.`); process.exit(3); }
+    priorStates.push(JSON.parse(readFileSync(f, "utf8")));
+  }
+  const caps = remainingCaps({ maxCalls: approval.max_calls, maxUsd: approval.max_usd, perProviderUsd: approval.per_provider_usd || {} }, priorStates);
+  if (priorStates.length) out(`Earlier attempts: ${caps.prior.attempts}, $${caps.prior.usd} recorded, ${caps.prior.calls} calls. Left for this attempt: $${caps.maxUsd}, ${caps.maxCalls} calls.`);
+  // The ledger reserve: a re-run whose approval names the reservation already made for this study does not reserve twice.
+  const existing = approval.ledger_reservation;
+  if (existing && existing.label === `inheritance-001 ${plan.study_id}` && Number(existing.usd) >= approval.max_usd) {
+    out(`Ledger: using the reservation already made for this study ($${existing.usd}, ${existing.reserved_at}); nothing new reserved.`);
+  } else {
+    const reserve = spawnSync(process.execPath, [join(ROOT, "scripts/budget-preflight.mjs"), "--reserve", String(approval.max_usd), "--label", `inheritance-001 ${plan.study_id}`], { env: { ...process.env, BLOB_READ_WRITE_TOKEN: keys.BLOB_READ_WRITE_TOKEN || "" }, stdio: "inherit" });
+    if (reserve.status !== 0) { out("REFUSED: the shared budget ledger did not accept the reservation."); process.exit(3); }
+  }
   const killFile = join(RESEARCH, "KILL");
-  const guard = createSpendGuard({ maxCalls: approval.max_calls, maxUsd: approval.max_usd, perProviderUsd: approval.per_provider_usd || {}, onDate: study.price_date, killSwitch: () => existsSync(killFile) });
+  const guard = createSpendGuard({ maxCalls: caps.maxCalls, maxUsd: caps.maxUsd, perProviderUsd: caps.perProviderUsd, onDate: study.price_date, killSwitch: () => existsSync(killFile) });
   // Only the provider keys reach the adapter.
   const providerKeys = Object.fromEntries(Object.entries(keys).filter(([k]) => Object.values(KEY_ENV).includes(k)));
   const live = createLiveAdapter({ authorization, keys: providerKeys });

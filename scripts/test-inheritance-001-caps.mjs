@@ -9,7 +9,7 @@ import { checkLiveAuthorization, createHttpsTransport, parseProviderResponse } f
 import { priceFor } from "./inheritance-001/lib/prices.mjs";
 import { buildPlan, outputCapFor } from "./inheritance-001/lib/plan.mjs";
 import { runStudy } from "./inheritance-001/lib/runner.mjs";
-import { createSpendGuard } from "./inheritance-001/lib/adapters.mjs";
+import { createSpendGuard, remainingCaps } from "./inheritance-001/lib/adapters.mjs";
 import { drawFamilySet, setKey } from "./inheritance-001/lib/families.mjs";
 import { calibrationOpSets } from "./inheritance-001/lib/probe.mjs";
 import { PILOT_MODELS, pilotStudy, projectionFamilies, SEALED_DRAW, sealedPilotStudy } from "./inheritance-001/fixtures/pilot-001.mjs";
@@ -206,4 +206,33 @@ test("[K9] the plan a live pilot is approved for is the plan it records: caps in
   const r = await runStudy({ study: reg, adapter, guard: createSpendGuard({ mock: true }) });
   assert.equal(r.run.plan_sha256, h, "the run records the approved hash");
   assert.equal(r.store.list("study")[0].preregistration.status, "registered", "the analysis sees the registration");
+});
+
+test("[K10] regression (Pilot 001, first attempt): an oversize producer output is set aside at admission and the run completes", async () => {
+  const L = livePilot(17);
+  let first = true;
+  const long = { ...L.adapter, async call(req) {
+    const r = await L.adapter.call(req);
+    if (first && req.tracing_id.startsWith("P-") && !r.error) { first = false; return { ...r, output: `${r.output}\n${"x".repeat(9000)}` }; }
+    return r;
+  } };
+  const store = createMemoryLabStore();
+  const result = await runStudy({ study: L.study, adapter: long, guard: L.guard, clock: () => "2026-11-21T00:00:00.000Z", store });
+  assert.equal(result.run.status, "completed");
+  assert.equal(result.run.counters.producer_inadmissible, 1);
+  assert.match(result.run.counters.inadmissible[0].reason, /text longer than 8000/);
+  assert.ok(result.run.counters.inadmissible[0].text_chars > 8000);
+  assert.ok(store.list("artifact").every((a) => a.content.text.length <= 8000), "nothing oversize entered the pool");
+  assert.equal(store.list("trial").length, 288);
+});
+
+test("[K11] a re-run under the same approval: earlier recorded spend comes off every cap", () => {
+  const prior = [{ calls: 57, usd: 1.020741, byProvider: { deepseek: 0.124893, gemini: 0.895848 } }];
+  const c = remainingCaps({ maxCalls: 688, maxUsd: 17, perProviderUsd: { anthropic: 7, openai: 7, gemini: 4, deepseek: 1 } }, prior);
+  assert.equal(c.maxCalls, 631);
+  assert.equal(c.maxUsd, 15.979259);
+  assert.deepEqual(c.perProviderUsd, { anthropic: 7, openai: 7, gemini: 3.104152, deepseek: 0.875107 });
+  assert.equal(c.prior.usd, 1.020741);
+  assert.deepEqual(remainingCaps({ maxCalls: 5, maxUsd: 1 }, []), { maxCalls: 5, maxUsd: 1, perProviderUsd: {}, prior: { attempts: 0, usd: 0, calls: 0, byProvider: {} } });
+  assert.equal(remainingCaps({ maxCalls: 5, maxUsd: 1 }, [{ usd: 3, calls: 9 }]).maxUsd, 0, "never negative");
 });
