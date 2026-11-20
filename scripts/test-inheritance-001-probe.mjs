@@ -84,6 +84,20 @@ test("[Q4] the spend guard stops the probe before a call whose worst case would 
   assert.ok(g.precheck({ provider: "xai", model_id: "grok-4.7", tokensIn: 0, maxOut: 100 }).worst_usd >= (9000 * 6) / 1e6, "worst case uses the largest output seen");
 });
 
+test("[Q6] regression (2026-11-20 probe): a timed-out call is charged at its worst case, never $0, so the cap still binds", async () => {
+  const sent = [];
+  const timeoutTransport = async (req) => { sent.push(req); throw Object.assign(new Error("timeout"), { code: "TIMEOUT" }); };
+  const adapter = createLiveAdapter({ authorization: auth(), keys: { ANTHROPIC_API_KEY: "sk-ant-test-0000000000", XAI_API_KEY: "xai-test-00000000000000" }, transport: timeoutTransport });
+  const guard = createSpendGuard({ maxCalls: 32, maxUsd: 0.1, onDate: "2026-11-20" });
+  const { records, summary } = await runProbe({ ...P, adapter, guard });
+  const timedOut = records.filter((r) => r.outcome === "timeout");
+  assert.ok(timedOut.length > 0 && timedOut.every((r) => r.cost_status === "assumed-worst-case" && r.cost_usd > 0), "no timed-out call is free");
+  assert.ok(guard.state.assumedCalls === timedOut.length && guard.state.usd > 0);
+  assert.ok(guard.state.usd <= 0.1, "the cap held");
+  assert.ok(sent.length < 32, `the run stopped at the cap (${sent.length} sent)`);
+  assert.equal(summary.assumed_worst_case_calls, timedOut.length);
+});
+
 test("[Q5] summary arithmetic: ceiling and floor branches fire on the stated thresholds", () => {
   const mk = (rate) => P.plan.calls.map((c, i) => ({ ...c, outcome: "pass", score: i % 16 < rate * 16 ? 1 : 0, usage: { out: 100 }, cost_usd: 0.001, cost_status: "priced" }));
   assert.equal(summarizeProbe(P.plan, mk(0.8)).decision.difficulty.branch, 0);

@@ -312,7 +312,8 @@
                 "enum": [
                   "priced",
                   "unknown",
-                  "mock-zero"
+                  "mock-zero",
+                  "assumed-worst-case"
                 ]
               },
               "price_basis": {
@@ -355,7 +356,8 @@
           "enum": [
             "priced",
             "unknown",
-            "mock-zero"
+            "mock-zero",
+            "includes-assumed"
           ]
         }
       }

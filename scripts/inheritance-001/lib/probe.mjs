@@ -143,6 +143,7 @@ export function summarizeProbe(plan, records) {
     decision: { difficulty, output_cap: { share_stopped_at_cap: +capShare.toFixed(3), fired: capShare > 0.10, ...(capShare > 0.10 ? { then: DECISION_RULE.output_cap.then } : {}) } },
     spend_usd_recorded: +totalUsd.toFixed(5),
     unknown_cost_calls: records.filter((r) => r.cost_status === "unknown").length,
+    assumed_worst_case_calls: records.filter((r) => r.cost_status === "assumed-worst-case").length,
     note: DECISION_RULE.note,
   };
 }
@@ -150,7 +151,7 @@ export function summarizeProbe(plan, records) {
 export function renderProbe(summary, { approvedWords, ranAt }) {
   const L = ["# Calibration probe IS1-PROBE-CAL-001: results (private until reviewed)", ""];
   L.push(`Ran ${ranAt}. Approved by xz: "${approvedWords}". Arm A only, public calibration families. **Not a result about inheritance.**`, "");
-  L.push(`Calls: ${summary.calls_made} of ${summary.calls_planned}. Recorded spend: **$${summary.spend_usd_recorded.toFixed(4)}** (unknown-cost calls: ${summary.unknown_cost_calls}).`, "");
+  L.push(`Calls: ${summary.calls_made} of ${summary.calls_planned}. Recorded spend: **$${summary.spend_usd_recorded.toFixed(4)}** (unknown-cost calls: ${summary.unknown_cost_calls}; charged at worst case because they timed out: ${summary.assumed_worst_case_calls ?? 0}).`, "");
   L.push("| Model (requested) | Returned id | Scored | Pass rate | Outcomes | Stopped at cap | Output tokens median / p90 / max | USD |", "|---|---|---:|---:|---|---:|---|---:|");
   for (const m of summary.by_model) L.push(`| \`${m.model_id}\` | ${m.returned_ids.map((x) => `\`${x}\``).join(", ") || "—"} | ${m.scored} | ${m.pass_rate ?? "—"} | ${Object.entries(m.outcomes).map(([k, v]) => `${k} ${v}`).join(", ")} | ${m.stopped_at_cap} | ${m.output_tokens.median ?? "—"} / ${m.output_tokens.p90 ?? "—"} / ${m.output_tokens.max ?? "—"} | ${m.usd ?? "unknown"} |`);
   L.push("", "| Calibration family | Scored | Pass rate |", "|---|---:|---:|");

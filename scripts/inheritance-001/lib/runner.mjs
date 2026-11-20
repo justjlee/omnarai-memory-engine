@@ -140,7 +140,7 @@ export async function runStudy({ study, adapter, clock = fixedClock(study.start_
       snapshot_sha256: snapshot.sha256,
       context: { sha256: ctx.digest, tokens_est: ctx.tokens, chars: ctx.chars, artifact_ids: ctx.included, producer_families: ctx.producer_families, poison_ids: ctx.poison, volume_match: ctx.volume, leak_blocked: leaks.length > 0 },
       budget: { reasoning_allowance_tokens: ctx.reasoning_allowance_tokens, aplus_matching: ctx.matching },
-      call: { tracing_id, attempts, usage, cost_usd: mock ? 0 : usd, cost_status: mock ? "mock-zero" : usd === null ? "unknown" : "priced" },
+      call: { tracing_id, attempts, usage, cost_usd: mock ? 0 : usd, cost_status: mock ? "mock-zero" : usd === null ? "unknown" : attempts.some((x) => x.cost_status === "assumed-worst-case") ? "includes-assumed" : "priced" },
       output: result?.output != null ? { sha256: sha256(result.output), stored: "sealed-local" } : null,
       outcome,
       score,

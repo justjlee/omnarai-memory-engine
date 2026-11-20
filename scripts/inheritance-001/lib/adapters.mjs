@@ -40,7 +40,7 @@ export function redact(s, extraSecrets = []) {
 // ── Spend guard: hard numeric caps, worst-case pre-check, kill switch ────────────────────────────────────────────────
 export function createSpendGuard({ maxCalls, maxUsd, perProviderUsd = {}, onDate, killSwitch = () => false, mock = false }) {
   if (!mock && (!Number.isInteger(maxCalls) || maxCalls < 0 || !Number.isFinite(maxUsd) || maxUsd < 0)) throw new Error("SPEND_GUARD_NEEDS_FINITE_CAPS");
-  const state = { calls: 0, usd: 0, byProvider: {}, unknownCostCalls: 0, maxOutSeen: {} };
+  const state = { calls: 0, usd: 0, byProvider: {}, unknownCostCalls: 0, maxOutSeen: {}, assumedUsd: 0, assumedCalls: 0 };
   return {
     state,
     // Before a call: worst case = full input + the whole output cap at list price. Refuse if it could cross a cap.
@@ -58,6 +58,15 @@ export function createSpendGuard({ maxCalls, maxUsd, perProviderUsd = {}, onDate
       if (cap !== undefined && (state.byProvider[provider] || 0) + worst > cap) throw new BudgetExhaustedError(`${provider} cap $${cap}`);
       state.calls++;
       return { worst_usd: +worst.toFixed(6) };
+    },
+    // A call that timed out or lost its connection returns no usage, but the provider may still bill it (the 2026-11-20
+    // probe: 13 of 16 grok-4.7 calls ran past 120 s and came back with nothing to count). Such a call is charged at its
+    // pre-call worst case, never $0, and the charge is marked as assumed.
+    assume({ provider, worst_usd }) {
+      if (mock) return { usd: 0, status: "mock-zero" };
+      state.usd += worst_usd; state.assumedUsd += worst_usd; state.assumedCalls++;
+      state.byProvider[provider] = (state.byProvider[provider] || 0) + worst_usd;
+      return { usd: +worst_usd.toFixed(6), status: "assumed-worst-case", price_basis: null };
     },
     // Priced by the RETURNED id when the table knows it (a dated snapshot resolves to its base id), else by the requested
     // id; the basis is recorded so a reader can tell which.
@@ -80,7 +89,8 @@ export async function callWithRetries(adapter, request, { maxAttempts = 3, guard
     const attempt_id = `${request.tracing_id}-a${attempt}`;
     const pre = guard.precheck({ provider: request.provider, model_id: request.model_id, tokensIn: request.tokens_in_est, maxOut: request.max_output_tokens });
     const r = await adapter.call({ ...request, attempt });
-    const cost = guard.record({ provider: request.provider, model_id: request.model_id, returned_model_id: r.provider_returned_model_id, usage: r.usage });
+    const unseen = r.error && !r.usage && ["TIMEOUT", "TRANSPORT_ERROR"].includes(r.error.code);
+    const cost = unseen ? guard.assume({ provider: request.provider, worst_usd: pre.worst_usd }) : guard.record({ provider: request.provider, model_id: request.model_id, returned_model_id: r.provider_returned_model_id, usage: r.usage });
     const rec = {
       attempt_id,
       status: r.error ? (r.error.code === "TIMEOUT" ? "timeout" : "error") : "ok",
