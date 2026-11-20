@@ -15,6 +15,9 @@
 //   draw-sealed --out FILE                draw the sealed held-out families from a fresh secret seed (FILE outside the repo)
 //   run-models --sealed FILE --approval FILE --out DIR [--live --yes --experiment ID --max-usd N --max-calls N]
 //                                         REFUSES unless every live-run condition holds (see lib/adapters.mjs)
+//   probe [--out DIR]                     stage-0 calibration probe: offline it prints the plan, hash and worst-case cost;
+//         --live --yes --experiment IS1-PROBE-CAL-001 --max-usd N --max-calls N --approval FILE --env-file FILE --out DIR
+//                                         runs it (arm A, public calibration families) under the same gate, minus registration
 import { mkdirSync, writeFileSync, readFileSync, existsSync, realpathSync } from "node:fs";
 import { join, resolve, dirname, relative, isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -35,6 +38,7 @@ import { familyRecord } from "./lib/tasks.mjs";
 import { checkLiveAuthorization, createLiveAdapter, createSpendGuard } from "./lib/adapters.mjs";
 import { priceFor, PRICES_AS_OF } from "./lib/prices.mjs";
 import { envValue } from "../lib/env-value.mjs";
+import { buildProbe, runProbe, renderProbe, PROBE_ID } from "./lib/probe.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const RESEARCH = join(ROOT, "research/inheritance-001");
@@ -45,7 +49,7 @@ const insideRepo = (p) => { const r = relative(ROOT, resolve(p)); return !r.star
 const out = (...a) => process.stdout.write(a.join(" ") + "\n");
 
 const OFFLINE = ["demo", "summarize", "verify", "validate-instrument", "budget", "plan", "draw-sealed"];
-if (OFFLINE.includes(cmd)) installNetworkGuard();
+if (OFFLINE.includes(cmd) || (cmd === "probe" && !argv.includes("--live"))) installNetworkGuard();
 
 async function demo() {
   const world = opt("--world", "positive-shared");
@@ -187,6 +191,48 @@ async function runModels() {
   out(`Live run finished: ${guard.state.calls} calls, $${guard.state.usd.toFixed(4)}. Results (private): ${outDir}`);
 }
 
+async function probe() {
+  const params = pilotStudy({ families: projectionFamilies(), salt: "x" }).params;
+  const { plan, tasks, contexts } = buildProbe({ consumers: PILOT_MODELS.consumers, params });
+  const live = argv.includes("--live");
+  const outDir = opt("--out");
+  if (!live) {
+    out(`Probe ${PROBE_ID} (offline preview, nothing called): ${plan.calls.length} calls, arm A, ${plan.families.length} public calibration families x 4 tasks.`);
+    out(`  plan_sha256 ${plan.plan_sha256}`);
+    for (const m of plan.projection.by_model) out(`  ${m.model_id}: ${m.calls} calls, worst case $${m.usd_worst}`);
+    out(`  worst case total $${plan.projection.usd_worst}`);
+    if (outDir) { mkdirSync(resolve(outDir), { recursive: true }); writeFileSync(join(resolve(outDir), "probe-plan.json"), JSON.stringify(plan, null, 2) + "\n"); }
+    return;
+  }
+  const approvalFile = opt("--approval"), envFile = opt("--env-file");
+  const problems = [];
+  if (!outDir || insideRepo(outDir)) problems.push("--out DIR outside the repository is required (probe results are private until reviewed)");
+  if (!envFile || !existsSync(envFile)) problems.push("--env-file FILE with the provider keys is required");
+  const approval = approvalFile && existsSync(approvalFile) ? JSON.parse(readFileSync(approvalFile, "utf8")) : null;
+  const authorization = { approval, preregistration: null, plan, planSha256: plan.plan_sha256, argv: process.argv, env: process.env, requireRegistration: false };
+  const missing = [...problems, ...checkLiveAuthorization(authorization)];
+  if (missing.length) { out("REFUSED: no model was called and nothing was spent. Missing:"); for (const m of missing) out(`  - ${m}`); process.exit(3); }
+  const keys = {};
+  for (const line of readFileSync(envFile, "utf8").split("\n")) { const m = /^\s*(ANTHROPIC_API_KEY|XAI_API_KEY|BLOB_READ_WRITE_TOKEN)\s*=\s*(.*)$/.exec(line); if (m) keys[m[1]] = envValue(m[2]); }
+  for (const k of ["ANTHROPIC_API_KEY", "XAI_API_KEY", "BLOB_READ_WRITE_TOKEN"]) if (!keys[k]) { out(`REFUSED: ${k} not found in the env file.`); process.exit(3); }
+  const reserve = spawnSync(process.execPath, [join(ROOT, "scripts/budget-preflight.mjs"), "--reserve", String(approval.max_usd), "--label", `inheritance-001 ${PROBE_ID}`], { env: { ...process.env, BLOB_READ_WRITE_TOKEN: keys.BLOB_READ_WRITE_TOKEN }, stdio: "inherit" });
+  if (reserve.status !== 0) { out("REFUSED: the shared budget ledger did not accept the reservation. Nothing was called."); process.exit(3); }
+  const killFile = join(RESEARCH, "KILL");
+  const guard = createSpendGuard({ maxCalls: approval.max_calls, maxUsd: approval.max_usd, perProviderUsd: approval.per_provider_usd || {}, onDate: "2026-11-20", killSwitch: () => existsSync(killFile) });
+  const adapter = createLiveAdapter({ authorization, keys: { ANTHROPIC_API_KEY: keys.ANTHROPIC_API_KEY, XAI_API_KEY: keys.XAI_API_KEY } });
+  const ranAt = new Date().toISOString();
+  const { records, outputs, summary } = await runProbe({ plan, tasks, contexts, adapter, guard, onCall: (r) => out(`  ${r.call_id} ${r.model_id} -> ${r.outcome}${r.stopped_at_cap ? " (cap)" : ""} out=${r.usage?.out ?? "?"} $${r.cost_usd ?? "?"}`) });
+  const dir = resolve(outDir);
+  mkdirSync(join(dir, "raw"), { recursive: true });
+  writeFileSync(join(dir, "probe-plan.json"), JSON.stringify(plan, null, 2) + "\n");
+  writeFileSync(join(dir, "probe-records.jsonl"), records.map((r) => JSON.stringify(r)).join("\n") + "\n");
+  writeFileSync(join(dir, "probe-summary.json"), JSON.stringify({ ...summary, ran_at: ranAt, guard: guard.state }, null, 2) + "\n");
+  writeFileSync(join(dir, "raw", "outputs.jsonl"), outputs.map((r) => JSON.stringify(r)).join("\n") + "\n");
+  writeFileSync(join(dir, "raw", "tasks.sealed.jsonl"), tasks.map((t) => JSON.stringify(t.sealed)).join("\n") + "\n");
+  writeFileSync(join(dir, "PROBE-RESULTS.md"), renderProbe(summary, { approvedWords: approval.approval_words, ranAt }));
+  out(`Probe finished: ${summary.calls_made} calls, recorded $${summary.spend_usd_recorded}. Results (private): ${dir}`);
+}
+
 function planCmd() {
   const { study } = demoStudy({ world: opt("--world", "positive-shared") });
   const { plan } = buildPlan(study);
@@ -195,6 +241,6 @@ function planCmd() {
   out(`plan ${plan.plan_sha256} → ${file}`);
 }
 
-const COMMANDS = { demo, summarize: () => { const d = resolve(opt("--out")); const r = summarizeDir(d); out(`summary ${r.id} → ${d}/summary.json, REPORT.md`); }, verify: () => { const r = verifyRunDir(resolve(opt("--out"))); out(JSON.stringify(r)); if (!r.ok) process.exit(1); }, "validate-instrument": validateInstrument, budget, plan: planCmd, "draw-sealed": drawSealed, "run-models": runModels };
+const COMMANDS = { demo, summarize: () => { const d = resolve(opt("--out")); const r = summarizeDir(d); out(`summary ${r.id} → ${d}/summary.json, REPORT.md`); }, verify: () => { const r = verifyRunDir(resolve(opt("--out"))); out(JSON.stringify(r)); if (!r.ok) process.exit(1); }, "validate-instrument": validateInstrument, budget, plan: planCmd, "draw-sealed": drawSealed, "run-models": runModels, probe };
 if (!COMMANDS[cmd]) { out(`usage: lab.mjs <${Object.keys(COMMANDS).join("|")}> [options]`); process.exit(2); }
 await COMMANDS[cmd]();

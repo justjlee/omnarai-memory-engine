@@ -40,7 +40,7 @@ export function redact(s, extraSecrets = []) {
 // ── Spend guard: hard numeric caps, worst-case pre-check, kill switch ────────────────────────────────────────────────
 export function createSpendGuard({ maxCalls, maxUsd, perProviderUsd = {}, onDate, killSwitch = () => false, mock = false }) {
   if (!mock && (!Number.isInteger(maxCalls) || maxCalls < 0 || !Number.isFinite(maxUsd) || maxUsd < 0)) throw new Error("SPEND_GUARD_NEEDS_FINITE_CAPS");
-  const state = { calls: 0, usd: 0, byProvider: {}, unknownCostCalls: 0 };
+  const state = { calls: 0, usd: 0, byProvider: {}, unknownCostCalls: 0, maxOutSeen: {} };
   return {
     state,
     // Before a call: worst case = full input + the whole output cap at list price. Refuse if it could cross a cap.
@@ -50,7 +50,9 @@ export function createSpendGuard({ maxCalls, maxUsd, perProviderUsd = {}, onDate
       if (state.calls + 1 > maxCalls) throw new BudgetExhaustedError(`call cap ${maxCalls} reached`);
       const p = priceFor(model_id, onDate);
       if (!p) throw new BudgetExhaustedError(`no price on file for ${model_id}; cannot bound the spend`);
-      const worst = (tokensIn * p.in + maxOut * p.out) / 1e6;
+      // A provider may bill more output than the cap asked for (reasoning tokens): the worst case is the larger of the
+      // cap and the largest output this model has actually returned in this run.
+      const worst = (tokensIn * p.in + Math.max(maxOut, state.maxOutSeen[model_id] || 0) * p.out) / 1e6;
       if (state.usd + worst > maxUsd) throw new BudgetExhaustedError(`worst case $${(state.usd + worst).toFixed(4)} would cross the $${maxUsd} cap`);
       const cap = perProviderUsd[provider];
       if (cap !== undefined && (state.byProvider[provider] || 0) + worst > cap) throw new BudgetExhaustedError(`${provider} cap $${cap}`);
@@ -62,6 +64,7 @@ export function createSpendGuard({ maxCalls, maxUsd, perProviderUsd = {}, onDate
     record({ provider, model_id, returned_model_id = null, usage }) {
       if (mock) return { usd: 0, status: "mock-zero" };
       const basis = returned_model_id && priceFor(returned_model_id, onDate) ? returned_model_id : model_id;
+      state.maxOutSeen[model_id] = Math.max(state.maxOutSeen[model_id] || 0, usage?.out || 0);
       const c = { ...costOf(basis, usage?.in || 0, usage?.out || 0, { onDate }), price_basis: basis };
       if (c.usd === null) state.unknownCostCalls++;
       else { state.usd += c.usd; state.byProvider[provider] = (state.byProvider[provider] || 0) + c.usd; }
@@ -101,7 +104,9 @@ export async function callWithRetries(adapter, request, { maxAttempts = 3, guard
 }
 
 // ── The live gate ────────────────────────────────────────────────────────────────────────────────────────────────────
-export function checkLiveAuthorization({ approval, preregistration, plan, planSha256, argv = [], env = {} }) {
+// requireRegistration=false is ONLY for a calibration probe whose results never enter the study (public calibration
+// families, arm A only); everything else about the gate is identical.
+export function checkLiveAuthorization({ approval, preregistration, plan, planSha256, argv = [], env = {}, requireRegistration = true }) {
   const missing = [];
   const flag = (name) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
   if (!approval) missing.push("no approval file (research/inheritance-001/approvals/<study>.json, written from xz's words)");
@@ -113,7 +118,7 @@ export function checkLiveAuthorization({ approval, preregistration, plan, planSh
     if (!Number.isFinite(approval.max_usd) || approval.max_usd <= 0) missing.push("approval lacks a USD cap");
     for (const m of plan?.models || []) if (!(approval.models || []).includes(m.model_id)) missing.push(`approval does not list model ${m.model_id}`);
   }
-  if (preregistration?.status !== "registered" || !/^[0-9a-f]{7,40}$/.test(preregistration?.registered_commit_sha || "")) missing.push("preregistration is not registered with a pushed commit sha");
+  if (requireRegistration && (preregistration?.status !== "registered" || !/^[0-9a-f]{7,40}$/.test(preregistration?.registered_commit_sha || ""))) missing.push("preregistration is not registered with a pushed commit sha");
   if (!argv.includes("--live") || !argv.includes("--yes")) missing.push("--live --yes not given");
   if (flag("--experiment") !== plan?.study_id) missing.push("--experiment <study id> not given or wrong");
   if (approval && Number(flag("--max-usd")) !== approval.max_usd) missing.push("--max-usd must repeat the approved cap");
@@ -171,9 +176,13 @@ export function parseProviderResponse(provider, res) {
   const reqId = res.headers?.["request-id"] || res.headers?.["x-request-id"] || d.id || d.responseId || null;
   if (res.status === 429 || res.status >= 500) return { error: { code: `HTTP_${res.status}`, retryable: true }, request_id: reqId, duration_ms: res.duration_ms, usage: null };
   if (res.status >= 400 || d.error) return { error: { code: `HTTP_${res.status}`, detail: d.error?.message || res.text?.slice(0, 200), retryable: false }, request_id: reqId, duration_ms: res.duration_ms, usage: null };
-  if (provider === "anthropic") return { provider_returned_model_id: d.model || null, output: (d.content || []).map((c) => c.text || "").join(""), usage: { in: d.usage?.input_tokens || 0, out: d.usage?.output_tokens || 0 }, request_id: reqId, duration_ms: res.duration_ms, provider_response_metadata: { stop_reason: d.stop_reason || null }, error: null };
+  if (provider === "anthropic") return { provider_returned_model_id: d.model || null, output: (d.content || []).map((c) => c.text || "").join(""), usage: { in: d.usage?.input_tokens || 0, out: d.usage?.output_tokens || 0 }, request_id: reqId, duration_ms: res.duration_ms, provider_response_metadata: { stop_reason: d.stop_reason || null, raw_usage: d.usage || null }, error: null };
   if (provider === "gemini") return { provider_returned_model_id: d.modelVersion || null, output: d.candidates?.[0]?.content?.parts?.map((p) => p.text || "").join("") || "", usage: { in: d.usageMetadata?.promptTokenCount || 0, out: (d.usageMetadata?.candidatesTokenCount || 0) + (d.usageMetadata?.thoughtsTokenCount || 0) }, request_id: reqId, duration_ms: res.duration_ms, provider_response_metadata: { finish_reason: d.candidates?.[0]?.finishReason || null }, error: null };
-  return { provider_returned_model_id: d.model || null, output: d.choices?.[0]?.message?.content || "", usage: { in: d.usage?.prompt_tokens || 0, out: d.usage?.completion_tokens || 0 }, request_id: reqId, duration_ms: res.duration_ms, provider_response_metadata: { finish_reason: d.choices?.[0]?.finish_reason || null }, error: null };
+  // xAI reports reasoning tokens in completion_tokens_details; whether completion_tokens already includes them is not
+  // verified here, so they are ADDED (a possible over-count — the safe direction for a spend cap) and both raw figures kept.
+  const reasoning = d.usage?.completion_tokens_details?.reasoning_tokens || 0;
+  const out = (d.usage?.completion_tokens || 0) + (provider === "xai" ? reasoning : 0);
+  return { provider_returned_model_id: d.model || null, output: d.choices?.[0]?.message?.content || "", usage: { in: d.usage?.prompt_tokens || 0, out }, request_id: reqId, duration_ms: res.duration_ms, provider_response_metadata: { finish_reason: d.choices?.[0]?.finish_reason || null, raw_usage: d.usage || null, reasoning_tokens_added: provider === "xai" ? reasoning : 0 }, error: null };
 }
 
 export function createLiveAdapter({ authorization, keys, transport = null }) {
