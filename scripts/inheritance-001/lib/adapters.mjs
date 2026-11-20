@@ -14,12 +14,16 @@
 //   3. the command line repeats the experiment id, --max-usd and --max-calls, matching the approval, plus --live --yes;
 //   4. OMNARAI_LAB_LIVE=1 in the environment;
 //   5. every model in the plan has a price on file (an unknown price cannot be bounded);
-//   6. the shared $95 ledger reserve succeeded (scripts/budget-preflight.mjs, run by run-models before the first call).
+//   6. the shared $95 ledger reserve succeeded (scripts/budget-preflight.mjs, run by run-models before the first call);
+//   7. every model has a DOCUMENTED, provider-enforced bound on all billed output, reasoning included, and the plan records
+//      the reasoning controls that bound relies on (lib/caps.mjs; added after the 2026-11-20 probe, where grok-4.7 billed
+//      reasoning far past its max_tokens).
 // The transport (node:https, keys in headers only — never in a URL) is constructed only after all of that.
 import https from "node:https";
 import { sha256 } from "./canon.mjs";
 import { costOf, priceFor } from "./prices.mjs";
 import { familyOfModelId } from "./identity.mjs";
+import { capProblems, controlsFor } from "./caps.mjs";
 
 export class SpendRefusedError extends Error {
   constructor(missing) { super(`SPEND_REFUSED: ${missing.join("; ")}`); this.code = "SPEND_REFUSED"; this.missing = missing; }
@@ -135,6 +139,7 @@ export function checkLiveAuthorization({ approval, preregistration, plan, planSh
   if (approval && Number(flag("--max-calls")) !== approval.max_calls) missing.push("--max-calls must repeat the approved call cap");
   if (env.OMNARAI_LAB_LIVE !== "1") missing.push("OMNARAI_LAB_LIVE=1 not set");
   for (const m of plan?.models || []) if (!priceFor(m.model_id)) missing.push(`no price on file for ${m.model_id}`);
+  for (const m of plan?.models || []) missing.push(...capProblems(m));
   return missing;
 }
 
@@ -160,23 +165,31 @@ function postJSON(url, headers, body, timeoutMs) {
 }
 
 // One request per provider. Keys travel in headers (Gemini: x-goog-api-key), never in a URL or a log line.
-export function createHttpsTransport(keys) {
+// Every request carries the model's documented reasoning controls (lib/caps.mjs) next to the output field the provider
+// documents as bounding ALL billed output. Gemini goes through the Interactions API, the endpoint whose max_output_tokens
+// is documented to include thought tokens; generateContent's maxOutputTokens is not, so it is not used.
+export function createHttpsTransport(keys, { post = postJSON } = {}) {
   return async function send({ provider, model_id, input, temperature, max_output_tokens, timeout_ms }) {
     const msgs = [{ role: "user", content: input.user }];
+    const controls = controlsFor(model_id) || {};
     if (provider === "anthropic") {
-      return postJSON("https://api.anthropic.com/v1/messages", { "x-api-key": keys.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-        JSON.stringify({ model: model_id, max_tokens: max_output_tokens, ...(input.system ? { system: input.system } : {}), ...(temperature != null ? { temperature } : {}), messages: msgs }), timeout_ms);
+      // API version 2026-10-21, the one the effort docs' examples use. It rejects temperature/top_p/top_k on every model
+      // (Sonnet 5.5 already rejects non-default values), so no sampling field is ever sent here.
+      return post("https://api.anthropic.com/v1/messages", { "x-api-key": keys.ANTHROPIC_API_KEY, "anthropic-version": "2026-10-21", "content-type": "application/json" },
+        JSON.stringify({ model: model_id, max_tokens: max_output_tokens, ...(controls.output_config ? { output_config: controls.output_config } : {}), ...(input.system ? { system: input.system } : {}), messages: msgs }), timeout_ms);
     }
     if (provider === "gemini") {
-      return postJSON(`https://generativelanguage.googleapis.com/v1beta/models/${model_id}:generateContent`, { "x-goog-api-key": keys.GEMINI_API_KEY, "content-type": "application/json" },
-        JSON.stringify({ ...(input.system ? { systemInstruction: { parts: [{ text: input.system }] } } : {}), contents: [{ role: "user", parts: [{ text: input.user }] }], generationConfig: { maxOutputTokens: max_output_tokens, ...(temperature != null ? { temperature } : {}) } }), timeout_ms);
+      return post("https://generativelanguage.googleapis.com/v1beta/interactions", { "x-goog-api-key": keys.GEMINI_API_KEY, "content-type": "application/json" },
+        JSON.stringify({ model: model_id, input: input.user, ...(input.system ? { system_instruction: input.system } : {}), generation_config: { max_output_tokens, ...(controls.thinking_level ? { thinking_level: controls.thinking_level } : {}), ...(temperature != null ? { temperature } : {}) }, store: false }), timeout_ms);
     }
     const base = { openai: "https://api.openai.com/v1", xai: "https://api.x.ai/v1", deepseek: "https://api.deepseek.com" }[provider];
     const key = { openai: keys.OPENAI_API_KEY, xai: keys.XAI_API_KEY, deepseek: keys.DEEPSEEK_API_KEY }[provider];
     if (!base) throw new Error(`UNKNOWN_PROVIDER ${provider}`);
-    const capField = provider === "openai" ? "max_completion_tokens" : "max_tokens";
-    return postJSON(`${base}/chat/completions`, { authorization: `Bearer ${key}`, "content-type": "application/json" },
-      JSON.stringify({ model: model_id, [capField]: max_output_tokens, ...(temperature != null ? { temperature } : {}), messages: [...(input.system ? [{ role: "system", content: input.system }] : []), ...msgs] }), timeout_ms);
+    // OpenAI and xAI document max_completion_tokens (max_tokens is deprecated there); DeepSeek documents max_tokens.
+    const capField = provider === "deepseek" ? "max_tokens" : "max_completion_tokens";
+    const extra = { ...(controls.reasoning_effort ? { reasoning_effort: controls.reasoning_effort } : {}), ...(controls.thinking ? { thinking: controls.thinking } : {}) };
+    return post(`${base}/chat/completions`, { authorization: `Bearer ${key}`, "content-type": "application/json" },
+      JSON.stringify({ model: model_id, [capField]: max_output_tokens, ...extra, ...(temperature != null ? { temperature } : {}), messages: [...(input.system ? [{ role: "system", content: input.system }] : []), ...msgs] }), timeout_ms);
   };
 }
 
@@ -187,6 +200,14 @@ export function parseProviderResponse(provider, res) {
   if (res.status === 429 || res.status >= 500) return { error: { code: `HTTP_${res.status}`, retryable: true }, request_id: reqId, duration_ms: res.duration_ms, usage: null };
   if (res.status >= 400 || d.error) return { error: { code: `HTTP_${res.status}`, detail: d.error?.message || res.text?.slice(0, 200), retryable: false }, request_id: reqId, duration_ms: res.duration_ms, usage: null };
   if (provider === "anthropic") return { provider_returned_model_id: d.model || null, output: (d.content || []).map((c) => c.text || "").join(""), usage: { in: d.usage?.input_tokens || 0, out: d.usage?.output_tokens || 0 }, request_id: reqId, duration_ms: res.duration_ms, provider_response_metadata: { stop_reason: d.stop_reason || null, raw_usage: d.usage || null }, error: null };
+  if (provider === "gemini" && (Array.isArray(d.steps) || d.usage?.total_input_tokens !== undefined)) {
+    // Interactions API. Its documented example has total_tokens = input + output + thought, so the thought tokens are NOT
+    // inside total_output_tokens: billed output = output + thought (the documented cap covers both).
+    const steps = (d.steps || []).filter((st) => !st.type || st.type === "model_output");
+    const text = steps.flatMap((st) => (Array.isArray(st.content) ? st.content : [])).filter((c) => c && (c.type === "text" || c.type === undefined) && typeof c.text === "string").map((c) => c.text).join("");
+    const u = d.usage || {};
+    return { provider_returned_model_id: d.model || null, output: text, usage: { in: u.total_input_tokens || 0, out: (u.total_output_tokens || 0) + (u.total_thought_tokens || 0) }, request_id: reqId, duration_ms: res.duration_ms, provider_response_metadata: { finish_reason: d.status || null, raw_usage: d.usage || null, step_types: (d.steps || []).map((st) => st?.type ?? null) }, error: null };
+  }
   if (provider === "gemini") return { provider_returned_model_id: d.modelVersion || null, output: d.candidates?.[0]?.content?.parts?.map((p) => p.text || "").join("") || "", usage: { in: d.usageMetadata?.promptTokenCount || 0, out: (d.usageMetadata?.candidatesTokenCount || 0) + (d.usageMetadata?.thoughtsTokenCount || 0) }, request_id: reqId, duration_ms: res.duration_ms, provider_response_metadata: { finish_reason: d.candidates?.[0]?.finishReason || null }, error: null };
   // xAI reports reasoning tokens in completion_tokens_details; whether completion_tokens already includes them is not
   // verified here, so they are ADDED (a possible over-count — the safe direction for a spend cap) and both raw figures kept.

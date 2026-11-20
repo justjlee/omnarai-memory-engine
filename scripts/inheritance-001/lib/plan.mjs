@@ -9,6 +9,7 @@ import { schemaVersion, sha256, canonicalJSON, rng, shuffled, hexId, PROTOCOL } 
 import { familyRecord, generateTasks, publicView, EVAL_ROLES } from "./tasks.mjs";
 import { ARMS, baseFrameTokens } from "./context.mjs";
 import { priceFor, PRICES_AS_OF } from "./prices.mjs";
+import { controlsFor } from "./caps.mjs";
 
 export const PLAN_VERSION = "is1-plan/0.1";
 
@@ -144,7 +145,9 @@ export function buildPlan(study) {
     task_counts: Object.fromEntries(families.map((f) => [f.record.id, tasksByFamily.get(f.record.id).length])),
     consumers: study.consumers,
     producers: study.producers,
-    models: models.map((m) => ({ model_id: m.model_id, provider: m.provider })),
+    // A model with a documented output bound carries the reasoning controls that bound relies on, so an approval of this
+    // plan hash also fixes them (the live gate re-checks them against lib/caps.mjs).
+    models: models.map((m) => ({ model_id: m.model_id, provider: m.provider, ...(controlsFor(m.model_id) ? { controls: controlsFor(m.model_id) } : {}) })),
     producer_calls: producerCalls,
     generations,
     blocks,

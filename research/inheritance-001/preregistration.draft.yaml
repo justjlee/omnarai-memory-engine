@@ -22,13 +22,14 @@ design:
   pilot_only: true
   transitions: 1                    # generation-0 producers -> generation-1 consumers; cannot test a ratchet
   producers:                        # model ids as requested; families are taken from the PROVIDER-RETURNED id
-    - { provider: openai,   model_id: gpt-6.1-sol }
-    - { provider: deepseek, model_id: deepseek-v4-pro }
+    - { provider: deepseek, model_id: deepseek-v4-pro, controls: { thinking: { type: disabled } } }
+    - { provider: gemini,   model_id: gemini-4-carbon, api: interactions, controls: { thinking_level: low } }
   consumers:
-    - { provider: anthropic, model_id: claude-sonnet-5-5 }
-    - { provider: xai,       model_id: grok-4.7 }
+    - { provider: anthropic, model_id: claude-sonnet-5-5, controls: { output_config: { effort: medium } } }
+    - { provider: openai,    model_id: gpt-6.1-sol, controls: { reasoning_effort: medium } }
+  output_bounds: every call's max_output_tokens goes in the field its provider documents as bounding ALL billed output, reasoning included (pilot/PROVIDER-CAPS.md, lib/caps.mjs); a model without one is refused
   cross_family_only: true
-  families: { work: 6, eval_anchor: 8, placebo: 2, steps_per_family: 3 }
+  families: { work: 6, eval_anchor: 8, placebo: 2, steps_per_family: 4, excludes_calibration_op_sets: true }
   tasks: { per_work_family: 4, per_eval_family: 3, per_placebo_family: 2, examples: 3, hidden_checks: 8 }
   arms: [A, A+, B, C, D, E]
   primary_comparator: A+
@@ -38,10 +39,11 @@ design:
   base_reasoning_allowance_tokens: 1024
   aplus_matching: extra allowance = C context tokens - A context tokens + amortized curation tokens (token-for-token)
   poison_fraction: 0.34
-  max_output_tokens: 2000
+  max_output_tokens: 3000
+  timeout_seconds: 600              # a timed-out call scores 0 and is charged at its worst case
   temperature: provider default (recorded); seeds are not claimed to make providers deterministic
   ablations: 0                      # deferred; leave-one-out is preregistered only when budgeted
-  calibration_stage: arm A only, 4 public calibration families x 4 tasks x 2 consumers, BEFORE registration; never reused
+  calibration_stage: arm A only, BEFORE registration, public families never reused; probe 1 (3-step, 32 calls) ran 2026-11-20; probe 2 (4-step, 4 families, 12 calls per consumer and 4 per producer) per lib/probe.mjs DECISION_RULE_2
 
 primary_outcome: exact match of the normalized <answer> to the hidden expected output (timeouts and abstentions score 0)
 missing_data: provider errors are missing, excluded pairwise; worst/best-case bounds reported; no re-running of single arms

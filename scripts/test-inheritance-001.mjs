@@ -22,6 +22,7 @@ import { buildSnapshot, assertSnapshotMembers } from "./inheritance-001/lib/snap
 import { buildContext, ARMS, STANDARD_INSTRUCTIONS, DATA_BOUNDARY } from "./inheritance-001/lib/context.mjs";
 import { leakIndex, scanText } from "./inheritance-001/lib/leak.mjs";
 import { checkLiveAuthorization, createLiveAdapter, createSpendGuard, callWithRetries, redact, SpendRefusedError, BudgetExhaustedError } from "./inheritance-001/lib/adapters.mjs";
+import { controlsFor } from "./inheritance-001/lib/caps.mjs";
 import { costOf } from "./inheritance-001/lib/prices.mjs";
 import { validateRecord } from "./inheritance-001/lib/schemas.mjs";
 import { runStudy } from "./inheritance-001/lib/runner.mjs";
@@ -383,7 +384,7 @@ const liveArgv = (a) => ["--live", "--yes", "--experiment", plan.study_id, "--ma
 
 test("[M1] with nothing approved, the live gate refuses and names every missing condition", () => {
   const missing = checkLiveAuthorization({ approval: null, preregistration: { status: "draft_unregistered" }, plan, planSha256: plan.plan_sha256, argv: [], env: {} });
-  for (const re of [/no approval file/, /not registered/, /--live --yes/, /--experiment/, /OMNARAI_LAB_LIVE/, /no price on file for mock-/]) assert.ok(missing.some((m) => re.test(m)), String(re));
+  for (const re of [/no approval file/, /not registered/, /--live --yes/, /--experiment/, /OMNARAI_LAB_LIVE/, /no price on file for mock-/, /no documented, provider-enforced output bound on file for mock-/]) assert.ok(missing.some((m) => re.test(m)), String(re));
   assert.throws(() => createLiveAdapter({ authorization: { approval: null, plan, argv: [], env: {} }, keys: {} }), SpendRefusedError);
 });
 
@@ -400,7 +401,7 @@ test("[M2] an approval for another plan, missing caps or a CLI that does not rep
 });
 
 test("[M3] even when authorized: explicit attempt records, redacted errors, a hard cap checked BEFORE each call, a kill switch", async () => {
-  const realPlan = { study_id: "IS1-STUDY-X", models: [{ model_id: "claude-sonnet-5-5" }] };
+  const realPlan = { study_id: "IS1-STUDY-X", models: [{ model_id: "claude-sonnet-5-5", provider: "anthropic", controls: controlsFor("claude-sonnet-5-5") }] };
   const approval = { study_id: "IS1-STUDY-X", plan_sha256: "p".repeat(64), approved_by: "xz", approved_at: T, approval_words: "Yes", max_calls: 3, max_usd: 0.05, models: ["claude-sonnet-5-5"] };
   const authorization = { approval, preregistration: { status: "registered", registered_commit_sha: "abc1234" }, plan: realPlan, planSha256: "p".repeat(64), argv: ["--live", "--yes", "--experiment", "IS1-STUDY-X", "--max-usd", "0.05", "--max-calls", "3"], env: { OMNARAI_LAB_LIVE: "1" } };
   const KEY = "sk-ant-api03-abcdefghijklmnopqrstuvwxyz";

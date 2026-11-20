@@ -1,33 +1,36 @@
 {
   "projection_only": true,
   "stand_in_families": "public draw 'public-projection-only' — the sealed set is drawn at registration",
-  "plan_sha256_of_projection": "8a24daa5c711a0963e575e52bc817f2c0937719f00f29e134a170e410004bcaa",
+  "plan_sha256_of_projection": "2a0b40003c05dd89be9ea50e6ce20490ba8f7cdeb1adb487027fff45cff8c758",
+  "steps_per_family": 4,
   "calibration_stage": {
+    "probe": "IS1-PROBE-CAL-002",
+    "plan_sha256": "346b0cf3e99724bc7e0cb5cfad387a79b7fb7c636a03b49f24facfa5cb4e5a3a",
     "calls": 32,
-    "usd_worst": 0.5376
+    "usd_worst": 1.0245
   },
   "projection": {
     "prices_as_of": "2026-11-13 / 2026-11-18 provider pages (re-verify before any live run)",
     "price_date": "2026-12-01",
     "assumptions": {
-      "expected_output_tokens": 700,
-      "max_output_tokens": 2000,
+      "expected_output_tokens": 1400,
+      "max_output_tokens": 3000,
       "max_attempts": 2,
       "tokens_per_char": 0.25
     },
     "calls_first_attempt": 344,
     "calls_max_with_retries": 688,
-    "usd_expected": 3.2029,
-    "usd_worst_first_attempts": 6.8215,
-    "usd_worst_with_retries": 13.643,
+    "usd_expected": 6.4546,
+    "usd_worst_first_attempts": 12.28,
+    "usd_worst_with_retries": 24.56,
     "models": [
       {
         "model_id": "claude-sonnet-5-5",
         "provider": "anthropic",
         "calls": 144,
-        "tokens_in": 176958,
-        "tokens_out_expected": 136800,
-        "tokens_out_max": 331200,
+        "tokens_in": 177636,
+        "tokens_out_expected": 237600,
+        "tokens_out_max": 475200,
         "by_kind": {
           "consumer-A": 24,
           "consumer-A+": 24,
@@ -37,17 +40,17 @@
           "in": 2,
           "out": 10
         },
-        "usd_expected": 1.7219,
-        "usd_worst_first_attempts": 3.6659,
-        "usd_worst_with_retries": 7.3318
+        "usd_expected": 2.7313,
+        "usd_worst_first_attempts": 5.1073,
+        "usd_worst_with_retries": 10.2146
       },
       {
         "model_id": "deepseek-v4-pro",
         "provider": "deepseek",
         "calls": 28,
-        "tokens_in": 9849,
-        "tokens_out_expected": 19600,
-        "tokens_out_max": 56000,
+        "tokens_in": 9913,
+        "tokens_out_expected": 39200,
+        "tokens_out_max": 84000,
         "by_kind": {
           "producer-work": 24,
           "producer-placebo": 4
@@ -56,36 +59,36 @@
           "in": 1.32,
           "out": 3.96
         },
-        "usd_expected": 0.0906,
-        "usd_worst_first_attempts": 0.2348,
-        "usd_worst_with_retries": 0.4696
+        "usd_expected": 0.1683,
+        "usd_worst_first_attempts": 0.3457,
+        "usd_worst_with_retries": 0.6914
       },
       {
-        "model_id": "gpt-6.1-sol",
-        "provider": "openai",
+        "model_id": "gemini-4-carbon",
+        "provider": "gemini",
         "calls": 28,
-        "tokens_in": 9849,
-        "tokens_out_expected": 19600,
-        "tokens_out_max": 56000,
+        "tokens_in": 9913,
+        "tokens_out_expected": 39200,
+        "tokens_out_max": 84000,
         "by_kind": {
           "producer-work": 24,
           "producer-placebo": 4
         },
         "price_per_m": {
-          "in": 2,
-          "out": 10
+          "in": 4,
+          "out": 20
         },
-        "usd_expected": 0.2157,
-        "usd_worst_first_attempts": 0.5797,
-        "usd_worst_with_retries": 1.1594
+        "usd_expected": 0.8237,
+        "usd_worst_first_attempts": 1.7197,
+        "usd_worst_with_retries": 3.4394
       },
       {
-        "model_id": "grok-4.7",
-        "provider": "xai",
+        "model_id": "gpt-6.1-sol",
+        "provider": "openai",
         "calls": 144,
-        "tokens_in": 176958,
-        "tokens_out_expected": 136800,
-        "tokens_out_max": 331200,
+        "tokens_in": 177636,
+        "tokens_out_expected": 237600,
+        "tokens_out_max": 475200,
         "by_kind": {
           "consumer-A": 24,
           "consumer-A+": 24,
@@ -93,16 +96,62 @@
         },
         "price_per_m": {
           "in": 2,
-          "out": 6
+          "out": 10
         },
-        "usd_expected": 1.1747,
-        "usd_worst_first_attempts": 2.3411,
-        "usd_worst_with_retries": 4.6822
+        "usd_expected": 2.7313,
+        "usd_worst_first_attempts": 5.1073,
+        "usd_worst_with_retries": 10.2146
       }
     ]
   },
   "blocks": 48,
   "producer_calls": 56,
+  "proposed_caps": {
+    "calls": 720,
+    "usd": 17
+  },
+  "output_bounds": [
+    {
+      "model_id": "claude-sonnet-5-5",
+      "field": "max_tokens",
+      "enforced": true,
+      "controls": {
+        "output_config": {
+          "effort": "medium"
+        }
+      },
+      "status": "verified-from-docs"
+    },
+    {
+      "model_id": "deepseek-v4-pro",
+      "field": "max_tokens",
+      "enforced": true,
+      "controls": {
+        "thinking": {
+          "type": "disabled"
+        }
+      },
+      "status": "verified-from-docs (thinking disabled only)"
+    },
+    {
+      "model_id": "gemini-4-carbon",
+      "field": "generation_config.max_output_tokens",
+      "enforced": true,
+      "controls": {
+        "thinking_level": "low"
+      },
+      "status": "verified-from-docs (Interactions API only)"
+    },
+    {
+      "model_id": "gpt-6.1-sol",
+      "field": "max_completion_tokens",
+      "enforced": true,
+      "controls": {
+        "reasoning_effort": "medium"
+      },
+      "status": "verified-from-docs"
+    }
+  ],
   "power_at_8_families": [
     {
       "families": 8,
