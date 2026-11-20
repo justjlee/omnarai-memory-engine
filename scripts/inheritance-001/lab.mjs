@@ -45,7 +45,7 @@ import { familyRecord } from "./lib/tasks.mjs";
 import { checkLiveAuthorization, createLiveAdapter, createSpendGuard, remainingCaps } from "./lib/adapters.mjs";
 import { priceFor, PRICES_AS_OF } from "./lib/prices.mjs";
 import { envValue } from "../lib/env-value.mjs";
-import { buildProbe, runProbe, renderProbe, PROBES, LATEST_PROBE_ID, calibrationOpSets } from "./lib/probe.mjs";
+import { buildProbe, runProbe, renderProbe, PROBES, LATEST_PROBE_ID, DEFAULT_PROBE_ID, calibrationOpSets } from "./lib/probe.mjs";
 import { capFor, CAPS_READ_ON } from "./lib/caps.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -284,15 +284,15 @@ async function runModels() {
 }
 
 async function probe() {
-  const id = opt("--probe", LATEST_PROBE_ID);
+  const id = opt("--probe", DEFAULT_PROBE_ID);
   if (!Object.hasOwn(PROBES, id)) { out(`unknown probe ${id}; known: ${Object.keys(PROBES).join(", ")}`); process.exit(2); }
   const { plan, tasks, contexts } = buildProbe({ probe: PROBES[id] });
   const live = argv.includes("--live");
   const outDir = opt("--out");
   if (!live) {
-    out(`Probe ${plan.study_id} (offline preview, nothing called; ${PROBES[id].status}): ${plan.calls.length} calls, arm A, ${plan.families.length} public calibration families.`);
+    out(`Probe ${plan.study_id} (offline preview, nothing called; ${PROBES[id].status}): ${plan.calls.length} calls, arm ${plan.arm}, ${plan.families.length} public calibration families.`);
     out(`  plan_sha256 ${plan.plan_sha256}`);
-    for (const m of plan.projection.by_model) { const c = capFor(m.model_id); out(`  ${m.model_id}${m.role ? ` (${m.role})` : ""}: ${m.calls} calls, worst case $${m.usd_worst}; bound ${c?.cap_field ?? "none"} = ${plan.params.max_output_tokens}${c ? `, ${c.cap_enforced ? "provider-enforced" : "NOT enforced"}` : ", no entry"}`); }
+    for (const m of plan.projection.by_model) { const c = capFor(m.model_id); out(`  ${m.model_id}${m.role ? ` (${m.role})` : ""}: ${m.calls} calls, worst case $${m.usd_worst}; bound ${c?.cap_field ?? "none"} = ${m.max_output_tokens_per_call ?? plan.params.max_output_tokens}${c ? `, ${c.cap_enforced ? "provider-enforced" : "NOT enforced"}` : ", no entry"}`); }
     out(`  worst case total $${plan.projection.usd_worst}; timeout ${plan.params.timeout_ms / 1000} s per call, timed-out calls charged at worst case`);
     if (outDir) { mkdirSync(resolve(outDir), { recursive: true }); writeFileSync(join(resolve(outDir), `${plan.study_id}-plan.json`), JSON.stringify(plan, null, 2) + "\n"); }
     return;
@@ -315,7 +315,8 @@ async function probe() {
   const guard = createSpendGuard({ maxCalls: approval.max_calls, maxUsd: approval.max_usd, perProviderUsd: approval.per_provider_usd || {}, onDate: PROBES[id].price_date, killSwitch: () => existsSync(killFile) });
   const adapter = createLiveAdapter({ authorization, keys: Object.fromEntries(need.map((k) => [k, keys[k]])) });
   const ranAt = new Date().toISOString();
-  const { records, outputs, summary } = await runProbe({ plan, tasks, contexts, adapter, guard, onCall: (r) => out(`  ${r.call_id} ${r.model_id} -> ${r.outcome}${r.stopped_at_cap ? " (cap)" : ""}${r.cap_check && !r.cap_check.ok ? " OVER CAP" : ""} out=${r.usage?.out ?? "?"} $${r.cost_usd ?? "?"}`) });
+  const run = await runProbe({ plan, tasks, contexts, adapter, guard, onCall: (r) => out(`  ${r.call_id} ${r.model_id} -> ${r.outcome}${r.verification ? ` verify=${r.verification}` : ""}${r.stopped_at_cap ? " (cap)" : ""}${r.cap_check && !r.cap_check.ok ? " OVER CAP" : ""} out=${r.usage?.out ?? "?"} $${r.cost_usd ?? "?"}`) });
+  const { records, outputs, summary } = run;
   const dir = resolve(outDir);
   mkdirSync(join(dir, "raw"), { recursive: true });
   writeFileSync(join(dir, "probe-plan.json"), JSON.stringify(plan, null, 2) + "\n");
@@ -323,6 +324,8 @@ async function probe() {
   writeFileSync(join(dir, "probe-summary.json"), JSON.stringify({ ...summary, ran_at: ranAt, guard: guard.state }, null, 2) + "\n");
   writeFileSync(join(dir, "raw", "outputs.jsonl"), outputs.map((r) => JSON.stringify(r)).join("\n") + "\n");
   writeFileSync(join(dir, "raw", "tasks.sealed.jsonl"), tasks.map((t) => JSON.stringify(t.sealed)).join("\n") + "\n");
+  if (run.artifacts) writeFileSync(join(dir, "raw", "artifacts.jsonl"), run.artifacts.map((r) => JSON.stringify(r)).join("\n") + "\n");
+  if (run.evaluations) writeFileSync(join(dir, "raw", "evaluations.jsonl"), run.evaluations.map((r) => JSON.stringify(r)).join("\n") + "\n");
   writeFileSync(join(dir, "PROBE-RESULTS.md"), renderProbe(summary, { approvedWords: approval.approval_words, ranAt }));
   out(`Probe finished: ${summary.calls_made} calls, recorded $${summary.spend_usd_recorded}. Results (private): ${dir}`);
 }

@@ -37,7 +37,7 @@ test("[Q2] probe 2 plan: 32 arm-A calls, the capped panel, 4-step families on a 
   assert.notEqual(PROBE_2.seed, PROBE_1.seed);
   const p1Fams = new Set(buildProbe({ probe: PROBE_1 }).plan.families.map((f) => f.template_commitment_sha256));
   assert.ok(P.plan.families.every((f) => !p1Fams.has(f.template_commitment_sha256)), "no probe-1 family reused");
-  assert.equal(calibrationOpSets().size, 8, "probe 1 + probe 2 op sets, all distinct");
+  assert.equal(calibrationOpSets().size, 12, "probes 1, 2 and 3: all op sets distinct");
   assert.equal(P.plan.arm, "A");
   assert.equal(P.plan.params.max_output_tokens, 3000);
   assert.equal(P.plan.params.timeout_ms, 600000);

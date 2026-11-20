@@ -21,3 +21,6 @@ blocked the offline build. Items D1–D4 block the live pilot.
 Assumptions that need measuring, not deciding: real base rates and ceiling/floor effects (the calibration probe), real reasoning-token
 use per call (the projection assumes 700 expected, 2000 cap), whether providers return dated model ids (handled: priced by base id), and
 whether every provider's returned id identifies the family (unknown ids are excluded from H3).
+| D13 | **Run producer probe 3** (`IS1-PROBE-CAL-003`): 20 calls, producers only (`deepseek-v4-pro` ×10, `gemini-4-carbon` ×10), on 4 new public 4-step string families and 2 number families, with the new instructions that state the program language; counts the records that pass their task's hidden checks. Worst case $1.10 at December prices; rule `DECISION_RULE_3`. | Approve at a **$1.15** cap. Pilot 001 could not test inheritance because no producer record was verifiable; this checks the fix for cents before any new pilot. | `lab.mjs probe --live` refuses: no approval file. |
+| D14 | **Pilot 002** (after probe 3): fresh sealed draw, new registration, new approval. GPT-6.1 Sol solved 21 of 24 held-out tasks cold in Pilot 001 (near the ceiling). | Decide after probe 3; consider harder families for the consumers. | Not designed. |
+

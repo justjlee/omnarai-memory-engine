@@ -18,6 +18,7 @@
 // consumer's own provider-returned family. Retrieved text is data: the boundary sentence says so, and no field of a
 // record can change what the consumer is asked to do.
 import { canonicalJSON, sha256, rng, shuffled, tokensFor, PROTOCOL } from "./canon.mjs";
+import { languageText } from "./language.mjs";
 
 export const ARMS = Object.freeze(["A", "A+", "B", "C", "D", "E"]);
 export const ARM_LABELS = Object.freeze({ A: "cold", "A+": "compute-matched", B: "raw-history", C: "verified-inheritance", D: "contaminated", E: "unrelated-placebo" });
@@ -102,7 +103,10 @@ export function buildProducerContext({ task, snapshot, artifactsById, evaluation
     ? selectC({ snapshot, artifactsById, evaluationsById, consumerFamily: producerFamily, budget: params.context_budget_tokens, seed })
     : { items: [] };
   const items = sel.items.map((x, i) => ({ ...x, view: { ...x.view, ref: `R${i + 1}` } }));
-  const context = { ...frame(task, params.base_reasoning_tokens, items.map((x) => x.view)), contribution_request: CONTRIBUTION_REQUEST };
+  // params.producer_language (set after Pilot 001): the request also states the program language and a length limit, so a
+  // producer's record can be verified at all. Studies without it (the offline demo worlds, Pilot 001) are unchanged.
+  const request = params.producer_language ? `${CONTRIBUTION_REQUEST} Keep the whole reply under 6,000 characters; a longer reply is discarded.\n${languageText(task.domain)}` : CONTRIBUTION_REQUEST;
+  const context = { ...frame(task, params.base_reasoning_tokens, items.map((x) => x.view)), contribution_request: request };
   const text = serialize(context);
   return { context, text, digest: sha256(text), tokens: tokensFor(text.length), included: items.map((x) => x.artifact.id) };
 }

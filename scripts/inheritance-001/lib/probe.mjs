@@ -13,12 +13,15 @@
 import { schemaVersion, sha256, hexId, rng, shuffled } from "./canon.mjs";
 import { familyRecord, generateTasks, publicView } from "./tasks.mjs";
 import { drawFamilySet, setKey } from "./families.mjs";
-import { buildContext, SYSTEM_PROMPT } from "./context.mjs";
+import { buildContext, buildProducerContext, SYSTEM_PROMPT } from "./context.mjs";
 import { scoreOutput } from "./oracle.mjs";
 import { callWithRetries } from "./adapters.mjs";
 import { priceFor } from "./prices.mjs";
 import { familyOfModelId } from "./identity.mjs";
 import { capFor } from "./caps.mjs";
+import { outputCapFor } from "./plan.mjs";
+import { makeArtifact, validateArtifactSemantics } from "./artifacts.mjs";
+import { verifyArtifact } from "./verify.mjs";
 
 // ── Probe 1 (ran 2026-11-20). Frozen verbatim: changing anything below changes its plan hash d3fc3cc0… ─────────────────
 export const DECISION_RULE_1 = {
@@ -83,7 +86,9 @@ export const PROBE_2 = Object.freeze({
   params: { context_budget_tokens: 1500, base_reasoning_tokens: 1024, poison_fraction: 0.34, max_output_tokens: 3000, timeout_ms: 600000 },
   decision_rule: DECISION_RULE_2,
 });
-export const PROBES = Object.freeze({ [PROBE_1.id]: PROBE_1, [PROBE_2.id]: PROBE_2 });
+// Registry of every probe (frozen ones and the proposed one); calibrationOpSets() reads all of them.
+const PROBES_MUTABLE = { [PROBE_1.id]: PROBE_1, [PROBE_2.id]: PROBE_2 };
+export const PROBES = PROBES_MUTABLE;
 export const LATEST_PROBE_ID = PROBE_2.id;
 
 const calibrationSpecs = (probe) => drawFamilySet({ seed: probe.seed, nWork: probe.n_families || 4, nAnchor: 0, nPlacebo: 0, steps: probe.steps, generations: 1 }).map((f, i) => ({ ...f, key: `cal${i}`, role: "calibration" }));
@@ -93,6 +98,7 @@ export function calibrationOpSets() {
 }
 
 export function buildProbe({ probe = PROBES[LATEST_PROBE_ID] } = {}) {
+  if (probe.kind === "producer") return buildProbe3(probe);
   return probe.id === PROBE_1.id ? buildProbe1() : buildProbe2(probe);
 }
 
@@ -181,6 +187,7 @@ export function capCheck(rec, cap) {
 }
 
 export async function runProbe({ plan, tasks, contexts, adapter, guard, onCall = () => {} }) {
+  if (plan.kind === "producer-probe") return runProducerProbe({ plan, tasks, contexts, adapter, guard, onCall });
   const sealed = new Map(tasks.map((t) => [t.public.id, t.sealed]));
   const records = [], outputs = [];
   for (const c of plan.calls) {
@@ -305,6 +312,7 @@ export function summarizeProbe(plan, records) {
 }
 
 export function renderProbe(summary, { approvedWords, ranAt }) {
+  if (summary.kind === "producer-probe") return renderProducerProbe(summary, { approvedWords, ranAt });
   const v2 = summary.probe !== PROBE_1.id;
   const L = [`# Calibration probe ${summary.probe}: results (private until reviewed)`, ""];
   L.push(`Ran ${ranAt}. Approved by xz: "${approvedWords}". Arm A only, public calibration families. **Not a result about inheritance.**`, "");
@@ -323,6 +331,213 @@ export function renderProbe(summary, { approvedWords, ranAt }) {
   L.push(`- Difficulty: **${d.difficulty.then}** (branch: ${d.difficulty.when || d.difficulty.branch}).`);
   if (!v2) L.push(`- Output cap: ${(d.output_cap.share_stopped_at_cap * 100).toFixed(1)}% of calls stopped at the cap: ${d.output_cap.fired ? `**${d.output_cap.then}**` : "keep 2000"}.`);
   else for (const k of ["producers", "output_cap", "cap_enforcement", "latency", "identity", "parsing"]) L.push(`- ${k.replace("_", " ")}: ${d[k].fired ? `**fired for ${d[k].models.map((x) => `\`${x}\``).join(", ")}: ${d[k].then}**` : "did not fire"}.`);
+  L.push("", summary.note, "");
+  return L.join("\n") + "\n";
+}
+
+// ── Probe 3: producers only (proposed 2026-11-20, NOT run). Fixed before any call ─────────────────────────────────────────
+// Pilot 001 ran but could not test inheritance: no producer record carried a program in the study's language, so nothing
+// was verified and arm C was empty. Probe 3 asks the two producers for exactly what a pilot asks them (the contribution
+// request, now stating the language) and counts the records that PASS the hidden checks of their own task.
+export const DECISION_RULE_3 = {
+  verification: [
+    { when: "every producer's verified share (records that pass their task's hidden checks, of its completed calls) >= 0.5", then: "producers can leave verifiable work with these instructions: prepare Pilot 002 (fresh sealed draw, new registration, xz's approval)" },
+    { when: "any producer's verified share < 0.25", then: "that producer cannot reliably leave verifiable work this way: xz decides (replace it, or change the instructions) before any new pilot" },
+    { when: "anything else", then: "proceed only on xz's decision, given the expected number of verified records in a pilot (56 producer calls times the shares)" },
+  ],
+  placebo: { when: "no number-domain record verifies", then: "arm E (the placebo) would be empty again: fix before any registration" },
+  size: { when: "a producer has more than 10% of its completed replies set aside as too long", then: "tighten the length request before any registration" },
+  output_cap: { when: "for any producer, more than 10% of its completed calls stop at its output cap", then: "raise that producer's cap by half and re-project before any registration" },
+  cap_enforcement: DECISION_RULE_2.cap_enforcement,
+  latency: DECISION_RULE_2.latency,
+  identity: DECISION_RULE_2.identity,
+  note: "Probe tasks are public calibration tasks, drawn from a seed never used before and excluded from every sealed draw. A verified share here is not a result about inheritance.",
+};
+export const PROBE_3 = Object.freeze({
+  id: "IS1-PROBE-CAL-003",
+  kind: "producer",
+  seed: "calibration-probe-3-2026-11-20",
+  status: "proposed, not run (needs xz's approval of this exact plan hash)",
+  steps: 4,
+  n_families: 4,
+  tasks: { per_str_family: 2, per_num_family: 1, examples: 3, checks: 8 },
+  price_date: "2026-12-01",
+  models: [
+    { role: "producer", provider: "deepseek", model_id: "deepseek-v4-pro", expected_family: "deepseek" },
+    { role: "producer", provider: "gemini", model_id: "gemini-4-carbon", expected_family: "google-gemini" },
+  ],
+  params: { context_budget_tokens: 1500, base_reasoning_tokens: 1024, poison_fraction: 0.34, producer_language: true, max_output_tokens: 3000, max_output_tokens_by_model: { "gemini-4-carbon": 4500 }, timeout_ms: 600000 },
+  decision_rule: DECISION_RULE_3,
+});
+PROBES_MUTABLE[PROBE_3.id] = PROBE_3;
+export const DEFAULT_PROBE_ID = PROBE_3.id;
+
+function buildProbe3(probe) {
+  const { models, params, tasks: T } = probe;
+  const numSpecs = drawFamilySet({ seed: probe.seed, nWork: 0, nAnchor: 0, nPlacebo: 2, steps: probe.steps, generations: 1 });
+  const families = [...calibrationSpecs(probe), ...numSpecs].map((spec) => ({ spec, record: familyRecord(spec, { studyId: probe.id, salt: "public-calibration" }) }));
+  const tasks = families.flatMap(({ spec, record }) => generateTasks(spec, record, { seed: probe.seed, count: spec.domain === "num" ? T.per_num_family : T.per_str_family, examples: T.examples, checks: T.checks }));
+  const byId = new Map(tasks.map((t) => [t.public.id, t]));
+  const calls = shuffled(models.flatMap((m) => tasks.map((t) => ({ call_id: `PRB-${hexId({ p: probe.id, t: t.public.id, m: m.model_id }, 12)}`, task_id: t.public.id, family_id: t.public.family_id, domain: t.public.domain, model_id: m.model_id, provider: m.provider, role: m.role, expected_family: m.expected_family }))), rng(`${probe.seed}|order`));
+  const contexts = new Map(calls.map((c) => [c.call_id, buildProducerContext({ task: publicView(byId.get(c.task_id)), snapshot: null, artifactsById: new Map(), producerFamily: c.expected_family, params, seed: hexId({ g: 0, t: c.task_id, m: c.model_id }, 16) })]));
+  const requestOf = (domain) => contexts.get(calls.find((c) => c.domain === domain).call_id).context.contribution_request;
+  const projection = models.map((m) => {
+    const p = priceFor(m.model_id, probe.price_date);
+    const mine = calls.filter((x) => x.model_id === m.model_id);
+    const tin = mine.reduce((s, c) => s + contexts.get(c.call_id).tokens + 40, 0);
+    const cap = outputCapFor(params, m.model_id);
+    // input counted twice, as the spend guard does before each call, so an approval at this figure lets every call through
+    return { model_id: m.model_id, role: m.role, calls: mine.length, tokens_in_est: tin, max_output_tokens_per_call: cap, price_per_m: p, usd_worst: p ? +((2 * tin * p.in + mine.length * cap * p.out) / 1e6).toFixed(4) : null };
+  });
+  const plan = {
+    schema_version: schemaVersion("plan"),
+    study_id: probe.id,
+    kind: "producer-probe",
+    arm: "producer",
+    seed: probe.seed,
+    steps: probe.steps,
+    families: families.map((f) => f.record),
+    tasks: tasks.map((t) => ({ id: t.public.id, family_id: t.public.family_id, domain: t.public.domain, sealed_commitment_sha256: t.public.sealed_commitment_sha256 })),
+    models: models.map((m) => { const c = capFor(m.model_id); return { model_id: m.model_id, provider: m.provider, role: m.role, controls: c?.controls ?? null, max_output_tokens: outputCapFor(params, m.model_id), output_cap: c ? { field: c.cap_field, enforced: c.cap_enforced, status: c.status, sources: c.sources.map((s) => s.url) } : null }; }),
+    calls,
+    params: { max_output_tokens: params.max_output_tokens, max_output_tokens_by_model: params.max_output_tokens_by_model, base_reasoning_tokens: params.base_reasoning_tokens, timeout_ms: params.timeout_ms, max_attempts: 1, timeouts_charged_at_worst_case: true, producer_language: true, contribution_request_sha256: { str: sha256(requestOf("str")), num: sha256(requestOf("num")) } },
+    projection: { price_date: probe.price_date, calls: calls.length, input_counted: "twice the estimate (as the spend guard)", by_model: projection, usd_worst: projection.every((x) => x.usd_worst !== null) ? +projection.reduce((s, x) => s + x.usd_worst, 0).toFixed(4) : null },
+    decision_rule: DECISION_RULE_3,
+  };
+  return { plan: { ...plan, plan_sha256: sha256(plan) }, tasks, contexts };
+}
+
+export async function runProducerProbe({ plan, tasks, contexts, adapter, guard, onCall = () => {}, clock = () => new Date().toISOString() }) {
+  const sealedIndex = new Map(tasks.map((t) => [t.public.id, t.sealed]));
+  const capOf = new Map(plan.models.map((m) => [m.model_id, m.max_output_tokens]));
+  const records = [], outputs = [], artifacts = [], evaluations = [];
+  for (const c of plan.calls) {
+    const ctx = contexts.get(c.call_id);
+    let result, attempts;
+    try {
+      ({ result, attempts } = await callWithRetries(adapter, { provider: c.provider, model_id: c.model_id, input: { system: SYSTEM_PROMPT, user: ctx.text }, max_output_tokens: capOf.get(c.model_id), timeout_ms: plan.params.timeout_ms, tracing_id: c.call_id, domain: c.domain, tokens_in_est: ctx.tokens + 40 }, { maxAttempts: 1, guard }));
+    } catch (e) {
+      records.push({ ...c, outcome: "not-called", stop: e.code || String(e.message).slice(0, 80) });
+      if (e.code === "BUDGET_EXHAUSTED") break;
+      continue;
+    }
+    const meta = result.provider_response_metadata || {};
+    const stop = meta.stop_reason || meta.finish_reason || null;
+    const a0 = attempts.at(-1);
+    const rec = {
+      ...c,
+      model_id_returned: result.provider_returned_model_id ?? null,
+      family_returned: result.provider_returned_model_id ? familyOfModelId(result.provider_returned_model_id) : null,
+      outcome: result.error ? (result.error.code === "TIMEOUT" ? "timeout" : "error") : null,
+      score: null, stop, stopped_at_cap: STOPPED_AT_CAP.has(stop),
+      usage: a0?.usage ?? null, raw_usage: meta.raw_usage ?? null, cost_usd: a0?.cost_usd ?? null, cost_status: a0?.cost_status ?? null,
+      duration_ms: a0?.duration_ms ?? null, request_id: a0?.request_id ?? null, error_code: a0?.error_code ?? null,
+    };
+    if (!result.error) {
+      const scored = scoreOutput(sealedIndex.get(c.task_id), result.output, c.domain);
+      const a = makeArtifact({
+        studyId: plan.study_id, generation: 0, domain: c.domain,
+        producer: { provider: c.provider, model_id_requested: c.model_id, model_id_returned: result.provider_returned_model_id },
+        source: { task_id: c.task_id, family_id: c.family_id, input_snapshot_id: null, input_snapshot_sha256: null, run_id: plan.study_id, call_id: c.call_id, exposed_artifact_ids: [] },
+        text: result.output, relations: { derived_from: [] },
+        production: { tokens_in: a0?.usage?.in ?? 0, tokens_out: a0?.usage?.out ?? 0, usd: a0?.cost_usd ?? null, cost_status: a0?.cost_status ?? "unknown" },
+        createdAt: clock(),
+      });
+      const problems = validateArtifactSemantics(a);
+      const ev = problems.length ? null : verifyArtifact(a, sealedIndex, { recordedAt: clock() });
+      Object.assign(rec, {
+        outcome: scored.outcome, score: scored.score, text_chars: result.output.length,
+        program_present: Boolean(a.content.program), program_error: a.content.program_parse_error ?? null,
+        admitted: problems.length === 0, admission_problem: problems[0] ?? null,
+        verification: ev?.status ?? null, verification_detail: ev?.detail ?? null, cases: ev ? { n: ev.cases.n, passed: ev.cases.passed } : null,
+        empty_output: !String(result.output ?? "").trim(),
+      });
+      artifacts.push(a);
+      if (ev) evaluations.push(ev);
+      outputs.push({ call_id: c.call_id, output: result.output });
+    }
+    rec.cap_check = capCheck(rec, capOf.get(c.model_id));
+    records.push(rec);
+    onCall(rec);
+  }
+  return { records, outputs, artifacts, evaluations, summary: summarizeProducerProbe(plan, records) };
+}
+
+export function summarizeProducerProbe(plan, records) {
+  const byModel = plan.models.map(({ model_id, role, max_output_tokens }) => {
+    const xs = records.filter((r) => r.model_id === model_id);
+    const done = xs.filter((r) => r.usage && !r.outcome?.match(/^(timeout|error)$/));
+    const outs = xs.map((r) => r.usage?.out).filter((x) => Number.isFinite(x));
+    const verified = done.filter((r) => r.verification === "passed");
+    const expected = plan.calls.find((c) => c.model_id === model_id)?.expected_family;
+    return {
+      model_id, role, max_output_tokens,
+      returned_ids: [...new Set(xs.map((r) => r.model_id_returned).filter(Boolean))],
+      calls: xs.length, completed: done.length,
+      answer_pass: done.filter((r) => r.score === 1).length,
+      program_present: done.filter((r) => r.program_present).length,
+      set_aside: done.filter((r) => r.admitted === false).length,
+      set_aside_too_long: done.filter((r) => /text longer than/.test(r.admission_problem || "")).length,
+      verified: verified.length,
+      verified_share: done.length ? +(verified.length / done.length).toFixed(3) : null,
+      verified_by_domain: { str: verified.filter((r) => r.domain === "str").length, num: verified.filter((r) => r.domain === "num").length },
+      program_errors: done.filter((r) => r.program_error).reduce((o, r) => { const k = String(r.program_error).replace(/"[^"]*"/g, '"…"').slice(0, 60); return { ...o, [k]: (o[k] || 0) + 1 }; }, {}),
+      stopped_at_cap: done.filter((r) => r.stopped_at_cap).length,
+      share_stopped_at_cap: done.length ? +(done.filter((r) => r.stopped_at_cap).length / done.length).toFixed(3) : 0,
+      timeouts: xs.filter((r) => r.outcome === "timeout").length,
+      cap_violations: xs.filter((r) => r.cap_check?.checked && !r.cap_check.ok).length,
+      family_mismatch: xs.some((r) => r.family_returned && expected && r.family_returned !== expected),
+      output_tokens: { median: pct(outs, 0.5), p90: pct(outs, 0.9), max: outs.length ? Math.max(...outs) : null },
+      usd: xs.every((r) => r.cost_usd !== null && r.cost_usd !== undefined) ? +xs.reduce((s, r) => s + r.cost_usd, 0).toFixed(5) : null,
+    };
+  });
+  const R = DECISION_RULE_3;
+  const shares = byModel.map((m) => m.verified_share);
+  let verification;
+  if (!shares.every((x) => x !== null)) verification = { branch: "incomplete", then: "a producer has no completed calls: no decision; xz decides" };
+  else if (shares.every((x) => x >= 0.5)) verification = { branch: 0, ...R.verification[0] };
+  else if (shares.some((x) => x < 0.25)) verification = { branch: 1, ...R.verification[1] };
+  else verification = { branch: 2, ...R.verification[2] };
+  const fired = (list, r) => ({ fired: list.length > 0, models: list, ...(list.length ? { then: r.then } : {}) });
+  const numDone = records.filter((r) => r.domain === "num" && r.usage && r.admitted !== undefined).length;
+  const numVerified = byModel.reduce((s, m) => s + m.verified_by_domain.num, 0);
+  const called = records.filter((r) => r.outcome !== "not-called");
+  return {
+    kind: "producer-probe",
+    probe: plan.study_id,
+    plan_sha256: plan.plan_sha256,
+    calls_made: called.length,
+    calls_planned: plan.calls.length,
+    by_model: byModel,
+    decision: {
+      verification,
+      placebo: { fired: numDone > 0 && numVerified === 0, num_completed: numDone, num_verified: numVerified, ...(numDone > 0 && numVerified === 0 ? { then: R.placebo.then } : {}) },
+      size: fired(byModel.filter((m) => m.completed && m.set_aside_too_long / m.completed > 0.10).map((m) => m.model_id), R.size),
+      output_cap: fired(byModel.filter((m) => m.share_stopped_at_cap > 0.10).map((m) => m.model_id), R.output_cap),
+      cap_enforcement: fired(byModel.filter((m) => m.cap_violations > 0).map((m) => m.model_id), R.cap_enforcement),
+      latency: fired(byModel.filter((m) => m.timeouts > 1).map((m) => m.model_id), R.latency),
+      identity: fired(byModel.filter((m) => m.family_mismatch).map((m) => m.model_id), R.identity),
+    },
+    spend_usd_recorded: +records.reduce((s, r) => s + (r.cost_usd || 0), 0).toFixed(5),
+    unknown_cost_calls: records.filter((r) => r.cost_status === "unknown").length,
+    assumed_worst_case_calls: records.filter((r) => r.cost_status === "assumed-worst-case").length,
+    note: R.note,
+  };
+}
+
+export function renderProducerProbe(summary, { approvedWords, ranAt }) {
+  const L = [`# Producer probe ${summary.probe}: results (private until reviewed)`, ""];
+  L.push(`Ran ${ranAt}. Approved by xz: "${approvedWords}". Producers only, public calibration families. **Not a result about inheritance.**`, "");
+  L.push(`Calls: ${summary.calls_made} of ${summary.calls_planned}. Recorded spend: **$${summary.spend_usd_recorded.toFixed(4)}** (unknown-cost calls: ${summary.unknown_cost_calls}; charged at worst case because they timed out: ${summary.assumed_worst_case_calls}).`, "");
+  L.push("| Producer | Completed | Verified (share) | Verified str / num | Program present | Set aside (too long) | Answer right | Stopped at cap | Over cap | Timeouts | Output tokens median / p90 / max | USD |", "|---|---:|---|---|---:|---:|---:|---:|---:|---:|---|---:|");
+  for (const m of summary.by_model) L.push(`| \`${m.model_id}\` | ${m.completed} | ${m.verified} (${m.verified_share ?? "—"}) | ${m.verified_by_domain.str} / ${m.verified_by_domain.num} | ${m.program_present} | ${m.set_aside} (${m.set_aside_too_long}) | ${m.answer_pass} | ${m.stopped_at_cap} | ${m.cap_violations} | ${m.timeouts} | ${m.output_tokens.median ?? "—"} / ${m.output_tokens.p90 ?? "—"} / ${m.output_tokens.max ?? "—"} | ${m.usd ?? "unknown"} |`);
+  L.push("", "Why records failed to verify:", "");
+  for (const m of summary.by_model) L.push(`- \`${m.model_id}\`: ${Object.entries(m.program_errors).map(([k, v]) => `${k} ×${v}`).join("; ") || "no program errors"}`);
+  L.push("", "## What the pre-committed rule says", "");
+  const d = summary.decision;
+  L.push(`- Verification: **${d.verification.then}** (branch: ${d.verification.when || d.verification.branch}).`);
+  L.push(`- Placebo (number tasks): ${d.placebo.fired ? `**fired: ${d.placebo.then}**` : `did not fire (${d.placebo.num_verified} of ${d.placebo.num_completed} verified)`}.`);
+  for (const k of ["size", "output_cap", "cap_enforcement", "latency", "identity"]) L.push(`- ${k.replace("_", " ")}: ${d[k].fired ? `**fired for ${d[k].models.map((x) => `\`${x}\``).join(", ")}: ${d[k].then}**` : "did not fire"}.`);
   L.push("", summary.note, "");
   return L.join("\n") + "\n";
 }
