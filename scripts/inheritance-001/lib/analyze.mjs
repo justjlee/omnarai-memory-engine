@@ -117,6 +117,9 @@ export function analyze({ study, plan, trials, snapshots, artifacts, evaluations
   const P = contrasts.pooled;
   const flags = [];
   const flag = (code, text) => flags.push({ code, text });
+  if (snapshots.length && snapshots.every((s) => !(s.entries || []).some((e) => (e.eligible || []).includes("C")))) {
+    flag("NO_INHERITABLE_RECORDS", "No record passed independent verification, so arm C carried no inherited records (and D only its planted poison). C − A+, C − A, C − B and C − E cannot speak to inheritance in this run: an instrument outcome, not a null result.");
+  }
   if (P["C-A+"].classification === "negative") flag("INHERITANCE_WORSE_THAN_COMPUTE", "C scored below the compute-matched baseline A+.");
   if (P["C-A+"].classification === "null-or-inconclusive") flag("NO_CLEAR_INHERITANCE_BENEFIT", "The C−A+ interval includes 0.");
   if (P["C-E"].classification !== "positive") flag("SCAFFOLDING_NOT_EXCLUDED", "C is not clearly above the unrelated placebo E: format or confidence priming could explain any C gain.");

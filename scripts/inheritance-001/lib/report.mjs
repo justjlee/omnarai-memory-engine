@@ -32,7 +32,9 @@ export function renderReport({ report, plan, run }) {
   L.push(`- Consumer generations: ${plan.generations_consumer.join(", ")}; ${plan.blocks.length} paired blocks × 6 arms; ${run.counters.ablation_trials} ablation trials; ${run.counters.producer_calls} producer calls (${run.counters.producer_failures} failed).`);
   L.push(`- Snapshots: ${report.inputs.snapshots.map((s) => `\`${s.id}\``).join(", ")}.`);
   L.push(`- Contexts blocked by the leak scan: ${run.counters.leak_blocked}. Trials whose returned model family differed from the requested one: ${report.identity.returned_family_differs_from_expected}.`);
-  L.push(`- Incomplete blocks: ${report.missingness.incomplete_blocks}. Billable calls: ${run.spend.calls_billed}. Network calls: 0 (offline adapter${sim ? ", hermetic guard" : ""}).`);
+  L.push(run.kind === "live"
+    ? `- Incomplete blocks: ${report.missingness.incomplete_blocks}. Live provider calls: ${run.spend.calls_billed}, through the live gate and the spend guard.`
+    : `- Incomplete blocks: ${report.missingness.incomplete_blocks}. Billable calls: ${run.spend.calls_billed}. Network calls: 0 (offline adapter${sim ? ", hermetic guard" : ""}).`);
   L.push("");
   L.push(`## 2. ${sim ? "Mock results (synthetic, NOT evidence)" : "Results"}`);
   L.push("");
@@ -90,10 +92,14 @@ export function renderReport({ report, plan, run }) {
   L.push("");
   L.push("## 4. Not shown, and speculative");
   L.push("");
-  L.push("- Whether any real model benefits from another model's verified work: untested. No live call has been made.");
+  L.push(run.kind === "live"
+    ? "- Whether any real model benefits from another model's verified work: not established by one descriptive pilot (fewer than 10 held-out families); see §2 and its flags."
+    : "- Whether any real model benefits from another model's verified work: untested. No live call has been made.");
   L.push("- Whether verification bounds the ratchet (the \"pawl\" hypothesis): untested; this study has one, cheap, verification regime.");
   L.push("- Whether program-induction transfer says anything about other domains: unknown; cross-domain scores are not comparable.");
-  L.push("- Task difficulty calibration for real models: not done; ceiling or floor effects are possible until a calibration probe runs.");
+  L.push(run.kind === "live"
+    ? "- Task difficulty for real models: set by calibration probes before registration (arm A only, public families); held-out families can still sit nearer a floor or ceiling."
+    : "- Task difficulty calibration for real models: not done; ceiling or floor effects are possible until a calibration probe runs.");
   L.push("- Provider-returned ids are recorded as the provider sent them; that is API provenance, not proof of what weights ran.");
   L.push("");
   return L.join("\n") + "\n";

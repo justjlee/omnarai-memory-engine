@@ -151,7 +151,7 @@ import { createLiveAdapter } from "./inheritance-001/lib/adapters.mjs";
 import { createMemoryLabStore, exportRun } from "./inheritance-001/lib/store.mjs";
 import { summarizeDir } from "./inheritance-001/lib/pipeline.mjs";
 
-function livePilot(maxUsd) {
+function livePilot(maxUsd, { withProgram = true } = {}) {
   const study = pilotStudy({ families: projectionFamilies(), salt: "k8" });
   const { plan, tasks } = buildPlan(study);
   const byQuery = tasks.map((t) => [`"query":${JSON.stringify(t.public.prompt.query)}`, t.sealed]);
@@ -159,7 +159,7 @@ function livePilot(maxUsd) {
   const transport = async (req) => {
     const s = byQuery.find(([q]) => req.input.user.includes(q))?.[1];
     const right = s && k++ % 3 !== 0;
-    const text = `<answer>${right ? s.expected : "nope"}</answer>${s && right ? `\n\`\`\`program\n${JSON.stringify(s.program)}\n\`\`\`` : ""}`;
+    const text = `<answer>${right ? s.expected : "nope"}</answer>${s && right && withProgram ? `\n\`\`\`program\n${JSON.stringify(s.program)}\n\`\`\`` : ""}`;
     if (req.provider === "anthropic") return { status: 200, headers: { "request-id": "a" }, json: { model: req.model_id, stop_reason: "end_turn", content: [{ type: "text", text }], usage: { input_tokens: 400, output_tokens: 800 } }, duration_ms: 3 };
     if (req.provider === "gemini") return { status: 200, headers: {}, json: { id: "g", model: req.model_id, status: "completed", steps: [{ type: "thought", content: [] }, { type: "model_output", content: [{ type: "text", text }] }], usage: { total_input_tokens: 400, total_output_tokens: 100, total_thought_tokens: 900, total_tokens: 1400 } }, duration_ms: 3 };
     return { status: 200, headers: { "x-request-id": "o" }, json: { model: req.model_id, choices: [{ finish_reason: "stop", message: { content: text } }], usage: { prompt_tokens: 400, completion_tokens: 600, completion_tokens_details: { reasoning_tokens: req.provider === "openai" ? 500 : 0 } } }, duration_ms: 3 };
@@ -235,4 +235,21 @@ test("[K11] a re-run under the same approval: earlier recorded spend comes off e
   assert.equal(c.prior.usd, 1.020741);
   assert.deepEqual(remainingCaps({ maxCalls: 5, maxUsd: 1 }, []), { maxCalls: 5, maxUsd: 1, perProviderUsd: {}, prior: { attempts: 0, usd: 0, calls: 0, byProvider: {} } });
   assert.equal(remainingCaps({ maxCalls: 5, maxUsd: 1 }, [{ usd: 3, calls: 9 }]).maxUsd, 0, "never negative");
+});
+
+test("[K12] regression (Pilot 001): a live run in which no record could be verified is flagged, and the report says it was live", async () => {
+  const L = livePilot(17, { withProgram: false });
+  const store = createMemoryLabStore(), outputs = [];
+  const result = await runStudy({ study: L.study, adapter: L.adapter, guard: L.guard, clock: () => "2026-11-21T00:00:00.000Z", store, outputs });
+  assert.equal(result.run.kind, "live");
+  assert.ok(store.list("evaluation").every((e) => e.status !== "pass"), "no producer record verified");
+  const dir = mkdtempSync(joinPath(tmpdir(), "is1-k12-"));
+  exportRun(store, dir, { plan: result.plan, sealed: { tasks: result.sealed.tasks, outputs }, sealedDir: joinPath(dir, "sealed") });
+  summarizeDir(dir);
+  const summary = JSON.parse(readFile(joinPath(dir, "summary.json"), "utf8"));
+  assert.ok(JSON.stringify(summary).includes("NO_INHERITABLE_RECORDS"));
+  const md = readFile(joinPath(dir, "REPORT.md"), "utf8");
+  assert.match(md, /NO_INHERITABLE_RECORDS/);
+  assert.match(md, /Live provider calls: 344/);
+  assert.doesNotMatch(md, /No live call has been made|offline adapter/);
 });
