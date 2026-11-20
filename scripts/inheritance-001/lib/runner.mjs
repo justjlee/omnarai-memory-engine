@@ -20,7 +20,7 @@ import { leakIndex, scanText } from "./leak.mjs";
 import { buildSnapshot } from "./snapshot.mjs";
 import { createMemoryLabStore } from "./store.mjs";
 import { callWithRetries, createSpendGuard } from "./adapters.mjs";
-import { buildPlan } from "./plan.mjs";
+import { buildPlan, outputCapFor } from "./plan.mjs";
 
 export function fixedClock(startIso) {
   let t = Date.parse(startIso);
@@ -80,7 +80,7 @@ export async function runStudy({ study, adapter, clock = fixedClock(study.start_
       const pc = buildProducerContext({ task: publicView(task), snapshot, artifactsById, evaluationsById, producerFamily: prodFamily, params: study.params, seed: hexId({ g, t: c.task_id, m: c.model_id }, 16) });
       if (scanText(pc.text, leakIdx).length) { counters.leak_blocked++; continue; }
       const tracing_id = `P-g${g}-${hexId({ t: c.task_id, m: c.model_id }, 10)}`;
-      const { result, attempts } = await callWithRetries(adapter, { provider: c.provider, model_id: c.model_id, input: { system: SYSTEM_PROMPT, user: pc.text }, max_output_tokens: study.params.max_output_tokens, timeout_ms: study.params.timeout_ms, tracing_id, domain, tokens_in_est: pc.tokens + 40 }, { maxAttempts: study.params.max_attempts, guard: spend });
+      const { result, attempts } = await callWithRetries(adapter, { provider: c.provider, model_id: c.model_id, input: { system: SYSTEM_PROMPT, user: pc.text }, max_output_tokens: outputCapFor(study.params, c.model_id), timeout_ms: study.params.timeout_ms, tracing_id, domain, tokens_in_est: pc.tokens + 40 }, { maxAttempts: study.params.max_attempts, guard: spend });
       counters.producer_calls++; counters.attempts += attempts.length;
       if (result.error) { counters.producer_failures++; continue; }
       const cited = citedRefs(result.output, pc.included);
@@ -108,7 +108,7 @@ export async function runStudy({ study, adapter, clock = fixedClock(study.start_
     let result = null, attempts = [], outcome, score, scoring = null;
     if (leaks.length) { counters.leak_blocked++; outcome = "error"; score = null; }
     else {
-      const maxOut = study.params.max_output_tokens + Math.max(0, ctx.reasoning_allowance_tokens - study.params.base_reasoning_tokens);
+      const maxOut = outputCapFor(study.params, block.consumer_model_id) + Math.max(0, ctx.reasoning_allowance_tokens - study.params.base_reasoning_tokens);
       ({ result, attempts } = await callWithRetries(adapter, { provider: block.consumer_provider, model_id: block.consumer_model_id, input: { system: SYSTEM_PROMPT, user: ctx.text }, max_output_tokens: maxOut, timeout_ms: study.params.timeout_ms, tracing_id, domain: study.main_domain, tokens_in_est: ctx.tokens + 40 }, { maxAttempts: study.params.max_attempts, guard: spend }));
       counters.attempts += attempts.length;
       if (result.error) { outcome = result.error.code === "TIMEOUT" ? "timeout" : "error"; score = outcome === "timeout" && study.analysis.timeouts_as_failures ? 0 : null; }

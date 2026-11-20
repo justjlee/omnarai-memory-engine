@@ -111,4 +111,5 @@ different consumer families). Gemini is therefore needed, and it is placed as a 
 
 - Producers: `deepseek-v4-pro` (thinking off), `gemini-4-carbon` (Interactions API, thinking `low`).
 - Consumers: `claude-sonnet-5-5` (effort `medium`), `gpt-6.1-sol` (reasoning effort `medium`).
-- Every call: `max_output_tokens` 3000 in the field above, client timeout 600 s, a timed-out call charged at its worst case.
+- Every call: `max_output_tokens` 3000 in the field above (Gemini 4500, after probe 2's pre-committed output-cap rule fired for it;
+  xz chose to raise it for Gemini only), client timeout 600 s, a timed-out call charged at its worst case.

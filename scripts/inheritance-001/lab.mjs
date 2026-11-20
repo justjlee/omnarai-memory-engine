@@ -27,7 +27,7 @@ import { spawnSync } from "node:child_process";
 import { installNetworkGuard, guardState } from "./lib/hermetic.mjs";
 import { runDemo, summarizeDir } from "./lib/pipeline.mjs";
 import { verifyRunDir, exportRun } from "./lib/store.mjs";
-import { buildPlan } from "./lib/plan.mjs";
+import { buildPlan, outputCapFor } from "./lib/plan.mjs";
 import { runStudy } from "./lib/runner.mjs";
 import { createMockAdapter } from "./lib/mock-model.mjs";
 import { analyze } from "./lib/analyze.mjs";
@@ -116,29 +116,32 @@ function budget() {
   const calibCalls = probePlan.calls.length, calibUsd = probePlan.projection.usd_worst;
   const P = plan.projection;
   const power = [0.1, 0.15, 0.2].map((effect) => simulatePower({ families: 8, tasksPerFamily: 3, consumers: 2, baseRate: 0.4, effect, sims: 400, resamples: 400, seed: 8 + effect * 100 }));
-  const capUsd = Math.ceil((P.usd_worst_first_attempts + calibUsd) * 1.25);
-  const proj = { projection_only: true, stand_in_families: "public draw 'public-projection-only' — the sealed set is drawn at registration", plan_sha256_of_projection: plan.plan_sha256, steps_per_family: SEALED_DRAW.steps, calibration_stage: { probe: probePlan.study_id, plan_sha256: probePlan.plan_sha256, calls: calibCalls, usd_worst: calibUsd }, projection: P, blocks: plan.blocks.length, producer_calls: plan.producer_calls.length, proposed_caps: { calls: P.calls_max_with_retries + calibCalls, usd: capUsd }, output_bounds: plan.models.map((m) => { const c = capFor(m.model_id); return { model_id: m.model_id, field: c?.cap_field ?? null, enforced: c?.cap_enforced ?? false, controls: c?.controls ?? null, status: c?.status ?? "no entry" }; }), power_at_8_families: power };
+  // A probe that has already run was approved and reserved on its own, so it is not part of the pilot's cap.
+  const probeRan = /^ran /.test(PROBES[LATEST_PROBE_ID].status);
+  const capUsd = Math.ceil((P.usd_worst_first_attempts + (probeRan ? 0 : calibUsd)) * 1.25);
+  const capCalls = P.calls_max_with_retries + (probeRan ? 0 : calibCalls);
+  const proj = { projection_only: true, stand_in_families: "public draw 'public-projection-only' — the sealed set is drawn at registration", plan_sha256_of_projection: plan.plan_sha256, steps_per_family: SEALED_DRAW.steps, calibration_stage: { probe: probePlan.study_id, plan_sha256: probePlan.plan_sha256, calls: calibCalls, usd_worst: calibUsd }, projection: P, blocks: plan.blocks.length, producer_calls: plan.producer_calls.length, proposed_caps: { calls: capCalls, usd: capUsd }, output_bounds: plan.models.map((m) => { const c = capFor(m.model_id); return { model_id: m.model_id, field: c?.cap_field ?? null, enforced: c?.cap_enforced ?? false, controls: c?.controls ?? null, status: c?.status ?? "no entry" }; }), power_at_8_families: power };
   writeFileSync(join(outDir, "pilot-projection.json"), JSON.stringify(proj, null, 2) + "\n");
   const money = (x) => (x === null ? "unknown" : `$${x.toFixed(2)}`);
   const ctl = (c) => (c ? Object.entries(c).map(([k, v]) => `\`${k}: ${JSON.stringify(v).replace(/"/g, "")}\``).join(", ") : "—");
   const md = [
     "# Pilot 001: projected calls and dollars (PROJECTION, nothing has been spent)", "",
-    `Prices: ${PRICES_AS_OF}; priced for a run on ${study.price_date} (Gemini 4 Carbon's higher December price). Input tokens are estimated from the real prompt frame at 4 characters per token. Output: the cap is ${study.params.max_output_tokens} tokens per call, a bound each provider documents as covering all billed output, reasoning included; the expected figure, ${study.params.expected_output_tokens}, is the measured median of \`claude-sonnet-5-5\` in calibration probe 1 (1,328 tokens on 3-step tasks), rounded up, and is ASSUMED for the other three models until probe 2 measures them. Timeouts: 600 s, and a call that times out is charged at its worst case.`, "",
+    `Prices: ${PRICES_AS_OF}; priced for a run on ${study.price_date} (Gemini 4 Carbon's higher December price). Output caps: ${study.params.max_output_tokens} tokens per call${study.params.max_output_tokens_by_model ? ` (${Object.entries(study.params.max_output_tokens_by_model).map(([m, v]) => `\`${m}\`: ${v}`).join(", ")}, raised by probe 2's pre-committed output-cap rule)` : ""}, each a bound its provider documents as covering all billed output, reasoning included. Expected output per call is each model's measured mean in calibration probe 2 (arm A, 4-step tasks), rounded up; Gemini's calls that stopped at 3,000 are counted at 4,500. Producers' and inheriting arms' outputs may run longer than arm A; the worst case does not depend on this. Input tokens are estimated at 4 characters per token, then scaled by the largest real/estimated ratio probe 2 measured per model (Claude about 1.55). Timeouts: 600 s, and a call that times out is charged at its worst case.`, "",
     "## Design", "",
     `- One transition: generation-0 producers (${PILOT_MODELS.producers.map((m) => `\`${m.model_id}\``).join(", ")}) → generation-1 consumers (${PILOT_MODELS.consumers.map((m) => `\`${m.model_id}\``).join(", ")}). No producer family is a consumer family. \`grok-4.7\` left the panel on 2026-11-20: xAI documents no request field that bounds its reasoning tokens (see PROVIDER-CAPS.md).`,
     `- Task families are ${SEALED_DRAW.steps}-step compositions (probe 1 found 3-step families too easy for the one fully measured consumer). The sealed draw excludes every calibration family's op set.`,
     `- ${families.filter((f) => f.role === "work").length} work families × ${study.tasks.per_work_family} tasks × ${PILOT_MODELS.producers.length} producers = ${plan.producer_calls.filter((c) => c.kind === "work").length} producer calls, plus ${plan.producer_calls.filter((c) => c.kind === "placebo").length} placebo-domain producer calls.`,
     `- ${families.filter((f) => f.role === "eval-anchor").length} held-out families × ${study.tasks.per_eval_family} tasks × ${PILOT_MODELS.consumers.length} consumers = ${plan.blocks.length} paired blocks × 6 arms = ${plan.blocks.length * 6} consumer calls. No ablations in this pilot.`,
-    `- Stage 0 (before registration): calibration probe \`${probePlan.study_id}\`, arm A only, ${calibCalls} calls on public calibration families with this exact panel and cap, worst case ${money(calibUsd)} (plan \`${probePlan.plan_sha256.slice(0, 12)}…\`).`, "",
+    `- Stage 0 (before registration): calibration probe \`${probePlan.study_id}\`, arm A only, ${calibCalls} calls on public calibration families with this panel, worst case ${money(calibUsd)} (plan \`${probePlan.plan_sha256.slice(0, 12)}…\`): ${probeRan ? `**${PROBES[LATEST_PROBE_ID].status}**, approved and reserved on its own, so it is not part of the pilot cap below` : "not yet run"}.`, "",
     "## Per-call output bounds (checked by the live gate)", "",
-    "| Model | Bound field | Reasoning controls sent | Documented status |", "|---|---|---|---|",
-    ...plan.models.map((m) => { const c = capFor(m.model_id); return `| \`${m.model_id}\` | \`${c?.cap_field ?? "none"}\` | ${ctl(c?.controls)} | ${c?.status ?? "no entry: refused"} |`; }),
+    "| Model | Bound field | Cap per call | Reasoning controls sent | Documented status |", "|---|---|---:|---|---|",
+    ...plan.models.map((m) => { const c = capFor(m.model_id); return `| \`${m.model_id}\` | \`${c?.cap_field ?? "none"}\` | ${outputCapFor(study.params, m.model_id)} | ${ctl(c?.controls)} | ${c?.status ?? "no entry: refused"} |`; }),
     "", `Docs read on ${CAPS_READ_ON}; sources and quotes in \`PROVIDER-CAPS.md\`.`, "",
     "## Money", "",
     "| Model | Role | Calls | Tokens in | Out (expected) | Out (cap) | $/M in, out | Expected | Worst (first attempts) | Worst (with retries) |", "|---|---|---:|---:|---:|---:|---|---:|---:|---:|",
     ...P.models.map((m) => `| \`${m.model_id}\` | ${Object.keys(m.by_kind).join(", ")} | ${m.calls} | ${m.tokens_in} | ${m.tokens_out_expected} | ${m.tokens_out_max} | ${m.price_per_m ? `${m.price_per_m.in}, ${m.price_per_m.out}` : "unknown"} | ${money(m.usd_expected)} | ${money(m.usd_worst_first_attempts)} | ${money(m.usd_worst_with_retries)} |`),
     `| **Total** | | **${P.calls_first_attempt}** (≤ ${P.calls_max_with_retries} with retries) | | | | | **${money(P.usd_expected)}** | **${money(P.usd_worst_first_attempts)}** | **${money(P.usd_worst_with_retries)}** |`, "",
-    `Proposed hard caps for approval (after probe 2): **${P.calls_max_with_retries + calibCalls} calls** and **$${capUsd}** (worst case of first attempts plus the probe, plus 25%). The spend guard stops before any call whose worst case would cross the cap, a timed-out call is charged at its worst case, and the shared $95 ledger reserve must also succeed. Retries happen only on rate limits and server errors, never on timeouts.`, "",
+    `Proposed hard caps for approval: **${capCalls} calls** and **$${capUsd}** (worst case of first attempts${probeRan ? "" : " plus the probe"}, plus 25%; the A+ arm's larger allowance is included). The spend guard stops before any call whose worst case would cross the cap, a timed-out call is charged at its worst case, and the shared $95 ledger reserve must also succeed. Retries happen only on rate limits and server errors, never on timeouts.`, "",
     "## What this pilot can and cannot show", "",
     "- It can show whether the machinery works on real providers (returned ids, usage, refusals, timeouts) and give first, descriptive estimates of C−A+, C−E, C−B and C−D.",
     "- It cannot confirm H1–H3: 8 held-out families is below the preregistered minimum of 10 clusters for inference, so every verdict is descriptive. It cannot test a ratchet at all (one transition).",

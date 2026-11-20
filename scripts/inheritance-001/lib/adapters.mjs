@@ -42,7 +42,9 @@ export function redact(s, extraSecrets = []) {
 }
 
 // ── Spend guard: hard numeric caps, worst-case pre-check, kill switch ────────────────────────────────────────────────
-export function createSpendGuard({ maxCalls, maxUsd, perProviderUsd = {}, onDate, killSwitch = () => false, mock = false }) {
+// inputFactor: the pre-call worst case multiplies the input estimate (4 characters per token) by this factor, because probe 2
+// (2026-11-20) measured real input up to 1.55x that estimate for Claude; the recorded cost always uses the provider's usage.
+export function createSpendGuard({ maxCalls, maxUsd, perProviderUsd = {}, onDate, killSwitch = () => false, mock = false, inputFactor = 2 }) {
   if (!mock && (!Number.isInteger(maxCalls) || maxCalls < 0 || !Number.isFinite(maxUsd) || maxUsd < 0)) throw new Error("SPEND_GUARD_NEEDS_FINITE_CAPS");
   const state = { calls: 0, usd: 0, byProvider: {}, unknownCostCalls: 0, maxOutSeen: {}, assumedUsd: 0, assumedCalls: 0 };
   return {
@@ -56,7 +58,7 @@ export function createSpendGuard({ maxCalls, maxUsd, perProviderUsd = {}, onDate
       if (!p) throw new BudgetExhaustedError(`no price on file for ${model_id}; cannot bound the spend`);
       // A provider may bill more output than the cap asked for (reasoning tokens): the worst case is the larger of the
       // cap and the largest output this model has actually returned in this run.
-      const worst = (tokensIn * p.in + Math.max(maxOut, state.maxOutSeen[model_id] || 0) * p.out) / 1e6;
+      const worst = (tokensIn * inputFactor * p.in + Math.max(maxOut, state.maxOutSeen[model_id] || 0) * p.out) / 1e6;
       if (state.usd + worst > maxUsd) throw new BudgetExhaustedError(`worst case $${(state.usd + worst).toFixed(4)} would cross the $${maxUsd} cap`);
       const cap = perProviderUsd[provider];
       if (cap !== undefined && (state.byProvider[provider] || 0) + worst > cap) throw new BudgetExhaustedError(`${provider} cap $${cap}`);

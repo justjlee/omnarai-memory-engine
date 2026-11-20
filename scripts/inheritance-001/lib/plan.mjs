@@ -11,6 +11,14 @@ import { ARMS, baseFrameTokens } from "./context.mjs";
 import { priceFor, PRICES_AS_OF } from "./prices.mjs";
 import { controlsFor } from "./caps.mjs";
 
+// Per-model overrides set from calibration measurements (all optional; a study without them behaves exactly as before):
+//   max_output_tokens_by_model       a model's per-call output bound (e.g. raised by a probe's output-cap rule)
+//   expected_output_tokens_by_model  a model's measured mean output, for the expected-cost projection
+//   input_token_factor_by_model      measured real input tokens ÷ the 4-characters-per-token estimate
+export const outputCapFor = (p, modelId) => (p.max_output_tokens_by_model && Object.hasOwn(p.max_output_tokens_by_model, modelId) ? p.max_output_tokens_by_model[modelId] : p.max_output_tokens);
+const expectedOutFor = (p, modelId) => (p.expected_output_tokens_by_model && Object.hasOwn(p.expected_output_tokens_by_model, modelId) ? p.expected_output_tokens_by_model[modelId] : p.expected_output_tokens);
+const inputFactorFor = (p, modelId) => (p.input_token_factor_by_model && Object.hasOwn(p.input_token_factor_by_model, modelId) ? p.input_token_factor_by_model[modelId] : 1);
+
 export const PLAN_VERSION = "is1-plan/0.1";
 
 export class PlanError extends Error {
@@ -105,16 +113,17 @@ export function buildPlan(study) {
   const add = (model_id, provider, kind, n, tin, toutExp, toutMax) => {
     const k = model_id;
     const r = (proj[k] ||= { model_id, provider, calls: 0, tokens_in: 0, tokens_out_expected: 0, tokens_out_max: 0, by_kind: {} });
-    r.calls += n; r.tokens_in += n * tin; r.tokens_out_expected += n * toutExp; r.tokens_out_max += n * toutMax;
+    r.calls += n; r.tokens_in += n * Math.ceil(tin * inputFactorFor(p, model_id)); r.tokens_out_expected += n * toutExp; r.tokens_out_max += n * toutMax;
     r.by_kind[kind] = (r.by_kind[kind] || 0) + n;
   };
   const expOut = p.expected_output_tokens, maxOut = p.max_output_tokens;
   for (const c of producerCalls) {
     const base = baseFrameTokens(publicView(taskById.get(c.task_id)), p.base_reasoning_tokens) + 120;
-    add(c.model_id, c.provider, `producer-${c.kind}`, 1, base + (c.generation > 0 ? p.context_budget_tokens : 0), expOut, maxOut);
+    add(c.model_id, c.provider, `producer-${c.kind}`, 1, base + (c.generation > 0 ? p.context_budget_tokens : 0), expectedOutFor(p, c.model_id), outputCapFor(p, c.model_id));
   }
   for (const b of blocks) {
     const base = baseFrameTokens(publicView(taskById.get(b.task_id)), p.base_reasoning_tokens);
+    const expOut = expectedOutFor(p, b.consumer_model_id), maxOut = outputCapFor(p, b.consumer_model_id);
     add(b.consumer_model_id, b.consumer_provider, "consumer-A", 1, base, expOut, maxOut);
     add(b.consumer_model_id, b.consumer_provider, "consumer-A+", 1, base, expOut + p.context_budget_tokens, maxOut + p.context_budget_tokens + p.aplus_amortized_allowance_tokens);
     add(b.consumer_model_id, b.consumer_provider, "consumer-BCDE", 4, base + p.context_budget_tokens, expOut, maxOut);
@@ -155,7 +164,7 @@ export function buildPlan(study) {
     projection: {
       prices_as_of: PRICES_AS_OF,
       price_date: study.price_date,
-      assumptions: { expected_output_tokens: expOut, max_output_tokens: maxOut, max_attempts: attempts, tokens_per_char: 0.25 },
+      assumptions: { expected_output_tokens: expOut, max_output_tokens: maxOut, max_attempts: attempts, tokens_per_char: 0.25, ...Object.fromEntries(["max_output_tokens_by_model", "expected_output_tokens_by_model", "input_token_factor_by_model"].filter((k) => p[k]).map((k) => [k, p[k]])) },
       calls_first_attempt: totalCalls,
       calls_max_with_retries: totalCalls * attempts,
       usd_expected: sum("usd_expected"),

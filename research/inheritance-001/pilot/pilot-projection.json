@@ -1,7 +1,7 @@
 {
   "projection_only": true,
   "stand_in_families": "public draw 'public-projection-only' — the sealed set is drawn at registration",
-  "plan_sha256_of_projection": "2a0b40003c05dd89be9ea50e6ce20490ba8f7cdeb1adb487027fff45cff8c758",
+  "plan_sha256_of_projection": "a98eba3985d62371191a1e542c203167424fee0e37a4d224e8bfe9b77688ee38",
   "steps_per_family": 4,
   "calibration_stage": {
     "probe": "IS1-PROBE-CAL-002",
@@ -16,20 +16,35 @@
       "expected_output_tokens": 1400,
       "max_output_tokens": 3000,
       "max_attempts": 2,
-      "tokens_per_char": 0.25
+      "tokens_per_char": 0.25,
+      "max_output_tokens_by_model": {
+        "gemini-4-carbon": 4500
+      },
+      "expected_output_tokens_by_model": {
+        "claude-sonnet-5-5": 900,
+        "gpt-6.1-sol": 600,
+        "deepseek-v4-pro": 600,
+        "gemini-4-carbon": 2600
+      },
+      "input_token_factor_by_model": {
+        "claude-sonnet-5-5": 1.6,
+        "gpt-6.1-sol": 1,
+        "deepseek-v4-pro": 1,
+        "gemini-4-carbon": 1.15
+      }
     },
     "calls_first_attempt": 344,
     "calls_max_with_retries": 688,
-    "usd_expected": 6.4546,
-    "usd_worst_first_attempts": 12.28,
-    "usd_worst_with_retries": 24.56,
+    "usd_expected": 5.3851,
+    "usd_worst_first_attempts": 13.3392,
+    "usd_worst_with_retries": 26.6784,
     "models": [
       {
         "model_id": "claude-sonnet-5-5",
         "provider": "anthropic",
         "calls": 144,
-        "tokens_in": 177636,
-        "tokens_out_expected": 237600,
+        "tokens_in": 284256,
+        "tokens_out_expected": 165600,
         "tokens_out_max": 475200,
         "by_kind": {
           "consumer-A": 24,
@@ -40,16 +55,16 @@
           "in": 2,
           "out": 10
         },
-        "usd_expected": 2.7313,
-        "usd_worst_first_attempts": 5.1073,
-        "usd_worst_with_retries": 10.2146
+        "usd_expected": 2.2245,
+        "usd_worst_first_attempts": 5.3205,
+        "usd_worst_with_retries": 10.641
       },
       {
         "model_id": "deepseek-v4-pro",
         "provider": "deepseek",
         "calls": 28,
         "tokens_in": 9913,
-        "tokens_out_expected": 39200,
+        "tokens_out_expected": 16800,
         "tokens_out_max": 84000,
         "by_kind": {
           "producer-work": 24,
@@ -59,7 +74,7 @@
           "in": 1.32,
           "out": 3.96
         },
-        "usd_expected": 0.1683,
+        "usd_expected": 0.0796,
         "usd_worst_first_attempts": 0.3457,
         "usd_worst_with_retries": 0.6914
       },
@@ -67,9 +82,9 @@
         "model_id": "gemini-4-carbon",
         "provider": "gemini",
         "calls": 28,
-        "tokens_in": 9913,
-        "tokens_out_expected": 39200,
-        "tokens_out_max": 84000,
+        "tokens_in": 11414,
+        "tokens_out_expected": 72800,
+        "tokens_out_max": 126000,
         "by_kind": {
           "producer-work": 24,
           "producer-placebo": 4
@@ -78,16 +93,16 @@
           "in": 4,
           "out": 20
         },
-        "usd_expected": 0.8237,
-        "usd_worst_first_attempts": 1.7197,
-        "usd_worst_with_retries": 3.4394
+        "usd_expected": 1.5017,
+        "usd_worst_first_attempts": 2.5657,
+        "usd_worst_with_retries": 5.1314
       },
       {
         "model_id": "gpt-6.1-sol",
         "provider": "openai",
         "calls": 144,
         "tokens_in": 177636,
-        "tokens_out_expected": 237600,
+        "tokens_out_expected": 122400,
         "tokens_out_max": 475200,
         "by_kind": {
           "consumer-A": 24,
@@ -98,7 +113,7 @@
           "in": 2,
           "out": 10
         },
-        "usd_expected": 2.7313,
+        "usd_expected": 1.5793,
         "usd_worst_first_attempts": 5.1073,
         "usd_worst_with_retries": 10.2146
       }
@@ -107,7 +122,7 @@
   "blocks": 48,
   "producer_calls": 56,
   "proposed_caps": {
-    "calls": 720,
+    "calls": 688,
     "usd": 17
   },
   "output_bounds": [

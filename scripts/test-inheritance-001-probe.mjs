@@ -45,6 +45,7 @@ test("[Q2] probe 2 plan: 32 arm-A calls, the capped panel, 4-step families on a 
   assert.equal(P.plan.projection.price_date, "2026-12-01", "priced at the higher December Gemini price");
   assert.ok(P.plan.projection.usd_worst > 0.9 && P.plan.projection.usd_worst <= 1.05, String(P.plan.projection.usd_worst));
   assert.equal(buildProbe().plan.plan_sha256, P.plan.plan_sha256, "deterministic");
+  assert.equal(P.plan.plan_sha256, PROBE_2.plan_sha256, "probe 2 ran under this plan: it must keep reproducing");
   const text = JSON.stringify(P.plan);
   for (const t of P.tasks) { assert.ok(!text.includes(t.sealed.canary)); assert.ok(!text.includes(canonicalJSON(t.sealed.program))); }
   for (const ctx of P.contexts.values()) assert.equal(ctx.context.inherited_records.records.length, 0, "arm A: no inherited records");
@@ -57,11 +58,13 @@ test("[Q2] probe 2 plan: 32 arm-A calls, the capped panel, 4-step families on a 
   }
 });
 
-test("[Q2b] probe 2 runs exactly the pilot's panel, cap, timeout and step count (drift would need a new probe id)", () => {
+test("[Q2b] probe 2 ran the pilot's panel, timeout and step count; the pilot differs only by the rule-driven Gemini cap", () => {
   const study = pilotStudy({ families: projectionFamilies(), salt: "x" });
   const panel = [...PILOT_MODELS.consumers.map((m) => ({ ...m, role: "consumer" })), ...PILOT_MODELS.producers.map((m) => ({ ...m, role: "producer" }))];
   assert.deepEqual(PROBE_2.models.map((m) => [m.model_id, m.provider, m.role, m.expected_family]).sort(), panel.map((m) => [m.model_id, m.provider, m.role, m.expected_family]).sort());
   assert.equal(PROBE_2.params.max_output_tokens, study.params.max_output_tokens);
+  assert.deepEqual(study.params.max_output_tokens_by_model, { "gemini-4-carbon": 4500 }, "probe 2's output-cap branch fired for Gemini only; xz: \"Gemini only\"");
+  assert.match(DECISION_RULE_2.output_cap.then, /4500/);
   assert.equal(PROBE_2.params.timeout_ms, study.params.timeout_ms);
   assert.equal(PROBE_2.steps, SEALED_DRAW.steps);
 });

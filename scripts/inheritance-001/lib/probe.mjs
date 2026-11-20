@@ -7,8 +7,9 @@
 //
 //   IS1-PROBE-CAL-001  ran 2026-11-20: claude-sonnet-5-5 + grok-4.7, 3-step families. Its findings (Grok's reasoning is
 //                      not bounded by max_tokens; timed-out calls went uncounted) led to probe 2.
-//   IS1-PROBE-CAL-002  proposed, NOT run: the capped pilot panel (two consumers, two producers), 4-step families on a NEW
+//   IS1-PROBE-CAL-002  ran 2026-11-20: the capped pilot panel (two consumers, two producers), 4-step families on a NEW
 //                      public seed, a 3000-token cap that each provider documents as bounding all billed output, 600 s.
+//                      Its output-cap branch fired for gemini-4-carbon (the pilot raises that model's cap to 4500).
 import { schemaVersion, sha256, hexId, rng, shuffled } from "./canon.mjs";
 import { familyRecord, generateTasks, publicView } from "./tasks.mjs";
 import { drawFamilySet, setKey } from "./families.mjs";
@@ -46,7 +47,7 @@ export const PROBE_1 = Object.freeze({
   decision_rule: DECISION_RULE_1,
 });
 
-// ── Probe 2 (proposed 2026-11-20, NOT run). Fixed before any call ──────────────────────────────────────────────────────
+// ── Probe 2 (ran 2026-11-20). Fixed before any call; frozen, it must keep reproducing plan 346b0cf3… ──────────────────────────────────────────────────────
 // Bands are chosen so that 12 consumer calls leave no gap: 1/12 ≤ 0.10, 2/12 ≥ 0.15, 8/12 ≤ 0.70, 9/12 ≥ 0.75.
 export const DECISION_RULE_2 = {
   difficulty: [
@@ -66,7 +67,8 @@ export const DECISION_RULE_2 = {
 export const PROBE_2 = Object.freeze({
   id: "IS1-PROBE-CAL-002",
   seed: "calibration-probe-2-2026-11-20",
-  status: "proposed, not run (needs xz's approval of this exact plan hash)",
+  status: "ran 2026-11-20 (results private)",
+  plan_sha256: "346b0cf3e99724bc7e0cb5cfad387a79b7fb7c636a03b49f24facfa5cb4e5a3a",
   steps: 4,
   n_families: 4,
   tasks: { consumer_per_family: 3, producer_per_family: 1, examples: 3, checks: 8 },

@@ -7,7 +7,9 @@ import assert from "node:assert/strict";
 import { OUTPUT_CAPS, capFor, controlsFor, capProblems, CAPS_READ_ON } from "./inheritance-001/lib/caps.mjs";
 import { checkLiveAuthorization, createHttpsTransport, parseProviderResponse } from "./inheritance-001/lib/adapters.mjs";
 import { priceFor } from "./inheritance-001/lib/prices.mjs";
-import { buildPlan } from "./inheritance-001/lib/plan.mjs";
+import { buildPlan, outputCapFor } from "./inheritance-001/lib/plan.mjs";
+import { runStudy } from "./inheritance-001/lib/runner.mjs";
+import { createSpendGuard } from "./inheritance-001/lib/adapters.mjs";
 import { drawFamilySet, setKey } from "./inheritance-001/lib/families.mjs";
 import { calibrationOpSets } from "./inheritance-001/lib/probe.mjs";
 import { PILOT_MODELS, pilotStudy, projectionFamilies, SEALED_DRAW } from "./inheritance-001/fixtures/pilot-001.mjs";
@@ -118,8 +120,25 @@ test("[K6] the pilot panel: four families, no overlap between producers and cons
   const study = pilotStudy({ families: projectionFamilies(), salt: "x" });
   assert.equal(study.params.timeout_ms, 600000);
   assert.equal(study.params.max_output_tokens, 3000);
+  assert.deepEqual(PANEL.map((m) => [m.model_id, outputCapFor(study.params, m.model_id)]), [["deepseek-v4-pro", 3000], ["gemini-4-carbon", 4500], ["claude-sonnet-5-5", 3000], ["gpt-6.1-sol", 3000]]);
+  assert.ok(PANEL.every((m) => study.params.expected_output_tokens_by_model[m.model_id] > 0 && study.params.input_token_factor_by_model[m.model_id] >= 1), "every panel model has probe-2 measurements");
   assert.ok(study.families.filter((f) => f.domain === "str").every((f) => f.steps.length === 4));
   const { plan } = buildPlan(study);
   assert.equal(plan.projection.calls_first_attempt, 344);
-  assert.ok(plan.projection.usd_worst_first_attempts < 13, String(plan.projection.usd_worst_first_attempts));
+  const gem = plan.projection.models.find((m) => m.model_id === "gemini-4-carbon");
+  assert.equal(gem.tokens_out_max, 28 * 4500, "Gemini's raised cap is in the worst case");
+  assert.ok(plan.projection.usd_worst_first_attempts < 14 && Math.ceil(plan.projection.usd_worst_first_attempts * 1.25) <= 17, String(plan.projection.usd_worst_first_attempts));
+});
+
+test("[K7] the runner sends each model's own cap (Gemini 4500, the rest 3000), and the guard pads the input estimate", async () => {
+  const sent = [];
+  const adapter = { kind: "fake", billable: false, async call(req) { sent.push(req); return { provider_returned_model_id: req.model_id, output: "<answer>zz</answer>", usage: { in: 100, out: 100 }, request_id: "r", duration_ms: 1, provider_response_metadata: {}, error: null }; } };
+  const study = pilotStudy({ families: projectionFamilies(), salt: "k7" });
+  await runStudy({ study: { ...study, budget: { max_paid_calls: 0, max_usd: 0 } }, adapter, guard: createSpendGuard({ mock: true }) });
+  const caps = {};
+  for (const r of sent) (caps[r.model_id] ||= new Set()).add(r.max_output_tokens);
+  assert.deepEqual(Object.fromEntries(Object.entries(caps).map(([k, v]) => [k, [...v]])), { "deepseek-v4-pro": [3000], "gemini-4-carbon": [4500], "claude-sonnet-5-5": [3000], "gpt-6.1-sol": [3000] });
+  assert.ok(sent.every((r) => r.timeout_ms === 600000));
+  const g = createSpendGuard({ maxCalls: 5, maxUsd: 5, onDate: "2026-12-01" });
+  assert.equal(g.precheck({ provider: "anthropic", model_id: "claude-sonnet-5-5", tokensIn: 1000, maxOut: 0 }).worst_usd, (1000 * 2 * 2) / 1e6, "input counted at twice the estimate");
 });

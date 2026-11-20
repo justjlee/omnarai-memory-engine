@@ -40,6 +40,7 @@ design:
   aplus_matching: extra allowance = C context tokens - A context tokens + amortized curation tokens (token-for-token)
   poison_fraction: 0.34
   max_output_tokens: 3000
+  max_output_tokens_by_model: { gemini-4-carbon: 4500 }   # probe 2's pre-committed output-cap rule fired for Gemini only; xz chose Gemini only
   timeout_seconds: 600              # a timed-out call scores 0 and is charged at its worst case
   temperature: provider default (recorded); seeds are not claimed to make providers deterministic
   ablations: 0                      # deferred; leave-one-out is preregistered only when budgeted

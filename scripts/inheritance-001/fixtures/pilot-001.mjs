@@ -48,11 +48,20 @@ export function pilotStudy({ families, salt, seed = 20261201 }) {
     replicates: 1,
     consumers: PILOT_MODELS.consumers,
     producers: PILOT_MODELS.producers,
-    // max_output_tokens: a bound each provider enforces on all billed output (lib/caps.mjs). expected_output_tokens: the
-    // measured median of claude-sonnet-5-5 in probe 1 (1,328, 3-step, default effort), rounded up; ASSUMED for the other three
-    // models until probe 2 measures them. timeout_ms: 600 s (probe 1's 120 s cut off long reasoning calls); a call that
-    // times out is still charged at its worst case (adapters.mjs assume()).
-    params: { context_budget_tokens: 1500, base_reasoning_tokens: 1024, poison_fraction: 0.34, max_output_tokens: 3000, expected_output_tokens: 1400, aplus_amortized_allowance_tokens: 300, timeout_ms: 600000, max_attempts: 2 },
+    // max_output_tokens: a bound each provider enforces on all billed output (lib/caps.mjs); 3000 per call, except
+    // gemini-4-carbon at 4500: probe 2's pre-committed output-cap rule fired for it (2 of its 4 calls stopped at 3000 at its
+    // lowest thinking level), and xz chose "Gemini only" (2026-11-20). expected_output_tokens_by_model: probe 2's measured
+    // mean output per model (arm A, 4-step), rounded up to 100; Gemini's two cap-stopped calls counted at 4500.
+    // input_token_factor_by_model: probe 2's largest real-input ÷ estimated-input ratio per model, rounded up.
+    // expected_output_tokens (1400, from probe 1) is only the fallback for a model without a measurement.
+    // timeout_ms: 600 s; a call that times out is still charged at its worst case (adapters.mjs assume()).
+    params: {
+      context_budget_tokens: 1500, base_reasoning_tokens: 1024, poison_fraction: 0.34,
+      max_output_tokens: 3000, max_output_tokens_by_model: { "gemini-4-carbon": 4500 },
+      expected_output_tokens: 1400, expected_output_tokens_by_model: { "claude-sonnet-5-5": 900, "gpt-6.1-sol": 600, "deepseek-v4-pro": 600, "gemini-4-carbon": 2600 },
+      input_token_factor_by_model: { "claude-sonnet-5-5": 1.6, "gpt-6.1-sol": 1.0, "deepseek-v4-pro": 1.0, "gemini-4-carbon": 1.15 },
+      aplus_amortized_allowance_tokens: 300, timeout_ms: 600000, max_attempts: 2,
+    },
     ablation: { max_artifacts: 0, split: "anchor" },
     analysis: { resamples: 2000, alpha: 0.05, seed: 11, min_clusters_for_inference: 10, timeouts_as_failures: true, primary_family: ["H1", "H2", "H3"] },
     budget: { max_paid_calls: 0, max_usd: 0 },
