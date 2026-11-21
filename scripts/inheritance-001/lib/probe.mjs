@@ -335,7 +335,7 @@ export function renderProbe(summary, { approvedWords, ranAt }) {
   return L.join("\n") + "\n";
 }
 
-// ── Probe 3: producers only (proposed 2026-11-20, NOT run). Fixed before any call ─────────────────────────────────────────
+// ── Probe 3: producers only (ran 2026-11-21; frozen, it must keep reproducing plan 36fe2036…) ─────────────────────────────────────────
 // Pilot 001 ran but could not test inheritance: no producer record carried a program in the study's language, so nothing
 // was verified and arm C was empty. Probe 3 asks the two producers for exactly what a pilot asks them (the contribution
 // request, now stating the language) and counts the records that PASS the hidden checks of their own task.
@@ -357,7 +357,8 @@ export const PROBE_3 = Object.freeze({
   id: "IS1-PROBE-CAL-003",
   kind: "producer",
   seed: "calibration-probe-3-2026-11-20",
-  status: "proposed, not run (needs xz's approval of this exact plan hash)",
+  status: "ran 2026-11-21 (results private)",
+  plan_sha256: "36fe203610e44b620d1cf364fcc434559690951053de6d6bab5bd5ae8bdbf2e4",
   steps: 4,
   n_families: 4,
   tasks: { per_str_family: 2, per_num_family: 1, examples: 3, checks: 8 },
@@ -370,12 +371,32 @@ export const PROBE_3 = Object.freeze({
   decision_rule: DECISION_RULE_3,
 });
 PROBES_MUTABLE[PROBE_3.id] = PROBE_3;
-export const DEFAULT_PROBE_ID = PROBE_3.id;
+
+// ── Probe 4: GPT-6.1 Sol as a producer (proposed 2026-11-21, NOT run). Fixed before any call ───────────────────────────────
+// Probe 3: gemini-4-carbon verified 9 of 10; deepseek-v4-pro (thinking off) 0 of 10. xz chose producers Gemini + GPT-6.1 Sol
+// with Claude Sonnet 5.5 the only consumer for Pilot 002 ("Yes, Gemini + GPT"). Probe 4 asks GPT-6.1 Sol for exactly what
+// probe 3 asked, on probe 3's own tasks (tasks_from), so the two producers are compared on identical work. Same rule.
+export const PROBE_4 = Object.freeze({
+  id: "IS1-PROBE-CAL-004",
+  kind: "producer",
+  tasks_from: PROBE_3.id,
+  seed: PROBE_3.seed,
+  status: "proposed, not run (needs xz's approval of this exact plan hash)",
+  steps: PROBE_3.steps,
+  n_families: PROBE_3.n_families,
+  tasks: PROBE_3.tasks,
+  price_date: "2026-12-01",
+  models: [{ role: "producer", provider: "openai", model_id: "gpt-6.1-sol", expected_family: "openai-gpt" }],
+  params: PROBE_3.params,
+  decision_rule: DECISION_RULE_3,
+});
+PROBES_MUTABLE[PROBE_4.id] = PROBE_4;
+export const DEFAULT_PROBE_ID = PROBE_4.id;
 
 function buildProbe3(probe) {
   const { models, params, tasks: T } = probe;
   const numSpecs = drawFamilySet({ seed: probe.seed, nWork: 0, nAnchor: 0, nPlacebo: 2, steps: probe.steps, generations: 1 });
-  const families = [...calibrationSpecs(probe), ...numSpecs].map((spec) => ({ spec, record: familyRecord(spec, { studyId: probe.id, salt: "public-calibration" }) }));
+  const families = [...calibrationSpecs(probe), ...numSpecs].map((spec) => ({ spec, record: familyRecord(spec, { studyId: probe.tasks_from ?? probe.id, salt: "public-calibration" }) }));
   const tasks = families.flatMap(({ spec, record }) => generateTasks(spec, record, { seed: probe.seed, count: spec.domain === "num" ? T.per_num_family : T.per_str_family, examples: T.examples, checks: T.checks }));
   const byId = new Map(tasks.map((t) => [t.public.id, t]));
   const calls = shuffled(models.flatMap((m) => tasks.map((t) => ({ call_id: `PRB-${hexId({ p: probe.id, t: t.public.id, m: m.model_id }, 12)}`, task_id: t.public.id, family_id: t.public.family_id, domain: t.public.domain, model_id: m.model_id, provider: m.provider, role: m.role, expected_family: m.expected_family }))), rng(`${probe.seed}|order`));
@@ -395,6 +416,7 @@ function buildProbe3(probe) {
     kind: "producer-probe",
     arm: "producer",
     seed: probe.seed,
+    ...(probe.tasks_from ? { tasks_from: probe.tasks_from } : {}),
     steps: probe.steps,
     families: families.map((f) => f.record),
     tasks: tasks.map((t) => ({ id: t.public.id, family_id: t.public.family_id, domain: t.public.domain, sealed_commitment_sha256: t.public.sealed_commitment_sha256 })),

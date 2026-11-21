@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { PROGRAM_LANGUAGE, languageText } from "./inheritance-001/lib/language.mjs";
 import { DOMAINS, runProgram, parseValue, formatValue, validateProgram, extractProgram } from "./inheritance-001/lib/dsl.mjs";
 import { buildProducerContext, buildContext, CONTRIBUTION_REQUEST } from "./inheritance-001/lib/context.mjs";
-import { buildProbe, runProbe, summarizeProducerProbe, renderProbe, calibrationOpSets, PROBES, PROBE_1, PROBE_2, PROBE_3, DECISION_RULE_3, DEFAULT_PROBE_ID } from "./inheritance-001/lib/probe.mjs";
+import { buildProbe, runProbe, summarizeProducerProbe, renderProbe, calibrationOpSets, PROBES, PROBE_1, PROBE_2, PROBE_3, PROBE_4, DECISION_RULE_3, DEFAULT_PROBE_ID } from "./inheritance-001/lib/probe.mjs";
 import { checkLiveAuthorization, createLiveAdapter, createSpendGuard } from "./inheritance-001/lib/adapters.mjs";
 import { capFor } from "./inheritance-001/lib/caps.mjs";
 import { canonicalJSON } from "./inheritance-001/lib/canon.mjs";
@@ -47,7 +47,7 @@ const approval = { study_id: PROBE_3.id, plan_sha256: P.plan.plan_sha256, approv
 const auth = (over = {}) => ({ approval, preregistration: null, plan: P.plan, planSha256: P.plan.plan_sha256, argv: ["--live", "--yes", "--experiment", PROBE_3.id, "--max-usd", "1.15", "--max-calls", "20"], env: { OMNARAI_LAB_LIVE: "1" }, requireRegistration: false, ...over });
 
 test("[P3a] probe 3 plan: 20 producer calls on NEW public families (4 string, 2 number), the pilot's caps and controls, worst case about $1.10", () => {
-  assert.equal(DEFAULT_PROBE_ID, PROBE_3.id);
+  assert.equal(P.plan.plan_sha256, PROBE_3.plan_sha256, "probe 3 ran under this plan: it must keep reproducing");
   assert.equal(P.plan.kind, "producer-probe");
   assert.equal(P.plan.calls.length, 20);
   assert.deepEqual(P.plan.models.map((m) => [m.model_id, m.max_output_tokens]), [["deepseek-v4-pro", 3000], ["gemini-4-carbon", 4500]]);
@@ -138,4 +138,32 @@ test("[P3d] the guard stops probe 3 before its cap; a timed-out call is charged 
   const r = await runProbe({ ...P, adapter, guard: g });
   assert.ok(r.records.filter((x) => x.outcome === "timeout").every((x) => x.cost_status === "assumed-worst-case" && x.cost_usd > 0));
   assert.ok(g.state.usd <= 0.5 && sent.length < 20);
+});
+
+test("[P4a] probe 4: GPT-6.1 Sol alone, on probe 3's identical tasks, same request and rule; probe 3 unchanged", async () => {
+  assert.equal(DEFAULT_PROBE_ID, PROBE_4.id);
+  const P4 = buildProbe({ probe: PROBE_4 });
+  assert.equal(P4.plan.calls.length, 10);
+  assert.deepEqual(P4.plan.models.map((m) => [m.model_id, m.provider, m.max_output_tokens]), [["gpt-6.1-sol", "openai", 3000]]);
+  assert.deepEqual(P4.plan.models[0].controls, capFor("gpt-6.1-sol").controls);
+  assert.deepEqual(P4.plan.tasks, P.plan.tasks, "the same task ids and sealed commitments as probe 3");
+  assert.deepEqual(P4.plan.params.contribution_request_sha256, P.plan.params.contribution_request_sha256, "the same request text");
+  assert.equal(P4.plan.tasks_from, PROBE_3.id);
+  assert.equal(P4.plan.decision_rule, DECISION_RULE_3);
+  assert.notEqual(P4.plan.plan_sha256, P.plan.plan_sha256);
+  assert.ok(P4.plan.projection.usd_worst > 0.2 && P4.plan.projection.usd_worst <= 0.4, String(P4.plan.projection.usd_worst));
+  assert.equal(calibrationOpSets().size, 12, "no new families are consumed");
+  const a4 = { study_id: PROBE_4.id, plan_sha256: P4.plan.plan_sha256, approved_by: "xz", approved_at: "2026-11-21T00:00:00Z", approval_words: "Yes", max_calls: 10, max_usd: 0.4, models: ["gpt-6.1-sol"] };
+  const auth4 = { approval: a4, preregistration: null, plan: P4.plan, planSha256: P4.plan.plan_sha256, argv: ["--live", "--yes", "--experiment", PROBE_4.id, "--max-usd", "0.4", "--max-calls", "10"], env: { OMNARAI_LAB_LIVE: "1" }, requireRegistration: false };
+  assert.deepEqual(checkLiveAuthorization(auth4), []);
+  const byText = new Map([...P4.contexts].map(([id, ctx]) => [ctx.text, P4.tasks.find((t) => t.public.id === P4.plan.calls.find((c) => c.call_id === id).task_id).sealed]));
+  let k = 0;
+  const adapter = createLiveAdapter({ authorization: auth4, keys: { OPENAI_API_KEY: "sk-test-openai-000000000000" }, transport: async (req) => {
+    const s = byText.get(req.input.user);
+    const text = `<answer>${s.expected}</answer>${k++ % 2 ? `\n\`\`\`program\n${JSON.stringify(s.program)}\n\`\`\`` : ""}`;
+    return { status: 200, headers: {}, json: { model: "gpt-6.1-sol", choices: [{ finish_reason: "stop", message: { content: text } }], usage: { prompt_tokens: 800, completion_tokens: 700, completion_tokens_details: { reasoning_tokens: 500 } } }, duration_ms: 2 };
+  } });
+  const { summary } = await runProbe({ ...P4, adapter, guard: createSpendGuard({ maxCalls: 10, maxUsd: 0.4, onDate: PROBE_4.price_date }) });
+  assert.equal(summary.by_model[0].verified, 5);
+  assert.equal(summary.decision.verification.branch, 0, "0.5 counts as enough");
 });
