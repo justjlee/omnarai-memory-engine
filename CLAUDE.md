@@ -192,6 +192,15 @@ layer that must exist before an agent is responsible to build. Entry point: `res
 
 ---
 
+### Inheritance Study 001 — research namespace (2026-11-20, branch `inheritance-001`, NOT deployed, $0)
+A controlled test of whether one model family's *independently verified* work helps a *different* family on held-out task categories
+(six arms A / A+ / B / C / D / E, frozen generation snapshots, re-executed verification receipts, sealed tasks, family-clustered
+analysis, a six-criterion ratchet checklist). Start at `research/inheritance-001/README.md`; code in `scripts/inheritance-001/`.
+- Offline demo: `node scripts/inheritance-001/demo.mjs` (mock in synthetic worlds — NOT evidence). Tests: `scripts/test-inheritance-001*.mjs` (in the suite above).
+- It is NOT `/api/inheritance` (the orientation view) and adds no route, tool, function or Footprint field; it never writes `memory/grown.json`.
+- Live calls refuse unless xz's approval file names the exact plan hash and caps, the preregistration is pushed publicly ALONE first,
+  `OMNARAI_LAB_LIVE=1`, and the shared ledger reserve succeeds. Sealed task material lives outside the repository.
+
 ## Recurring actions (runbooks — don't re-derive these)
 
 | Action | One command | Notes |

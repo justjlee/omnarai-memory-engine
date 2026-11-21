@@ -1,0 +1,405 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://engine.omnarai.org/research/inheritance-001/schemas/trial-0.1.schema.json",
+  "title": "Inheritance Study 001 trial record (research draft; not a Footprint, not a public contract)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "study_id",
+    "run_id",
+    "generation",
+    "block_id",
+    "task_id",
+    "task_family_id",
+    "eval_split",
+    "consumer",
+    "arm",
+    "arm_label",
+    "variant",
+    "replicate",
+    "snapshot_id",
+    "snapshot_sha256",
+    "context",
+    "budget",
+    "call",
+    "output",
+    "outcome",
+    "score",
+    "scoring",
+    "simulation",
+    "sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "omnarai.inheritance-study.trial/0.1"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^IS1-TRIAL-[0-9a-f]{16}$"
+    },
+    "study_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "block_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "task_id": {
+      "type": "string",
+      "pattern": "^IS1-TASK-[0-9a-f]{12}$"
+    },
+    "task_family_id": {
+      "type": "string",
+      "pattern": "^IS1-FAM-[0-9a-f]{10}$"
+    },
+    "eval_split": {
+      "enum": [
+        "anchor",
+        "generation"
+      ]
+    },
+    "consumer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider",
+        "model_id_requested",
+        "model_id_returned",
+        "family",
+        "expected_family"
+      ],
+      "properties": {
+        "provider": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model_id_requested": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model_id_returned": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "family": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "expected_family": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "arm": {
+      "enum": [
+        "A",
+        "A+",
+        "B",
+        "C",
+        "D",
+        "E"
+      ]
+    },
+    "arm_label": {
+      "enum": [
+        "cold",
+        "compute-matched",
+        "raw-history",
+        "verified-inheritance",
+        "contaminated",
+        "unrelated-placebo"
+      ]
+    },
+    "variant": {
+      "type": "string",
+      "pattern": "^(full|minus:IS1-ART-g\\d{1,3}-[0-9a-f]{12})$"
+    },
+    "replicate": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "snapshot_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "snapshot_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sha256",
+        "tokens_est",
+        "chars",
+        "artifact_ids",
+        "producer_families",
+        "poison_ids",
+        "volume_match",
+        "leak_blocked"
+      ],
+      "properties": {
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "tokens_est": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "chars": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "artifact_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^IS1-ART-g\\d{1,3}-[0-9a-f]{12}$"
+          }
+        },
+        "producer_families": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "poison_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^IS1-ART-g\\d{1,3}-[0-9a-f]{12}$"
+          }
+        },
+        "volume_match": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "leak_blocked": {
+          "type": "boolean"
+        }
+      }
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reasoning_allowance_tokens",
+        "aplus_matching"
+      ],
+      "properties": {
+        "reasoning_allowance_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "aplus_matching": {
+          "type": [
+            "object",
+            "null"
+          ]
+        }
+      }
+    },
+    "call": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tracing_id",
+        "attempts",
+        "usage",
+        "cost_usd",
+        "cost_status"
+      ],
+      "properties": {
+        "tracing_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "attempts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "attempt_id",
+              "status",
+              "error_code",
+              "error_detail",
+              "request_id",
+              "provider_returned_model_id",
+              "duration_ms",
+              "usage",
+              "cost_usd",
+              "cost_status",
+              "price_basis",
+              "worst_case_usd"
+            ],
+            "properties": {
+              "attempt_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "status": {
+                "enum": [
+                  "ok",
+                  "error",
+                  "timeout"
+                ]
+              },
+              "error_code": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "error_detail": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "request_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "provider_returned_model_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "duration_ms": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "usage": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "cost_usd": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "cost_status": {
+                "enum": [
+                  "priced",
+                  "unknown",
+                  "mock-zero",
+                  "assumed-worst-case"
+                ]
+              },
+              "price_basis": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "worst_case_usd": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "usage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "in",
+            "out"
+          ],
+          "properties": {
+            "in": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "out": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "cost_usd": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "cost_status": {
+          "enum": [
+            "priced",
+            "unknown",
+            "mock-zero",
+            "includes-assumed"
+          ]
+        }
+      }
+    },
+    "output": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "outcome": {
+      "enum": [
+        "pass",
+        "fail",
+        "abstain",
+        "timeout",
+        "error"
+      ]
+    },
+    "score": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "enum": [
+        0,
+        1,
+        null
+      ]
+    },
+    "scoring": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "simulation": {
+      "type": "boolean"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

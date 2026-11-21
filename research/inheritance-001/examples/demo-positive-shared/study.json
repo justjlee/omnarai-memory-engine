@@ -1,0 +1,96 @@
+{
+  "schema_version": "omnarai.inheritance-study.study/0.1",
+  "id": "IS1-STUDY-DEMO-POSITIVE-SHARED",
+  "protocol": "omnarai.inheritance-study/0.1",
+  "status": "draft_unregistered",
+  "simulation": true,
+  "title": "Offline mechanics demo (positive-shared) — NOT EVIDENCE",
+  "preregistration": {
+    "path": "research/inheritance-001/preregistration.draft.yaml",
+    "status": "draft_unregistered",
+    "registered_commit_sha": null
+  },
+  "config": {
+    "study_id": "IS1-STUDY-DEMO-POSITIVE-SHARED",
+    "title": "Offline mechanics demo (positive-shared) — NOT EVIDENCE",
+    "status": "draft_unregistered",
+    "simulation": true,
+    "world_label": "positive-shared",
+    "world_truth": "transfer is real where held-out families reuse ops prior work covered: C > A and C > E expected; C vs A+ depends on size; D < C",
+    "preregistration": {
+      "path": "research/inheritance-001/preregistration.draft.yaml",
+      "status": "draft_unregistered",
+      "registered_commit_sha": null
+    },
+    "seed": 20261120,
+    "start_at": "2026-11-20T00:00:00.000Z",
+    "price_date": "2026-11-20",
+    "main_domain": "str",
+    "generations": 3,
+    "tasks": {
+      "per_work_family": 3,
+      "per_eval_family": 3,
+      "per_placebo_family": 2,
+      "examples": 3,
+      "checks": 8
+    },
+    "replicates": 1,
+    "consumers": [
+      {
+        "provider": "mock",
+        "model_id": "mock-alpha-1",
+        "expected_family": "mock-alpha"
+      },
+      {
+        "provider": "mock",
+        "model_id": "mock-beta-1",
+        "expected_family": "mock-beta"
+      }
+    ],
+    "producers": [
+      {
+        "provider": "mock",
+        "model_id": "mock-gamma-1",
+        "expected_family": "mock-gamma"
+      },
+      {
+        "provider": "mock",
+        "model_id": "mock-delta-1",
+        "expected_family": "mock-delta"
+      }
+    ],
+    "params": {
+      "context_budget_tokens": 700,
+      "base_reasoning_tokens": 320,
+      "poison_fraction": 0.34,
+      "max_output_tokens": 1500,
+      "expected_output_tokens": 600,
+      "aplus_amortized_allowance_tokens": 200,
+      "timeout_ms": 60000,
+      "max_attempts": 3
+    },
+    "ablation": {
+      "max_artifacts": 2,
+      "split": "anchor"
+    },
+    "analysis": {
+      "resamples": 2000,
+      "alpha": 0.05,
+      "seed": 11,
+      "min_clusters_for_inference": 10,
+      "timeouts_as_failures": true,
+      "primary_family": [
+        "H1",
+        "H2",
+        "H3"
+      ]
+    },
+    "budget": {
+      "max_paid_calls": 0,
+      "max_usd": 0
+    }
+  },
+  "plan_sha256": "b600cff2cefb286a200b6793e0adb22eafcd4e208940f7f87683dcbb164dfebd",
+  "created_at": "2026-11-20T00:00:00.000Z",
+  "sha256": "648cea486286c3e2720fe0ecb401bbd3e02b903b21e2184b4b46c3d2ec4fd63a"
+}

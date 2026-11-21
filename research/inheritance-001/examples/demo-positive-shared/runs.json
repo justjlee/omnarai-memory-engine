@@ -1,0 +1,32 @@
+[
+  {
+    "schema_version": "omnarai.inheritance-study.run/0.1",
+    "id": "IS1-RUN-70bca9e5d823",
+    "study_id": "IS1-STUDY-DEMO-POSITIVE-SHARED",
+    "kind": "offline-mock",
+    "adapter": "mock",
+    "started_at": "2026-11-20T00:00:00.000Z",
+    "finished_at": "2026-11-20T00:01:10.000Z",
+    "plan_sha256": "b600cff2cefb286a200b6793e0adb22eafcd4e208940f7f87683dcbb164dfebd",
+    "counters": {
+      "producer_calls": 32,
+      "producer_failures": 0,
+      "consumer_trials": 648,
+      "ablation_trials": 144,
+      "leak_blocked": 0,
+      "attempts": 824
+    },
+    "spend": {
+      "calls_billed": 0,
+      "usd": 0,
+      "unknown_cost_calls": 0,
+      "caps": {
+        "max_paid_calls": 0,
+        "max_usd": 0
+      }
+    },
+    "events_head_sha256": "2f16e23f1647b6ef990276e15f2e1eebd45eb8d601378b008f29f3ef7a375037",
+    "status": "completed",
+    "sha256": "a835b00135f31a1951fb1c0647aaaa056bb2eca5cedff1b301d33483156fec60"
+  }
+]

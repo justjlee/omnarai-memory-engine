@@ -1,0 +1,102 @@
+# Inheritance Study 001 — Pilot 002 preregistration. DRAFT, NOT REGISTERED (built 2026-11-21; nothing drawn, approved or run).
+# Adapted from Pilot 001's registered preregistration (preregistration.draft.yaml, commit d24005d), which stays unchanged.
+# To register: draw the sealed set (lab.mjs draw-sealed --study pilot-002), fill the fields marked FILL from
+# `lab.mjs pilot-plan --study pilot-002` and xz's approval, commit THIS FILE BY ITSELF, push, then record that commit's sha in
+# research/inheritance-001/registration-002.json (a file cannot contain its own commit sha). Only then may Pilot 002 run.
+# After registration this file is never edited: changes are appended to deviations.ndjson with a reason.
+protocol_id: omnarai.inheritance-study/0.1
+study_id: IS1-STUDY-PILOT-002
+status: draft_unregistered
+registered_at_utc: null             # FILL at registration
+registered_commit_sha: null         # recorded in registration-002.json: the public commit that contains this file alone
+investigators:
+  - xz (curator, Omnarai)
+  - Claude | xz (instrument)
+  - Omnai (protocol design, handoff 2026-11-20)
+
+research_question: >-
+  Does work left by one model family, once independently verified, improve a different model family's exact-match
+  score on held-out program-induction families, beyond a compute-matched baseline (A+), raw history (B) and an
+  unrelated, format-matched placebo (E)? In this pilot the inheriting family is Claude Sonnet 5.5 only.
+
+why_a_second_pilot: >-
+  Pilot 001 (IS1-STUDY-PILOT-001, registered d24005d, plan 4a2364af...) ran all 344 calls but could not test inheritance:
+  producers were never told the program step language, so 0 of 51 producer records could be verified and arm C carried no
+  inherited records. That is an instrument finding, not a null result about inheritance. Producers are now told the
+  language; producer probes 3 and 4 (public calibration tasks, results private, never part of any study) checked that both
+  producers below can leave records that pass their task's hidden checks.
+
+design:
+  pilot_only: true
+  transitions: 1                    # generation-0 producers -> generation-1 consumer; cannot test a ratchet
+  producers:                        # model ids as requested; families are taken from the PROVIDER-RETURNED id
+    - { provider: gemini, model_id: gemini-4-carbon, api: interactions, controls: { thinking_level: low } }
+    - { provider: openai, model_id: gpt-6.1-sol, controls: { reasoning_effort: medium } }
+  consumers:                        # one consumer family: results speak only to Claude Sonnet 5.5 as an inheritor
+    - { provider: anthropic, model_id: claude-sonnet-5-5, controls: { output_config: { effort: medium } } }
+  panel_decision: xz, 2026-11-21, "Yes, Gemini + GPT" (deepseek-v4-pro left: its records did not verify with thinking off, and its thinking mode has no documented output bound; gpt-6.1-sol moved from consumer to producer)
+  producer_language: true           # producers' contribution request states every step, its parameters and a worked example (lib/language.mjs) and asks for replies under 6,000 characters; consumer frames (arms A-E) are unchanged from Pilot 001
+  output_bounds: every call's max_output_tokens goes in the field its provider documents as bounding ALL billed output, reasoning included (pilot/PROVIDER-CAPS.md, lib/caps.mjs); a model without one is refused
+  cross_family_only: true           # no producer family is the consumer's family
+  families: { work: 6, eval_anchor: 8, placebo: 2, steps_per_family: 4, excludes_calibration_op_sets: true, excludes_pilot_001_op_sets: null }   # FILL: true if drawn with --exclude-sealed <Pilot 001's sealed file> (recorded in the sealed file's exclusions)
+  tasks: { per_work_family: 4, per_eval_family: 6, per_placebo_family: 2, examples: 3, hidden_checks: 8 }   # 6 per held-out family (Pilot 001: 3 x 2 consumers): 48 paired blocks either way
+  arms: [A, A+, B, C, D, E]
+  primary_comparator: A+
+  unit_of_randomization: block (task x consumer); all six arms in every block; arm order and call order seeded
+  unit_of_analysis: task family (cluster)
+  context_budget_tokens: 1500
+  base_reasoning_allowance_tokens: 1024
+  aplus_matching: extra allowance = C context tokens - A context tokens + amortized curation tokens (token-for-token)
+  poison_fraction: 0.34
+  max_output_tokens: 3000
+  max_output_tokens_by_model: { gemini-4-carbon: 4500 }   # probe 2's pre-committed output-cap rule fired for Gemini only; xz chose Gemini only
+  timeout_seconds: 600              # a timed-out call scores 0 and is charged at its worst case
+  temperature: provider default (recorded); seeds are not claimed to make providers deterministic
+  ablations: 0
+  calibration_stage: BEFORE registration, public families never reused; probe 2 (consumer difficulty at 4 steps, arm A) ran 2026-11-20; producer probes 3 (gemini-4-carbon, deepseek-v4-pro) and 4 (gpt-6.1-sol) ran 2026-11-21 under lib/probe.mjs DECISION_RULE_3; probe 4's rule said prepare this pilot
+
+primary_outcome: exact match of the normalized <answer> to the hidden expected output (timeouts and abstentions score 0)
+missing_data: provider errors are missing, excluded pairwise; worst/best-case bounds reported; no re-running of single arms
+primary_estimand: mean over held-out families of mean paired score(C) - score(A+)
+
+hypotheses:
+  H1: C outperforms A+ on held-out families.
+  H2: C outperforms the unrelated placebo E.
+  H3: C outperforms A+ on blocks whose consumer family (provider-returned) differs from every producer family shown.   # every block is cross-family by construction here, so H3 covers the same blocks as H1 unless a returned id drifts
+  H4_exploratory: transfer varies with verification cost (not assessable with one verification regime).
+
+analysis:
+  script: scripts/inheritance-001/lib/analyze.mjs   # FILL: frozen at the instrument commit named in registration-002.json
+  confidence_interval: family-cluster percentile bootstrap, 2000 resamples, seed 11, 95%
+  test: two-sided sign-flip randomization on family means (exact for <= 16 families)
+  multiplicity: Holm over H1-H3
+  alpha: 0.05
+  min_clusters_for_inference: 10    # this pilot has 8: every verdict is DESCRIPTIVE by construction
+  timeouts_as_failures: true
+  diagnostic: NO_INHERITABLE_RECORDS is flagged if no snapshot holds a C-eligible record (added after Pilot 001); if it fires, C-A+ cannot speak to inheritance
+  verdict_rule: supported only if registered, non-simulated, >= 10 families, interval above 0 and Holm p < 0.05
+
+falsifiers:
+  - No C advantage over A+ (H1 not supported or contradicted).
+  - E matches C (scaffolding, not knowledge).
+  - B matches or beats C (curation adds nothing).
+  - Gains vanish between distinct provider-returned families.
+  - Verification plus curation cost exceeds the benefit at the stated amortization horizon.
+  - D does not lower scores (the verification gate is not load-bearing), or D raises them (poison design or grader is wrong).
+scope_of_any_result: one consumer family (claude-sonnet-5-5), one transition, 8 held-out families, program-induction string tasks; a confirmatory study needs more consumer families (DECISIONS_REQUIRED.md D8)
+
+registries:                         # FILL every field from `lab.mjs pilot-plan --study pilot-002 --sealed FILE --max-calls N --max-usd N`
+  task_manifest_sha256: null
+  family_template_commitments: []   # salted commitments from the sealed draw; templates stay sealed
+  verifier_code_sha256: null
+  oracle_code_sha256: null
+  plan_sha256: null                 # the plan xz approves; the caps are inside it
+
+sealed_material:
+  location: outside the repository (Claude/omnarai-private/inheritance-001/sealed/, held by xz); never in git, Vercel, npm or logs
+  release_policy: curator decision after the analysis is run and reported
+budget:                             # projection: pilot/PILOT-002-BUDGET.md (344 calls; expected about $5.61, worst $14.07 at December prices; proposed caps 688 calls and $18)
+  maximum_paid_calls: null          # FILL from xz's written approval
+  maximum_usd: null                 # FILL from xz's written approval
+  shared_ledger: must reserve the cap on the $95 rolling ledger before the first call
+deviations_log: research/inheritance-001/deviations.ndjson

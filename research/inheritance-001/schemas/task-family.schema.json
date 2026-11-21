@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://engine.omnarai.org/research/inheritance-001/schemas/task_family-0.1.schema.json",
+  "title": "Inheritance Study 001 task_family record (research draft; not a Footprint, not a public contract)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "study_id",
+    "domain",
+    "role",
+    "generation",
+    "n_steps",
+    "template_commitment_sha256",
+    "generator",
+    "verification",
+    "contamination_class",
+    "sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "omnarai.inheritance-study.task_family/0.1"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^IS1-FAM-[0-9a-f]{10}$"
+    },
+    "study_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "domain": {
+      "enum": [
+        "str",
+        "num"
+      ]
+    },
+    "role": {
+      "enum": [
+        "work",
+        "eval-anchor",
+        "eval-generation",
+        "placebo",
+        "calibration"
+      ]
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "n_steps": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "template_commitment_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "generator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "cost_class"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "deterministic-dsl"
+          ]
+        },
+        "cost_class": {
+          "enum": [
+            "cheap"
+          ]
+        }
+      }
+    },
+    "contamination_class": {
+      "enum": [
+        "synthetic-novel",
+        "public-fixture"
+      ]
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

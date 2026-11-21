@@ -1,0 +1,107 @@
+# Inheritance Study 001 — Pilot 001 preregistration. REGISTERED 2026-11-20 (this file was committed by itself and pushed
+# before any pilot model call; its commit sha is recorded in research/inheritance-001/registration.json, since a file cannot
+# contain its own commit sha). The file keeps its draft name so every earlier reference still resolves.
+# Derived from docs/handoff-2026-11-20-inheritance-001/protocol/preregistration-template.yaml (preserved verbatim there).
+# After registration this file is never edited: changes are appended to deviations.ndjson with a reason.
+protocol_id: omnarai.inheritance-study/0.1
+study_id: IS1-STUDY-PILOT-001
+status: registered
+registered_at_utc: 2026-11-20T22:10:45Z
+registered_commit_sha: null        # recorded in registration.json: the public commit that contains this file alone
+investigators:
+  - xz (curator, Omnarai)
+  - Claude | xz (instrument)
+  - Omnai (protocol design, handoff 2026-11-20)
+
+research_question: >-
+  Does work left by one model family, once independently verified, improve a different model family's exact-match
+  score on held-out program-induction families, beyond a compute-matched baseline (A+), raw history (B) and an
+  unrelated, format-matched placebo (E)?
+
+design:
+  pilot_only: true
+  transitions: 1                    # generation-0 producers -> generation-1 consumers; cannot test a ratchet
+  producers:                        # model ids as requested; families are taken from the PROVIDER-RETURNED id
+    - { provider: deepseek, model_id: deepseek-v4-pro, controls: { thinking: { type: disabled } } }
+    - { provider: gemini,   model_id: gemini-4-carbon, api: interactions, controls: { thinking_level: low } }
+  consumers:
+    - { provider: anthropic, model_id: claude-sonnet-5-5, controls: { output_config: { effort: medium } } }
+    - { provider: openai,    model_id: gpt-6.1-sol, controls: { reasoning_effort: medium } }
+  output_bounds: every call's max_output_tokens goes in the field its provider documents as bounding ALL billed output, reasoning included (pilot/PROVIDER-CAPS.md, lib/caps.mjs); a model without one is refused
+  cross_family_only: true
+  families: { work: 6, eval_anchor: 8, placebo: 2, steps_per_family: 4, excludes_calibration_op_sets: true }
+  tasks: { per_work_family: 4, per_eval_family: 3, per_placebo_family: 2, examples: 3, hidden_checks: 8 }
+  arms: [A, A+, B, C, D, E]
+  primary_comparator: A+
+  unit_of_randomization: block (task x consumer); all six arms in every block; arm order and call order seeded
+  unit_of_analysis: task family (cluster)
+  context_budget_tokens: 1500
+  base_reasoning_allowance_tokens: 1024
+  aplus_matching: extra allowance = C context tokens - A context tokens + amortized curation tokens (token-for-token)
+  poison_fraction: 0.34
+  max_output_tokens: 3000
+  max_output_tokens_by_model: { gemini-4-carbon: 4500 }   # probe 2's pre-committed output-cap rule fired for Gemini only; xz chose Gemini only
+  timeout_seconds: 600              # a timed-out call scores 0 and is charged at its worst case
+  temperature: provider default (recorded); seeds are not claimed to make providers deterministic
+  ablations: 0                      # deferred; leave-one-out is preregistered only when budgeted
+  calibration_stage: arm A only, BEFORE registration, public families never reused; probe 1 (3-step, 32 calls) ran 2026-11-20; probe 2 (4-step, 4 families, 12 calls per consumer and 4 per producer) per lib/probe.mjs DECISION_RULE_2
+
+primary_outcome: exact match of the normalized <answer> to the hidden expected output (timeouts and abstentions score 0)
+missing_data: provider errors are missing, excluded pairwise; worst/best-case bounds reported; no re-running of single arms
+primary_estimand: mean over held-out families of mean paired score(C) - score(A+)
+
+hypotheses:
+  H1: C outperforms A+ on held-out families.
+  H2: C outperforms the unrelated placebo E.
+  H3: C outperforms A+ on blocks whose consumer family (provider-returned) differs from every producer family shown.
+  H4_exploratory: transfer varies with verification cost (not assessable with one verification regime).
+
+analysis:
+  script: scripts/inheritance-001/lib/analyze.mjs   # frozen at commit 7bb04c9 (the instrument as registered)
+  confidence_interval: family-cluster percentile bootstrap, 2000 resamples, seed 11, 95%
+  test: two-sided sign-flip randomization on family means (exact for <= 16 families)
+  multiplicity: Holm over H1-H3
+  alpha: 0.05
+  min_clusters_for_inference: 10    # this pilot has 8: every verdict is DESCRIPTIVE by construction
+  timeouts_as_failures: true
+  verdict_rule: supported only if registered, non-simulated, >= 10 families, interval above 0 and Holm p < 0.05
+
+falsifiers:
+  - No C advantage over A+ (H1 not supported or contradicted).
+  - E matches C (scaffolding, not knowledge).
+  - B matches or beats C (curation adds nothing).
+  - Gains vanish between distinct provider-returned families.
+  - Verification plus curation cost exceeds the benefit at the stated amortization horizon.
+  - D does not lower scores (the verification gate is not load-bearing), or D raises them (poison design or grader is wrong).
+
+registries:
+  task_manifest_sha256: 5e31f79e85b4d765e233a379d0130bc37a217b30ec3dcf9292b487bf1f97d35d
+  family_template_commitments:      # salted commitments from the sealed draw (lab.mjs draw-sealed); templates stay sealed
+    - { id: IS1-FAM-ead1d9fa72, role: work, n_steps: 4, template_commitment_sha256: de7f7f952a393f263d798a02e4cf52a5a4e05d38c5f34d6712c369e00bbfd559 }
+    - { id: IS1-FAM-9f2c003c98, role: work, n_steps: 4, template_commitment_sha256: 8653e9c04e6ca502ab251debf12b542c5a27dd85d4c336c2570cbfa1ffb129f6 }
+    - { id: IS1-FAM-639d2cf9b4, role: work, n_steps: 4, template_commitment_sha256: 4c6b41cb8c6ae5b3484dc0f89d675d35a8b8435dc83619759a1c3dc6418a190d }
+    - { id: IS1-FAM-b70988f380, role: work, n_steps: 4, template_commitment_sha256: 57e7684906430743d9321b02151ae8e153496925efc7621b9bb7488e26c6844c }
+    - { id: IS1-FAM-06d4b478fd, role: work, n_steps: 4, template_commitment_sha256: f35244e5e3f1975a2e721044b9341c8cd341259af791d6a3e7a76d133a690198 }
+    - { id: IS1-FAM-a2bbbec3d0, role: work, n_steps: 4, template_commitment_sha256: f3af7155ef8a1ce82726ee1c41faace288a0de7111bd8da5db4522350e270603 }
+    - { id: IS1-FAM-431e847fe4, role: eval-anchor, n_steps: 4, template_commitment_sha256: 38eda533059341e9cf6e03f253ec894842c9071d5ae02b3541501af293068624 }
+    - { id: IS1-FAM-2e065b646e, role: eval-anchor, n_steps: 4, template_commitment_sha256: 97d5b55695e95bb772e9058d2b8c38616c2124533b2dda97fc02bf3ad95ed779 }
+    - { id: IS1-FAM-9d8917e5b9, role: eval-anchor, n_steps: 4, template_commitment_sha256: 88a1b7a0625320647446b70c0f4ac2edc36c766e596cd75359b22c9c8732c6e6 }
+    - { id: IS1-FAM-c1e6cd8714, role: eval-anchor, n_steps: 4, template_commitment_sha256: d8f9383fbfc4c0a80724f0e6bda6c9433c9cb5174244fbe42aa9af0c19384fdf }
+    - { id: IS1-FAM-06801b9c09, role: eval-anchor, n_steps: 4, template_commitment_sha256: 2f822ec0ef941ad971fac8526731256ba8605d09ca9349fd672b24d8a7cec98a }
+    - { id: IS1-FAM-d3a9b845fb, role: eval-anchor, n_steps: 4, template_commitment_sha256: c1a6c5ae21be2fe762393e83263f18df1bd848d56d957c22079b86a69acc7504 }
+    - { id: IS1-FAM-7eaec12860, role: eval-anchor, n_steps: 4, template_commitment_sha256: d332246971141648b86e0091c1b70a0f4cec20b58bb3838a1fa8db8eb02ee448 }
+    - { id: IS1-FAM-607ad594c6, role: eval-anchor, n_steps: 4, template_commitment_sha256: 4b8f5acdcad2b10fa43beda6d50e4d0b7e9a9d1ec6f38c544ef74c9abf25d4a3 }
+    - { id: IS1-FAM-e257bfbf2a, role: placebo, n_steps: 1, template_commitment_sha256: 1566bd12202d6c6c141a484aeaf2ef8c33a6adccc535a829f762c5df97478af1 }
+    - { id: IS1-FAM-a0a733f2b0, role: placebo, n_steps: 2, template_commitment_sha256: 71e7ba3adfc8be44c2888ab852a078616417f3662c4562861443c88afb623bba }
+  verifier_code_sha256: 245e4132b2dbee461883b6b36521cc38c00f3f9e7476b25cab5640b4b9f05ff1
+  oracle_code_sha256: e7d8195a92f782f40698fbfdef9d9ab1f8190a2aed56a037e949a2d742403c25
+  plan_sha256: 4a2364af95cab18c6d27bde6a7860309594f449e1cad50b923b6edd1921d882b   # the plan xz approved (344 calls; worst $13.338, expected $5.3839 at December prices)
+
+sealed_material:
+  location: outside the repository (Claude/omnarai-private/inheritance-001/sealed/, held by xz); never in git, Vercel, npm or logs
+  release_policy: curator decision after the analysis is run and reported
+budget:
+  maximum_paid_calls: 688           # xz's written approval: "Approved" (the pilot at the $17 cap)
+  maximum_usd: 17
+  shared_ledger: must reserve the cap on the $95 rolling ledger before the first call
+deviations_log: research/inheritance-001/deviations.ndjson

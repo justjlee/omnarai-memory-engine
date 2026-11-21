@@ -1,0 +1,75 @@
+# Protocol 001 — DRAFT ONLY. Freeze via a dated git commit before any live result.
+protocol_id: omnarai.inheritance-study/0.1-draft
+study_id: OMIT_UNTIL_PREREGISTRATION
+status: draft_unregistered
+registered_at_utc: null
+registered_commit_sha: null
+investigators:
+  - Omnarai research collaboration
+research_question: >-
+  Does verified inherited work from different earlier model families improve
+  held-out transfer beyond compute-matched self-search and structure placebo?
+primary_estimand: mean_paired_score_C_minus_A_plus
+primary_outcome: hidden_oracle_pass_rate
+unit_of_randomization: task_family_x_consumer_model_x_generation
+unit_of_analysis: task_family_cluster
+conditions: [A, A_plus, B, C, D, E]
+primary_comparator: A_plus
+pilot_only: true
+confirmatory_run_requires_new_preregistration: true
+hypotheses:
+  H1: C outperforms A_plus on category-held-out objective tasks.
+  H2: C outperforms matched unrelated placebo E.
+  H3: C transfers between distinct provider-returned model families.
+  H4_exploratory: Positive transfer changes systematically with verification cost.
+negative_controls:
+  - E_structural_placebo
+  - D_contaminated_inheritance
+  - B_raw_history
+  - A_no_inheritance
+  - A_plus_compute_matched
+registries:
+  corpus_snapshot_sha256: null
+  task_manifest_sha256: null
+  verifier_image_or_commit_sha256: null
+  model_version_manifest_sha256: null
+sealed_material:
+  location: PRIVATE_NOT_IN_PUBLIC_REPO
+  release_policy: curator_decision_after_all_tests
+  canary_commitment_sha256: null
+pilot_design:
+  generations: 2
+  distinct_provider_families: 2
+  tasks_per_family: 8
+  repeats_per_arm: 1
+  seed: 20261120
+  maximum_paid_calls: 0 # change only after explicit approval, with deviations
+  maximum_estimated_usd: 0
+confirmatory_target_subject_to_power:
+  generations: 4
+  distinct_provider_families: 3
+  holdout_level: entire_task_family
+  power_analysis_required: true
+analysis:
+  paired_difference: C_minus_A_plus
+  confidence_interval: cluster_bootstrap_by_task_family
+  bootstrap_resamples: 2000
+  alpha_two_sided: 0.05
+  multiplicity_method: Holm_for_preregistered_primary_family
+  exclude_trials_after_allocation: false
+  timeouts_as_failures: true
+  missing_provider_calls: separately_report_and_include_conservative_sensitivity
+  predeclare_difficulty_calibration_for_generation_trend: true
+  trend_requires_three_increments_with_uncertainty: true
+  ablation_budget: 0 # deferred in $0 pilot; preregister subset before spending
+falsifiers:
+  - No C advantage over A_plus after matched total compute cost.
+  - Placebo E matches C.
+  - Gains vanish on whole-category held-out tasks or distinct producer-consumer families.
+  - Across-generation improvements disappear after difficulty calibration.
+  - Verification/maintenance cost eclipses transferred benefit.
+  - Poisoned history undermines reliability or contaminates accepted contributions.
+deviations_log: protocol/deviations.ndjson
+notes: >-
+  This template is not a pre-registration. Researcher must freeze actual models,
+  tasks, budgets, scorer, task-family grouping, missingness and analysis before any live run.

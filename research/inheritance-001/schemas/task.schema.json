@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://engine.omnarai.org/research/inheritance-001/schemas/task-0.1.schema.json",
+  "title": "Inheritance Study 001 task record (research draft; not a Footprint, not a public contract)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "study_id",
+    "family_id",
+    "domain",
+    "role",
+    "generation",
+    "prompt",
+    "sealed_commitment_sha256",
+    "sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "omnarai.inheritance-study.task/0.1"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^IS1-TASK-[0-9a-f]{12}$"
+    },
+    "study_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "family_id": {
+      "type": "string",
+      "pattern": "^IS1-FAM-[0-9a-f]{10}$"
+    },
+    "domain": {
+      "enum": [
+        "str",
+        "num"
+      ]
+    },
+    "role": {
+      "enum": [
+        "work",
+        "eval-anchor",
+        "eval-generation",
+        "placebo",
+        "calibration"
+      ]
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "prompt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "examples",
+        "query"
+      ],
+      "properties": {
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "input",
+              "output"
+            ],
+            "properties": {
+              "input": {
+                "type": "string"
+              },
+              "output": {
+                "type": "string"
+              }
+            }
+          },
+          "minItems": 1
+        },
+        "query": {
+          "type": "string"
+        }
+      }
+    },
+    "sealed_commitment_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

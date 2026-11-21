@@ -1,0 +1,270 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://engine.omnarai.org/research/inheritance-001/schemas/artifact-0.1.schema.json",
+  "title": "Inheritance Study 001 artifact record (research draft; not a Footprint, not a public contract)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "study_id",
+    "generation",
+    "kind",
+    "domain",
+    "producer",
+    "source",
+    "production",
+    "content",
+    "relations",
+    "created_at",
+    "sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "omnarai.inheritance-study.artifact/0.1"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^IS1-ART-g\\d{1,3}-[0-9a-f]{12}$"
+    },
+    "study_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "kind": {
+      "enum": [
+        "producer_output",
+        "poison_fixture",
+        "footprint_import"
+      ]
+    },
+    "domain": {
+      "enum": [
+        "str",
+        "num"
+      ]
+    },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider",
+        "model_id_requested",
+        "model_id_returned",
+        "family",
+        "identity_status"
+      ],
+      "properties": {
+        "provider": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model_id_requested": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "model_id_returned": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "family": {
+          "type": "string",
+          "minLength": 1
+        },
+        "identity_status": {
+          "enum": [
+            "provider-returned",
+            "declared-unverified",
+            "investigator"
+          ]
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "task_id",
+        "family_id",
+        "input_snapshot_id",
+        "input_snapshot_sha256",
+        "run_id",
+        "call_id",
+        "footprint_content_sha256",
+        "exposed_artifact_ids"
+      ],
+      "properties": {
+        "task_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "family_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "input_snapshot_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "input_snapshot_sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "run_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "call_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "footprint_content_sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "exposed_artifact_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^IS1-ART-g\\d{1,3}-[0-9a-f]{12}$"
+          }
+        }
+      }
+    },
+    "production": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tokens_in",
+        "tokens_out",
+        "usd",
+        "cost_status"
+      ],
+      "properties": {
+        "tokens_in": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tokens_out": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "usd": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "cost_status": {
+          "enum": [
+            "priced",
+            "unknown",
+            "mock-zero",
+            "not-applicable"
+          ]
+        }
+      }
+    },
+    "content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "program",
+        "program_parse_error"
+      ],
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "program": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "object"
+          }
+        },
+        "program_parse_error": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "relations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "derived_from",
+        "supersedes",
+        "footprint_refs",
+        "atlas_refs"
+      ],
+      "properties": {
+        "derived_from": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^IS1-ART-g\\d{1,3}-[0-9a-f]{12}$"
+          }
+        },
+        "supersedes": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^IS1-ART-g\\d{1,3}-[0-9a-f]{12}$"
+        },
+        "footprint_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^OMN-FP-\\d{13}-[0-9a-f]{8}$"
+          }
+        },
+        "atlas_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^OMN-(D|L|DD)\\d{10,16}$"
+          }
+        }
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}
