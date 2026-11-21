@@ -33,6 +33,8 @@ node --import ./scripts/lib/register-mem-blob.mjs --test scripts/test-inheritanc
 5. `pilot/PROVIDER-CAPS.md`: what each provider documents about bounding billed output (why Grok left the panel), then
    `pilot/PILOT-BUDGET.md`: projected calls and dollars for the proposed pilot, and `pilot/IS1-PROBE-CAL-002-plan.json`: the
    pre-committed plan of calibration probe 2.
+   Pilot 002 (proposed 2026-11-21, not run): `pilot/PILOT-002-BUDGET.md` (projection, and what a smaller cap would do),
+   `preregistration-002.draft.yaml` (draft) and `registration-002.json` (draft); every gated command takes `--study pilot-002`.
 6. `examples/`: the offline demo outputs (`plan.json`, `snapshot.json`, `trials.jsonl`, `summary.json`, `REPORT.md`, …) and the
    instrument validation over synthetic worlds.
 
@@ -41,7 +43,8 @@ node --import ./scripts/lib/register-mem-blob.mjs --test scripts/test-inheritanc
 ```
 research/inheritance-001/
   PROTOCOL.md  BASELINE.md  DECISIONS_REQUIRED.md  SESSION-REPORT-2026-11-20.md
-  preregistration.draft.yaml   # frozen and pushed BY ITSELF before any live run; never edited afterwards
+  preregistration.draft.yaml   # Pilot 001: registered (d24005d); frozen and pushed BY ITSELF before any live run; never edited afterwards
+  preregistration-002.draft.yaml  registration-002.json   # Pilot 002: drafts, not registered
   deviations.ndjson            # dated, append-only
   schemas/                     # ten record schemas (study … report), engine validator subset
   pilot/                       # projection for the proposed pilot (stand-in families, no sealed data)

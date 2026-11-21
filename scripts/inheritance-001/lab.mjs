@@ -9,10 +9,14 @@
 //   summarize --out DIR                   re-derive summary.json + REPORT.md from a run directory's records
 //   verify --out DIR                      tamper check: every record sealed, every record in the hash chain
 //   validate-instrument [--seeds N]       run every synthetic world over N seeds; detection and false-positive rates
-//   budget                                projected calls and dollars for the proposed pilot (stand-in families)
+//   budget [--study S]                    projected calls and dollars for a pilot (stand-in families); S = pilot-001
+//                                         (default, writes pilot/PILOT-BUDGET.md) or pilot-002 (pilot/PILOT-002-BUDGET.md)
 //   plan --world W --out FILE             write a demo plan only
-// Gated commands:
-//   draw-sealed --out FILE                draw the sealed held-out families from a fresh secret seed (FILE outside the repo)
+// Gated commands (each takes --study pilot-001|pilot-002, default pilot-001; a sealed set, registration or approval made
+// for one study is never accepted for another):
+//   draw-sealed --out FILE [--exclude-sealed FILE]
+//                                         draw the sealed held-out families from a fresh secret seed (FILE outside the repo),
+//                                         never reusing a calibration op set, nor (if given) an earlier sealed set's
 //   pilot-plan --sealed FILE --max-calls N --max-usd N
 //                                         offline: the exact plan hash a live pilot with these caps would run, its projection,
 //                                         and the public registries the preregistration needs (no sealed content printed)
@@ -37,10 +41,13 @@ import { createMockAdapter } from "./lib/mock-model.mjs";
 import { analyze } from "./lib/analyze.mjs";
 import { simulatePower } from "./lib/stats.mjs";
 import { demoStudy, WORLDS } from "./fixtures/worlds.mjs";
-import { pilotStudy, projectionFamilies, PILOT_MODELS, SEALED_DRAW, sealedPilotStudy } from "./fixtures/pilot-001.mjs";
+import { pilotStudy, projectionFamilies, PILOT_MODELS, SEALED_DRAW } from "./fixtures/pilot-001.mjs";
+import * as PILOT_001 from "./fixtures/pilot-001.mjs";
+import * as PILOT_002 from "./fixtures/pilot-002.mjs";
+import { replaySpend } from "./lib/cap-replay.mjs";
 import { VERIFIER } from "./lib/verify.mjs";
 import { ORACLE } from "./lib/oracle.mjs";
-import { drawFamilySet } from "./lib/families.mjs";
+import { drawFamilySet, setKey } from "./lib/families.mjs";
 import { familyRecord } from "./lib/tasks.mjs";
 import { checkLiveAuthorization, createLiveAdapter, createSpendGuard, remainingCaps } from "./lib/adapters.mjs";
 import { priceFor, PRICES_AS_OF } from "./lib/prices.mjs";
@@ -55,6 +62,22 @@ const cmd = argv[0];
 const opt = (name, dflt = undefined) => { const i = argv.indexOf(name); return i >= 0 && argv[i + 1] && !argv[i + 1].startsWith("--") ? argv[i + 1] : dflt; };
 const insideRepo = (p) => { const r = relative(ROOT, resolve(p)); return !r.startsWith("..") && !isAbsolute(r); };
 const out = (...a) => process.stdout.write(a.join(" ") + "\n");
+
+// Each pilot has its own fixture, budget page, registration file and sealed set. Pilot 001 keeps its original paths.
+const STUDIES = {
+  "pilot-001": { fixture: PILOT_001, studyId: "IS1-STUDY-PILOT-001", budgetFile: "PILOT-BUDGET.md", projectionFile: "pilot-projection.json", registrationFile: "registration.json" },
+  "pilot-002": { fixture: PILOT_002, studyId: PILOT_002.STUDY_ID, budgetFile: "PILOT-002-BUDGET.md", projectionFile: "pilot-002-projection.json", registrationFile: "registration-002.json" },
+};
+const STUDY_COMMANDS = ["budget", "draw-sealed", "pilot-plan", "run-models"];
+const studyKey = opt("--study", "pilot-001");
+if (STUDY_COMMANDS.includes(cmd) && !Object.hasOwn(STUDIES, studyKey)) { out(`unknown --study ${studyKey}; known: ${Object.keys(STUDIES).join(", ")}`); process.exit(2); }
+const S = STUDIES[studyKey];
+// A sealed set names the study it was drawn for (Pilot 001's predates that and names none); the fixture decides what it
+// accepts (Pilot 002 refuses anything not drawn for it). → { study } or { refused }
+function sealedStudyFor(sealed, opts) {
+  if (sealed.study_id && sealed.study_id !== S.studyId) return { refused: `the sealed set was drawn for ${sealed.study_id}, not ${S.studyId}` };
+  try { return { study: S.fixture.sealedPilotStudy(sealed, opts) }; } catch (e) { return { refused: e.message }; }
+}
 
 const OFFLINE = ["demo", "summarize", "verify", "validate-instrument", "budget", "plan", "draw-sealed", "pilot-plan"];
 if (OFFLINE.includes(cmd) || (cmd === "probe" && !argv.includes("--live"))) installNetworkGuard();
@@ -112,7 +135,12 @@ async function validateInstrument() {
   out(`  wrote ${outDir}/INSTRUMENT-VALIDATION.md`);
 }
 
-function budget() {
+async function budget() {
+  return studyKey === "pilot-002" ? budget002() : budget001();
+}
+
+// Pilot 001's page (registered plan 4a2364af…): unchanged, so `budget` with no --study still reproduces PILOT-BUDGET.md.
+function budget001() {
   const families = projectionFamilies();
   const study = pilotStudy({ families, salt: "public-projection-only" });
   const { plan } = buildPlan(study);
@@ -158,18 +186,98 @@ function budget() {
   out(`Pilot projection: ${P.calls_first_attempt} calls (≤ ${P.calls_max_with_retries} with retries) + ${calibCalls} probe calls; expected ${money(P.usd_expected)}, worst ${money(P.usd_worst_first_attempts)} (with retries ${money(P.usd_worst_with_retries)}); proposed cap $${capUsd}. Wrote ${outDir}/PILOT-BUDGET.md`);
 }
 
+// The cost of the Pilot 001 run that completed (attempt 2: 344 calls), as recorded in deviations.ndjson on 2026-11-20.
+const PILOT_001_ATTEMPT_2_RECORDED_USD = 3.16;
+
+async function budget002() {
+  const F = PILOT_002;
+  const families = F.projectionFamilies();
+  const study = F.pilotStudy({ families, salt: "public-projection-only" });
+  const { plan } = buildPlan(study);
+  const outDir = resolve(opt("--out", join(RESEARCH, "pilot")));
+  mkdirSync(outDir, { recursive: true });
+  const P = plan.projection;
+  const capUsd = Math.ceil(P.usd_worst_first_attempts * 1.25);
+  const capCalls = P.calls_max_with_retries;
+  const probes = F.CALIBRATION.probes.map((id) => ({ id, status: PROBES[id].status, plan_sha256: PROBES[id].plan_sha256 }));
+  const nCons = F.PILOT_MODELS.consumers.length, perEval = study.tasks.per_eval_family;
+  const power = [0.1, 0.15, 0.2].map((effect) => simulatePower({ families: 8, tasksPerFamily: perEval, consumers: nCons, baseRate: 0.4, effect, sims: 400, resamples: 400, seed: 8 + effect * 100 }));
+  // What smaller caps would do: an offline replay through the real spend guard (lib/cap-replay.mjs), $0.
+  const capsShown = [...new Set([6, 6.5, 7, 8, capUsd])].sort((a, b) => a - b);
+  const replays = [];
+  for (const m of [1, 1.25, 1.5]) {
+    const r = await replaySpend(study, { outputMultiplier: m });
+    replays.push({ output_multiplier: m, usd_total: r.usd_total, min_cap_to_finish: r.min_cap_to_finish, at_caps: capsShown.map((c) => r.atCap(c)) });
+  }
+  const p1Replay = await replaySpend(PILOT_001.pilotStudy({ families: PILOT_001.projectionFamilies(), salt: "public-projection-only" }), { outputMultiplier: 1 });
+  const proj = { projection_only: true, study_id: plan.study_id, stand_in_families: "public draw 'public-projection-only' (the same stand-in as Pilot 001) — the sealed set is drawn at registration", plan_sha256_of_projection: plan.plan_sha256, steps_per_family: F.SEALED_DRAW.steps, producer_language: study.params.producer_language === true, calibration_stage: probes, projection: P, blocks: plan.blocks.length, producer_calls: plan.producer_calls.length, proposed_caps: { calls: capCalls, usd: capUsd }, output_bounds: plan.models.map((m) => { const c = capFor(m.model_id); return { model_id: m.model_id, field: c?.cap_field ?? null, enforced: c?.cap_enforced ?? false, controls: c?.controls ?? null, status: c?.status ?? "no entry" }; }), power_at_8_families: power, cap_replay: { note: "offline what-if on token counts through the real spend guard (lib/cap-replay.mjs); not a forecast of any model", runs: replays, pilot_001_same_replay_usd: p1Replay.usd_total, pilot_001_attempt_2_recorded_usd: PILOT_001_ATTEMPT_2_RECORDED_USD } };
+  writeFileSync(join(outDir, S.projectionFile), JSON.stringify(proj, null, 2) + "\n");
+  const money = (x) => (x === null ? "unknown" : `$${x.toFixed(2)}`);
+  const ctl = (c) => (c ? Object.entries(c).map(([k, v]) => `\`${k}: ${JSON.stringify(v).replace(/"/g, "")}\``).join(", ") : "—");
+  const prodIds = F.PILOT_MODELS.producers.map((m) => `\`${m.model_id}\``).join(", "), consIds = F.PILOT_MODELS.consumers.map((m) => `\`${m.model_id}\``).join(", ");
+  const exp = study.params.expected_output_tokens_by_model, fac = study.params.input_token_factor_by_model;
+  const cell = (a) => (a.completes ? `finishes (${money(a.usd_recorded)})` : `stops at ${a.calls_done}/${P.calls_first_attempt} calls; ${a.blocks_with_c_and_aplus}/${a.blocks} blocks have C and A+`);
+  const md = [
+    "# Pilot 002: projected calls and dollars (PROJECTION, nothing has been spent)", "",
+    `**Status: proposed.** Built 2026-11-21 on xz's panel decision ("Yes, Gemini + GPT"). Not drawn, not registered, not approved, never run. Draft preregistration: \`${F.PREREGISTRATION_PATH}\`.`, "",
+    `Prices: ${PRICES_AS_OF}; priced for a run on ${study.price_date} (Gemini 4 Carbon's higher December price). Output caps: ${study.params.max_output_tokens} tokens per call (${Object.entries(study.params.max_output_tokens_by_model).map(([m, v]) => `\`${m}\`: ${v}`).join(", ")}, raised by probe 2's pre-committed output-cap rule), each a bound its provider documents as covering all billed output, reasoning included. Expected output per call is each model's measured mean, rounded up to 100: \`claude-sonnet-5-5\` ${exp["claude-sonnet-5-5"]} (probe 2, arm A, 4-step), \`gemini-4-carbon\` ${exp["gemini-4-carbon"]} (probe 3) and \`gpt-6.1-sol\` ${exp["gpt-6.1-sol"]} (probe 4), the producers measured on the contribution request this pilot sends them. Input tokens are estimated at 4 characters per token, then scaled by the largest real/estimated ratio measured on the frame each model will see (${Object.entries(fac).map(([m, v]) => `\`${m}\` ${v}`).join(", ")}). Timeouts: ${study.params.timeout_ms / 1000} s, and a call that times out is charged at its worst case.`, "",
+    "## Design", "",
+    `- One transition: generation-0 producers (${prodIds}) → generation-1 consumer (${consIds}), the only consumer. No producer family is the consumer's family, so every inherited record is cross-family. Results speak only to Claude Sonnet 5.5 as an inheritor.`,
+    "- What changed since Pilot 001, and why: Pilot 001 (registered d24005d) ran all 344 calls but could not test inheritance, because producers were never told the program step language: 0 of 51 producer records could be verified and arm C was empty (an instrument finding, not a null). Producers are now told the language (`params.producer_language`, `lib/language.mjs`); consumer frames (arms A to E) are unchanged. Producer probes 3 and 4 checked the fix before this pilot (their shares stay private). `deepseek-v4-pro` left the panel (its records did not verify with thinking off, and its thinking mode has no documented output bound); `gpt-6.1-sol` moved from consumer to producer.",
+    `- Task families are ${F.SEALED_DRAW.steps}-step compositions. The sealed set is drawn from a fresh secret seed (\`lab.mjs draw-sealed --study pilot-002\`) and never reuses an op set from any calibration probe; given Pilot 001's sealed file (\`--exclude-sealed\`), it also avoids every Pilot 001 family.`,
+    `- ${families.filter((f) => f.role === "work").length} work families × ${study.tasks.per_work_family} tasks × ${F.PILOT_MODELS.producers.length} producers = ${plan.producer_calls.filter((c) => c.kind === "work").length} producer calls, plus ${plan.producer_calls.filter((c) => c.kind === "placebo").length} placebo-domain producer calls.`,
+    `- ${families.filter((f) => f.role === "eval-anchor").length} held-out families × ${perEval} tasks × ${nCons} consumer = ${plan.blocks.length} paired blocks × 6 arms = ${plan.blocks.length * 6} consumer calls (Pilot 001: 3 tasks × 2 consumers, the same 48 blocks). No ablations.`,
+    `- Stage 0 (before registration): ${probes.map((p) => `\`${p.id}\`: ${p.status}`).join("; ")}. Each was approved and reserved on its own; none is part of this cap.`, "",
+    "## Per-call output bounds (checked by the live gate)", "",
+    "| Model | Bound field | Cap per call | Reasoning controls sent | Documented status |", "|---|---|---:|---|---|",
+    ...plan.models.map((m) => { const c = capFor(m.model_id); return `| \`${m.model_id}\` | \`${c?.cap_field ?? "none"}\` | ${outputCapFor(study.params, m.model_id)} | ${ctl(c?.controls)} | ${c?.status ?? "no entry: refused"} |`; }),
+    "", `Docs read on ${CAPS_READ_ON}; sources and quotes in \`PROVIDER-CAPS.md\`.`, "",
+    "## Money", "",
+    "| Model | Role | Calls | Tokens in | Out (expected) | Out (cap) | $/M in, out | Expected | Worst (first attempts) | Worst (with retries) |", "|---|---|---:|---:|---:|---:|---|---:|---:|---:|",
+    ...P.models.map((m) => `| \`${m.model_id}\` | ${Object.keys(m.by_kind).join(", ")} | ${m.calls} | ${m.tokens_in} | ${m.tokens_out_expected} | ${m.tokens_out_max} | ${m.price_per_m ? `${m.price_per_m.in}, ${m.price_per_m.out}` : "unknown"} | ${money(m.usd_expected)} | ${money(m.usd_worst_first_attempts)} | ${money(m.usd_worst_with_retries)} |`),
+    `| **Total** | | **${P.calls_first_attempt}** (≤ ${P.calls_max_with_retries} with retries) | | | | | **${money(P.usd_expected)}** | **${money(P.usd_worst_first_attempts)}** | **${money(P.usd_worst_with_retries)}** |`, "",
+    `Proposed hard caps for approval: **${capCalls} calls** and **$${capUsd}** (worst case of first attempts plus 25%; the A+ arm's larger allowance is included). The spend guard stops before any call whose worst case would cross the cap, a timed-out call is charged at its worst case, and the shared $95 ledger must accept a reservation of the whole cap first. Retries happen only on rate limits and server errors, never on timeouts. The cap is part of the plan, so the plan hash xz approves fixes it.`, "",
+    "## What a smaller cap would do (offline replay, not a forecast)", "",
+    "The shared ledger holds each run's whole reservation for 30 days, and on 2026-11-21 it had about $6.58 of room (DECISIONS_REQUIRED.md D16). The same ledger pays for the site's Council, queries and longitudinal cron, so a reservation that fills the room pauses those until reservations age out. The spend guard does not stop at the worst case: it stops before any call whose worst case would carry the *recorded* spend past the cap. So a cap well below the worst case can still let the run finish when real outputs stay near the measured means. The table replays this pilot offline through the real spend guard, billing every call a multiple of its model's measured mean output (never past its cap; producers always leave verifiable records, so arm C carries a full context). A run that stops keeps everything it recorded before the stop, but a stopped pilot cannot be resumed: a re-run starts over.", "",
+    `| Outputs vs measured means | Replay total | Smallest cap that finishes | ${capsShown.map((c) => `Cap ${money(c)}`).join(" | ")} |`, `|---|---:|---:|${capsShown.map(() => "---").join("|")}|`,
+    ...replays.map((r) => `| ×${r.output_multiplier} | ${money(r.usd_total)} | ${money(r.min_cap_to_finish)} | ${r.at_caps.map(cell).join(" | ")} |`), "",
+    `For calibration: the same replay predicts ${money(p1Replay.usd_total)} for Pilot 001's plan; Pilot 001's complete second attempt recorded ${money(PILOT_001_ATTEMPT_2_RECORDED_USD)} (deviations.ndjson). Pilot 001's arm C was empty, which kept its inputs small, so Pilot 002 need not come in as low.`, "",
+    "## What this pilot can and cannot show", "",
+    "- It can show whether producers told the language leave work a consumer can inherit, and give first, descriptive estimates of C−A+, C−E, C−B and C−D for one consumer family.",
+    "- It speaks only to Claude Sonnet 5.5 as an inheritor. Every block is cross-family by construction, so H3 (the cross-family subset) is the same set of blocks as H1 here.",
+    "- It cannot confirm H1–H3: 8 held-out families is below the preregistered minimum of 10 clusters for inference, so every verdict is descriptive. It cannot test a ratchet at all (one transition).",
+    `- Parametric power at 8 families (${perEval} tasks × ${nCons} consumer each, base rate 0.4, an assumption, not a measured rate):`, "",
+    "| True effect | Power | Wrong-sign rate |", "|---:|---:|---:|", ...power.map((p) => `| ${p.true_effect} | ${p.power} | ${p.wrong_sign_rate} |`), "",
+  ].join("\n");
+  writeFileSync(join(outDir, S.budgetFile), md + "\n");
+  out(`Pilot 002 projection: ${P.calls_first_attempt} calls (≤ ${P.calls_max_with_retries} with retries); expected ${money(P.usd_expected)}, worst ${money(P.usd_worst_first_attempts)} (with retries ${money(P.usd_worst_with_retries)}); proposed cap $${capUsd}; at measured means the replay finishes under any cap ≥ ${money(replays[0].min_cap_to_finish)}. Wrote ${outDir}/${S.budgetFile}`);
+}
+
 function drawSealed() {
   const file = opt("--out");
   if (!file) { out("draw-sealed needs --out FILE (outside the repository)"); process.exit(2); }
   if (insideRepo(file)) { out(`REFUSED: ${file} is inside the repository. Sealed material must live outside it (e.g. Claude/omnarai-private/inheritance-001/).`); process.exit(2); }
   if (existsSync(file)) { out(`REFUSED: ${file} exists; sealed sets are never overwritten.`); process.exit(2); }
+  // Never a family any calibration probe has already put in front of a model (op-set level, like the held-out split), and,
+  // when an earlier sealed file is given, never one of its families either.
+  const exclude = calibrationOpSets();
+  const exclusions = { calibration_op_sets: exclude.size, earlier_sealed: [] };
+  const earlierFile = opt("--exclude-sealed");
+  if (earlierFile) {
+    if (!existsSync(earlierFile)) { out(`REFUSED: ${earlierFile} does not exist. Nothing was drawn.`); process.exit(2); }
+    if (insideRepo(realpathSync(earlierFile))) { out("REFUSED: the earlier sealed file is inside the repository. Nothing was drawn."); process.exit(2); }
+    const prev = JSON.parse(readFileSync(earlierFile, "utf8"));
+    const keys = (prev.families || []).filter((f) => f.domain === "str").map((f) => setKey(f.steps.map((s) => s.op)));
+    if (!keys.length) { out("REFUSED: the earlier sealed file holds no families. Nothing was drawn."); process.exit(2); }
+    for (const k of keys) exclude.add(k);
+    exclusions.earlier_sealed.push({ study_id: prev.study_id ?? null, drawn_at: prev.drawn_at ?? null, op_sets: keys.length });
+  }
   const seed = randomBytes(32).toString("hex"), salt = randomBytes(32).toString("hex");
-  // Never a family any calibration probe has already put in front of a model (op-set level, like the held-out split).
-  const families = drawFamilySet({ seed, ...SEALED_DRAW, exclude: calibrationOpSets() });
-  const records = families.map((spec) => familyRecord(spec, { studyId: "IS1-STUDY-PILOT-001", salt }));
+  const families = drawFamilySet({ seed, ...S.fixture.SEALED_DRAW, exclude });
+  const records = families.map((spec) => familyRecord(spec, { studyId: S.studyId, salt }));
   mkdirSync(dirname(resolve(file)), { recursive: true });
-  writeFileSync(file, JSON.stringify({ drawn_at: new Date().toISOString(), seed, salt, families }, null, 2) + "\n", { mode: 0o600 });
-  out(`Sealed set written to ${file} (mode 600). Public commitments (safe to publish in the registration):`);
+  writeFileSync(file, JSON.stringify({ study_id: S.studyId, drawn_at: new Date().toISOString(), seed, salt, exclusions, families }, null, 2) + "\n", { mode: 0o600 });
+  out(`Sealed set for ${S.studyId} written to ${file} (mode 600). Excluded: ${exclusions.calibration_op_sets} calibration op sets${exclusions.earlier_sealed.map((e) => `, ${e.op_sets} op sets of the sealed set drawn ${e.drawn_at ?? "earlier"}${e.study_id ? ` for ${e.study_id}` : ""}`).join("")}. Public commitments (safe to publish in the registration):`);
   for (const r of records) out(`  ${r.id} ${r.role} ${r.template_commitment_sha256}`);
 }
 
@@ -178,11 +286,14 @@ function pilotPlanCmd() {
   if (!sealedFile || !existsSync(sealedFile)) { out("pilot-plan needs --sealed FILE (from draw-sealed)"); process.exit(2); }
   if (insideRepo(realpathSync(sealedFile))) { out("REFUSED: the sealed file is inside the repository."); process.exit(2); }
   const sealed = JSON.parse(readFileSync(sealedFile, "utf8"));
-  const study = sealedPilotStudy(sealed, { maxCalls: Number(opt("--max-calls", 0)), maxUsd: Number(opt("--max-usd", 0)) });
+  const { study, refused } = sealedStudyFor(sealed, { maxCalls: Number(opt("--max-calls", 0)), maxUsd: Number(opt("--max-usd", 0)) });
+  if (refused) { out(`REFUSED: ${refused}`); process.exit(2); }
   const { plan } = buildPlan(study);
   const P = plan.projection;
   out(JSON.stringify({
     study_id: plan.study_id,
+    ...(study.params.producer_language ? { producer_language: true } : {}),
+    ...(sealed.exclusions ? { sealed_draw_exclusions: sealed.exclusions } : {}),
     plan_sha256: plan.plan_sha256,
     caps: plan.budget,
     calls_first_attempt: P.calls_first_attempt,
@@ -209,10 +320,14 @@ async function runModels() {
   if (outDir && existsSync(join(resolve(outDir), "plan.json"))) problems.push("--out already holds a run; a new attempt writes to a new directory, never over an earlier one");
   if (problems.length) { out(`REFUSED: ${problems.join("; ")}`); process.exit(3); }
   const sealed = JSON.parse(readFileSync(sealedFile, "utf8"));
-  const registration = existsSync(join(RESEARCH, "registration.json")) ? JSON.parse(readFileSync(join(RESEARCH, "registration.json"), "utf8")) : { status: "draft_unregistered" };
+  // Each pilot has its own registration file; one registered for another study never counts.
+  const regFile = join(RESEARCH, S.registrationFile);
+  const registration = existsSync(regFile) ? JSON.parse(readFileSync(regFile, "utf8")) : { status: "draft_unregistered" };
+  if (registration.status === "registered" && registration.study_id !== S.studyId) { out(`REFUSED: ${S.registrationFile} registers ${registration.study_id}, not ${S.studyId}. Nothing was reserved or called.`); process.exit(3); }
   const approval = approvalFile && existsSync(approvalFile) ? JSON.parse(readFileSync(approvalFile, "utf8")) : null;
   // The approved caps are part of the plan: the hash the approval names is the hash the run records.
-  const study = sealedPilotStudy(sealed, { maxCalls: approval?.max_calls ?? 0, maxUsd: approval?.max_usd ?? 0, registration });
+  const { study, refused } = sealedStudyFor(sealed, { maxCalls: approval?.max_calls ?? 0, maxUsd: approval?.max_usd ?? 0, registration });
+  if (refused) { out(`REFUSED: ${refused}. Nothing was reserved or called.`); process.exit(3); }
   const { plan } = buildPlan(study);
   const authorization = { approval, preregistration: registration, plan, planSha256: plan.plan_sha256, argv: process.argv, env: process.env };
   const missing = checkLiveAuthorization(authorization);

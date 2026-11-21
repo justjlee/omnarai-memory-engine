@@ -135,6 +135,8 @@ export function checkLiveAuthorization({ approval, preregistration, plan, planSh
     for (const m of plan?.models || []) if (!(approval.models || []).includes(m.model_id)) missing.push(`approval does not list model ${m.model_id}`);
   }
   if (requireRegistration && (preregistration?.status !== "registered" || !/^[0-9a-f]{7,40}$/.test(preregistration?.registered_commit_sha || ""))) missing.push("preregistration is not registered with a pushed commit sha");
+  // A registration names its study (registration.json, registration-002.json, …); one made for another study never counts.
+  if (requireRegistration && preregistration?.study_id !== undefined && preregistration.study_id !== plan?.study_id) missing.push("the registration is for a different study");
   if (!argv.includes("--live") || !argv.includes("--yes")) missing.push("--live --yes not given");
   if (flag("--experiment") !== plan?.study_id) missing.push("--experiment <study id> not given or wrong");
   if (approval && Number(flag("--max-usd")) !== approval.max_usd) missing.push("--max-usd must repeat the approved cap");

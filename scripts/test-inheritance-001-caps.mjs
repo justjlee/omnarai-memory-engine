@@ -242,7 +242,7 @@ test("[K12] regression (Pilot 001): a live run in which no record could be verif
   const store = createMemoryLabStore(), outputs = [];
   const result = await runStudy({ study: L.study, adapter: L.adapter, guard: L.guard, clock: () => "2026-11-21T00:00:00.000Z", store, outputs });
   assert.equal(result.run.kind, "live");
-  assert.ok(store.list("evaluation").every((e) => e.status !== "pass"), "no producer record verified");
+  assert.ok(store.list("evaluation").length > 0 && store.list("evaluation").every((e) => e.status !== "passed"), "no producer record verified (the verifier's word is \"passed\")");
   const dir = mkdtempSync(joinPath(tmpdir(), "is1-k12-"));
   exportRun(store, dir, { plan: result.plan, sealed: { tasks: result.sealed.tasks, outputs }, sealedDir: joinPath(dir, "sealed") });
   summarizeDir(dir);

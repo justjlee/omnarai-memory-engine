@@ -1,0 +1,10 @@
+{
+  "study_id": "IS1-STUDY-PILOT-002",
+  "status": "draft_unregistered",
+  "registered_commit_sha": null,
+  "registered_at": null,
+  "pushed_before_any_pilot_call": null,
+  "preregistration_path": "research/inheritance-001/preregistration-002.draft.yaml",
+  "plan_sha256": null,
+  "note": "Pilot 002's own registration file (Pilot 001's is registration.json). lab.mjs run-models --study pilot-002 reads only this file and refuses unless it says registered, names this study and carries the sha of the public commit that holds preregistration-002.draft.yaml by itself."
+}

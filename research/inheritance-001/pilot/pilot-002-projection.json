@@ -1,0 +1,348 @@
+{
+  "projection_only": true,
+  "study_id": "IS1-STUDY-PILOT-002",
+  "stand_in_families": "public draw 'public-projection-only' (the same stand-in as Pilot 001) — the sealed set is drawn at registration",
+  "plan_sha256_of_projection": "2337917b61ca938736bbdbe0027068b13d3c948d16418015ff7fc9a3fcda13aa",
+  "steps_per_family": 4,
+  "producer_language": true,
+  "calibration_stage": [
+    {
+      "id": "IS1-PROBE-CAL-002",
+      "status": "ran 2026-11-20 (results private)",
+      "plan_sha256": "346b0cf3e99724bc7e0cb5cfad387a79b7fb7c636a03b49f24facfa5cb4e5a3a"
+    },
+    {
+      "id": "IS1-PROBE-CAL-003",
+      "status": "ran 2026-11-21 (results private)",
+      "plan_sha256": "36fe203610e44b620d1cf364fcc434559690951053de6d6bab5bd5ae8bdbf2e4"
+    },
+    {
+      "id": "IS1-PROBE-CAL-004",
+      "status": "ran 2026-11-21 (results private)",
+      "plan_sha256": "21364b481a1bff27b11cb897984f58b5b530285a96bf749452e3005860eac26a"
+    }
+  ],
+  "projection": {
+    "prices_as_of": "2026-11-13 / 2026-11-18 provider pages (re-verify before any live run)",
+    "price_date": "2026-12-01",
+    "assumptions": {
+      "expected_output_tokens": 1400,
+      "max_output_tokens": 3000,
+      "max_attempts": 2,
+      "tokens_per_char": 0.25,
+      "max_output_tokens_by_model": {
+        "gemini-4-carbon": 4500
+      },
+      "expected_output_tokens_by_model": {
+        "claude-sonnet-5-5": 900,
+        "gemini-4-carbon": 1700,
+        "gpt-6.1-sol": 500
+      },
+      "input_token_factor_by_model": {
+        "claude-sonnet-5-5": 1.6,
+        "gemini-4-carbon": 1.25,
+        "gpt-6.1-sol": 1.15
+      }
+    },
+    "calls_first_attempt": 344,
+    "calls_max_with_retries": 688,
+    "usd_expected": 5.6128,
+    "usd_worst_first_attempts": 14.0728,
+    "usd_worst_with_retries": 28.1456,
+    "models": [
+      {
+        "model_id": "claude-sonnet-5-5",
+        "provider": "anthropic",
+        "calls": 288,
+        "tokens_in": 568254,
+        "tokens_out_expected": 331200,
+        "tokens_out_max": 950400,
+        "by_kind": {
+          "consumer-A": 48,
+          "consumer-A+": 48,
+          "consumer-BCDE": 192
+        },
+        "price_per_m": {
+          "in": 2,
+          "out": 10
+        },
+        "usd_expected": 4.4485,
+        "usd_worst_first_attempts": 10.6405,
+        "usd_worst_with_retries": 21.281
+      },
+      {
+        "model_id": "gemini-4-carbon",
+        "provider": "gemini",
+        "calls": 28,
+        "tokens_in": 12366,
+        "tokens_out_expected": 47600,
+        "tokens_out_max": 126000,
+        "by_kind": {
+          "producer-work": 24,
+          "producer-placebo": 4
+        },
+        "price_per_m": {
+          "in": 4,
+          "out": 20
+        },
+        "usd_expected": 1.0015,
+        "usd_worst_first_attempts": 2.5695,
+        "usd_worst_with_retries": 5.139
+      },
+      {
+        "model_id": "gpt-6.1-sol",
+        "provider": "openai",
+        "calls": 28,
+        "tokens_in": 11382,
+        "tokens_out_expected": 14000,
+        "tokens_out_max": 84000,
+        "by_kind": {
+          "producer-work": 24,
+          "producer-placebo": 4
+        },
+        "price_per_m": {
+          "in": 2,
+          "out": 10
+        },
+        "usd_expected": 0.1628,
+        "usd_worst_first_attempts": 0.8628,
+        "usd_worst_with_retries": 1.7256
+      }
+    ]
+  },
+  "blocks": 48,
+  "producer_calls": 56,
+  "proposed_caps": {
+    "calls": 688,
+    "usd": 18
+  },
+  "output_bounds": [
+    {
+      "model_id": "claude-sonnet-5-5",
+      "field": "max_tokens",
+      "enforced": true,
+      "controls": {
+        "output_config": {
+          "effort": "medium"
+        }
+      },
+      "status": "verified-from-docs"
+    },
+    {
+      "model_id": "gemini-4-carbon",
+      "field": "generation_config.max_output_tokens",
+      "enforced": true,
+      "controls": {
+        "thinking_level": "low"
+      },
+      "status": "verified-from-docs (Interactions API only)"
+    },
+    {
+      "model_id": "gpt-6.1-sol",
+      "field": "max_completion_tokens",
+      "enforced": true,
+      "controls": {
+        "reasoning_effort": "medium"
+      },
+      "status": "verified-from-docs"
+    }
+  ],
+  "power_at_8_families": [
+    {
+      "families": 8,
+      "tasks_per_family": 6,
+      "consumers": 1,
+      "base_rate": 0.4,
+      "true_effect": 0.1,
+      "family_sd": 0.1,
+      "sims": 400,
+      "power": 0.237,
+      "wrong_sign_rate": 0.003
+    },
+    {
+      "families": 8,
+      "tasks_per_family": 6,
+      "consumers": 1,
+      "base_rate": 0.4,
+      "true_effect": 0.15,
+      "family_sd": 0.1,
+      "sims": 400,
+      "power": 0.375,
+      "wrong_sign_rate": 0.003
+    },
+    {
+      "families": 8,
+      "tasks_per_family": 6,
+      "consumers": 1,
+      "base_rate": 0.4,
+      "true_effect": 0.2,
+      "family_sd": 0.1,
+      "sims": 400,
+      "power": 0.588,
+      "wrong_sign_rate": 0
+    }
+  ],
+  "cap_replay": {
+    "note": "offline what-if on token counts through the real spend guard (lib/cap-replay.mjs); not a forecast of any model",
+    "runs": [
+      {
+        "output_multiplier": 1,
+        "usd_total": 5.8315,
+        "min_cap_to_finish": 5.8559,
+        "at_caps": [
+          {
+            "cap": 6,
+            "completes": true,
+            "calls_done": 344,
+            "usd_recorded": 5.8315,
+            "blocks_with_c_and_aplus": 48,
+            "blocks_all_six_arms": 48,
+            "blocks": 48
+          },
+          {
+            "cap": 6.5,
+            "completes": true,
+            "calls_done": 344,
+            "usd_recorded": 5.8315,
+            "blocks_with_c_and_aplus": 48,
+            "blocks_all_six_arms": 48,
+            "blocks": 48
+          },
+          {
+            "cap": 7,
+            "completes": true,
+            "calls_done": 344,
+            "usd_recorded": 5.8315,
+            "blocks_with_c_and_aplus": 48,
+            "blocks_all_six_arms": 48,
+            "blocks": 48
+          },
+          {
+            "cap": 8,
+            "completes": true,
+            "calls_done": 344,
+            "usd_recorded": 5.8315,
+            "blocks_with_c_and_aplus": 48,
+            "blocks_all_six_arms": 48,
+            "blocks": 48
+          },
+          {
+            "cap": 18,
+            "completes": true,
+            "calls_done": 344,
+            "usd_recorded": 5.8315,
+            "blocks_with_c_and_aplus": 48,
+            "blocks_all_six_arms": 48,
+            "blocks": 48
+          }
+        ]
+      },
+      {
+        "output_multiplier": 1.25,
+        "usd_total": 7.0137,
+        "min_cap_to_finish": 7.0445,
+        "at_caps": [
+          {
+            "cap": 6,
+            "completes": false,
+            "calls_done": 290,
+            "usd_recorded": 5.959,
+            "blocks_with_c_and_aplus": 31,
+            "blocks_all_six_arms": 14,
+            "blocks": 48
+          },
+          {
+            "cap": 6.5,
+            "completes": false,
+            "calls_done": 318,
+            "usd_recorded": 6.4592,
+            "blocks_with_c_and_aplus": 40,
+            "blocks_all_six_arms": 28,
+            "blocks": 48
+          },
+          {
+            "cap": 7,
+            "completes": false,
+            "calls_done": 340,
+            "usd_recorded": 6.9599,
+            "blocks_with_c_and_aplus": 48,
+            "blocks_all_six_arms": 44,
+            "blocks": 48
+          },
+          {
+            "cap": 8,
+            "completes": true,
+            "calls_done": 344,
+            "usd_recorded": 7.0137,
+            "blocks_with_c_and_aplus": 48,
+            "blocks_all_six_arms": 48,
+            "blocks": 48
+          },
+          {
+            "cap": 18,
+            "completes": true,
+            "calls_done": 344,
+            "usd_recorded": 7.0137,
+            "blocks_with_c_and_aplus": 48,
+            "blocks_all_six_arms": 48,
+            "blocks": 48
+          }
+        ]
+      },
+      {
+        "output_multiplier": 1.5,
+        "usd_total": 8.2535,
+        "min_cap_to_finish": 8.2911,
+        "at_caps": [
+          {
+            "cap": 6,
+            "completes": false,
+            "calls_done": 243,
+            "usd_recorded": 5.9765,
+            "blocks_with_c_and_aplus": 18,
+            "blocks_all_six_arms": 2,
+            "blocks": 48
+          },
+          {
+            "cap": 6.5,
+            "completes": false,
+            "calls_done": 263,
+            "usd_recorded": 6.4516,
+            "blocks_with_c_and_aplus": 23,
+            "blocks_all_six_arms": 6,
+            "blocks": 48
+          },
+          {
+            "cap": 7,
+            "completes": false,
+            "calls_done": 287,
+            "usd_recorded": 6.9596,
+            "blocks_with_c_and_aplus": 30,
+            "blocks_all_six_arms": 13,
+            "blocks": 48
+          },
+          {
+            "cap": 8,
+            "completes": false,
+            "calls_done": 331,
+            "usd_recorded": 7.9504,
+            "blocks_with_c_and_aplus": 45,
+            "blocks_all_six_arms": 37,
+            "blocks": 48
+          },
+          {
+            "cap": 18,
+            "completes": true,
+            "calls_done": 344,
+            "usd_recorded": 8.2535,
+            "blocks_with_c_and_aplus": 48,
+            "blocks_all_six_arms": 48,
+            "blocks": 48
+          }
+        ]
+      }
+    ],
+    "pilot_001_same_replay_usd": 5.5783,
+    "pilot_001_attempt_2_recorded_usd": 3.16
+  }
+}

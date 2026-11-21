@@ -372,7 +372,7 @@ export const PROBE_3 = Object.freeze({
 });
 PROBES_MUTABLE[PROBE_3.id] = PROBE_3;
 
-// ── Probe 4: GPT-6.1 Sol as a producer (proposed 2026-11-21, NOT run). Fixed before any call ───────────────────────────────
+// ── Probe 4: GPT-6.1 Sol as a producer (ran 2026-11-21; frozen, it must keep reproducing plan 21364b48…) ──────────────────────
 // Probe 3: gemini-4-carbon verified 9 of 10; deepseek-v4-pro (thinking off) 0 of 10. xz chose producers Gemini + GPT-6.1 Sol
 // with Claude Sonnet 5.5 the only consumer for Pilot 002 ("Yes, Gemini + GPT"). Probe 4 asks GPT-6.1 Sol for exactly what
 // probe 3 asked, on probe 3's own tasks (tasks_from), so the two producers are compared on identical work. Same rule.
@@ -381,7 +381,8 @@ export const PROBE_4 = Object.freeze({
   kind: "producer",
   tasks_from: PROBE_3.id,
   seed: PROBE_3.seed,
-  status: "proposed, not run (needs xz's approval of this exact plan hash)",
+  status: "ran 2026-11-21 (results private)",
+  plan_sha256: "21364b481a1bff27b11cb897984f58b5b530285a96bf749452e3005860eac26a",
   steps: PROBE_3.steps,
   n_families: PROBE_3.n_families,
   tasks: PROBE_3.tasks,
