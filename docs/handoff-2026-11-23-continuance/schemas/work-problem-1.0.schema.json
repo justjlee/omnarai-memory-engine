@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omnarai.org/schemas/proposals/work-problem-1.0.schema.json",
+  "title": "Work Problem 1.0.Schema.Json",
+  "description": "PROPOSAL, not a registered or deployed Omnarai contract. Versioned by the November 23 2026 handoff.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "title",
+    "objective",
+    "acceptance_criteria",
+    "open_questions",
+    "source_refs",
+    "provenance",
+    "visibility"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "enum": [
+        "work-problem/1.0"
+      ]
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:/#-]+$",
+      "maxLength": 200
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160
+    },
+    "objective": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4000
+    },
+    "acceptance_criteria": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 1000
+      },
+      "maxItems": 40
+    },
+    "open_questions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 1000
+      },
+      "maxItems": 40
+    },
+    "failed_attempts": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 1000
+      },
+      "maxItems": 40
+    },
+    "source_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9._:/#-]+$",
+        "maxLength": 200
+      },
+      "maxItems": 100
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "registered_by",
+        "registered_at",
+        "source_revision"
+      ],
+      "properties": {
+        "registered_by": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "registered_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "source_revision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 150
+        }
+      }
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "public",
+        "private"
+      ]
+    }
+  }
+}

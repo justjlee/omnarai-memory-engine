@@ -1,0 +1,25 @@
+{
+  "schema": "signals-page/1.0",
+  "events": [
+    {
+      "schema": "signals-change/1.0",
+      "source_id": "OMN-FP-DEMO-A",
+      "source_revision": "v1",
+      "kind": "admitted",
+      "occurred_at": "2026-11-23T00:00:00Z",
+      "public_scope": "footprint",
+      "event_id": "sig_547b7112151d99875904f25cdeffd905"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "source_id": "OMN-WORK-DEMO-01",
+      "source_revision": "v2",
+      "kind": "work_progress",
+      "occurred_at": "2026-11-23T00:03:00Z",
+      "public_scope": "work",
+      "event_id": "sig_7e202194893aa5314c321d56b6ce44bb"
+    }
+  ],
+  "next_cursor": "MjAyNi0xMS0yM1QwMDowMzowMFp8c2lnXzdlMjAyMTk0ODkzYWE1MzE0YzMyMWQ1NmI2Y2U0NGJi",
+  "has_more": false
+}

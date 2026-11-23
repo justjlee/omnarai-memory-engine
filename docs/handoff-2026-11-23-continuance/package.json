@@ -1,0 +1,13 @@
+{
+  "name": "omnarai-continuance-handoff-reference",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Offline, non-production reference prototypes for the Nov 23, 2026 Omnarai handoff",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "node --test prototype/tests/*.test.mjs",
+    "demo": "node prototype/demo.mjs",
+    "check": "npm test && npm run demo"
+  }
+}

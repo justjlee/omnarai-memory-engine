@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omnarai.org/schemas/proposals/work-event-1.0.schema.json",
+  "title": "Work Event 1.0.Schema.Json",
+  "description": "PROPOSAL, not a registered or deployed Omnarai contract. Versioned by the November 23 2026 handoff.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "problem_id",
+    "kind",
+    "occurred_at",
+    "source_id",
+    "source_sha256",
+    "visibility"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "enum": [
+        "work-event/1.0"
+      ]
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:/#-]+$",
+      "maxLength": 200
+    },
+    "problem_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:/#-]+$",
+      "maxLength": 200
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "attempt_recorded",
+        "advance_claimed",
+        "advance_tested",
+        "advance_reviewed",
+        "advance_refuted",
+        "superseded",
+        "reopened"
+      ]
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:/#-]+$",
+      "maxLength": 200
+    },
+    "source_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "public",
+        "private",
+        "pending"
+      ]
+    },
+    "claim_event_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:/#-]+$",
+      "maxLength": 200
+    },
+    "verifier_receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "receipt_id",
+        "source_sha256",
+        "verifier_id",
+        "independent",
+        "result",
+        "method_version"
+      ],
+      "properties": {
+        "receipt_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._:/#-]+$",
+          "maxLength": 200
+        },
+        "source_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "verifier_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "independent": {
+          "type": "boolean"
+        },
+        "result": {
+          "type": "string",
+          "enum": [
+            "pass",
+            "fail",
+            "inconclusive"
+          ]
+        },
+        "method_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "cost": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "independent",
+        "reviewer_id",
+        "decision"
+      ],
+      "properties": {
+        "independent": {
+          "type": "boolean"
+        },
+        "reviewer_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "accept",
+            "reject",
+            "inconclusive"
+          ]
+        }
+      }
+    },
+    "moderation": {
+      "enum": [
+        "pending",
+        "admitted",
+        "rejected",
+        "retracted"
+      ]
+    },
+    "author_declared": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    }
+  }
+}

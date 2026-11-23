@@ -1,0 +1,19 @@
+{
+  "schema": "inheritance-summary/1.0",
+  "study_id": "OMN-STUDY-SYNTHETIC-001",
+  "paired_tasks": 1,
+  "total_tasks": 1,
+  "average_c_minus_a_plus": 0.16,
+  "negative_transfer_tasks": 0,
+  "rows": [
+    {
+      "task_id": "synthetic-task-01",
+      "complete": true,
+      "c_minus_a_plus_cost_usd": 0,
+      "c_vs_compute_matched": 0.16,
+      "negative_transfer": false,
+      "placebo_vs_compute_matched": -0.01
+    }
+  ],
+  "caveat": "DESCRIPTIVE MOCK ONLY. Not a confidence interval, causal claim, or evidence of cumulative intelligence."
+}

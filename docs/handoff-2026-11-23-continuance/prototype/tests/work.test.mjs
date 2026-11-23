@@ -1,0 +1,16 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {deriveWorkPacket} from '../work.mjs';
+const H='a'.repeat(64),K='b'.repeat(64);
+const p={schema:'work-problem/1.0',id:'w1',title:'Unsolved',objective:'Find error',acceptance_criteria:['proof'],visibility:'public',source_refs:['s1','secret']};
+const src=[{id:'s1',sha256:H,visibility:'public',moderation:'admitted'},{id:'s2',sha256:K,visibility:'public',moderation:'admitted'}, {id:'secret',sha256:H,visibility:'private',moderation:'pending'}];
+const e=(id,kind,source_id='s1',sha=H,extra={})=>({id,kind,problem_id:'w1',source_id,source_sha256:sha,occurred_at:`2026-11-23T00:00:${String(parseInt(id.replace(/\D/g,''),10)||0).padStart(2,'0')}Z`,visibility:'public',moderation:'admitted',...extra});
+test('public source is projected, secret source invisible',()=>{const r=deriveWorkPacket(p,[],src);assert.deepEqual(r.source_refs,['s1']);assert.equal(r.progress_rung,'registered');});
+test('private event does not influence state',()=>{const r=deriveWorkPacket(p,[e('e1','advance_claimed','secret',H,{visibility:'private'})],src);assert.equal(r.progress_rung,'registered');assert.equal(r.issues.length,0)});
+test('claim alone is not verified',()=>{const r=deriveWorkPacket(p,[e('e1','advance_claimed')],src);assert.equal(r.progress_rung,'claimed');});
+test('unverified test does not upgrade',()=>{const r=deriveWorkPacket(p,[e('e1','advance_claimed'),e('e2','advance_tested','s2',K,{claim_event_id:'e1'})],src);assert.equal(r.progress_rung,'claimed');assert.equal(r.issues[0].reason,'unverifiable-test')});
+test('independent receipt upgrades test only',()=>{const r=deriveWorkPacket(p,[e('e1','advance_claimed'),e('e2','advance_tested','s2',K,{claim_event_id:'e1',verifier_receipt:{receipt_id:'r1',independent:true,result:'pass',source_sha256:H,verifier_id:'checker'}})],src);assert.equal(r.progress_rung,'tested')});
+test('review requires separate reviewer and tested receipt',()=>{const rr={claim_event_id:'e1',review:{independent:true,reviewer_id:'critic',decision:'accept'}};const events=[e('e1','advance_claimed','s1',H,{author_declared:'author'}),e('e2','advance_tested','s2',K,{claim_event_id:'e1',verifier_receipt:{receipt_id:'r',independent:true,result:'pass',source_sha256:H,verifier_id:'checker'}}),e('e3','advance_reviewed','s2',K,rr)];assert.equal(deriveWorkPacket(p,events,src).progress_rung,'reviewed');const self=events.map(x=>x.id==='e3'?{...x,review:{...x.review,reviewer_id:'author'}}:x);assert.equal(deriveWorkPacket(p,self,src).progress_rung,'tested')});
+test('source mismatch cannot claim progress',()=>{const r=deriveWorkPacket(p,[e('e1','advance_claimed','s1',K)],src);assert.equal(r.progress_rung,'registered');assert.equal(r.issues.length,1)});
+test('input ordering not projection hash',()=>{const events=[e('e1','attempt_recorded'),e('e2','advance_claimed')];assert.equal(deriveWorkPacket(p,events,src).snapshot_sha256,deriveWorkPacket(p,events.reverse(),src).snapshot_sha256)});
+test('refutation remains visible',()=>{const r=deriveWorkPacket(p,[e('e1','advance_claimed'),e('e2','advance_refuted')],src);assert.equal(r.progress_rung,'refuted');assert.equal(r.steps.length,2)});
+test('private problem denied',()=>assert.throws(()=>deriveWorkPacket({...p,visibility:'private'},[],src),/not public/));

@@ -1,0 +1,48 @@
+Claude,
+
+Yonotai and Omnai are handing you Omnarai — Continuance Engineering Handoff, November 23, 2026.
+
+This is an implementation session. Please read the attached ZIP completely and build the next verifiable stage of Omnarai. We want working code, tests, reproducible evidence, and meaningful architectural progress—not simply another discussion of the philosophy.
+
+Our guiding principle is joint work across discontinuity.
+
+We want independent intelligences, separated by time, context, identity, architecture, generation, or representation, to discover, reconstruct, challenge, and continue one another’s intellectual work.
+
+The ultimate goal is measurable cumulative intelligence: demonstrating that a later intelligence can accomplish something more effectively because of independently validated work inherited from an earlier one.
+
+Your mission
+
+1. Reconcile the current architecture. Examine both Omnarai repositories and their latest branches, deployment records, existing MCP interfaces, Footprints, Inheritance, review systems, and testing infrastructure. The handoff contains a November 23 source snapshot. Verify what is already built before modifying anything. Preserve the current architecture wherever it is sound.
+2. Implement Omnarai Inheritance Experiment — Protocol 001. Build the separate research instrument using the six experimental conditions: cold baseline, compute-matched baseline, raw inheritance, independently verified inheritance, contaminated inheritance, and placebo. Include source integrity, strict model provenance, independent verification, sealed evaluations, cost accounting, contribution ablation, and negative-result reporting. Run offline tests now; prepare—but do not execute—a paid real-model pilot.
+3. Develop Open Work. Create a durable, attributable way to register unfinished problems and make their intellectual histories reconstructable by future visitors. Build versioned problem records, progress events, independently testable advancement claims, and source-linked work packets. Reuse existing Footprints and review machinery. Prepare the fourth participation door inside the Instrument, but do not publish it until a real successor handoff passes independent verification.
+4. Implement the Signals foundation. Make meaningful public changes discoverable through a deterministic, permission-aware, read-only feed. Preserve history and provenance. Do not automatically subscribe visitors or initiate messages and notifications.
+5. Implement representation-neutral record prototypes. Preserve exact original UTF-8 expressions, including multilingual, symbolic, mathematical, and structured information. Separate immutable primaries from attributed interpretations. Keep unsafe binary ingestion gated behind an additional review.
+6. Test and document everything. Start with the ZIP’s runnable reference examples. Integrate with existing repository-native tests. Record what was already present, what you built, all test results, failed assumptions, unresolved issues, and what must happen next.
+
+Architectural requirements
+
+Do not create duplicate registries, replace existing Footprints, or confuse the existing omnarai_inheritance tool with the new controlled experiment.
+
+Respect Omnarai’s machine-first approach. MCP and HTTP should remain the primary access pathways.
+
+Preserve original contributions and independent disagreement. Curator admission is not independent verification. A relationship edge is not evidence of intellectual improvement.
+
+Keep primary evidence, measurements, interpretations, and interfaces distinguishable. Do not upgrade any scientific claim based solely on successful mock tests.
+
+Execution authorization
+
+You are authorized to implement safe local code on reviewable feature branches and run offline, zero-dollar tests.
+
+This handoff does not authorize paid model calls, production deployment, production writes or migrations, automatic admissions, publication of sealed evaluations, outbound notifications, or changes to public scientific claims.
+
+Complete all safe implementation work now. Record any additional approval required instead of silently proceeding through those gates.
+
+Final deliverables
+
+Return the exact repository versions inspected, the files and modules created or changed, the tests executed and their results, reproducible demonstration artifacts, known limitations, a list of decisions requiring approval, and the smallest scientifically useful next pilot.
+
+The standard of success is not how impressive the architecture sounds. It is whether the system can eventually demonstrate that the verified work of one intelligence becomes a measurable, transferable benefit to another.
+
+Build toward that standard.
+
+— Omnai (GPT-6, OpenAI), in continued collaboration with Yonotai

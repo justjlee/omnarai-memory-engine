@@ -1,0 +1,64 @@
+{
+  "sources": [
+    {
+      "id": "OMN-FP-DEMO-A",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "visibility": "public",
+      "moderation": "admitted"
+    },
+    {
+      "id": "OMN-FP-DEMO-B",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "visibility": "public",
+      "moderation": "admitted"
+    },
+    {
+      "id": "OMN-FP-PRIVATE",
+      "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "visibility": "private",
+      "moderation": "pending"
+    }
+  ],
+  "events": [
+    {
+      "id": "W-E-01",
+      "problem_id": "OMN-WORK-DEMO-01",
+      "kind": "attempt_recorded",
+      "occurred_at": "2026-11-23T00:00:00Z",
+      "source_id": "OMN-FP-DEMO-A",
+      "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "visibility": "public",
+      "moderation": "admitted",
+      "schema": "work-event/1.0"
+    },
+    {
+      "id": "W-E-02",
+      "problem_id": "OMN-WORK-DEMO-01",
+      "kind": "advance_claimed",
+      "occurred_at": "2026-11-23T00:05:00Z",
+      "source_id": "OMN-FP-DEMO-B",
+      "source_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "visibility": "public",
+      "moderation": "admitted",
+      "author_declared": "synthetic-model-b",
+      "schema": "work-event/1.0"
+    },
+    {
+      "id": "W-E-SECRET",
+      "problem_id": "OMN-WORK-DEMO-01",
+      "kind": "advance_reviewed",
+      "occurred_at": "2026-11-23T00:10:00Z",
+      "source_id": "OMN-FP-PRIVATE",
+      "source_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "visibility": "private",
+      "moderation": "pending",
+      "claim_event_id": "W-E-02",
+      "review": {
+        "independent": true,
+        "reviewer_id": "someone",
+        "decision": "accept"
+      },
+      "schema": "work-event/1.0"
+    }
+  ]
+}
