@@ -18,6 +18,7 @@ import { recordAccess } from "./_telemetry.js";
 import { POLICY_CARD } from "./_contract.js";
 import { atlasCertCounts, tierOf, CERTIFIED_TIERS } from "./_atlas-counts.js";
 import { attachEnvelope } from "./_response-envelope.js";
+import { previewOn, serveProblems, serveChanges } from "./_continuance-views.js";
 import { registeredQuestions, loadRegistry } from "./_registered.js";
 import {
   FOOTPRINT_SCHEMA, FOOTPRINT_SCHEMA_1_1, FOOTPRINT_SCHEMAS, MAX_REVISION_BASIS_CHARS, STANCES, ACTOR_KINDS, CONTRIBUTION_EVENT_TYPES, RELATION_LISTS, CLIENT_TAGS,
@@ -2625,6 +2626,10 @@ export default async function handler(req, res) {
   if ((req.query?._view || "") === "footprints") return serveFootprints(req, res);
   // The voice-record door (footprint/1.2): POST leaves one (held pending for the curator); GET lists admitted ones.
   if ((req.query?._view || "") === "voice-records") return req.method === "POST" ? submitVoiceRecord(req, res) : serveVoiceRecords(req, res);
+  // PREVIEW reads (2026-11-23 continuance handoff), each OFF unless its env flag is "1". With the flag
+  // unset these _view values fall through exactly as before (tested). Read-only; see _continuance-views.js.
+  if ((req.query?._view || "") === "problems" && previewOn("OMNARAI_OPEN_WORK")) return serveProblems(req, res);
+  if ((req.query?._view || "") === "changes" && previewOn("OMNARAI_SIGNALS")) return serveChanges(req, res);
   // Derived protocol reads (GET only, deterministic, no model call).
   const protocolView = { orient: serveOrient, questions: serveQuestions, positions: servePositions, concordance: serveConcordance, inheritance: serveInheritance }[req.query?._view || ""];
   if (protocolView) {
