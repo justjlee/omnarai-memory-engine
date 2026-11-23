@@ -146,14 +146,14 @@ test("rule acceptance: dry run writes nothing; real run accepts only what qualif
 
   const dry = await review(["--accept-consensus", file, "--dry-run"], { log: quiet, consensusMap });
   assert.equal(dry.accepted, 1);
-  assert.equal(mem.__dump(DERIVED_REVIEW_PREFIX).filter((x) => /accept-consensus/.test(x.pathname || x)).length, 0, "dry run writes nothing");
+  assert.equal(mem.__dumpPrivate(DERIVED_REVIEW_PREFIX).filter((x) => /accept-consensus/.test(x.pathname || x)).length, 0, "dry run writes nothing");
 
   const real = await review(["--accept-consensus", file], { log: quiet, consensusMap, nowMs: Date.now() + 5000 });
   assert.equal(real.accepted, 1, "only a: b's stored stance differs, c was rejected by the curator, d has no votes on record");
   assert.deepEqual(real.skipped, { not_stored: 0, already_reviewed: 1, stance_mismatch: 1, votes_not_on_record: 1 });
-  const written = mem.__dump(DERIVED_REVIEW_PREFIX).filter((k) => /__accept-consensus__/.test(k));
+  const written = mem.__dumpPrivate(DERIVED_REVIEW_PREFIX).filter((k) => /__accept-consensus__/.test(k));
   assert.equal(written.length, 1, "exactly one rule-acceptance record");
-  const rec = mem.__read(written[0]);
+  const rec = mem.__readPrivate(written[0]);
   assert.equal(rec.individually_human_checked, false, "the permanent record says it too");
   assert.equal(rec.approved.by, "Jonathan Lee (curator)");
 

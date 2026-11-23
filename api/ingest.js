@@ -1,4 +1,5 @@
-import { put, list } from "@vercel/blob";
+import { put, list, blobFetch } from "./_blob.js";
+import { secretEquals } from "./_operator.js";
 
 /**
  * POST /api/ingest
@@ -41,7 +42,7 @@ export default async function handler(req, res) {
   if (!secret) {
     return res.status(503).json({ error: "Ingest endpoint not configured — set INGEST_SECRET in Vercel env" });
   }
-  if (req.body?.secret?.trim() !== secret.trim()) {
+  if (!secretEquals(String(req.body?.secret || "").trim(), secret.trim())) {
     return res.status(401).json({ error: "Unauthorized — wrong or missing secret" });
   }
 
@@ -103,7 +104,7 @@ export default async function handler(req, res) {
     const { blobs } = await list({ prefix: "proposals/" });
     for (const blob of blobs) {
       try {
-        const existing = await (await fetch(blob.url)).json();
+        const existing = await (await blobFetch(blob.url)).json();
         if (existing.title?.toLowerCase() === title.trim().toLowerCase()) {
           return res.status(409).json({
             error: "Duplicate title — entry with this title already exists",

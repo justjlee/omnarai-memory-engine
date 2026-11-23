@@ -151,9 +151,10 @@ function RepairPanel({ t, onRepaired }) {
   const [pending, setPending] = useState(null); // disposition id being composed
   const [note, setNote]       = useState("");
   const [downVoice, setDown]  = useState(t.voice_a);
-  const [token, setToken]     = useState(() => {
-    try { return localStorage.getItem("omnarai_curator_token") || ""; } catch { return ""; }
-  });
+  // A pasted curator key is used for this request only and never stored; any
+  // key an older version stored is removed.
+  const [token, setToken]     = useState("");
+  useEffect(() => { try { localStorage.removeItem("omnarai_curator_token"); } catch { /* ignore */ } }, []);
   const [busy, setBusy] = useState(false);
   const [err, setErr]   = useState(null);
 
@@ -162,10 +163,7 @@ function RepairPanel({ t, onRepaired }) {
   async function submit() {
     setBusy(true); setErr(null);
     const headers = { "Content-Type": "application/json" };
-    if (def?.gated && token) {
-      headers.Authorization = `Bearer ${token}`;
-      try { localStorage.setItem("omnarai_curator_token", token); } catch { /* ignore */ }
-    }
+    if (def?.gated && token) headers.Authorization = `Bearer ${token}`;
     const payload = { action: "repair", key: t.key, disposition: pending, actor: "xz" };
     if (note.trim()) payload.note = note.trim();
     if (pending === "reclassified") payload.reclassify = { downgraded_voice: downVoice, to_stage: "exploration" };
@@ -234,7 +232,7 @@ function RepairPanel({ t, onRepaired }) {
           {def.gated && (
             <input
               type="password" value={token} onChange={e => setToken(e.target.value)}
-              placeholder="curator token (INGEST_SECRET)"
+              placeholder="curator key (not stored)"
               style={{ ...fieldStyle, ...mono, fontSize: 10 }}
             />
           )}

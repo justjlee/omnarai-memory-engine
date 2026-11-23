@@ -19,6 +19,7 @@
  */
 
 import Anthropic from "@anthropic-ai/sdk";
+import { secretEquals } from "./_operator.js";
 
 const PROBE_SECRET = (process.env.PROBE_SECRET || "").trim();
 
@@ -178,7 +179,7 @@ export default async function handler(req, res) {
   if (PROBE_SECRET) {
     const auth = req.headers.authorization || "";
     const token = auth.startsWith("Bearer ") ? auth.slice(7) : req.query.secret;
-    if (token !== PROBE_SECRET) {
+    if (!secretEquals(token, PROBE_SECRET)) {
       return res.status(401).json({ error: "Unauthorized. Provide Authorization: Bearer <PROBE_SECRET>" });
     }
   }

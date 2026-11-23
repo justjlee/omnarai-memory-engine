@@ -7,16 +7,10 @@
 // grown memory (which query.js merges into the served corpus) and choose its ring,
 // including "core". The proposal log shows no approval since 2026-06-02, all the
 // curator's own.
-import { timingSafeEqual } from "node:crypto";
+import { operatorAuthed } from "./_operator.js";
 
-export function curatorAuthed(req) {
-  const secret = process.env.INGEST_SECRET;
-  if (!secret) return false;
-  const token = String(req.headers?.authorization || "").replace(/^Bearer\s+/i, "");
-  const a = Buffer.from(token, "utf8");
-  const b = Buffer.from(secret, "utf8");
-  return a.length === b.length && timingSafeEqual(a, b);
-}
+// The single operator check (session cookie or Bearer INGEST_SECRET, constant time).
+export const curatorAuthed = operatorAuthed;
 
 export const CURATOR_ONLY = {
   error: "Bearer INGEST_SECRET required — approving or rejecting is the curator's decision.",

@@ -118,6 +118,11 @@ echo
 echo ">> Response-envelope parity (schema · OpenAPI · llms.txt · agent-entry · handlers)"
 node scripts/check-response-envelope.mjs
 echo
+# HARD gate: storage classes (2026-11-18). One storage door (api/_blob.js), every storage path in api/
+# classified in api/_storage-classes.js, no bare reads of stored bodies, constant-time secret checks.
+echo ">> Storage classes (one door · every path classified · constant-time secret checks)"
+node scripts/check-storage-classes.mjs
+echo
 
 if [[ "${1:-}" == "--promote" ]]; then
   # IMPORTANT: promotion is a real PRODUCTION deployment, not a preview alias.

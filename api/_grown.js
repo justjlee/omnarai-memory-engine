@@ -1,4 +1,4 @@
-import { list, put, BlobPreconditionFailedError } from "@vercel/blob";
+import { list, put, BlobPreconditionFailedError, blobFetch } from "./_blob.js";
 
 // ── Durable grown-memory layer ────────────────────────────────────────────────
 // The organism's growth — approved syntheses and their embeddings — lives here,
@@ -80,7 +80,7 @@ async function readGrown({ strict = false } = {}) {
     // dropped in a rapid batch). It is not sufficient on its own (serial writes
     // ~43s apart still read stale, 2026-09-28), which is why writers also put
     // conditionally on the ETag of what they read.
-    const res = await fetch(`${blobs[0].url}?ts=${Date.now()}`, { cache: "no-store" });
+    const res = await blobFetch(`${blobs[0].url}?ts=${Date.now()}`, { cache: "no-store" });
     if (!res.ok) {
       if (strict) throw new Error(`grown.json read failed: HTTP ${res.status}`);
       return { grown: emptyGrown(), etag: null };

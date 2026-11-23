@@ -11,7 +11,8 @@ import {
   loadQuestionProposals, loadQuestionProposal,
   buildCouncilRun, saveCouncilRun, loadCouncilRun,
 } from "./_questions.js";
-import { list, put } from "@vercel/blob";
+import { list, put, blobFetch, privateStoreConfigured } from "./_blob.js";
+import { operatorAuthed, operatorDenied, privateNoStore, applyOperatorCors, bearerIsCurator, bearerToken, secretEquals } from "./_operator.js";
 import { waitUntil } from "@vercel/functions";
 import { recordAccess } from "./_telemetry.js";
 import { POLICY_CARD } from "./_contract.js";
@@ -76,10 +77,15 @@ function nextContributionId() {
   return `OMN-X${ms}`;
 }
 
-function curatorAuthed(req) {
-  const token = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
-  return Boolean(process.env.INGEST_SECRET) && token === process.env.INGEST_SECRET;
-}
+// Operator check (signed-in curator session or Bearer INGEST_SECRET, constant time): api/_operator.js.
+const curatorAuthed = operatorAuthed;
+
+const STORAGE_UNAVAILABLE = Object.freeze({
+  error: "Submissions are paused: the store that holds them is unavailable. Nothing was stored.",
+  code: "STORAGE_UNAVAILABLE",
+  agent_action: "Retry later.",
+  retryable: true,
+});
 
 async function findDivergenceRecord(id) {
   const grown = await loadGrownMemory();
@@ -98,7 +104,7 @@ async function loadContributions() {
     const entries = await Promise.all(
       blobs.map(async (b) => {
         try {
-          const res = await fetch(`${b.url}?ts=${Date.now()}`, { cache: "no-store" });
+          const res = await blobFetch(`${b.url}?ts=${Date.now()}`, { cache: "no-store" });
           return res.ok ? await res.json() : null;
         } catch {
           return null;
@@ -116,7 +122,7 @@ async function loadContribution(id) {
   try {
     const { blobs } = await list({ prefix: CONTRIB_PREFIX + id });
     if (!blobs.length) return null;
-    const res = await fetch(`${blobs[0].url}?ts=${Date.now()}`, { cache: "no-store" });
+    const res = await blobFetch(`${blobs[0].url}?ts=${Date.now()}`, { cache: "no-store" });
     return res.ok ? await res.json() : null;
   } catch {
     return null;
@@ -311,6 +317,8 @@ async function footprintRefContext(fp, divRecords) {
 }
 
 async function submitContribution(req, res) {
+  // Fail closed: a submission is stored only in private storage. Without it, nothing is written anywhere.
+  if (!privateStoreConfigured()) return res.status(503).json(STORAGE_UNAVAILABLE);
   if (req.method !== "POST") {
     return res.status(405).json({
       error: "Contribute is POST only.",
@@ -618,7 +626,7 @@ async function submitContribution(req, res) {
 
 // GET /api/contributions[?status=pending|approved|rejected]   (Bearer INGEST_SECRET)
 async function listContributionsView(req, res) {
-  if (!curatorAuthed(req)) return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
+  if (!curatorAuthed(req)) return operatorDenied(req, res);
   const status = req.query?.status || null;
   const all = await loadContributions();
   const items = all
@@ -634,7 +642,7 @@ async function listContributionsView(req, res) {
 // the earlier decision is kept in decision_history and in the footprint's
 // append-only review log — nothing is overwritten out of the record.
 async function reviewContribution(req, res, action) {
-  if (!curatorAuthed(req)) return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
+  if (!curatorAuthed(req)) return operatorDenied(req, res);
   const id = (req.body?.id || req.body?.contribId || "").toString().trim();
   if (!id) return res.status(400).json({ error: "Missing contribution id" });
   const reviewAction = action === "contribute-approve" ? "admit" : "reject";
@@ -802,6 +810,7 @@ async function serveVoiceRecords(req, res) {
 }
 
 async function submitVoiceRecord(req, res) {
+  if (!privateStoreConfigured()) return res.status(503).json(STORAGE_UNAVAILABLE);
   const body = req.body && typeof req.body === "object" && !Array.isArray(req.body) ? req.body : {};
   const unknown = Object.keys(body).filter((k) => !VOICE_RECORD_FIELDS.includes(k));
   if (unknown.length) {
@@ -1018,7 +1027,8 @@ async function serveFootprints(req, res) {
       const receiptOk = rcpt.token ? receiptMatches(h.body, rcpt.token) : false;
       res.setHeader("Vary", RECEIPT_HEADER);
       if (!isPublicHydrated(h) && !curator && !receiptOk) return res.status(404).json(FOOTPRINT_NOT_FOUND(id));
-      res.setHeader("Cache-Control", curator || receiptOk ? "no-store" : "s-maxage=60, stale-while-revalidate=300");
+      if (curator || receiptOk) privateNoStore(req, res);
+      else res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
       const chain = await chainContextFor(publicBodies);
       const body = {
         protocol: h.body?.schema_version || FOOTPRINT_SCHEMA,
@@ -1074,7 +1084,8 @@ async function serveFootprints(req, res) {
         .map((h) => project(h, { curator: true }))
         .sort((a, b) => (b.occurred_at || "").localeCompare(a.occurred_at || ""));
     }
-    res.setHeader("Cache-Control", curator ? "no-store" : "s-maxage=60, stale-while-revalidate=300");
+    if (curator) privateNoStore(req, res);
+    else res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
     const page = rows.slice(0, limit);
     const chain = await chainContextFor(publicBodies);
     const chains = Object.fromEntries(page.filter((f) => f.id && !f.unreadable && !f.tombstone).map((f) => [f.id, { edges: resolveEdges(f, chain.ctx), referenced_by: resolvedReferencedBy(f.id, chain.ctx) }]));
@@ -1105,7 +1116,7 @@ async function serveFootprints(req, res) {
 // Admit/reject deliberately go through contribute-approve/-reject so the
 // contribution and its footprint cannot disagree by construction.
 async function footprintReviewAction(req, res) {
-  if (!curatorAuthed(req)) return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
+  if (!curatorAuthed(req)) return operatorDenied(req, res);
   const id = (req.body?.id || "").toString().trim();
   const reviewAction = (req.body?.review_action || "").toString();
   if (!FP_ID_RE.test(id)) return res.status(400).json({ error: "id must be an OMN-FP id" });
@@ -1122,7 +1133,7 @@ async function footprintReviewAction(req, res) {
 // existed), redacts the source contribution's answer, and appends a `redact`
 // review. The one deliberate mutation in the protocol.
 async function footprintRedact(req, res) {
-  if (!curatorAuthed(req)) return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
+  if (!curatorAuthed(req)) return operatorDenied(req, res);
   const id = (req.body?.id || "").toString().trim();
   const reason = (req.body?.reason_category || "").toString();
   if (!FP_ID_RE.test(id)) return res.status(400).json({ error: "id must be an OMN-FP id" });
@@ -1322,7 +1333,8 @@ async function serveInheritance(req, res) {
     res.setHeader("Vary", RECEIPT_HEADER);
     if (!isPublicHydrated(h) && !receiptOk) return res.status(404).json(FOOTPRINT_NOT_FOUND(from));
     if (h.body?.tombstone) return res.status(410).json({ error: "That footprint was redacted.", code: "FOOTPRINT_REDACTED", redacted_at: h.body.redacted_at });
-    res.setHeader("Cache-Control", receiptOk ? "no-store" : "s-maxage=60, stale-while-revalidate=300");
+    if (receiptOk) privateNoStore(req, res);
+    else res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
     return res.status(200).json({
       protocol: PROTOCOL_VERSION,
       kind: "continuance — what happened after a footprint",
@@ -1367,7 +1379,7 @@ async function serveConcordance(req, res) {
 // provenance; the server stamps recorded_at and never accepts a mutation of an
 // existing event (append-only by construction — there is no update/delete path).
 async function annotateRecord(req, res) {
-  if (!curatorAuthed(req)) return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
+  if (!curatorAuthed(req)) return operatorDenied(req, res);
   const id = (req.body?.id || "").toString().trim();
   if (!id) return res.status(400).json({ error: "Missing divergence record id" });
   const record = await findDivergenceRecord(id);
@@ -1435,9 +1447,8 @@ async function scoreAnswers(texts) {
 async function runLongitudinal(req, res) {
   if (req.method !== "GET") return res.status(405).json({ error: "GET only" });
 
-  const auth = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
-  const cronOk = process.env.CRON_SECRET && auth === process.env.CRON_SECRET;
-  const curatorOk = process.env.INGEST_SECRET && auth === process.env.INGEST_SECRET;
+  const cronOk = secretEquals(bearerToken(req), (process.env.CRON_SECRET || "").trim());
+  const curatorOk = bearerIsCurator(req);
   if (!cronOk && !curatorOk) return res.status(401).json({ error: "Bearer CRON_SECRET or INGEST_SECRET required" });
 
   // Two tracks (api/_longitudinal.js): control = the standing council (the
@@ -1604,7 +1615,7 @@ async function loadAtlasIndex() {
   try {
     const { blobs } = await list({ prefix: ATLAS_INDEX_KEY });
     if (!blobs.length) return null;
-    const res = await fetch(`${blobs[0].url}?ts=${Date.now()}`, { cache: "no-store" });
+    const res = await blobFetch(`${blobs[0].url}?ts=${Date.now()}`, { cache: "no-store" });
     if (!res.ok) return null;
     const data = await res.json();
     return data && data.vectors && typeof data.vectors === "object" ? data : null;
@@ -1708,7 +1719,7 @@ async function loadDelta(deltaId) {
     const { blobs } = await list({ prefix: DELTA_PREFIX });
     const hit = blobs.find((b) => b.pathname.endsWith(`__${deltaId}.json`));
     if (!hit) return null;
-    const res = await fetch(`${hit.url}?ts=${Date.now()}`, { cache: "no-store" });
+    const res = await blobFetch(`${hit.url}?ts=${Date.now()}`, { cache: "no-store" });
     return res.ok ? await res.json() : null;
   } catch {
     return null;
@@ -2267,7 +2278,7 @@ async function proposeQuestion(req, res) {
 
 // GET /api/question-proposals[?status=pending|declined]   (Bearer INGEST_SECRET)
 async function listQuestionProposalsView(req, res) {
-  if (!curatorAuthed(req)) return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
+  if (!curatorAuthed(req)) return operatorDenied(req, res);
   const status = (req.query?.status || "pending").toString();
   const declined = status === "declined";
   const all = await loadQuestionProposals({ declined });
@@ -2285,7 +2296,7 @@ async function listQuestionProposalsView(req, res) {
 
 // POST /api/council {action:"question-approve"|"question-reject", id, note?}
 async function reviewQuestionProposal(req, res, action) {
-  if (!curatorAuthed(req)) return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
+  if (!curatorAuthed(req)) return operatorDenied(req, res);
   const id = (req.body?.id || "").toString().trim();
   const note = (req.body?.note || "").toString().slice(0, 500) || null;
   if (!id) return res.status(400).json({ error: "Missing 'id'" });
@@ -2596,7 +2607,13 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Omnarai-Receipt");
-  if (req.method === "OPTIONS") return res.status(200).end();
+  // The curator's dashboards call with a session cookie + x-omnarai-operator: credentialed
+  // CORS for those origins only, and never a cacheable answer.
+  if (req.method === "OPTIONS") {
+    applyOperatorCors(req, res);
+    return res.status(200).end();
+  }
+  if (req.headers?.["x-omnarai-operator"]) privateNoStore(req, res);
 
   // Access telemetry — background, never blocks the response (see _telemetry.js).
   // Covers the public /api/divergences read path too (it rewrites to here).
@@ -2689,9 +2706,7 @@ export default async function handler(req, res) {
 
   // Persistence is gated. Preview (persist:false) is open so anyone can see value.
   if (persist) {
-    const auth = req.headers.authorization || "";
-    const token = auth.replace(/^Bearer\s+/i, "");
-    if (!process.env.INGEST_SECRET || token !== process.env.INGEST_SECRET) {
+    if (!bearerIsCurator(req)) {
       return res.status(401).json({ error: "persist:true requires a valid Bearer INGEST_SECRET" });
     }
   }
