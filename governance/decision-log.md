@@ -499,3 +499,28 @@ check was running. Being told that access exists does not count.
 - Note: DL-0035 to DL-0038 are held by open PR #52 and DL-0039 by the drafted utility v2 entry. DL-0042 was
   provisionally named in two unmerged drafts, which take the next free numbers instead.
 - Logged: 2026-11-23 by Claude Code (Anthropic)
+
+## DL-0043 · 2026-11-23 · Storage classes and the operator sign-in are live on the engine and the front door
+- Decider: xz (chose a passphrase sign-in on 2026-11-18; said "Yes, deploy it" in a Claude Code session of 2026-11-23)
+- What: every storage path in the engine now has a class (`api/_storage-classes.js`, one storage door `api/_blob.js`).
+  Public classes stay where they were. Every other record is written only to a private store, read server-side and never
+  served by URL; without the private credential a write is refused (503) and never falls back. The curator's pages sign
+  in with a passphrase (only its scrypt hash is stored on the server) and get an HttpOnly, SameSite=Strict session cookie;
+  scripts use the curator key in the Authorization header only, and every secret comparison is constant time. The
+  curator key was rotated; receipts and stored hash salts now have their own settings, so receipts issued before keep
+  working. The omnarai.org front door (hand-deployed, not in git) moved its own access records the same way, and its two
+  curator pages sign in through the engine. The engine's proposal and tension panels no longer keep a key in the browser.
+- Source: PR #60 (merge 46f7494), engine 2026.11.23+46f7494, bundle index-D7TWbL39.js, crons registered on this build;
+  omnarai-verify 14/14, dual-native 14/14 (engine) and the front-door dual-native gate, surface-numbers in balance on both
+  scopes. Suite 52 files / 434 tests; front door 10/10; omnarai-mcp 65/65. Live checks after deploy: curator routes answer
+  401 with `private, no-store` when not signed in; the previous key is refused; a key in the address is never read; the
+  private store refuses anonymous reads (403); a new access event lands only in the private store, on both sites; the
+  curator signed in on both pages.
+- Copy: the engine's 210,982 non-public records in the previous location were archived (encrypted, offline, read back
+  and verified), then 158,743 were copied to the private store and verified by hash; 52,238 older than the 90-day
+  window are kept only in the archive, with 128 daily totals. On xz's exact approval sentence, the 889 previous copies
+  at fixed paths were removed (the store lists none afterwards; old paths answer 404 once edge caches expire). The
+  remaining per-event files follow the transition below.
+- Not decided here: retiring the transition reads (`PRIVATE_READ_FALLBACK=off`) after 7 days with no fallback read;
+  removing the previous copies (each step on xz's own approval); copying the front door's previous event files.
+- Logged: 2026-11-23 by Claude Code (Anthropic)
