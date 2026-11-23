@@ -74,6 +74,15 @@ test("append happy path: keeps existing entries and adds the new one, in one put
   assert.equal(state.puts[0].opts.ifMatch, ETAG, "the put is conditional on the ETag of the copy it read");
 });
 
+test("a weak ETag from the CDN (W/\"…\") goes into the put in its strong form", async () => {
+  // Production 2026-11-18..23: the compressed CDN read returned W/"<hex>", the
+  // engine passed it to ifMatch unchanged, and the store refused every write.
+  setup(listed, respond(200, stored, { etag: `W/${ETAG}` }));
+  assert.equal(await appendGrownEntry(newEntry), 3);
+  assert.equal(state.puts.length, 1);
+  assert.equal(state.puts[0].opts.ifMatch, ETAG);
+});
+
 test("append is idempotent by id", async () => {
   setup(listed, respond(200, stored));
   assert.equal(await appendGrownEntry({ id: "OMN-A", ring: "open" }), 2);

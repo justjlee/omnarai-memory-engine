@@ -9,7 +9,8 @@
 // LIST), `__faults.staleList` (LIST omits blobs written in the last N ms, the
 // CDN read-after-write lag that made the consolidated-array pattern lose data),
 // `__faults.staleRead` (a GET of a matching pathname serves the PREVIOUS version,
-// body and ETag together, as a lagging CDN edge does).
+// body and ETag together, as a lagging CDN edge does). Like the real CDN, a GET
+// returns the ETag in its weak form (W/"…").
 //
 // Mirrors @vercel/blob 2.x put semantics: every blob carries an ETag; a put onto
 // an existing pathname throws unless `allowOverwrite: true` or `ifMatch` is set;
@@ -121,7 +122,12 @@ export function installFetch() {
       const f = S.files.get(k);
       if (!f) return new Response("not found", { status: 404 });
       const v = S.faults.staleRead && f.prev && S.faults.staleRead(k) ? f.prev : f;
-      return new Response(v.body, { status: 200, headers: { "content-type": f.contentType, etag: v.etag } });
+      // The real public CDN compresses JSON (br/gzip) and so serves the ETag in
+      // its WEAK form, W/"<hex>"; the store's conditional put accepts only the
+      // strong form. Measured on the production store 2026-11-23. Serving the
+      // strong form here is why the suite passed while every live grown-memory
+      // write from 2026-11-18 on was refused.
+      return new Response(v.body, { status: 200, headers: { "content-type": f.contentType, etag: `W/${v.etag}` } });
     }
     if (process.env.MEM_BLOB_ALLOW_NET === "1") return realFetch(input, init);
     throw new Error(`hermetic: network blocked (${url.slice(0, 80)})`);
