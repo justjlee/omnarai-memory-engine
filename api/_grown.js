@@ -85,7 +85,11 @@ async function readGrown({ strict = false } = {}) {
       if (strict) throw new Error(`grown.json read failed: HTTP ${res.status}`);
       return { grown: emptyGrown(), etag: null };
     }
-    const etag = res.headers.get("etag");
+    // The CDN compresses this file, so it returns the ETag in its weak form
+    // (W/"<hex>"). The store's conditional put accepts only the strong form of
+    // the same value; passed through as served, every put was refused as a lost
+    // race, and no grown-memory write landed from 2026-11-18 to 2026-11-23.
+    const etag = (res.headers.get("etag") || "").replace(/^W\//, "") || null;
     const data = await res.json();
     if (strict && !Array.isArray(data.entries)) throw new Error("grown.json has no entries array");
     const entries = Array.isArray(data.entries) ? data.entries : [];

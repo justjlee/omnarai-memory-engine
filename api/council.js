@@ -1556,7 +1556,11 @@ async function runLongitudinal(req, res) {
     // failed run.
     await recordSpend(spendKind);
 
-    return res.status(200).json({
+    // A run whose answers were elicited (and paid for) but not stored is a
+    // failure, not a 200: from 2026-11-18 to 2026-11-23 four runs returned 200
+    // with committed:false and the logs showed nothing.
+    if (count === null) console.error(`longitudinal ${track} ${epoch} ${canon.canon_id}: answers elicited but NOT stored (grown-memory write failed)`);
+    return res.status(count === null ? 500 : 200).json({
       committed: count !== null,
       id: record.id,
       track,
