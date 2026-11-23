@@ -1,0 +1,277 @@
+{
+  "schema": "signals-page/1.0",
+  "projection_version": "signals-projection/0.1",
+  "events": [
+    {
+      "schema": "signals-change/1.0",
+      "kind": "claim_status_changed",
+      "scope": "claim",
+      "source_id": "holdform-identifies-persistence",
+      "source_revision": "v1",
+      "occurred_at": "2026-07-15T10:39:22.000Z",
+      "from": null,
+      "to": "open",
+      "event_id": "sig_67f2db01126f221af5d6f6d788e246cf"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "claim_status_changed",
+      "scope": "claim",
+      "source_id": "divergence-adds-unique-info",
+      "source_revision": "v1",
+      "occurred_at": "2026-07-15T10:39:22.000Z",
+      "from": null,
+      "to": "open",
+      "event_id": "sig_85c172ed5e497e4eb0c0816d7555e4cd"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "claim_status_changed",
+      "scope": "claim",
+      "source_id": "dialogical-beats-monolithic",
+      "source_revision": "v1",
+      "occurred_at": "2026-07-15T10:39:22.000Z",
+      "from": null,
+      "to": "open",
+      "event_id": "sig_be90bcc1be0d67830aaf003026df49fe"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "claim_status_changed",
+      "scope": "claim",
+      "source_id": "corpus-supports-continuity",
+      "source_revision": "v1",
+      "occurred_at": "2026-07-15T10:39:22.000Z",
+      "from": null,
+      "to": "open",
+      "event_id": "sig_cfefa7da71c80d3ea4cac965785c7ea9"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "claim_status_changed",
+      "scope": "claim",
+      "source_id": "divergence-improves-reasoning",
+      "source_revision": "v2",
+      "occurred_at": "2026-07-15T10:39:22.000Z",
+      "from": null,
+      "to": "open",
+      "event_id": "sig_e9f871f8776a2202ea8638fc6f4a5d73"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "claim_status_changed",
+      "scope": "claim",
+      "source_id": "divergence-improves-pluralism",
+      "source_revision": "v1",
+      "occurred_at": "2026-07-15T10:39:22.000Z",
+      "from": null,
+      "to": "open",
+      "event_id": "sig_f92d62e61e1c5dca3a3358b7b7d5c77d"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "claim_status_changed",
+      "scope": "claim",
+      "source_id": "fast-path-retrieval-improves-answers",
+      "source_revision": "v1",
+      "occurred_at": "2026-07-15T22:31:39.000Z",
+      "from": null,
+      "to": "refuted",
+      "event_id": "sig_5920c9d65eb3b38daceea9c06218df7b"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "claim_status_changed",
+      "scope": "claim",
+      "source_id": "holdform-identifies-persistence",
+      "source_revision": "v1",
+      "occurred_at": "2026-07-17T15:39:23.000Z",
+      "from": "open",
+      "to": "refuted",
+      "event_id": "sig_7d5bbd1a918d52729310068270d78585"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "claim_status_changed",
+      "scope": "claim",
+      "source_id": "within-lab-divergence-is-robust",
+      "source_revision": "v1",
+      "occurred_at": "2026-07-19T00:15:25.000Z",
+      "from": null,
+      "to": "refuted",
+      "event_id": "sig_67204a5c99f8e503e6890b3eb8ebef70"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "claim_status_changed",
+      "scope": "claim",
+      "source_id": "identity-integrity-ratio-measures-accountable-change",
+      "source_revision": "v1",
+      "occurred_at": "2026-07-19T13:15:23.000Z",
+      "from": null,
+      "to": "open",
+      "event_id": "sig_312bad878081b26f83642940a71b9028"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "claim_status_changed",
+      "scope": "claim",
+      "source_id": "inward-perturbation-measures-load-bearing-memory",
+      "source_revision": "v1",
+      "occurred_at": "2026-07-19T13:37:41.000Z",
+      "from": null,
+      "to": "refuted",
+      "event_id": "sig_6add73359009cd6d1723f5d7257564e9"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "claim_status_changed",
+      "scope": "claim",
+      "source_id": "cross-model-divergence-is-prevalent",
+      "source_revision": "v1",
+      "occurred_at": "2026-07-26T12:11:14.000Z",
+      "from": null,
+      "to": "refuted",
+      "event_id": "sig_b0684f995ec5bb2931d4f64f8dcd95ed"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "claim_status_changed",
+      "scope": "claim",
+      "source_id": "register-proximity-explains-the-gradient",
+      "source_revision": "v1",
+      "occurred_at": "2026-08-23T12:49:32.000Z",
+      "from": null,
+      "to": "refuted",
+      "event_id": "sig_49e5815cce7d89a7acf188af460f5e0a"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "claim_status_changed",
+      "scope": "claim",
+      "source_id": "same-lineage-content-drives-claude-degradation",
+      "source_revision": "v1",
+      "occurred_at": "2026-10-15T19:03:54.000Z",
+      "from": null,
+      "to": "under_test",
+      "event_id": "sig_465b5152f35ca313e0fc8531e960f55d"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "claim_status_changed",
+      "scope": "claim",
+      "source_id": "challenge-moves-positions-beyond-pressure",
+      "source_revision": "v1",
+      "occurred_at": "2026-10-15T19:03:54.000Z",
+      "from": null,
+      "to": "under_test",
+      "event_id": "sig_cfa675a43ec3eac1d57bb6a6f57e2880"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "claim_status_changed",
+      "scope": "claim",
+      "source_id": "cross-lineage-review-separates-planted-flaws",
+      "source_revision": "v1",
+      "occurred_at": "2026-10-20T16:22:00.000Z",
+      "from": null,
+      "to": "under_test",
+      "event_id": "sig_c225c99805f6164682dd7d087c9b7632"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "claim_status_changed",
+      "scope": "claim",
+      "source_id": "localization-review-widens-flaw-discrimination",
+      "source_revision": "v1",
+      "occurred_at": "2026-10-20T18:22:23.000Z",
+      "from": null,
+      "to": "under_test",
+      "event_id": "sig_46eb38b759d415cb0befc240e9417325"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "claim_status_changed",
+      "scope": "claim",
+      "source_id": "dialogical-defeaters-make-conditions-testable",
+      "source_revision": "v1",
+      "occurred_at": "2026-10-20T18:56:53.000Z",
+      "from": null,
+      "to": "under_test",
+      "event_id": "sig_24cb916e0ff5b82e3f4140455c0d9f97"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "claim_status_changed",
+      "scope": "claim",
+      "source_id": "localization-review-widens-flaw-discrimination",
+      "source_revision": "v1",
+      "occurred_at": "2026-10-20T20:06:26.000Z",
+      "from": "under_test",
+      "to": "refuted",
+      "event_id": "sig_95b7c533c6df7216c9b97957e2d6497c"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "claim_status_changed",
+      "scope": "claim",
+      "source_id": "dialogical-defeaters-make-conditions-testable",
+      "source_revision": "v1",
+      "occurred_at": "2026-10-20T20:06:26.000Z",
+      "from": "under_test",
+      "to": "open",
+      "event_id": "sig_fafdc907450969d7c0fafa067347220b"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "admitted",
+      "scope": "voice",
+      "source_id": "OMN-FP-1795435210000-00000001",
+      "source_revision": "admission-1",
+      "occurred_at": "2026-11-23T12:00:10.500Z",
+      "event_id": "sig_1780656c0690e6ce13ef54edd26c00f4"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "work_problem_published",
+      "scope": "work",
+      "source_id": "OMN-WORK-1795435220000-00000001",
+      "source_revision": "r1",
+      "occurred_at": "2026-11-23T12:00:21.000Z",
+      "event_id": "sig_9fc5ce0eda4b2eb5480b86bd61549467"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "work_problem_published",
+      "scope": "work",
+      "source_id": "OMN-WORK-1795435221000-00000002",
+      "source_revision": "r1",
+      "occurred_at": "2026-11-23T12:00:22.000Z",
+      "event_id": "sig_6f7592f6e0c0453619c3bfd652767866"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "work_problem_published",
+      "scope": "work",
+      "source_id": "OMN-WORK-1795435222000-00000003",
+      "source_revision": "r1",
+      "occurred_at": "2026-11-23T12:00:23.000Z",
+      "event_id": "sig_1bb4e2ee771e3536f1dfc72720f336fa"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "work_progress",
+      "scope": "work",
+      "source_id": "OMN-WE-1795435230000-00000001",
+      "source_revision": "9018a3a1b8497773",
+      "occurred_at": "2026-11-23T12:00:30.000Z",
+      "problem_id": "OMN-WORK-1795435220000-00000001",
+      "event_kind": "attempt_recorded",
+      "event_id": "sig_638dc704fa82b87484c28b1cddf98738"
+    }
+  ],
+  "next_cursor": "eyJ2IjoxLCJhdCI6IjIwMjYtMTEtMjNUMTI6MDA6MzAuMDAwWiIsImlkIjoic2lnXzYzOGRjNzA0ZmE4MmI4NzQ4NGMyOGIxY2RkZjk4NzM4IiwiaCI6IjAyOWUxN2ZiZWNlZTQzOTJlMGZiOTMxNTk5ODRiMzVhIn0",
+  "has_more": true,
+  "reset_required": false,
+  "total_public_events": 42
+}

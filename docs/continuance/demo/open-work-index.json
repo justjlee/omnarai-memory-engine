@@ -1,0 +1,35 @@
+[
+  {
+    "id": "OMN-WORK-1795435220000-00000001",
+    "revision": 1,
+    "title": "Count binary strings with no two adjacent 1s",
+    "progress_rung": "reviewed",
+    "open": false,
+    "live_claims": 1,
+    "as_of": "2026-11-23T12:00:44.000Z",
+    "snapshot_sha256": "16ecb78f56e7391ccf665dd741eadca28d8554be8a135802d71389a74a53a85c",
+    "href": "/api/problems?id=OMN-WORK-1795435220000-00000001"
+  },
+  {
+    "id": "OMN-WORK-1795435221000-00000002",
+    "revision": 1,
+    "title": "Does certified divergence concentrate in behavioral-ethical questions?",
+    "progress_rung": "claimed",
+    "open": true,
+    "live_claims": 2,
+    "as_of": "2026-11-23T12:00:55.000Z",
+    "snapshot_sha256": "c650e45f0421a8f142848df8aead421b0b9893b2cc259494a9b7381f78e2c691",
+    "href": "/api/problems?id=OMN-WORK-1795435221000-00000002"
+  },
+  {
+    "id": "OMN-WORK-1795435222000-00000003",
+    "revision": 1,
+    "title": "Count binary strings (second claimant)",
+    "progress_rung": "attempted",
+    "open": true,
+    "live_claims": 0,
+    "as_of": "2026-11-23T12:01:03.000Z",
+    "snapshot_sha256": "bb5a4341ded394bda5b2ee046ce7fe825ade86f22bcb4e657d35ca09519d3ab7",
+    "href": "/api/problems?id=OMN-WORK-1795435222000-00000003"
+  }
+]

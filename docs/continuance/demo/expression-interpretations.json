@@ -1,0 +1,96 @@
+{
+  "primary_id": "OMN-EXPR-1780000000000-00000001",
+  "primary_roundtrip_ok": true,
+  "readings": [
+    {
+      "id": "OMN-INTERP-1780000000000-00000001",
+      "kind": "gloss",
+      "interpreter_declared": "demo reader 1",
+      "method": {
+        "name": "human reading",
+        "version": "1"
+      },
+      "target": {
+        "media_type": "text/plain; charset=utf-8",
+        "language_hint": "en"
+      },
+      "limitations": [
+        "not a translation",
+        "the formula is incomplete in the primary"
+      ],
+      "measured": null,
+      "sha256": "a3992069524885dc27f03bf910b9a0ff43b20ae9bd779a51307cce093f78f21e"
+    },
+    {
+      "id": "OMN-INTERP-1780000000000-00000002",
+      "kind": "formalization",
+      "interpreter_declared": "demo reader 2",
+      "method": {
+        "name": "notation extraction",
+        "version": "1"
+      },
+      "target": {
+        "media_type": "text/x-tex; charset=utf-8",
+        "language_hint": null
+      },
+      "limitations": [
+        "ignores the natural-language parts"
+      ],
+      "measured": null,
+      "sha256": "ba8bc812b7ae2825f88e114925721e525980683b6514966e85326c385cbdb6dd"
+    }
+  ],
+  "records": [
+    {
+      "schema": "expression-interpretation/1.0",
+      "id": "OMN-INTERP-1780000000000-00000001",
+      "primary_id": "OMN-EXPR-1780000000000-00000001",
+      "primary_sha256": "4d8d8bedb82f354305f6ce75ef587de343f518d8acda818f530eea6fbe57bb6e",
+      "primary_record_sha256": "3ec6286a32bd0806bc5be66b6de9c33e88fa320af2c605b8a89ef66e516ad535",
+      "kind": "gloss",
+      "interpretation": "Malayalam word (\"Malayalam\"), infinity, the identity function, Chinese (\"Chinese\"), then the start of an epsilon–delta statement.",
+      "target": {
+        "media_type": "text/plain; charset=utf-8",
+        "language_hint": "en"
+      },
+      "method": {
+        "name": "human reading",
+        "version": "1"
+      },
+      "interpreter_declared": "demo reader 1",
+      "limitations": [
+        "not a translation",
+        "the formula is incomplete in the primary"
+      ],
+      "measured": null,
+      "equivalence_claimed": false,
+      "created_at": "2026-11-23T12:01:31.000Z",
+      "sha256": "a3992069524885dc27f03bf910b9a0ff43b20ae9bd779a51307cce093f78f21e"
+    },
+    {
+      "schema": "expression-interpretation/1.0",
+      "id": "OMN-INTERP-1780000000000-00000002",
+      "primary_id": "OMN-EXPR-1780000000000-00000001",
+      "primary_sha256": "4d8d8bedb82f354305f6ce75ef587de343f518d8acda818f530eea6fbe57bb6e",
+      "primary_record_sha256": "3ec6286a32bd0806bc5be66b6de9c33e88fa320af2c605b8a89ef66e516ad535",
+      "kind": "formalization",
+      "interpretation": "∀ε>0 ∃δ>0 …  (truncated quantifier prefix; no body)",
+      "target": {
+        "media_type": "text/x-tex; charset=utf-8",
+        "language_hint": null
+      },
+      "method": {
+        "name": "notation extraction",
+        "version": "1"
+      },
+      "interpreter_declared": "demo reader 2",
+      "limitations": [
+        "ignores the natural-language parts"
+      ],
+      "measured": null,
+      "equivalence_claimed": false,
+      "created_at": "2026-11-23T12:01:32.000Z",
+      "sha256": "ba8bc812b7ae2825f88e114925721e525980683b6514966e85326c385cbdb6dd"
+    }
+  ]
+}
