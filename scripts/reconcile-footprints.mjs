@@ -13,7 +13,7 @@
 // .env.local when present.
 import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { list } from "@vercel/blob";
+import { list } from "../api/_blob.js";
 import {
   getDefaultStore, loadFootprintIndex, hydrate, planReconcile, recordFootprint, appendReview,
 } from "../api/_footprints.js";

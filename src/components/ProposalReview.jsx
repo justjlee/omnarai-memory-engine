@@ -19,11 +19,11 @@ export default function ProposalReview() {
   const [filter, setFilter] = useState("pending");
   const [expandedId, setExpandedId] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
-  // Approve/reject need the curator token (server: api/_curator.js). Same storage
-  // key as the Tension Registry's repair panel, so it is entered once per browser.
-  const [token, setToken] = useState(() => {
-    try { return localStorage.getItem("omnarai_curator_token") || ""; } catch { return ""; }
-  });
+  // Approve/reject are curator-only (server: api/_curator.js). A signed-in
+  // operator session (omnarai.org/home) is enough; a pasted key works for this
+  // page only and is never stored. Any key an older version stored is removed.
+  const [token, setToken] = useState("");
+  useEffect(() => { try { localStorage.removeItem("omnarai_curator_token"); } catch { /* ignore */ } }, []);
   const [actionError, setActionError] = useState(null);
 
   const fetchProposals = useCallback(async () => {
@@ -45,13 +45,11 @@ export default function ProposalReview() {
     setActionLoading(id);
     setActionError(null);
     try {
-      const headers = { "Content-Type": "application/json" };
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-        try { localStorage.setItem("omnarai_curator_token", token); } catch { /* ignore */ }
-      }
+      const headers = { "Content-Type": "application/json", "x-omnarai-operator": "1" };
+      if (token) headers.Authorization = `Bearer ${token}`;
       const r = await fetch(`/api/store?action=${action}`, {
         method: "POST",
+        credentials: "same-origin",
         headers,
         body: JSON.stringify({ id, ...extraData }),
       });
@@ -99,7 +97,7 @@ export default function ProposalReview() {
       {filter === "pending" && (
         <input
           type="password" value={token} onChange={e => setToken(e.target.value)}
-          placeholder="curator token (INGEST_SECRET) — needed to approve or reject"
+          placeholder="curator key, if you're not signed in on omnarai.org/home (not stored)"
           style={{
             width: "100%", marginBottom: 12, padding: "6px 10px", fontSize: 10,
             fontFamily: "'IBM Plex Mono',monospace", color: "rgba(200,192,176,0.8)",

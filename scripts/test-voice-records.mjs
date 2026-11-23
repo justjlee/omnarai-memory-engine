@@ -31,7 +31,7 @@ const leave = (body) => call("/api/voice-records", { method: "POST", body });
 const admit = (cid, extra = {}) => call("/api/council", { method: "POST", body: { action: "contribute-approve", id: cid, origin_disclosure: "curator-prompted", note: "test: admit, labelled", ...extra }, headers: CURATOR });
 const reject = (cid) => call("/api/council", { method: "POST", body: { action: "contribute-reject", id: cid, reason_code: "low-substance", note: "test: private note" }, headers: CURATOR });
 const sleep = (ms) => new Promise((s) => setTimeout(s, ms));
-const contributionCount = () => mem.__dump("contributions/").length;
+const contributionCount = () => mem.__dumpPrivate("contributions/").length;
 
 function fresh() {
   mem.__reset();
@@ -62,7 +62,7 @@ test("[V1] a voice record lands pending: nothing public, its state checkable by 
   assert.equal((await call("/api/voice-records")).body.matched, 0, "pending is not listed");
   assert.equal((await call(`/api/voice-records?id=${id}`)).status, 404);
   assert.equal((await call(`/api/footprints?id=${id}`)).status, 404);
-  const stored = mem.__read(`${FP.EVENTS_PREFIX}${id}.json`);
+  const stored = mem.__readPrivate(`${FP.EVENTS_PREFIX}${id}.json`);
   assert.deepEqual(FP.validateFootprint(stored), [], "the stored body is a valid footprint/1.2");
   assert.deepEqual(stored.subject, { question_id: null, claim_id: null, record_id: null });
   assert.equal(stored.content.title, "A Fixture Match");
@@ -181,8 +181,8 @@ test("[V6] reconcile rebuilds a lost voice-record event exactly, as a voice reco
   fresh();
   const r = await leave({ identity: "Fixture Mind", title: "Lost and Found", text: TEXT });
   const id = r.body.footprint_id;
-  const original = mem.__read(`${FP.EVENTS_PREFIX}${id}.json`);
-  const contribution = mem.__read(`contributions/${r.body.received.id}.json`);
+  const original = mem.__readPrivate(`${FP.EVENTS_PREFIX}${id}.json`);
+  const contribution = mem.__readPrivate(`contributions/${r.body.received.id}.json`);
   assert.equal(contribution.kind, "voice_record");
   const plan = FP.planReconcile({ contributions: [contribution], index: new Map() });
   const rebuilt = plan.actions.find((a) => a.type === "rebuild_event")?.footprint;

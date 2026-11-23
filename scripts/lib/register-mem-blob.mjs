@@ -15,7 +15,10 @@ registerHooks({
 
 // Hermetic by default: no secrets from the environment leak into a test run,
 // so no code path can spend on a model call or reach a real store.
-for (const k of ["BLOB_READ_WRITE_TOKEN", "ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY", "XAI_API_KEY", "DEEPSEEK_API_KEY", "AUTO_ADMIT_CONTRIBUTIONS"]) {
+for (const k of ["BLOB_READ_WRITE_TOKEN", "PRIVATE_BLOB_READ_WRITE_TOKEN", "OPERATOR_PASSPHRASE_HASH", "OPERATOR_SESSION_KEY", "ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY", "XAI_API_KEY", "DEEPSEEK_API_KEY", "AUTO_ADMIT_CONTRIBUTIONS"]) {
   if (process.env.MEM_BLOB_KEEP_ENV !== "1") delete process.env[k];
 }
+// The hermetic private store answers to this stand-in token (a test that checks
+// fail-closed behaviour deletes it).
+if (process.env.MEM_BLOB_KEEP_ENV !== "1") process.env.PRIVATE_BLOB_READ_WRITE_TOKEN = "mem-private-token";
 await import(target); // installs the fetch shim before any handler loads

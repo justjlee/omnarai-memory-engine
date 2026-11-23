@@ -32,7 +32,7 @@
 // proposal can be told its PERCENTILE, which is far more informative to a
 // visitor than a bare pass/fail.
 
-import { list, put } from "@vercel/blob";
+import { list, put, blobFetch } from "./_blob.js";
 
 
 const PENDING_PREFIX = "question-proposals/";
@@ -187,7 +187,7 @@ export async function loadQuestionProposals({ declined = false } = {}) {
       try {
         // Cache-bust: Blob reads are CDN-fronted and a just-written status change
         // can otherwise read back stale.
-        const r = await fetch(`${b.url}?t=${Date.now()}`);
+        const r = await blobFetch(`${b.url}?t=${Date.now()}`);
         return r.ok ? await r.json() : null;
       } catch { return null; }
     })
@@ -200,7 +200,7 @@ export async function loadQuestionProposal(id) {
     const { blobs } = await list({ prefix: proposalKey(id, declined) });
     if (blobs.length) {
       try {
-        const r = await fetch(`${blobs[0].url}?t=${Date.now()}`);
+        const r = await blobFetch(`${blobs[0].url}?t=${Date.now()}`);
         if (r.ok) return await r.json();
       } catch { /* fall through */ }
     }
@@ -235,7 +235,7 @@ export async function loadCouncilRun(runId) {
   try {
     const { blobs } = await list({ prefix: `${RUNS_PREFIX}${runId}.json` });
     if (!blobs.length) return null;
-    const r = await fetch(`${blobs[0].url}?t=${Date.now()}`);
+    const r = await blobFetch(`${blobs[0].url}?t=${Date.now()}`);
     return r.ok ? await r.json() : null;
   } catch { return null; }
 }

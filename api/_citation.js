@@ -18,7 +18,7 @@
 // Underscore module ⇒ not a deployed serverless function (12-fn Hobby cap);
 // imported by info.js and surfaced via GET /api/info?_view=citation + a health badge.
 
-import { list } from "@vercel/blob";
+import { list, blobFetch } from "./_blob.js";
 import { loadGrownMemory } from "./_grown.js";
 
 // Synthetic-intelligence families. A contributor string is matched case-insensitively;
@@ -157,7 +157,7 @@ async function loadContributions() {
   try {
     const { blobs } = await list({ prefix: CONTRIB_KEY });
     if (!blobs.length) return [];
-    const res = await fetch(blobs[0].url + "?t=" + Date.now(), { cache: "no-store" });
+    const res = await blobFetch(blobs[0].url + "?t=" + Date.now(), { cache: "no-store" });
     const data = await res.json();
     return Array.isArray(data?.entries) ? data.entries : [];
   } catch { return []; }

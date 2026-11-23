@@ -1,4 +1,4 @@
-import { list, put } from "@vercel/blob";
+import { list, put, blobFetch } from "./_blob.js";
 import { createHash, randomBytes } from "crypto";
 
 // ── Song-play telemetry ───────────────────────────────────────────────────────
@@ -85,7 +85,9 @@ export function playerHash(req) {
   const fwd = (req.headers?.["x-forwarded-for"] || "").toString();
   const ip = fwd.split(",")[0].trim() || req.socket?.remoteAddress || "";
   if (!ip) return "no-ip";
-  const salt = process.env.INGEST_SECRET || "omnarai";
+  // VISITOR_HASH_SALT holds the salt every stored hash was made with, so the curator
+  // key can be rotated without making every returning visitor look new.
+  const salt = (process.env.VISITOR_HASH_SALT || "").trim() || process.env.INGEST_SECRET || "omnarai";
   return createHash("sha256").update(salt + ip).digest("hex").slice(0, 12);
 }
 
@@ -263,7 +265,7 @@ export async function readPlayDay(day, { limit = 2000 } = {}) {
   const wanted = blobs.slice(0, limit);
   const events = await Promise.all(
     wanted.map((b) =>
-      fetch(b.url)
+      blobFetch(b.url)
         .then((r) => r.json())
         .catch(() => null),
     ),

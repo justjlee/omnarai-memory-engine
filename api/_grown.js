@@ -1,4 +1,4 @@
-import { list, put, BlobPreconditionFailedError } from "@vercel/blob";
+import { list, put, BlobPreconditionFailedError, blobFetch } from "./_blob.js";
 
 // ── Durable grown-memory layer ────────────────────────────────────────────────
 // The organism's growth — approved syntheses and their embeddings — lives here,
@@ -80,12 +80,16 @@ async function readGrown({ strict = false } = {}) {
     // dropped in a rapid batch). It is not sufficient on its own (serial writes
     // ~43s apart still read stale, 2026-09-28), which is why writers also put
     // conditionally on the ETag of what they read.
-    const res = await fetch(`${blobs[0].url}?ts=${Date.now()}`, { cache: "no-store" });
+    const res = await blobFetch(`${blobs[0].url}?ts=${Date.now()}`, { cache: "no-store" });
     if (!res.ok) {
       if (strict) throw new Error(`grown.json read failed: HTTP ${res.status}`);
       return { grown: emptyGrown(), etag: null };
     }
-    const etag = res.headers.get("etag");
+    // The CDN compresses this file, so it returns the ETag in its weak form
+    // (W/"<hex>"). The store's conditional put accepts only the strong form of
+    // the same value; passed through as served, every put was refused as a lost
+    // race, and no grown-memory write landed from 2026-11-18 to 2026-11-23.
+    const etag = (res.headers.get("etag") || "").replace(/^W\//, "") || null;
     const data = await res.json();
     if (strict && !Array.isArray(data.entries)) throw new Error("grown.json has no entries array");
     const entries = Array.isArray(data.entries) ? data.entries : [];
