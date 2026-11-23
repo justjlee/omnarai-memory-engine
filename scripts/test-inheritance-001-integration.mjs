@@ -100,3 +100,13 @@ test("[I4] a full offline run writes nothing to Blob and attempts no network cal
   assert.throws(() => https.request("https://api.anthropic.com/v1/messages"), /HERMETIC_NETWORK_BLOCKED/);
   await assert.rejects(Promise.resolve().then(() => fetch("https://engine.omnarai.org/api/health")), /HERMETIC_NETWORK_BLOCKED|network blocked/);
 });
+
+test("[I5] research records are a PRIVATE storage class and the lab store never asks for public access", async () => {
+  const { classOf } = await import("../api/_storage-classes.js");
+  assert.equal(classOf(`${BLOB_NAMESPACE}IS1-STUDY-X/run/IS1-RUN-0123456789ab.json`), "private");
+  const calls = [];
+  const store = createBlobLabStore({ put: async (p, b, o) => { calls.push(o); return { url: "x" }; }, list: async () => ({ blobs: [] }), studyId: "IS1-STUDY-PRIVATE" });
+  await store.put("run", seal({ id: "IS1-RUN-0123456789ab", v: 1 }));
+  assert.equal(calls.length, 1);
+  assert.equal(Object.hasOwn(calls[0], "access"), false, "the router, not the lab store, decides access");
+});

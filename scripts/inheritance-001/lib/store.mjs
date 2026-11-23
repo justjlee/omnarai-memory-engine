@@ -7,7 +7,8 @@
 //
 // Two backends with the same interface:
 //   createMemoryLabStore()            — the offline runner; exported to files by exportRun()
-//   createBlobLabStore({put, list})   — Vercel Blob under research/inheritance-001/<study>/ ONLY, write-once
+//   createBlobLabStore({put, list, fetchImpl}) — Vercel Blob under research/inheritance-001/<study>/ ONLY, write-once;
+//                                       wire it to api/_blob.js (put, list, blobFetch): research/ is a PRIVATE class
 //                                       (no allowOverwrite). Tested against the in-memory Blob; never pointed at
 //                                       production in this pass. It cannot write memory/grown.json, footprints/ or any
 //                                       other namespace: the path is built here from a validated kind + id.
@@ -84,7 +85,9 @@ export function createBlobLabStore({ put, list, fetchImpl = (...a) => fetch(...a
       const path = pathOf(kind, record.id);
       if (!path.startsWith(BLOB_NAMESPACE)) throw new Error("NAMESPACE_ESCAPE");
       try {
-        await put(path, JSON.stringify(record), { access: "public", addRandomSuffix: false, contentType: "application/json" });
+        // No `access` here: pass api/_blob.js put/list and blobFetch, whose router classes research/ as PRIVATE
+        // (api/_storage-classes.js). A raw SDK put without `access` throws, so a mis-wired store fails closed.
+        await put(path, JSON.stringify(record), { addRandomSuffix: false, contentType: "application/json" });
       } catch (e) {
         const existing = (await list({ prefix: path })).blobs?.find((b) => b.pathname === path);
         if (!existing) throw e;

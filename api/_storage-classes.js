@@ -42,6 +42,9 @@ export const STORAGE_CLASSES = Object.freeze({
   "positions/reviews/": "private",
   "question-declined/": "private",
   "question-proposals/": "private",
+  // Research namespaces (Inheritance Study 001 lab records). Private: trial plans, evaluations and
+  // runs are reviewed before anything is published; sealed task material never enters Blob at all.
+  "research/": "private",
   "sessions/": "private",
   "telemetry/": "private",
 });
