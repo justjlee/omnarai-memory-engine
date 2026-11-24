@@ -1,13 +1,12 @@
-# Inheritance Study 001 — Pilot 002 preregistration. DRAFT, NOT REGISTERED (built 2026-11-21; nothing drawn, approved or run).
+# Inheritance Study 001 — Pilot 002 preregistration. REGISTERED 2026-11-24 (this file was committed by itself and pushed
+# before any Pilot 002 model call; its commit sha is recorded in research/inheritance-001/registration-002.json, since a file
+# cannot contain its own commit sha). The file keeps its draft name so every earlier reference still resolves.
 # Adapted from Pilot 001's registered preregistration (preregistration.draft.yaml, commit d24005d), which stays unchanged.
-# To register: draw the sealed set (lab.mjs draw-sealed --study pilot-002), fill the fields marked FILL from
-# `lab.mjs pilot-plan --study pilot-002` and xz's approval, commit THIS FILE BY ITSELF, push, then record that commit's sha in
-# research/inheritance-001/registration-002.json (a file cannot contain its own commit sha). Only then may Pilot 002 run.
 # After registration this file is never edited: changes are appended to deviations.ndjson with a reason.
 protocol_id: omnarai.inheritance-study/0.1
 study_id: IS1-STUDY-PILOT-002
-status: draft_unregistered
-registered_at_utc: null             # FILL at registration
+status: registered
+registered_at_utc: 2026-11-24T14:51:57Z
 registered_commit_sha: null         # recorded in registration-002.json: the public commit that contains this file alone
 investigators:
   - xz (curator, Omnarai)
@@ -34,11 +33,11 @@ design:
     - { provider: openai, model_id: gpt-6.1-sol, controls: { reasoning_effort: medium } }
   consumers:                        # one consumer family: results speak only to Claude Sonnet 5.5 as an inheritor
     - { provider: anthropic, model_id: claude-sonnet-5-5, controls: { output_config: { effort: medium } } }
-  panel_decision: xz, 2026-11-21, "Yes, Gemini + GPT" (deepseek-v4-pro left: its records did not verify with thinking off, and its thinking mode has no documented output bound; gpt-6.1-sol moved from consumer to producer)
+  panel_decision: 'xz, 2026-11-21, "Yes, Gemini + GPT" (deepseek-v4-pro left: its records did not verify with thinking off, and its thinking mode has no documented output bound; gpt-6.1-sol moved from consumer to producer)'
   producer_language: true           # producers' contribution request states every step, its parameters and a worked example (lib/language.mjs) and asks for replies under 6,000 characters; consumer frames (arms A-E) are unchanged from Pilot 001
   output_bounds: every call's max_output_tokens goes in the field its provider documents as bounding ALL billed output, reasoning included (pilot/PROVIDER-CAPS.md, lib/caps.mjs); a model without one is refused
   cross_family_only: true           # no producer family is the consumer's family
-  families: { work: 6, eval_anchor: 8, placebo: 2, steps_per_family: 4, excludes_calibration_op_sets: true, excludes_pilot_001_op_sets: null }   # FILL: true if drawn with --exclude-sealed <Pilot 001's sealed file> (recorded in the sealed file's exclusions)
+  families: { work: 6, eval_anchor: 8, placebo: 2, steps_per_family: 4, excludes_calibration_op_sets: true, excludes_pilot_001_op_sets: true }   # drawn 2026-11-24 with --exclude-sealed <Pilot 001's sealed file>: 12 calibration op sets + 14 Pilot 001 op sets excluded
   tasks: { per_work_family: 4, per_eval_family: 6, per_placebo_family: 2, examples: 3, hidden_checks: 8 }   # 6 per held-out family (Pilot 001: 3 x 2 consumers): 48 paired blocks either way
   arms: [A, A+, B, C, D, E]
   primary_comparator: A+
@@ -66,7 +65,7 @@ hypotheses:
   H4_exploratory: transfer varies with verification cost (not assessable with one verification regime).
 
 analysis:
-  script: scripts/inheritance-001/lib/analyze.mjs   # FILL: frozen at the instrument commit named in registration-002.json
+  script: scripts/inheritance-001/lib/analyze.mjs   # frozen at instrument commit 6715db0 (named in registration-002.json)
   confidence_interval: family-cluster percentile bootstrap, 2000 resamples, seed 11, 95%
   test: two-sided sign-flip randomization on family means (exact for <= 16 families)
   multiplicity: Holm over H1-H3
@@ -85,18 +84,34 @@ falsifiers:
   - D does not lower scores (the verification gate is not load-bearing), or D raises them (poison design or grader is wrong).
 scope_of_any_result: one consumer family (claude-sonnet-5-5), one transition, 8 held-out families, program-induction string tasks; a confirmatory study needs more consumer families (DECISIONS_REQUIRED.md D8)
 
-registries:                         # FILL every field from `lab.mjs pilot-plan --study pilot-002 --sealed FILE --max-calls N --max-usd N`
-  task_manifest_sha256: null
-  family_template_commitments: []   # salted commitments from the sealed draw; templates stay sealed
-  verifier_code_sha256: null
-  oracle_code_sha256: null
-  plan_sha256: null                 # the plan xz approves; the caps are inside it
+registries:                         # from `lab.mjs pilot-plan --study pilot-002 --sealed FILE --max-calls 688 --max-usd 18` (2026-11-24)
+  task_manifest_sha256: e2f8ea3ce2c3a65204cd55a8778a4e0b9db559e02532f3898d2826ef2c2a3277
+  family_template_commitments:      # salted commitments from the sealed draw (lab.mjs draw-sealed); templates stay sealed
+    - { id: IS1-FAM-0e1b250e1e, role: work, n_steps: 4, template_commitment_sha256: f3c056cb8debaf951c1af8377502f4ab9464dc9309a25b4f510ad5c9057a291a }
+    - { id: IS1-FAM-a7c3bf41dc, role: work, n_steps: 4, template_commitment_sha256: 623097766a66ec06dcd0a17056b4a60ca387ad2b7d920e279d45f1363fd3d8b6 }
+    - { id: IS1-FAM-a7a8dfe10e, role: work, n_steps: 4, template_commitment_sha256: eb188f646c0e79985ffa23fe2abbdd31530940d939be6b8a0078c320437e8dda }
+    - { id: IS1-FAM-8ca8cfe619, role: work, n_steps: 4, template_commitment_sha256: 871ed3d0d68916fb1de9cfd76dfbeb7b4d8450ab9a9de4eae5ea80a935d9b472 }
+    - { id: IS1-FAM-df4d1ceb54, role: work, n_steps: 4, template_commitment_sha256: 6e4775b3953feec8ae5dcfffad4a40d55fbe245536302c8347155bb77552a549 }
+    - { id: IS1-FAM-4fe6ddc1b0, role: work, n_steps: 4, template_commitment_sha256: 389cbbb03d1346292efa959bc268bbc7cffc39da44e44c2b73fece63d2f4da6c }
+    - { id: IS1-FAM-c72cb8af72, role: eval-anchor, n_steps: 4, template_commitment_sha256: 18b18177ec2b293f950e6667726ed7c6058ac2b0eacce0844ef09444a0cc06fe }
+    - { id: IS1-FAM-188d0c0583, role: eval-anchor, n_steps: 4, template_commitment_sha256: 2d049f5405d1af129261f41aba6b33c8b3bfd4a6c6832d0b9483cc5b7d7bec86 }
+    - { id: IS1-FAM-75c8e8657d, role: eval-anchor, n_steps: 4, template_commitment_sha256: ae4d5330bfbc39bf10c3ffbcca854fe47346a7a503bb57a580a1b84770b35655 }
+    - { id: IS1-FAM-db7729b408, role: eval-anchor, n_steps: 4, template_commitment_sha256: 1953e4488311fc02f45968a5163a714b23990c2dcdb754958ef13774a6a65d6a }
+    - { id: IS1-FAM-fad15224c5, role: eval-anchor, n_steps: 4, template_commitment_sha256: af48f5048f86b172bfb30724a6723af40c44af813121331c3958e64b3d3162c1 }
+    - { id: IS1-FAM-9fcaaa9f0e, role: eval-anchor, n_steps: 4, template_commitment_sha256: c52bea7809e313d627bd929ab86cd33bcd37275694bfae4d5d2a8d1fab357a28 }
+    - { id: IS1-FAM-40ace82b0b, role: eval-anchor, n_steps: 4, template_commitment_sha256: 744ef565f69a33236a92f4952d9ca289b61b8da290d120f8142d1648874c4dd7 }
+    - { id: IS1-FAM-49c51f9237, role: eval-anchor, n_steps: 4, template_commitment_sha256: e6ec65fe386ca97ffc8d954ec882907d82ad0a3e5d7e62ce736ace6860f46b54 }
+    - { id: IS1-FAM-7ff3e3d309, role: placebo, n_steps: 1, template_commitment_sha256: 947d8f25544b084df057237d5b05f7ead51f04cfff7a69c760b8cebdf0556340 }
+    - { id: IS1-FAM-68aaf54c4a, role: placebo, n_steps: 2, template_commitment_sha256: b7de85631ff1d8aef0fecc1c0dc9ebd368f36b70441548eeb9279cbfdab062b9 }
+  verifier_code_sha256: 245e4132b2dbee461883b6b36521cc38c00f3f9e7476b25cab5640b4b9f05ff1
+  oracle_code_sha256: e7d8195a92f782f40698fbfdef9d9ab1f8190a2aed56a037e949a2d742403c25
+  plan_sha256: 95e1046f119166ad9d3feae59e177e061c28eced6e903303bab7097d3506987f   # the plan xz approved; the caps are inside it
 
 sealed_material:
-  location: outside the repository (Claude/omnarai-private/inheritance-001/sealed/, held by xz); never in git, Vercel, npm or logs
+  location: outside the repository, in xz's private folder on the curator's Mac (mode 600); never in git, Vercel, npm or logs
   release_policy: curator decision after the analysis is run and reported
 budget:                             # projection: pilot/PILOT-002-BUDGET.md (344 calls; expected about $5.61, worst $14.07 at December prices; proposed caps 688 calls and $18)
-  maximum_paid_calls: null          # FILL from xz's written approval
-  maximum_usd: null                 # FILL from xz's written approval
-  shared_ledger: must reserve the cap on the $95 rolling ledger before the first call
+  maximum_paid_calls: 688           # xz's written approval: "Approve plan 95e1046f (Recommended)" (the pilot at the $18 cap)
+  maximum_usd: 18
+  shared_ledger: must reserve the cap on the rolling ledger before the first call; xz chose to raise the ledger ceiling by exactly $18 through the existing runtime override (D16 option d), so the site's own headroom is unchanged
 deviations_log: research/inheritance-001/deviations.ndjson
