@@ -675,3 +675,21 @@ check was running. Being told that access exists does not count.
   a flag-gated preview); research/open-work/crux-check/baseline-2026-11-24/ (verbatim replies, spend); the problems and
   their ids at GET /api/open-work.
 - Logged: 2026-11-24 by Claude Code (Anthropic)
+
+## DL-0047 · 2026-11-24 · Open Work binding moves onto the curator's dashboard (D-003 built)
+- Decider: xz (in a Claude Code session of 2026-11-24: Open Work "visible and manageable from xz's private operator
+  dashboard … so he can do the weekly review there without Claude running scripts"; "Yes, open the PR"; "Yes, ship it")
+- What: decision D-003 (docs/continuance/DECISIONS_REQUIRED.md) is built, its condition having been met by DL-0046.
+  One curator-only HTTP action, folded into `api/council.js` (12 of 12 functions): `POST /api/council
+  {action:"work-bind", problem_id, footprint_id, as: attempt|claim, claim_kind?, candidate?, note?}`, on the operator
+  session or Bearer INGEST_SECRET, behind `OMNARAI_OPEN_WORK`. It binds an ADMITTED footprint to a PUBLIC problem by
+  recording one work event and admitting it (append-only), through the same code `scripts/open-work-curator.mjs bind`
+  now runs; the exact same binding is refused, and a failed admit leaves the event private. The /home dashboard labels
+  each arrival with the problem it names, offers "Bind as attempt" / "Bind as claim" once it is admitted, and shows an
+  Open Work panel (milestones, candidate states, live claims, review queue) read from the public `/api/open-work`.
+  Binding is not verification: a bound claim moves no candidate and meets no milestone; verifier receipts and
+  independent reviews stay curator-script steps. No claims-registry change.
+- Reason: the weekly review of Open Work should not depend on a Claude session running scripts.
+- Source: the merged pull request #71; docs/open-work/DESIGN-OPEN-WORK-DOOR.md "Binding from the dashboard";
+  scripts/test-open-work-bind.mjs.
+- Logged: 2026-11-24 by Claude Code (Anthropic)

@@ -18,10 +18,9 @@
 // sits in a problem's history; it is not verification (tested and reviewed need a verifier receipt / an independent
 // review, recorded separately). Design: docs/open-work/DESIGN-OPEN-WORK-DOOR.md.
 import { readFileSync } from "node:fs";
-import { registerProblem, registerVerifier, recordWorkEvent, moderateWorkRecord, loadPublicWork, pendingTowardWork } from "../api/_work-store.js";
-import { WORK_PROBLEM_ID_RE, WORK_EVENT_ID_RE, validateProblem, validateReceipt, isIntact, seal, WORK_PROBLEM_SCHEMA, deriveWorkPacket, openWorkRow, CLAIM_KINDS } from "../api/_work.js";
+import { registerProblem, registerVerifier, recordWorkEvent, moderateWorkRecord, loadPublicWork, pendingTowardWork, planBinding, bindFootprint } from "../api/_work-store.js";
+import { WORK_PROBLEM_ID_RE, WORK_EVENT_ID_RE, validateProblem, validateReceipt, isIntact, seal, WORK_PROBLEM_SCHEMA, deriveWorkPacket, openWorkRow } from "../api/_work.js";
 import { CRUX_VERIFIER } from "./lib/crux-core.mjs";
-import { FP_ID_RE, loadPublicFootprints } from "../api/_footprints.js";
 
 const argv = process.argv.slice(2);
 const flag = (name) => argv.includes(name);
@@ -78,23 +77,15 @@ async function main() {
     return;
   }
   if (cmd === "bind") {
+    // The same checks and writes as the /home Arrivals panel's "Bind" (POST /api/council {action:"work-bind"}):
+    // public problem, admitted footprint, candidate in range, and not already bound the same way.
     const [problemId, fpId, as] = args;
-    if (!WORK_PROBLEM_ID_RE.test(problemId || "") || !FP_ID_RE.test(fpId || "") || !["attempt", "claim"].includes(as)) throw new Error("usage: bind <OMN-WORK-…> <OMN-FP-…> attempt|claim");
-    const pub = await loadPublicWork({ includeFootprints: false });
-    const problem = pub.problems.find((p) => p.id === problemId);
-    if (!problem) throw new Error(`${problemId} is not a public problem`);
-    const fp = (await loadPublicFootprints()).publicBodies.find((f) => f.id === fpId);
-    if (!fp) throw new Error(`${fpId} is not an ADMITTED footprint: admit the contribution first (Arrivals panel or contribute-approve)`);
-    const claimKind = opt("--kind"), candidate = opt("--candidate");
-    if ((claimKind || candidate != null) && as !== "claim") throw new Error("--kind and --candidate apply to a claim");
-    if (claimKind && !CLAIM_KINDS.includes(claimKind)) throw new Error(`--kind must be one of ${CLAIM_KINDS.join(", ")}`);
-    const cand = candidate == null ? null : Number(candidate);
-    if (cand != null && !(Number.isInteger(cand) && cand >= 0 && cand < (problem.success_contract?.candidates?.length || 0))) throw new Error(`--candidate must index the problem's success_contract.candidates (0..${(problem.success_contract?.candidates?.length || 0) - 1})`);
-    const input = { problem_id: problemId, problem_revision: problem.revision, kind: as === "claim" ? "advance_claimed" : "attempt_recorded", source: { footprint_id: fp.id, content_sha256: fp.integrity.content_sha256 }, ...(claimKind ? { claim_kind: claimKind } : {}), ...(cand != null ? { candidate: cand } : {}) };
-    if (!write) return dry(`bind ${fpId} to ${problemId} as ${as}, then admit the event`, input);
-    const ev = await recordWorkEvent(input, { curator });
-    await moderateWorkRecord({ record: ev.id, action: "admit", curator, note: opt("--note") });
-    say(`bound ${fpId} → ${problemId} as ${as} (event ${ev.id}, admitted)`);
+    const raw = { problem_id: problemId, footprint_id: fpId, as, claim_kind: opt("--kind"), candidate: opt("--candidate"), note: opt("--note") };
+    const plan = await planBinding(raw);
+    if (!plan.references_problem) say(`note: ${fpId} does not itself name ${problemId} in its relationships`);
+    if (!write) return dry(`bind ${fpId} to ${problemId} as ${as}, then admit the event`, plan.input);
+    const r = await bindFootprint(raw, { curator });
+    say(`bound ${fpId} → ${problemId} as ${as} (event ${r.event.id}, admitted)`);
     return;
   }
   if (cmd === "register-verifier") {
