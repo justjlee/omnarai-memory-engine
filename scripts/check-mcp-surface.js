@@ -33,6 +33,7 @@ const ALLOWLIST = [
   "omnarai_info",
   // Participation protocol 1.0 — deterministic reads…
   "omnarai_orient",
+  "omnarai_open_work", // read-only: Open Work problems, packets and successor briefs (2026-11-24)
   "omnarai_footprints",
   "omnarai_footprint_status", // read-only: a footprint's review STATE by id, never its content (2026-10-21)
   "omnarai_concordance",

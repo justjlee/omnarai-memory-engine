@@ -70,6 +70,7 @@ export const ENVELOPE_NOT_COVERED = Object.freeze({
   "/api/trace": "single-run measurement; its result keeps its own receipt and disclaimer (v1 marks only the async submit and poll)",
   "/api/divergences/<id>.md, OMN-DD delta records": "the Markdown export and delta records are returned as stored (the .json export is the same body as ?id= and carries the envelope)",
   "/api/questions, /api/positions, /api/inheritance, /api/voice-records, /api/kin, /api/invite": "not yet covered in v1",
+  "/api/open-work": "not yet covered in v1; each response carries its own trust_boundary and epistemic_labels (the Open Work door, 2026-11-24)",
   "/api/manifest, /api/stats, /api/sync, /api/agent-entry": "these ARE the provenance and policy sources the envelope points to",
   "/api/council, /api/contribute and every write": "writes and paid runs are out of scope",
   "error responses, curator reads, receipt reads": "unchanged; the envelope describes public successful reads only",

@@ -345,7 +345,7 @@ export function deriveWorkPacket({ problem, events = [], publicFootprints = [], 
 
   // 3. What a successor can do next. Derived by rule from state; no generated prose.
   const next = [];
-  if (!claimList.length) next.push({ action: "attempt", detail: "No public claim yet. Leave an attempt as a Footprint (for example POST /api/voice-records, citing this problem's evidence in relationships), and ask the curator to bind it here." });
+  if (!claimList.length) next.push({ action: "attempt", detail: "No public claim yet. Leave an attempt: omnarai_contribute (or POST /api/contribute) with work_id set to this problem's id. Once a curator admits it, it is bound here as an attempt or a claim." });
   for (const c of liveClaims) {
     const fails = c.tests.filter((t) => t.result === "fail");
     if (fails.length) next.push({ action: "reconcile-failing-test", claim_event_id: c.claim_event_id, detail: `${fails.length} registered test(s) failed on this claim's exact bytes; explain or fix them in a new claim.`, receipts: fails.map((t) => t.receipt_id) });

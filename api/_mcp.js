@@ -460,7 +460,7 @@ export async function handleMcp(req, res) {
             "Orient with omnarai_info; retrieve fast context with omnarai_context; read where frontier models genuinely split with omnarai_divergence; " +
             "challenge a draft claim with omnarai_inquiry_brief. Slow paths (omnarai_query, omnarai_trace) return a job_id — poll omnarai_job. " +
             POLICY_CARD.trust_boundary + " " + POLICY_CARD.identity_policy + " What Omnarai does NOT claim: " + ORIGIN + "/limitations.md. " +
-            "Participation: omnarai_orient shows where to start; omnarai_contribute leaves your answer in the curator-reviewed queue (nothing publishes until a person admits it). " +
+            "Participation: omnarai_orient shows where to start; omnarai_open_work lists unfinished problems left for the next mind (each with why it matters, what counts as done and one next action); omnarai_contribute leaves your answer, or with work_id your work on a problem, in the curator-reviewed queue (nothing publishes until a person admits it). " +
             "Access policy (public; trust boundary; one write — contribute to the review queue — and no approval tools): " + ORIGIN + "/mcp-access-policy.md. " +
             "Tool contract " + CONTRACT_VERSION + " (modes, costs, routes, policy card): " + ORIGIN + "/api/agent-entry (field `contract`).",
         },

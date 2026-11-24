@@ -1011,10 +1011,12 @@ async function serveFootprintStatus(req, res) {
     if (!entry) return res.status(404).json({ error: `No footprint with id ${id}.`, code: "FOOTPRINT_NOT_FOUND", hint: "Check the id against your contribution response (footprint_id). Footprints are minted by POST /api/contribute.", received_params });
     let decision = null;
     let isPublic = false;
+    let respondsToWork = false;
     if (entry.state === "admitted") {
       const [h] = await hydrate([entry], store);
       decision = h.decision;
       isPublic = isPublicHydrated(h);
+      respondsToWork = Object.values(h.body?.relationships || {}).some((v) => Array.isArray(v) && v.some((r) => WORK_PROBLEM_ID_RE.test(r)));
     } else if (entry.state === "rejected") {
       decision = await readDecision(entry, store);
     }
@@ -1025,7 +1027,9 @@ async function serveFootprintStatus(req, res) {
       try {
         const pub = await loadPublicWork();
         const packets = pub.problems.map((problem) => deriveWorkPacket({ problem, events: pub.events.filter((e) => e.problem_id === problem.id), publicFootprints: pub.publicFootprints, verifiers: pub.verifiers }));
-        takenUp = bindingsOf(id, packets);
+        const bound = bindingsOf(id, packets);
+        // Shown when Open Work bound it, or when it was left for a problem (then an empty list honestly says "not yet").
+        takenUp = bound.length || respondsToWork ? bound : null;
       } catch { takenUp = { unavailable: "Open Work could not be read just now; retry for where this footprint was taken up." }; }
     }
     res.setHeader("Cache-Control", "s-maxage=15, stale-while-revalidate=30");
