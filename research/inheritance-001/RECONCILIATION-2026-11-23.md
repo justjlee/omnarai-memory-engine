@@ -44,7 +44,7 @@ checked against the existing instrument below, and only the gaps are changed.
 ## Changed on `inheritance-001-sync` (this session)
 
 1. **Merge of `main` (956ad23) into the branch.** It merged cleanly. The branch predated DL-0042 (grown-memory writes)
-   and DL-0043 (storage classes). Hermetic suite on the merge: 517 pass, 0 fail, 2 cancelled. Both cancelled tests are
+   and DL-0043 (storage classes). Hermetic suite on the merge: 517 pass, 0 fail, 2 cancelled (520 / 518 / 0 / 2 with test I5 below). Both cancelled tests are
    `test-figures` "hang" cases: Node 22.23 exits on an unref'd `AbortSignal.timeout`, and they are cancelled on `main`
    too.
 2. **Lab records are a private storage class.** `createBlobLabStore` passed `access: "public"` and read stored records by
