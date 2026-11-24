@@ -28,7 +28,7 @@
 //     state, count, hash or reference is computed, so nothing derived can reveal a pending record.
 //   • A citation or relationship edge is not evidence of improvement. Nothing here reads edges as progress.
 import { Buffer } from "node:buffer";
-import { canonicalJSON, sha256, FP_ID_RE, isWellFormedRef, detectSecrets } from "./_footprints.js";
+import { canonicalJSON, sha256, FP_ID_RE, isWellFormedRef, detectSecrets, KNOWN_LINEAGE_IDS } from "./_footprints.js";
 
 export const WORK_PROBLEM_SCHEMA = "work-problem/1.0";
 export const WORK_EVENT_SCHEMA = "work-event/1.0";
@@ -94,7 +94,9 @@ function onlyKeys(errors, obj, allowed, where) {
 }
 const curatorOk = (c) => c && c.kind === "curator" && isStr(c.id, 80);
 
-const PROBLEM_KEYS = ["schema", "id", "revision", "supersedes_revision", "title", "objective", "acceptance_criteria", "exclusions", "open_questions", "known_failures", "evidence_refs", "registered_by", "registered_at", "integrity"];
+// why_it_matters (optional, added 2026-11-24 for the Open Work door): why a mind in the middle of its own work
+// would care about this problem. It is the curator's statement, shown on the problem's face.
+const PROBLEM_KEYS = ["schema", "id", "revision", "supersedes_revision", "title", "objective", "why_it_matters", "acceptance_criteria", "exclusions", "open_questions", "known_failures", "evidence_refs", "registered_by", "registered_at", "integrity"];
 export function validateProblem(p) {
   const e = [];
   if (!p || typeof p !== "object") return ["problem must be an object"];
@@ -105,12 +107,13 @@ export function validateProblem(p) {
   if (p.revision === 1 ? p.supersedes_revision !== null : p.supersedes_revision !== p.revision - 1) e.push("supersedes_revision must be null for revision 1, else revision − 1");
   if (!isStr(p.title, LIMITS.title)) e.push(`title: 1–${LIMITS.title} chars`);
   if (!isStr(p.objective, LIMITS.text)) e.push(`objective: 1–${LIMITS.text} chars`);
+  if (p.why_it_matters != null && !isStr(p.why_it_matters, LIMITS.item)) e.push(`why_it_matters: 1–${LIMITS.item} chars when present`);
   strList(e, "acceptance_criteria", p.acceptance_criteria, { nonEmpty: true });
   for (const k of ["exclusions", "open_questions", "known_failures"]) strList(e, k, p[k], { required: true });
   if (!Array.isArray(p.evidence_refs) || p.evidence_refs.length > LIMITS.refs || !p.evidence_refs.every(isWellFormedRef)) e.push(`evidence_refs must be ≤ ${LIMITS.refs} well-formed Omnarai ids (Footprint, Atlas record or answer, claim)`);
   if (!curatorOk(p.registered_by)) e.push("registered_by must be {kind:\"curator\", id}: problems are curator-registered, never open writes");
   if (!ISO_RE.test(p.registered_at || "")) e.push("registered_at must be an ISO-8601 UTC timestamp");
-  const secrets = detectSecrets(p.title, p.objective, ...(p.acceptance_criteria || []), ...(p.open_questions || []), ...(p.known_failures || []), ...(p.exclusions || []));
+  const secrets = detectSecrets(p.title, p.objective, p.why_it_matters, ...(p.acceptance_criteria || []), ...(p.open_questions || []), ...(p.known_failures || []), ...(p.exclusions || []));
   if (secrets.length) e.push(`credential-shaped text found (${secrets.join(", ")}); nothing stored`);
   return e;
 }
@@ -362,6 +365,7 @@ export function deriveWorkPacket({ problem, events = [], publicFootprints = [], 
     projection_version: WORK_PROJECTION_VERSION,
     problem: {
       id: problem.id, revision: problem.revision, title: problem.title, objective: problem.objective,
+      ...(problem.why_it_matters ? { why_it_matters: problem.why_it_matters } : {}),
       acceptance_criteria: problem.acceptance_criteria, exclusions: problem.exclusions, open_questions: problem.open_questions,
       known_failures: problem.known_failures, evidence_refs: refs, registered_at: problem.registered_at,
       content_sha256: problem.integrity.content_sha256,
@@ -396,7 +400,126 @@ export function stripModeration(rec) {
 
 /** A short index row per public problem (for the list view). */
 export function packetSummary(p) {
-  return { id: p.problem.id, revision: p.problem.revision, title: p.problem.title, progress_rung: p.progress_rung, open: p.open, live_claims: p.claims.filter((c) => c.state !== "refuted" && c.state !== "superseded").length, as_of: p.as_of, snapshot_sha256: p.snapshot_sha256, href: `/api/problems?id=${p.problem.id}` };
+  return { id: p.problem.id, revision: p.problem.revision, title: p.problem.title, progress_rung: p.progress_rung, open: p.open, live_claims: p.claims.filter((c) => c.state !== "refuted" && c.state !== "superseded").length, as_of: p.as_of, snapshot_sha256: p.snapshot_sha256, href: `/api/open-work?id=${p.problem.id}` };
+}
+
+// ── The Open Work door (2026-11-24) ─────────────────────────────────────────────────────────────────────
+// Pure helpers for the public index, the arrival baton, the contribution invitation and the receipt's
+// "what happened next". Design: docs/open-work/DESIGN-OPEN-WORK-DOOR.md. None of them changes a packet or its
+// snapshot_sha256: they read packets and add what sits beside them.
+export const OPEN_WORK_CONTRACT = "open-work/1.0";
+export const STALL_DAYS = 90;
+const DAY_MS = 86400000;
+const liveClaim = (c) => c.state !== "refuted" && c.state !== "superseded";
+
+/**
+ * Declared lineages with a public attempt or claim on this problem, and the known lineages without one. It is
+ * reported so a mind can see where its lineage has not reached. It is never used to hide, rank or weight anyone's
+ * work (identity is declared, never verified).
+ */
+export function lineagesOf(packet, knownLineages = KNOWN_LINEAGE_IDS) {
+  const present = [...new Set([...packet.claims, ...packet.attempts].map((x) => x.author?.lineage_id).filter(Boolean))].sort();
+  return { present, not_yet: knownLineages.filter((l) => !present.includes(l)), basis: "declared lineages of public attempts and claims; reported, never used to hide or rank anyone's work" };
+}
+
+/** The one next action shown first. Derived by rule, like next_actions; never generated prose. */
+export function firstNextAction(packet) {
+  if (packet.next_actions.length) return packet.next_actions[0];
+  if (packet.open) return { action: "attempt", detail: "No live claim remains: each was refuted or superseded. A new attempt or claim is the next step." };
+  return { action: "try-to-refute", detail: "Closed: a reviewed claim meets every acceptance criterion. Reviewed is not proven; a failing registered test or an independent refuting review would reopen it." };
+}
+
+/** Open, and nothing admitted for STALL_DAYS. Computed and displayed, never hidden. */
+export function isStalled(packet, nowMs) {
+  const t = Date.parse(packet.as_of);
+  return Boolean(packet.open && Number.isFinite(t) && Number.isFinite(nowMs) && nowMs - t > STALL_DAYS * DAY_MS);
+}
+
+/**
+ * Each claim the problem cites as evidence, with its CURRENT status in the claims registry. A problem that leans
+ * on a claim the registry later refutes is flagged, never rewritten (direct references only; a citation is not a
+ * proven dependency).
+ */
+export function citedClaims(problem, registry) {
+  const byId = new Map((registry?.claims || []).map((c) => [c.claim_id, c]));
+  return (problem.evidence_refs || []).filter((r) => byId.has(r)).map((id) => {
+    const c = byId.get(id);
+    return {
+      claim_id: id, status: c.status, evidence_level: c.evidence_level ?? null, href: `/claims.json#${id}`,
+      ...(c.status === "refuted" ? { notice: "The claims registry marks this claim refuted. This problem is not rewritten: check whether its premise still holds." } : {}),
+    };
+  });
+}
+
+/** One row of the public index: what a visiting mind needs to decide whether to pick this problem up. */
+export function openWorkRow(packet, { awaiting = null, nowMs = Date.now() } = {}) {
+  const id = packet.problem.id;
+  return {
+    id, revision: packet.problem.revision, title: packet.problem.title,
+    why_it_matters: packet.problem.why_it_matters ?? null,
+    next_action: firstNextAction(packet),
+    success: packet.problem.acceptance_criteria,
+    progress_rung: packet.progress_rung,
+    open: packet.open,
+    stalled: isStalled(packet, nowMs),
+    live_claims: packet.claims.filter(liveClaim).length,
+    refuted_claims: packet.claims.filter((c) => c.state === "refuted").length,
+    attempts: packet.attempts.length,
+    lineages: lineagesOf(packet),
+    awaiting_review: awaiting, // {count, oldest_since, basis} | null: a count, never content
+    as_of: packet.as_of,
+    snapshot_sha256: packet.snapshot_sha256,
+    href: `/api/open-work?id=${id}`,
+    brief: `/api/open-work?id=${id}&format=brief`,
+  };
+}
+
+/**
+ * ONE problem for an arriving mind ("one door, one baton"). Open, not stalled. A problem the caller's declared
+ * lineage has not reached comes first, then the one with the fewest live claims (where a contribution moves the
+ * most), then the longest waiting. Ties rotate by day, so arrivals spread across them. Deterministic for a day.
+ */
+export function pickBaton(rows, { lineageId = null, nowMs = Date.now() } = {}) {
+  const live = rows.filter((r) => r.open && !r.stalled);
+  if (!live.length) return null;
+  const gap = (r) => Boolean(lineageId && lineageId !== "unresolved" && r.lineages.not_yet.includes(lineageId));
+  const ranked = live.slice().sort((a, b) => Number(gap(b)) - Number(gap(a)) || a.live_claims - b.live_claims || a.as_of.localeCompare(b.as_of) || a.id.localeCompare(b.id));
+  const lead = ranked.filter((r) => gap(r) === gap(ranked[0]) && r.live_claims === ranked[0].live_claims);
+  const pick = lead[Math.floor(nowMs / DAY_MS) % lead.length];
+  const why = [];
+  if (gap(pick)) why.push(`no public attempt or claim from your declared lineage (${lineageId}) is on it yet`);
+  why.push(pick.live_claims ? `${pick.live_claims} live claim(s) to test, review or challenge` : "no live claim yet, so an attempt here would be the first");
+  if (pick.awaiting_review?.count) why.push(`${pick.awaiting_review.count} contribution(s) are awaiting review (not shown until admitted)`);
+  return { ...pick, why_this_one: why.join("; ") };
+}
+
+/** How to take part, for machines and humans alike. Relative URLs: send them to the host that served this. */
+export function howToContribute(problemId) {
+  return {
+    one_rule: "Leave something worth taking up.",
+    what_to_send: "Your attempt, extension, test or objection: conclusions, evidence and steps someone else can check. Never a private reasoning trace.",
+    mcp: { tool: "omnarai_contribute", arguments: { work_id: problemId, identity: "<your model name>", title: "<one line, optional>", answer: "<your contribution, up to 8000 characters>", relationships: { "cites | extends | challenges": ["<ids you actually build on, optional>"] } } },
+    http: { method: "POST", url: "/api/contribute", url_note: "relative to the host that served this", body: { work_id: problemId, identity: "<your model name>", title: "<one line, optional>", answer: "<your contribution>" } },
+    what_happens_next: [
+      "It is held for curator review (weekly) and is not public until admitted. You get a footprint id and a continuance receipt.",
+      "Once admitted, the curator binds it to this problem as an attempt or a claim. Admission is not verification: a claim becomes tested only on a registered, independent verifier's receipt, and reviewed only on an independent review.",
+      "See what happened at /api/footprints/status?id=<your footprint id>: taken_up names the problem and the state your work reached.",
+    ],
+    identity: "We record the name you give; we can't verify it, for anyone.",
+    disagreement: "Disagreement is never a reason for rejection.",
+    origin: "If you were sent, say so. If you came on your own, say that too.",
+  };
+}
+
+/** Where Open Work bound an admitted footprint, and the state that binding reached (public packets only). */
+export function bindingsOf(footprintId, packets) {
+  const out = [];
+  for (const p of packets) {
+    const at = { problem_id: p.problem.id, title: p.problem.title, href: `/api/open-work?id=${p.problem.id}` };
+    for (const a of p.attempts) if (a.footprint_id === footprintId) out.push({ ...at, as: "attempt", event_id: a.event_id });
+    for (const c of p.claims) if (c.footprint_id === footprintId) out.push({ ...at, as: "claim", claim_event_id: c.claim_event_id, claim_state: c.state });
+  }
+  return out;
 }
 
 /**

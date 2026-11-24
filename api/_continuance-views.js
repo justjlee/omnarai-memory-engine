@@ -1,15 +1,15 @@
-// PREVIEW read views for Open Work and Signals (2026-11-23 continuance handoff). Each view is OFF unless its
-// env flag is exactly "1". council.js checks the flag before dispatching here, so with the flags unset,
-// production behaves byte-for-byte as before (tested: scripts/test-continuance-e2e.mjs).
+// Read views for Open Work and Signals (2026-11-23 continuance handoff; the Open Work door 2026-11-24).
 //
-//   GET /api/council?_view=problems[&id=<OMN-WORK-…>][&format=brief][&status=open|closed]   flag OMNARAI_OPEN_WORK
-//   GET /api/council?_view=changes[&since=<cursor>][&limit=1..100]                          flag OMNARAI_SIGNALS
+//   GET /api/open-work[?id=<OMN-WORK-…>][&format=brief][&status=open|closed|stalled]   flag OMNARAI_OPEN_WORK
+//     (rewrite → council.js?_view=open-work). Flag unset ⇒ 404 OPEN_WORK_NOT_OPEN. Design:
+//     docs/open-work/DESIGN-OPEN-WORK-DOOR.md.
+//   GET /api/council?_view=changes[&since=<cursor>][&limit=1..100]                       flag OMNARAI_SIGNALS
+//     (still a preview: no public route, name and contract wait on decisions D-001 and D-006).
 //
-// There are deliberately no vercel.json rewrites (/api/problems, /api/changes), no OpenAPI entries, no MCP
-// tools and no response-envelope coverage yet: the names and contracts wait on decision D-001. Read-only:
-// neither view writes anything or calls a model.
-import { loadPublicWork } from "./_work-store.js";
-import { deriveWorkPacket, packetSummary, successorBrief, WORK_PROBLEM_ID_RE } from "./_work.js";
+// Neither view writes anything or calls a model. Neither is covered by the omnarai.response/1.0 envelope yet
+// (ENVELOPE_NOT_COVERED says so); each Open Work response carries its own trust boundary and epistemic labels.
+import { loadPublicWork, pendingTowardWork } from "./_work-store.js";
+import { deriveWorkPacket, successorBrief, WORK_PROBLEM_ID_RE, OPEN_WORK_CONTRACT, openWorkRow, citedClaims, howToContribute, lineagesOf, firstNextAction, isStalled, EPISTEMIC_LABELS } from "./_work.js";
 import { footprintSignals, claimSignals, workSignals, buildSignals, pageSignals, CursorError, NOT_COVERED, KINDS, MAX_LIMIT, DEFAULT_LIMIT } from "./_signals.js";
 import { loadFootprintIndex, hydrate, getDefaultStore } from "./_footprints.js";
 import { loadClaimsRegistry } from "./_protocol.js";
@@ -30,27 +30,94 @@ const methodGuard = (req, res) => {
 };
 const cache = (res) => res.setHeader("Cache-Control", "public, max-age=0, s-maxage=60");
 
-export async function serveProblems(req, res) {
+// ── Open Work: GET /api/open-work (rewrite → council.js?_view=open-work), behind OMNARAI_OPEN_WORK ─────────
+// Design: docs/open-work/DESIGN-OPEN-WORK-DOOR.md. With the flag unset the route answers 404 OPEN_WORK_NOT_OPEN
+// (rollback = unset the flag). Read-only: nothing here writes or calls a model.
+//   GET /api/open-work                              index of public problems, open first
+//   GET /api/open-work?status=open|closed|stalled   filtered index
+//   GET /api/open-work?id=<OMN-WORK-…>               one problem: the packet + what sits beside it
+//   GET /api/open-work?id=<OMN-WORK-…>&format=brief  the successor brief (one self-contained hand-off)
+export const OPEN_WORK_NOT_OPEN = Object.freeze({
+  error: "Open Work is not open yet.",
+  code: "OPEN_WORK_NOT_OPEN",
+  agent_action: "Start at GET /api/orient for what is open now.",
+});
+const NOT_PROOF = "These are counts of records, not measures of progress. Whether a later mind did better BECAUSE of earlier work is measured only by a controlled comparison (Inheritance Study 001).";
+const RULES = Object.freeze({
+  identity: "We record the name you give; we can't verify it, for anyone.",
+  admission: "Curator admission means a record may be shown. It is not verification.",
+  disagreement: "Disagreement is never a reason for rejection. Competing claims are listed side by side and never averaged.",
+  failures: "Refuted claims stay listed, with what they were before. A stalled problem says so.",
+});
+
+export async function serveOpenWork(req, res, { nowMs = Date.now() } = {}) {
   if (methodGuard(req, res)) return;
-  const id = (req.query?.id || "").toString();
-  const notFound = () => res.status(404).json({ error: "No public problem with that id.", code: "WORK_PROBLEM_NOT_FOUND", preview: PREVIEW("OMNARAI_OPEN_WORK", "D-001") });
+  if (!previewOn("OMNARAI_OPEN_WORK")) return res.status(404).json(OPEN_WORK_NOT_OPEN);
+  const id = (req.query?.id || "").toString().trim();
+  const format = (req.query?.format || "").toString();
+  const status = (req.query?.status || "").toString();
+  const notFound = () => res.status(404).json({ error: "No public Open Work problem with that id.", code: "WORK_PROBLEM_NOT_FOUND", index: "/api/open-work" });
   if (id && !WORK_PROBLEM_ID_RE.test(id)) return notFound(); // same answer as unknown or pending: existence is not disclosed
-  const pub = await loadPublicWork();
+  if (format && format !== "brief" && format !== "packet") return res.status(400).json({ error: "format must be brief or packet", code: "BAD_FORMAT" });
+  if (status && !["open", "closed", "stalled"].includes(status)) return res.status(400).json({ error: "status must be open, closed or stalled", code: "BAD_STATUS" });
+
+  let pub;
+  try { pub = await loadPublicWork(); } catch (err) {
+    return res.status(503).json({ error: "Open Work could not be read just now.", code: "OPEN_WORK_UNAVAILABLE", detail: String(err?.message || err).slice(0, 200), retryable: true });
+  }
+  // Additive context. Each part fails soft and says so; neither changes a packet or its hash.
+  const unavailable = [];
+  let awaiting = new Map();
+  try { awaiting = await pendingTowardWork(); } catch { unavailable.push("awaiting_review"); }
+  let registry = null;
+  try { registry = loadClaimsRegistry(); } catch { unavailable.push("cited_claims"); }
+
   const packetFor = (problem) => deriveWorkPacket({ problem, events: pub.events.filter((e) => e.problem_id === problem.id), publicFootprints: pub.publicFootprints, verifiers: pub.verifiers });
   cache(res);
+  const common = { contract: OPEN_WORK_CONTRACT, trust_boundary: POLICY_CARD.trust_boundary, rules: RULES, ...(unavailable.length ? { unavailable } : {}) };
+
   if (id) {
     const problem = pub.problems.find((p) => p.id === id);
     if (!problem) return notFound();
     const packet = packetFor(problem);
-    if ((req.query?.format || "") === "brief") return res.status(200).json({ ...successorBrief(packet, { trustBoundary: POLICY_CARD.trust_boundary }), preview: PREVIEW("OMNARAI_OPEN_WORK", "D-001") });
-    return res.status(200).json({ ...packet, trust_boundary: POLICY_CARD.trust_boundary, preview: PREVIEW("OMNARAI_OPEN_WORK", "D-001") });
+    const beside = {
+      next_action: firstNextAction(packet),
+      stalled: isStalled(packet, nowMs),
+      lineages: lineagesOf(packet),
+      awaiting_review: awaiting.get(id) || { count: 0, oldest_since: null, basis: "contributions awaiting curator review that respond to this problem: a count only, never their content" },
+      cited_claims: registry ? citedClaims(packet.problem, registry) : null,
+      how_to_contribute: howToContribute(id),
+    };
+    if (format === "brief") return res.status(200).json({ ...successorBrief(packet, { trustBoundary: POLICY_CARD.trust_boundary }), ...beside, ...common });
+    return res.status(200).json({ ...packet, ...beside, ...common });
   }
-  const status = (req.query?.status || "").toString();
-  if (status && !["open", "closed"].includes(status)) return res.status(400).json({ error: "status must be open or closed", code: "BAD_STATUS" });
-  const rows = pub.problems.map(packetFor).map(packetSummary)
-    .filter((r) => !status || (status === "open") === r.open)
-    .sort((a, b) => a.id.localeCompare(b.id));
-  return res.status(200).json({ schema: "work-problem-index/0.1", problems: rows, count: rows.length, trust_boundary: POLICY_CARD.trust_boundary, preview: PREVIEW("OMNARAI_OPEN_WORK", "D-001") });
+
+  const rows = pub.problems.map(packetFor).map((p) => openWorkRow(p, { awaiting: awaiting.get(p.problem.id) || null, nowMs }));
+  const counts = {
+    problems: rows.length,
+    open: rows.filter((r) => r.open && !r.stalled).length,
+    stalled: rows.filter((r) => r.stalled).length,
+    closed: rows.filter((r) => !r.open).length,
+    live_claims: rows.reduce((n, r) => n + r.live_claims, 0),
+    refuted_claims: rows.reduce((n, r) => n + r.refuted_claims, 0),
+    awaiting_review: rows.reduce((n, r) => n + (r.awaiting_review?.count || 0), 0),
+    not_proof: NOT_PROOF,
+  };
+  const shown = rows
+    .filter((r) => !status || (status === "stalled" ? r.stalled : status === "open" ? r.open && !r.stalled : !r.open))
+    // Open first, then stalled, then closed; inside each, the longest waiting first.
+    .sort((a, b) => (Number(!a.open) * 2 + Number(a.stalled)) - (Number(!b.open) * 2 + Number(b.stalled)) || a.as_of.localeCompare(b.as_of) || a.id.localeCompare(b.id));
+  return res.status(200).json({
+    schema: "open-work-index/1.0",
+    what_this_is: "Unfinished problems left for whoever arrives next. Each says why it matters, what counts as done, and the one next action. Pick one up, then leave your work for the mind after you.",
+    problems: shown,
+    count: shown.length,
+    counts,
+    ...(rows.length ? {} : { note: "No problem is public yet." }),
+    how_to_contribute: howToContribute("<OMN-WORK-… id from this list>"),
+    epistemic_labels: EPISTEMIC_LABELS,
+    ...common,
+  });
 }
 
 export async function loadAllSignals() {

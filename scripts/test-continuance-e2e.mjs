@@ -3,7 +3,8 @@
 //
 //   node --import ./scripts/lib/register-mem-blob.mjs --test scripts/test-continuance-e2e.mjs
 //
-//   [E1] flags OFF: ?_view=problems and ?_view=changes answer exactly what any unknown _view answers (no behavior change)
+//   [E1] flags OFF: ?_view=changes answers exactly what any unknown _view answers (no behavior change); /api/open-work
+//        answers 404 OPEN_WORK_NOT_OPEN and never falls through (the Open Work door, 2026-11-24)
 //   [E2] A → B continuation (case 1, solvable): A leaves an attempt, a successor reads ONLY the public brief, rebuilds
 //        every source from its id and hash, leaves a claim; a REAL deterministic verifier runs; an independent
 //        reviewer accepts; the problem closes. No step promotes itself.
@@ -91,18 +92,23 @@ async function setupCase1() {
   await event({ problem_id: p.id, problem_revision: 1, kind: "attempt_recorded", source: srcOf(A) });
   return { p, A };
 }
-const packet = async (id, q = "") => call(`/api/council?_view=problems&id=${id}${q}`);
+const packet = async (id, q = "") => call(`/api/open-work?id=${id}${q}`);
 
 test("[E1] flags off: identical to any unknown view", async () => {
   fresh();
   const unknown = await call("/api/council?_view=no-such-view-xyz");
-  for (const v of ["problems", "changes"]) {
+  for (const v of ["changes"]) {
     const r = await call(`/api/council?_view=${v}`);
     assert.equal(r.status, unknown.status, v);
     assert.deepEqual(r.body, unknown.body, v);
   }
+  for (const url of ["/api/open-work", "/api/council?_view=open-work"]) {
+    const r = await call(url);
+    assert.equal(r.status, 404, url);
+    assert.equal(r.body.code, "OPEN_WORK_NOT_OPEN", url);
+  }
   flags(true);
-  assert.equal((await call("/api/council?_view=problems")).body.schema, "work-problem-index/0.1");
+  assert.equal((await call("/api/open-work")).body.schema, "open-work-index/1.0");
 });
 
 test("[E2] A → B continuation, independently tested and reviewed", async () => {
@@ -149,8 +155,8 @@ test("[E2] A → B continuation, independently tested and reviewed", async () =>
   assert.deepEqual(pk.meets_all_criteria_by_review, [claim.id]);
   assert.deepEqual(pk.attempts.map((a) => a.footprint_id), [A.id]);
   assert.match(pk.epistemic_labels.causal_value, /Inheritance Study 001/, "the packet does not claim B did better BECAUSE of A");
-  assert.equal(pk.preview.enabled_by, "OMNARAI_OPEN_WORK=1");
-  const list = (await call("/api/council?_view=problems&status=closed")).body;
+  assert.equal(pk.contract, "open-work/1.0");
+  const list = (await call("/api/open-work?status=closed")).body;
   assert.deepEqual(list.problems.map((r) => r.id), [p.id]);
 });
 
@@ -205,7 +211,7 @@ test("[E5] nothing non-public leaks into packets, lists or Signals", async () =>
   const hidden = await registerProblem({ title: "Hidden problem", objective: "x", acceptance_criteria: ["x"] }, { curator, nowMs: tick(), bytes: bytes() });
   const pendingEvent = await recordWorkEvent({ problem_id: p.id, problem_revision: 1, kind: "attempt_recorded", source: srcOf(A) }, { curator, nowMs: tick(), bytes: bytes() });
   flags(true);
-  const all = JSON.stringify([(await packet(p.id)).body, (await call("/api/council?_view=problems")).body, (await call("/api/council?_view=changes&limit=100")).body]);
+  const all = JSON.stringify([(await packet(p.id)).body, (await call("/api/open-work")).body, (await call("/api/council?_view=changes&limit=100")).body]);
   for (const secret of [pending.footprint_id, rejected.footprint_id, hidden.id, pendingEvent.id, "Pending attempt", "Rejected attempt", "test: private note", "low-substance"]) {
     assert.ok(!all.includes(secret), `leaked: ${secret}`);
   }

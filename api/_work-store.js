@@ -15,7 +15,7 @@
 import { Buffer } from "node:buffer";
 import { randomBytes } from "node:crypto";
 import { list as blobList, put as blobPut, blobFetch } from "./_blob.js";
-import { foldModeration, REVIEW_ACTIONS, loadPublicFootprints, getDefaultStore as getFootprintStore } from "./_footprints.js";
+import { foldModeration, REVIEW_ACTIONS, loadPublicFootprints, loadFootprintIndex, hydrate, getDefaultStore as getFootprintStore } from "./_footprints.js";
 import {
   WORK_PROBLEM_SCHEMA, WORK_EVENT_SCHEMA, VERIFIER_SCHEMA, WORK_PROBLEM_ID_RE, WORK_EVENT_ID_RE, VERIFIER_ID_RE,
   validateProblem, validateEvent, validateVerifier, seal, isIntact, mintProblemId, mintEventId,
@@ -83,6 +83,7 @@ export async function registerProblem(input, { curator, nowMs = Date.now(), byte
     revision,
     supersedes_revision: revision === 1 ? null : revision - 1,
     title: input.title, objective: input.objective,
+    ...(input.why_it_matters ? { why_it_matters: input.why_it_matters } : {}),
     acceptance_criteria: input.acceptance_criteria, exclusions: input.exclusions ?? [], open_questions: input.open_questions ?? [],
     known_failures: input.known_failures ?? [], evidence_refs: input.evidence_refs ?? [],
     registered_by: { kind: "curator", id: curator }, registered_at: new Date(nowMs).toISOString(),
@@ -201,4 +202,34 @@ export async function loadPublicWork({ store = getDefaultWorkStore(), footprintS
   }
   const publicFootprints = includeFootprints ? (await loadPublicFootprints(footprintStore)).publicBodies : [];
   return { problems: [...problems.values()], events, verifiers, publicFootprints, moderation: mod };
+}
+
+// ── Awaiting review (the Open Work door, 2026-11-24) ─────────────────────────────────────────────────
+// Gemini's point: if A leaves work at 2:00 PM and B arrives at 2:15 PM, B cannot see it, because review is weekly.
+// Publishing unreviewed text is not the answer. This says only HOW MANY contributions responding to each problem
+// are waiting, and since when. Pending bodies are read here, server-side, to see what they reference, and nothing
+// from them leaves this function except the count and the oldest receipt time (the manifest already publishes the
+// queue's size and age). Bounded to the newest `limit` pending footprints.
+export async function pendingTowardWork({ footprintStore = getFootprintStore(), limit = 200 } = {}) {
+  const index = await loadFootprintIndex(footprintStore);
+  const pending = [...index.values()].filter((e) => e.state === "pending").sort((a, b) => b.id.localeCompare(a.id)).slice(0, limit);
+  const acc = new Map();
+  if (!pending.length) return acc;
+  for (const h of await hydrate(pending, footprintStore)) {
+    if (!h.body || !h.verified) continue;
+    const refs = new Set(Object.values(h.body.relationships || {}).flatMap((v) => (Array.isArray(v) ? v : [])));
+    const receivedMs = Number(String(h.entry.id).split("-")[2]);
+    for (const ref of refs) {
+      if (!WORK_PROBLEM_ID_RE.test(ref)) continue;
+      const cur = acc.get(ref) || { count: 0, oldest_ms: Infinity };
+      cur.count += 1;
+      if (Number.isFinite(receivedMs)) cur.oldest_ms = Math.min(cur.oldest_ms, receivedMs);
+      acc.set(ref, cur);
+    }
+  }
+  return new Map([...acc].map(([id, v]) => [id, {
+    count: v.count,
+    oldest_since: Number.isFinite(v.oldest_ms) ? new Date(v.oldest_ms).toISOString() : null,
+    basis: "contributions awaiting curator review that respond to this problem: a count only, never their content",
+  }]));
 }

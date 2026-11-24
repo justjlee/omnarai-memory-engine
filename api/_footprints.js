@@ -137,6 +137,10 @@ export const TENSION_REF_RE = /^(OMN-(?:D|L)\d{10,16})#t(\d{1,2})$/;
 export const CORPUS_ID_RE = /^(OMN-[A-Z]{0,3}-?\d{1,16}|video_[A-Za-z0-9_-]{11})$/;
 export const CONTRIB_ID_RE = /^OMN-X\d{10,16}$/;
 export const CLAIM_ID_RE = /^[a-z0-9][a-z0-9-]{2,80}$/;
+// An Open Work problem (api/_work.js WORK_PROBLEM_ID_RE, the same pattern; kept here so this module does not import
+// _work.js). Since 2026-11-24 a footprint may name a problem in its relationships ("this responds to that problem").
+// checkReferences accepts it only when the problem is PUBLIC.
+export const WORK_REF_RE = /^OMN-WORK-\d{13}-[0-9a-f]{8}$/;
 const URL_REF_RE = /^https?:\/\/[^\s"<>]{3,290}$/;
 const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?Z$/;
 
@@ -248,7 +252,7 @@ const isStrOrNull = (v, max) => v === null || (typeof v === "string" && v.length
 export function isWellFormedRef(ref) {
   return typeof ref === "string" && ref.length <= 120 && (
     FP_ID_RE.test(ref) || QUESTION_ID_RE.test(ref) || ATLAS_RECORD_RE.test(ref) || ANSWER_REF_RE.test(ref) || TENSION_REF_RE.test(ref) ||
-    CORPUS_ID_RE.test(ref) || CONTRIB_ID_RE.test(ref) || CLAIM_ID_RE.test(ref)
+    CORPUS_ID_RE.test(ref) || CONTRIB_ID_RE.test(ref) || CLAIM_ID_RE.test(ref) || WORK_REF_RE.test(ref)
   );
 }
 
@@ -354,7 +358,7 @@ export function validateFootprint(fp) {
 
 // ── Referential checks (needs context, still FAIL CLOSED) ──────────────────────
 // ctx = { admittedFootprintIds:Set, records:Map<id,{answers:number}>, claimIds:Set,
-//         corpusIds?:Set }. Footprint targets must be ADMITTED (a writer cannot
+//         corpusIds?:Set, publicWorkIds?:Set }. Footprint targets must be ADMITTED (a writer cannot
 // anchor to what it cannot see). Answer refs must exist. Claims must be in the
 // registry. Other ids are accepted on form alone (corpus ids are many and
 // checking them all would couple the write path to the seed file).
@@ -385,6 +389,12 @@ export function checkReferences(fp, ctx = {}) {
       const rec = records.get(m[1]);
       if (!rec) errors.push(`${where}: ${id} names an Atlas record that does not exist`);
       else if (Number(m[2]) >= rec.answers) errors.push(`${where}: ${id} — that record has ${rec.answers} answers (a0…a${rec.answers - 1})`);
+      continue;
+    }
+    // An Open Work problem must be public. ctx.publicWorkIds absent ⇒ unknown ⇒ refused (fail closed). A pending
+    // and an unknown problem get the same answer, so a reference never reveals that a pending problem exists.
+    if (WORK_REF_RE.test(id)) {
+      if (!(ctx.publicWorkIds instanceof Set) || !ctx.publicWorkIds.has(id)) errors.push(`${where}: ${id} is not a public Open Work problem`);
       continue;
     }
     if (ATLAS_RECORD_RE.test(id) && /^OMN-(D|L)\d/.test(id) && !/^OMN-DD/.test(id)) {
