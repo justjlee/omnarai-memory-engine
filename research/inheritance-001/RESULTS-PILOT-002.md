@@ -187,7 +187,12 @@ a574b5eea3e01eb91f21dd5276f2ea4636752655b68cf8b35bbfeefc0a517b07  snapshot.json
 - **Playbook fix:** `.claude/commands/pilot-002.md` should list five keys, adding `PRIVATE_BLOB_READ_WRITE_TOKEN`.
 - **Provider-side monthly limits:** still not confirmed (xz chose to proceed without them).
 
-## 9. Recommended next step (not started)
+**Addendum (2026-11-24, same day):** the $0 review recommended in section 9 has now been done. See
+[`REVIEW-PILOT-002-INSTRUMENT.md`](REVIEW-PILOT-002-INSTRUMENT.md). It found that grading is correct (288/288), that most
+of D's lead comes from C's refusals, that excluding refused blocks flips the sign of C − A+ (31 vs 29 of 41, exploratory),
+and that D and A+ need redesign.
+
+## 9. Recommended next step (as written before the review)
 
 Before any further paid run: a **$0 offline review** of the two instrument problems, using the private run files. (1) Why
 Claude refused 33 calls, unevenly by arm. Check the stop details and which context features co-occur with refusals, and
