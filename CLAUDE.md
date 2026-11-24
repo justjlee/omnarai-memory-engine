@@ -192,7 +192,12 @@ layer that must exist before an agent is responsible to build. Entry point: `res
 
 ---
 
-### Inheritance Study 001 — research namespace (2026-11-20, branch `inheritance-001`, NOT deployed, $0)
+### Inheritance Study 001 — research namespace (2026-11-20, branch `inheritance-001` → `inheritance-001-sync`, PR #63, NOT deployed)
+**Status 2026-11-24:** two registered pilots run. Pilot 001 (d24005d, $4.18) was an instrument outcome. Pilot 002 (9adaa95,
+$4.83) was a descriptive tie, C − A+ = −0.021 [−0.188, +0.146]. No claim; `claims.json` untouched. Before any further paid run,
+read `research/inheritance-001/REVIEW-PILOT-002-INSTRUMENT.md`: refusal categories are not recorded yet, arm D and A+ need
+redesign, and open decisions are D18–D22 in `DECISIONS_REQUIRED.md`. A live run's env file needs `PRIVATE_BLOB_READ_WRITE_TOKEN`
+for the private ledger.
 A controlled test of whether one model family's *independently verified* work helps a *different* family on held-out task categories
 (six arms A / A+ / B / C / D / E, frozen generation snapshots, re-executed verification receipts, sealed tasks, family-clustered
 analysis, a six-criterion ratchet checklist). Start at `research/inheritance-001/README.md`; code in `scripts/inheritance-001/`.

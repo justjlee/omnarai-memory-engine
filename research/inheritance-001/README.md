@@ -4,9 +4,17 @@
 neither has seen, beyond what the same compute, raw history or a format-matched placebo would give? And does that benefit grow over
 generations?
 
-**Evidence status: untested.** The instrument is built and tested offline with a deterministic mock. No model has been called. Every
-number in `examples/` comes from synthetic worlds and is NOT evidence about any model. This is a research namespace, not a
-public surface. It adds no route, tool, function or Footprint field, and it never writes `memory/grown.json`.
+**Evidence status (updated 2026-11-24): exploratory. No claim permitted.** Two registered pilots have run on real models.
+Neither can answer the question yet, and both say so.
+
+| Pilot | Registered | Ran | Spend (recorded) | Outcome |
+|---|---|---|---:|---|
+| 001 | d24005d | 2026-11-20 | $4.18 | **Instrument outcome:** 0 of 51 producer notes verifiable (producers were never told the step language), so arm C was empty. Not a null result |
+| 002 | 9adaa95 | 2026-11-24 | $4.83 | **Descriptive tie:** C − A+ = −0.021 [−0.188, +0.146] at 8 families (Claude Sonnet 5.5 inheriting from Gemini 4 Carbon and GPT-6.1 Sol). Verification now works (34 of 46 notes). Uneven consumer refusals and an arm D that cannot harm held-out tasks mean the comparison is not yet a fair test ([results](RESULTS-PILOT-002.md), [instrument review](REVIEW-PILOT-002-INSTRUMENT.md)) |
+
+Every number in `examples/` comes from synthetic worlds and is NOT evidence about any model. This is a research namespace,
+not a public surface. It adds no route, tool, function or Footprint field, and it never writes `memory/grown.json`.
+Nothing here has changed `public/claims.json` or any public claim.
 
 ## Run it ($0, no network)
 
@@ -26,6 +34,10 @@ node --import ./scripts/lib/register-mem-blob.mjs --test scripts/test-inheritanc
 
 ## Read in this order
 
+0. **For the current state:** `RESULTS-PILOT-002.md` (the latest run, with every contrast and its interval), then
+   `REVIEW-PILOT-002-INSTRUMENT.md` (why that run is not yet a fair test, and the seven proposed fixes), then
+   `DECISIONS_REQUIRED.md` (what is decided and what is still open). Every deviation, run and production change is dated in
+   `deviations.ndjson`.
 1. `PROTOCOL.md`: what is measured, the six arms, the pawl of verification, the analysis, the falsifiers.
 2. `BASELINE.md`: repository heads, test baseline, what is reused, and the conflicts that were reconciled.
 3. `SESSION-REPORT-2026-11-20.md`: what was built, what passed, what is unproven, and what the first live pilot needs.
@@ -33,8 +45,10 @@ node --import ./scripts/lib/register-mem-blob.mjs --test scripts/test-inheritanc
 5. `pilot/PROVIDER-CAPS.md`: what each provider documents about bounding billed output (why Grok left the panel), then
    `pilot/PILOT-BUDGET.md`: projected calls and dollars for the proposed pilot, and `pilot/IS1-PROBE-CAL-002-plan.json`: the
    pre-committed plan of calibration probe 2.
-   Pilot 002 (proposed 2026-11-21, not run): `pilot/PILOT-002-BUDGET.md` (projection, and what a smaller cap would do),
-   `preregistration-002.draft.yaml` (draft) and `registration-002.json` (draft); every gated command takes `--study pilot-002`.
+   Pilot 002 (built 2026-11-21, registered and run 2026-11-24): `pilot/PILOT-002-BUDGET.md` (the projection as generated
+   before the run; its "Status: proposed" line is the pre-run status, and the actual run recorded $4.83),
+   `preregistration-002.draft.yaml` (registered in 9adaa95, frozen) and `registration-002.json`; every gated command takes
+   `--study pilot-002`. The session playbook used to run it is `.claude/commands/pilot-002.md`.
 6. `examples/`: the offline demo outputs (`plan.json`, `snapshot.json`, `trials.jsonl`, `summary.json`, `REPORT.md`, …) and the
    instrument validation over synthetic worlds.
 
@@ -44,7 +58,8 @@ node --import ./scripts/lib/register-mem-blob.mjs --test scripts/test-inheritanc
 research/inheritance-001/
   PROTOCOL.md  BASELINE.md  DECISIONS_REQUIRED.md  SESSION-REPORT-2026-11-20.md
   preregistration.draft.yaml   # Pilot 001: registered (d24005d); frozen and pushed BY ITSELF before any live run; never edited afterwards
-  preregistration-002.draft.yaml  registration-002.json   # Pilot 002: drafts, not registered
+  preregistration-002.draft.yaml  registration-002.json   # Pilot 002: registered (9adaa95), frozen; run 2026-11-24
+  RESULTS-PILOT-002.md  REVIEW-PILOT-002-INSTRUMENT.md     # Pilot 002 results and the $0 instrument review
   deviations.ndjson            # dated, append-only
   schemas/                     # ten record schemas (study … report), engine validator subset
   pilot/                       # projection for the proposed pilot (stand-in families, no sealed data)

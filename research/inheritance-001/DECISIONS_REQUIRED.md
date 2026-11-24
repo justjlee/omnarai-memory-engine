@@ -1,5 +1,11 @@
 # Decisions required (Inheritance Study 001)
 
+**Current status (2026-11-24).** D1–D4, D10, D11 and D13–D17 have been decided and acted on: both pilots were registered and
+run. D16 and D17 were decided on 2026-11-24 (see "Decided 2026-11-24" at the end). **Open now: D18–D22 at the end, and D-IS1-B**
+(merge this branch; `RECONCILIATION-2026-11-23.md`). D5–D9 and D12 were never formally closed in this file. D6 (Claude as a
+consumer) was followed in both pilots, and D7 (claims registry) and D8 (confirmatory size) still wait on a fair test. The rows
+below are kept as they were written, for the record.
+
 Each item says what is undecided, the recommendation, and the safe default the code uses until someone decides. Nothing below
 blocked the offline build. Items D1–D4 block the live pilot.
 
@@ -34,3 +40,23 @@ pilot's reservation keeps the site's own headroom where it is (about $6.58), so 
 paused. It reverses with `{"reset": true}` once the reservation ages out, about 30 days later. Cost: for that window the ledger
 allows up to $18 more in total. Provider-side monthly limits remain the floor that cannot be bypassed. This is a production
 write that only xz makes. `.claude/commands/pilot-002.md` asks for it explicitly and does not send it itself.
+
+## Decided 2026-11-24 (xz, in the Pilot 002 session)
+
+- **D16 → option (d).** xz: "(d) Raise limit by $18 now (Recommended)". Sent at 14:55:56Z: `cap_usd` 100 → 118 (ceiling
+  $95 → $113). It is a runtime override, not a deploy (`deviations.ndjson`, kind `production-write`). Correction to the options
+  as written: $29 of older reservations age out on about 2026-12-03 and 12-04, not 12-20.
+- **D17 → approved at $18 and 688 calls.** xz: "Approve plan 95e1046f (Recommended)" (plan
+  95e1046f119166ad9d3feae59e177e061c28eced6e903303bab7097d3506987f), then "Go: raise limit and run (Recommended)". Registered
+  in 9adaa95 before any call; ran 344 of 344 calls, $4.83 recorded. Results: `RESULTS-PILOT-002.md`. Provider-side monthly
+  limits: xz chose to proceed without confirming them ("Not sure, go ahead").
+
+## Open after Pilot 002 (added 2026-11-24)
+
+| # | Decision | Recommendation | Safe default now |
+|---|---|---|---|
+| D18 | **Reset the budget override.** The live ceiling is $113 until reset. | Send `{"reset": true}` on or after **2026-12-04**: rolling spend should then sit near $80, below the restored $95. That also restores the July $100 rule on the ledger itself. | The override stays; the ledger still fails closed at $113. |
+| D19 | **Learn why Claude refused** (33 of 288 calls). First record `stop_details` in `lib/adapters.mjs` ($0, code + test). Then re-send the 33 refused requests once, unchanged, plus about 30 answered controls. | Approve the code change. Then approve the re-send at a cap of about **$0.50**, under its own pushed plan. | No call; the refusal category stays unknown. |
+| D20 | **Redesign before any further paid run** (`REVIEW-PILOT-002-INSTRUMENT.md` §4): explicit refusal handling in the preregistration, an arm D that poisons what can transfer, a real A+ compute match, and harder families (about 40–50% cold). | Do it as a written Pilot 003 or confirmatory design, priced, for xz's approval. No run until D19 answers the refusal question. | Pilot 002's instrument is unchanged. |
+| D21 | **Release Pilot 002's sealed material** (preregistration `release_policy`). | Hold until D19 and D20 are settled, since a re-analysis may need it. | Sealed set stays on the curator's Mac (mode 600). |
+| D22 | **Provider-side monthly limits** at Anthropic and OpenAI (Google offers alerts only). | Set them before the next paid run; they are the floor that our own code cannot bypass. | Not confirmed. |

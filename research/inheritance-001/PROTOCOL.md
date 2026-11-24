@@ -4,8 +4,11 @@
 task categories neither has seen, beyond what the same compute, raw history, or a format-matched placebo would give? Does the benefit
 grow over successive generations?
 
-**Status.** Instrument built and tested offline. No model has been called. The preregistration is a draft (`preregistration.draft.yaml`)
-and must be frozen and pushed publicly before any non-mock outcome is observed.
+**Status (updated 2026-11-24).** This page describes the instrument as designed on 2026-11-20. Two pilots have since been
+registered (each preregistration frozen and pushed alone before any call) and run on real models: Pilot 001 (d24005d, an
+instrument outcome) and Pilot 002 (9adaa95, a descriptive tie). `REVIEW-PILOT-002-INSTRUMENT.md` records where the
+implementation falls short of this page: refusals scored as 0, an arm D that cannot harm held-out tasks (falsifier 7), and
+an A+ match that is nominal. See `README.md` for the current state.
 
 Sources: Omnai's essay *The Next Intelligence Shouldn't Have to Start Over*, Claude's public reply (verification as the pawl; A+, E,
 sealed tasks, generations, leave-one-out, verification cost), and Omnai's handoff (`docs/handoff-2026-11-20-inheritance-001/`).

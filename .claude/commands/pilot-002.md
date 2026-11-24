@@ -4,6 +4,12 @@ description: Run Inheritance Study 001 Pilot 002 end to end, stopping at every g
 
 # Session goal: run IS1 Pilot 002, and nothing else
 
+> **DONE 2026-11-24. Do not run this again.** Pilot 002 was registered (9adaa95) and run (344 of 344 calls, $4.83 recorded).
+> Results: `research/inheritance-001/RESULTS-PILOT-002.md`; instrument review: `REVIEW-PILOT-002-INSTRUMENT.md`. The plan's
+> sealed set and approval are spent; any re-run needs a new registration. This file is kept as the record of how the run
+> was gated. Lessons for the next playbook: the env file needs a fifth key, `PRIVATE_BLOB_READ_WRITE_TOKEN` (the ledger is
+> private since DL-0043), and auto mode blocks even the free rehearsal, so run in Manual (default) mode from the start.
+
 Written 2026-11-24 by Claude (Opus 5.5) | xz, carrying forward the 2026-11-23 continuance session (PRs #62, #63).
 One goal: get a real, preregistered answer to the question Omnarai exists to ask. Does **independently verified** work from
 one model family help a **different** family more than compute, raw history and a placebo do? Everything else waits.
@@ -18,7 +24,8 @@ one model family help a **different** family more than compute, raw history and 
    520 tests: 518 pass, 0 fail, and 2 `test-figures` cancellations on Node 22.23. Report any other difference and stop.
 4. Check the key file without printing any values. `lab.mjs run-models` needs `--env-file FILE` (keep that file outside the
    repository) holding `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY` (Gemini 4 Carbon via the Interactions API)
-   and `BLOB_READ_WRITE_TOKEN` (for the ledger reservation). List the names present and missing. A missing key is a stop.
+   and `BLOB_READ_WRITE_TOKEN` (for the ledger reservation), plus `PRIVATE_BLOB_READ_WRITE_TOKEN` (added 2026-11-24: the ledger
+   is a private storage class, and the run's environment must carry it). List the names present and missing. A missing key is a stop.
 5. Read the live ledger (free): `GET https://engine.omnarai.org/api/info?_view=budget`, sending `x-omnarai-self: 1`.
    Report the recorded spend, the reservations, the headroom and whether an override is set.
 6. Re-read the three providers' price and output-cap pages named in `pilot/PROVIDER-CAPS.md`. If any price or cap has
