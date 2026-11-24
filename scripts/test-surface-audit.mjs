@@ -25,6 +25,9 @@ const explore = (tools = 12) => `<html><body><a href="https://engine.omnarai.org
 const hfAtlas = `# Atlas\n**Version:** v1.2.0 · **Records:** 166\n**47 of 166 records have now been through the harness.** The premise was refuted.`;
 const hfText = `| **Live engine total works** | 573 |\nSix of its most attractive ideas were refuted. Last synced from live engine: 2026-10-10. Atlas v1.2.0, all 166 records.`;
 
+// The HF text mirror ships byte copies of these two engine files (build-hf-derivatives.py).
+const engineLlms = `**Current corpus:** 573 works (~530K words). Six of this project's most attractive ideas were refuted. ${TOOLS.join(" ")}`;
+const engineContext = "**Corpus:** 573 works (~530K words)";
 function world(over = {}) {
   const j = (o) => ({ status: 200, body: JSON.stringify(o) });
   const t = (s) => ({ status: 200, body: s });
@@ -34,9 +37,9 @@ function world(over = {}) {
     [`${F}/sitemap.xml`]: t(`<urlset><loc>${F}/</loc><loc>${F}/explore</loc></urlset>`),
     [`${E}/sitemap.xml`]: t(`<urlset><loc>${E}/llms.txt</loc></urlset>`),
     [`${F}/`]: t(frontHome()), [`${F}/explore`]: t(explore()), [`${F}/llms.txt`]: t("573 works"),
-    [`${E}/llms.txt`]: t(`**Current corpus:** 573 works (~530K words). ${TOOLS.join(" ")}`),
-    [`${E}/omnarai.context.md`]: t("**Corpus:** 573 works (~530K words)"),
+    [`${E}/llms.txt`]: t(engineLlms), [`${E}/omnarai.context.md`]: t(engineContext),
     [`${HF}/omnarai-divergence-atlas/raw/main/README.md`]: t(hfAtlas), [`${HF}/realms-of-omnarai/raw/main/README.md`]: t(hfText),
+    [`${HF}/realms-of-omnarai/raw/main/llms.txt`]: t(engineLlms), [`${HF}/realms-of-omnarai/raw/main/omnarai.context.md`]: t(engineContext),
     "https://registry.npmjs.org/omnarai-mcp": j({ readme: "ships as eleven tools" }), "https://registry.npmjs.org/omnarai-mcp/latest": j({ version: "1.9.0" }),
     [`POST ${E}/api/mcp`]: t(`data: ${JSON.stringify({ result: { tools: TOOLS.map((name) => ({ name })) } })}`),
     ...over,
@@ -85,6 +88,20 @@ test("a wrong claim word and a wrong tool count are stale (exact, never lagging)
   const stale = r.facts.filter((g) => g.level === "fail");
   assert.ok(stale.some((g) => g.quantity === "refuted_word" && g.got === "Four"));
   assert.ok(stale.some((g) => g.quantity === "tools" && g.surface === "front:/explore" && g.got === "8"));
+});
+
+test("the 2026-11-24 defect: HF copies of llms.txt / context two refutations behind the card are caught", async () => {
+  // the card was refreshed by hand; the AI-reader copies beside it still said an older count
+  const old = engineLlms.replace("Six", "Four");
+  const r = await audit({ [`${HF}/realms-of-omnarai/raw/main/llms.txt`]: { status: 200, body: old } });
+  assert.equal(r.status, "out_of_sync");
+  const stale = r.facts.filter((g) => g.level === "fail");
+  assert.ok(stale.some((g) => g.surface === "hf:/realms-of-omnarai/llms.txt" && g.quantity === "refuted_word" && g.got === "Four"), JSON.stringify(stale));
+  assert.match(stale.find((g) => g.surface === "hf:/realms-of-omnarai/llms.txt").remedy, /build-hf-derivatives/);
+  // any other difference from the engine file is an advisory note, not a failure
+  const drift = await audit({ [`${HF}/realms-of-omnarai/raw/main/omnarai.context.md`]: { status: 200, body: engineContext + "\nolder paragraph" } });
+  assert.equal(drift.summary.stale, 0);
+  assert.ok(drift.facts.some((g) => g.surface === "hf:/realms-of-omnarai/omnarai.context.md" && g.quantity === "copy_currency" && g.level === "note"));
 });
 
 test("an unreachable source is NOT CHECKED — never counted as balanced, never hidden, and does not flip status", async () => {
