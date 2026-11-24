@@ -3,7 +3,7 @@
 // Rules: scripts/lib/crux-core.mjs (fixed before any run; every receipt carries their sha256).
 //
 //   node scripts/crux-check.mjs plan --text-file <proposal.md> | --footprint <OMN-FP-…> [--base <engine>]     $0
-//   node scripts/crux-check.mjs baseline --out <dir> --yes --env-file <keys>       today's panel, no premise (15 calls)
+//   node scripts/crux-check.mjs baseline --out <dir> --yes --env-file <keys> [--env-file <more keys>]   (15 calls)
 //   node scripts/crux-check.mjs run --out <dir> --footprint <OMN-FP-…> --claim-event <OMN-WE-…> [--problem <OMN-WORK-…>]
 //                                   --yes --env-file <keys>                         one proposal or elimination (30 calls)
 //   node scripts/crux-check.mjs score --out <dir>                                    rescore saved replies offline, $0
@@ -35,7 +35,7 @@ export async function askPanel({ callModel, prompt, runs = X.RULES.runs_per_cell
       const d = r?.ok ? X.parseDecision(r.text) : X.UNCLEAR;
       cost += r?.cost_usd || 0;
       ds.push(d);
-      onReply({ label: m.label, model_id: m.model_id, run: i + 1, ok: Boolean(r?.ok), decision: d, text: r?.text || "", refusal: r?.refusal ?? null, usage: r?.usage ?? null, cost_usd: r?.cost_usd ?? 0 });
+      onReply({ label: m.label, model_id: m.model_id, run: i + 1, ok: Boolean(r?.ok), decision: d, text: r?.text || "", truncated: r?.truncated ?? null, refusal: r?.refusal ?? null, resolved_model: r?.resolved ?? null, usage: r?.usage ?? null, cost_usd: r?.cost_usd ?? 0 });
     }
     decisions[m.label] = ds;
   }));
@@ -99,20 +99,26 @@ if (isMain) {
     const { priceOf } = await import("./lib/utility-v2-core.mjs");
     return Object.fromEntries(X.PANEL.map((m) => [m.model_id, priceOf(m.model_id, today)]));
   }
-  function keysFrom(file) {
+  // --env-file may be given more than once (the provider keys and the private-store token can live in different
+  // files); the first file that names a key wins. The budget ledger is private storage (DL-0043), so a reservation
+  // needs PRIVATE_BLOB_READ_WRITE_TOKEN as well as BLOB_READ_WRITE_TOKEN.
+  const KEY_NAMES = ["ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY", "XAI_API_KEY", "DEEPSEEK_API_KEY", "BLOB_READ_WRITE_TOKEN", "PRIVATE_BLOB_READ_WRITE_TOKEN"];
+  const envFiles = argv.flatMap((a, i) => (a === "--env-file" && argv[i + 1] ? [argv[i + 1]] : []));
+  async function keysFrom(files) {
     const KEYS = {};
-    if (!file) return KEYS;
-    return import("./lib/env-value.mjs").then(({ envValue }) => {
+    if (!files.length) return KEYS;
+    const { envValue } = await import("./lib/env-value.mjs");
+    for (const file of files) {
       for (const line of fs.readFileSync(file, "utf8").split("\n")) {
         const m = line.match(/^\s*([A-Z_]+)\s*=\s*(.*)\s*$/);
-        if (m && ["ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY", "XAI_API_KEY", "DEEPSEEK_API_KEY", "BLOB_READ_WRITE_TOKEN"].includes(m[1])) KEYS[m[1]] = envValue(m[2]);
+        if (m && KEY_NAMES.includes(m[1]) && !KEYS[m[1]]) KEYS[m[1]] = envValue(m[2]);
       }
-      return KEYS;
-    });
+    }
+    return KEYS;
   }
   function reserve(usd, label, KEYS) {
-    if (!KEYS.BLOB_READ_WRITE_TOKEN) throw new Error("no BLOB_READ_WRITE_TOKEN in --env-file: cannot reserve on the shared ledger, so nothing is spent");
-    const r = spawnSync(process.execPath, [path.join(ROOT, "scripts/budget-preflight.mjs"), "--reserve", String(Math.ceil(usd * 100) / 100), "--label", label], { stdio: "inherit", env: { ...process.env, BLOB_READ_WRITE_TOKEN: KEYS.BLOB_READ_WRITE_TOKEN }, cwd: ROOT });
+    if (!KEYS.BLOB_READ_WRITE_TOKEN || !KEYS.PRIVATE_BLOB_READ_WRITE_TOKEN) throw new Error("BLOB_READ_WRITE_TOKEN and PRIVATE_BLOB_READ_WRITE_TOKEN are needed (from any --env-file) to reserve on the shared ledger, so nothing is spent");
+    const r = spawnSync(process.execPath, [path.join(ROOT, "scripts/budget-preflight.mjs"), "--reserve", String(Math.ceil(usd * 100) / 100), "--label", label], { stdio: "inherit", env: { ...process.env, BLOB_READ_WRITE_TOKEN: KEYS.BLOB_READ_WRITE_TOKEN, PRIVATE_BLOB_READ_WRITE_TOKEN: KEYS.PRIVATE_BLOB_READ_WRITE_TOKEN }, cwd: ROOT });
     if (r.status !== 0) throw new Error("the shared ledger refused the reservation: nothing spent");
   }
   async function paidRunner(KEYS) {
@@ -139,7 +145,7 @@ if (isMain) {
       return;
     }
     if (mode === "baseline") {
-      const KEYS = await keysFrom(val("--env-file"));
+      const KEYS = await keysFrom(envFiles);
       const runner = await paidRunner(KEYS);
       const prices = await priceTable();
       reserve(X.worstCaseUsd({ calls: X.RULES.runs_per_cell, prices }), "crux-check baseline (Open Work)", KEYS);
@@ -150,7 +156,7 @@ if (isMain) {
       return;
     }
     if (mode === "run") {
-      const KEYS = await keysFrom(val("--env-file"));
+      const KEYS = await keysFrom(envFiles);
       const claimEvent = val("--claim-event");
       if (!claimEvent) throw new Error("pass --claim-event <OMN-WE-…>: the claim this receipt is about");
       const { text, footprint } = await loadProposal();

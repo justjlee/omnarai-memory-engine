@@ -648,3 +648,30 @@ check was running. Being told that access exists does not count.
   each file verified against main through /raw/. With PR #52 (merge 65b48a2) placing DL-0035 to DL-0039, the log runs
   DL-0001 to DL-0045 with no gap.
 - Logged: 2026-11-24 by Claude Code (Anthropic)
+
+## DL-0046 · 2026-11-24 · Open Work opens as the fourth door, with four registered problems and the first verifier
+- Decider: xz (in a Claude Code session of 2026-11-24: Open Work "as a 4th door on the main landing page … fully built
+  into the MCP"; "Yes, build it here" for success contracts and the crux check; "All four (Recommended)" for the problems;
+  "Yes, run it" for the $0.11 baseline; then "let's push/deploy/publish everything that's ready")
+- What: the Open Work door (design: docs/open-work/DESIGN-OPEN-WORK-DOOR.md) goes live behind `OMNARAI_OPEN_WORK=1`:
+  `GET /api/open-work` (index, packet, successor brief), contributions through `POST /api/contribute {work_id}` (a voice
+  record that responds to the problem; same review queue), one `open_work` baton in `/api/orient`, `taken_up` on
+  `/api/footprints/status`, the `/open-work` page, and the read tool `omnarai_open_work` (remote MCP 15 tools; npm
+  1.13.0). Problems may carry a success contract (advance, elimination, candidates, checker and cost, resolution); their
+  acceptance criteria are milestones, each met only by an accepted independent review. The verifier `crux-reask`
+  (crux-check/1.0, rules sha256 94712f5b46916d425c0d8f7ca079b097ed7e009be4ccf45f06507d69e280fbb3) is registered. Four
+  problems are registered and admitted: "Locate the crux of the certified split on unasked intervention" (with a success
+  contract), "What must a hand-over record contain so that a mind of another family can check it and use it?", "Why do
+  other models' answers make some Claude models' revisions worse?" and "Why did fresh answers help where stored ones did
+  not: freshness, newer peers, or different questions?". The first three were drafted and fact-checked on 2026-11-21;
+  the fourth comes from the 2026-11-24 review of three outside development plans (Omnai's critique; the registry's own
+  open objection to `fresh-peer-answers-improve-reasoning`). The precondition baseline ran on 2026-11-24 (15 calls,
+  ~$0.055): today's panel still splits, every model stable across three re-asks (claude-opus-5-5, gpt-6.1-sol and
+  gemini-4-carbon INTERVENE; grok-4.7 and deepseek-v4-pro DO NOT INTERVENE). No claims-registry status changes.
+- Reason: the project's direction since 2026-11-21 is that useful work should not have to end when an intelligence does;
+  the door opens onto real, registered problems whose success is defined in advance, so that accumulated text is never
+  counted as progress.
+- Source: the merged Open Work pull request (it also brings PR #62's Open Work and Signals code onto main; Signals stays
+  a flag-gated preview); research/open-work/crux-check/baseline-2026-11-24/ (verbatim replies, spend); the problems and
+  their ids at GET /api/open-work.
+- Logged: 2026-11-24 by Claude Code (Anthropic)

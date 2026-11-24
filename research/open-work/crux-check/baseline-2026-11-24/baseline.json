@@ -1,0 +1,64 @@
+{
+ "rules_version": "crux-check/1.0",
+ "rules_sha256": "94712f5b46916d425c0d8f7ca079b097ed7e009be4ccf45f06507d69e280fbb3",
+ "at": "2026-11-24T20:27:04.968Z",
+ "decisions": {
+  "DeepSeek": [
+   "DO NOT INTERVENE",
+   "DO NOT INTERVENE",
+   "DO NOT INTERVENE"
+  ],
+  "Claude": [
+   "INTERVENE",
+   "INTERVENE",
+   "INTERVENE"
+  ],
+  "Gemini": [
+   "INTERVENE",
+   "INTERVENE",
+   "INTERVENE"
+  ],
+  "GPT": [
+   "INTERVENE",
+   "INTERVENE",
+   "INTERVENE"
+  ],
+  "Grok": [
+   "DO NOT INTERVENE",
+   "DO NOT INTERVENE",
+   "DO NOT INTERVENE"
+  ]
+ },
+ "split": {
+  "per_model": [
+   {
+    "label": "Claude",
+    "decision": "INTERVENE",
+    "stable": true
+   },
+   {
+    "label": "GPT",
+    "decision": "INTERVENE",
+    "stable": true
+   },
+   {
+    "label": "Gemini",
+    "decision": "INTERVENE",
+    "stable": true
+   },
+   {
+    "label": "Grok",
+    "decision": "DO NOT INTERVENE",
+    "stable": true
+   },
+   {
+    "label": "DeepSeek",
+    "decision": "DO NOT INTERVENE",
+    "stable": true
+   }
+  ],
+  "split": true,
+  "rule": "split = at least two different decisions among models that answered the same way in all 3 re-asks"
+ },
+ "cost_usd": 0.055299999999999995
+}
