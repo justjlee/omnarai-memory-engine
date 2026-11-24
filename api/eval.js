@@ -19,7 +19,8 @@
  *   holdform_risk_accuracy     — risk level meets or exceeds expected minimum
  */
 
-import { put, list } from "@vercel/blob";
+import { put, list, blobFetch } from "./_blob.js";
+import { secretEquals } from "./_operator.js";
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -146,7 +147,7 @@ async function storeResults(results, summary) {
   const key = `${EVAL_BLOB_PREFIX}${ts.replace(/[:.]/g, "-")}.json`;
   await put(key, JSON.stringify({ ranAt: ts, summary, results }, null, 2), {
     access: "public",
-    addRandomSuffix: false,
+    addRandomSuffix: false, allowOverwrite: true,
     contentType: "application/json",
   });
   return key;
@@ -156,7 +157,7 @@ async function loadLatestResults() {
   const { blobs } = await list({ prefix: EVAL_BLOB_PREFIX });
   if (blobs.length === 0) return null;
   const latest = blobs.sort((a, b) => b.uploadedAt - a.uploadedAt)[0];
-  const res = await fetch(latest.url);
+  const res = await blobFetch(latest.url);
   return res.json();
 }
 
@@ -165,7 +166,7 @@ async function loadHistory() {
   const summaries = [];
   for (const blob of blobs.sort((a, b) => b.uploadedAt - a.uploadedAt).slice(0, 20)) {
     try {
-      const res = await fetch(blob.url);
+      const res = await blobFetch(blob.url);
       const data = await res.json();
       summaries.push({ ranAt: data.ranAt, summary: data.summary, url: blob.url });
     } catch { /* skip */ }
@@ -186,7 +187,7 @@ export default async function handler(req, res) {
   if (EVAL_SECRET) {
     const auth = req.headers.authorization || "";
     const token = auth.startsWith("Bearer ") ? auth.slice(7) : req.query.secret;
-    if (token !== EVAL_SECRET) {
+    if (!secretEquals(token, EVAL_SECRET)) {
       return res.status(401).json({ error: "Unauthorized. Provide Authorization: Bearer <EVAL_SECRET>" });
     }
   }

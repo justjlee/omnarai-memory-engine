@@ -1,4 +1,5 @@
-import { put, list } from "@vercel/blob";
+import { put, list, blobFetch } from "./_blob.js";
+import { bearerIsCurator } from "./_operator.js";
 import Anthropic from "@anthropic-ai/sdk";
 import { elicitCouncil, synthesizeCouncil, buildDivergenceRecord, embedRecord } from "./_council.js";
 import { appendGrownEntry } from "./_grown.js";
@@ -75,7 +76,7 @@ async function listTensions(statusFilter, searchQuery) {
   const q = searchQuery ? searchQuery.toLowerCase() : null;
   const read = await mapLimit(blobs, 24, async (blob) => {
     try {
-      const res = await fetch(blob.url);
+      const res = await blobFetch(blob.url);
       const t = await res.json();
       if (statusFilter && t.status !== statusFilter) return null;
       if (q) {
@@ -99,7 +100,7 @@ export async function persistTension(tension, query, sources) {
   try {
     const { blobs } = await list({ prefix: BLOB_PREFIX + key });
     if (blobs.length > 0) {
-      const res = await fetch(blobs[0].url);
+      const res = await blobFetch(blobs[0].url);
       existing = await res.json();
     }
   } catch { /* first time */ }
@@ -134,7 +135,7 @@ export async function persistTension(tension, query, sources) {
 
   await put(blobKey, JSON.stringify(record, null, 2), {
     access: "public",
-    addRandomSuffix: false,
+    addRandomSuffix: false, allowOverwrite: true,
     contentType: "application/json",
   });
 
@@ -154,14 +155,14 @@ const VALID_DISPOSITIONS = [...ANNOTATION_DISPOSITIONS, "crux", "council-review"
 async function loadTension(key) {
   const { blobs } = await list({ prefix: BLOB_PREFIX + key });
   if (!blobs.length) return null;
-  const res = await fetch(blobs[0].url);
+  const res = await blobFetch(blobs[0].url);
   return res.json();
 }
 
 async function saveTension(record) {
   await put(BLOB_PREFIX + record.key + ".json", JSON.stringify(record, null, 2), {
     access: "public",
-    addRandomSuffix: false,
+    addRandomSuffix: false, allowOverwrite: true,
     contentType: "application/json",
   });
 }
@@ -288,8 +289,7 @@ async function repairTension(req, res, body) {
 
   // ── council-review — writes durable grown memory, GATED by INGEST_SECRET ──
   if (disposition === "council-review") {
-    const token = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
-    if (!process.env.INGEST_SECRET || token !== process.env.INGEST_SECRET) {
+    if (!bearerIsCurator(req)) {
       return res.status(401).json({ error: "council-review writes durable memory — requires Bearer INGEST_SECRET" });
     }
     const question =

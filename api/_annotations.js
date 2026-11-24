@@ -22,7 +22,7 @@
 // Underscore module ⇒ not a deployed function (12-function Hobby cap). Reads
 // fold into the /api/divergences?id= response; writes fold into council.js
 // POST {action:"annotate"} (Bearer INGEST_SECRET — curator/council gated).
-import { list, put } from "@vercel/blob";
+import { list, put, blobFetch } from "./_blob.js";
 
 export const ANNOTATION_PREFIX = "annotations/";
 
@@ -71,7 +71,7 @@ export async function loadAnnotations(recordId) {
     if (!hit) return null;
     // Cache-busted read — Blob URLs are CDN-cached; a stale read here would make
     // the subsequent append silently drop entries (same class as the RMW hazard).
-    const res = await fetch(`${hit.url}?ts=${Date.now()}`, { cache: "no-store" });
+    const res = await blobFetch(`${hit.url}?ts=${Date.now()}`, { cache: "no-store" });
     return res.ok ? await res.json() : null;
   } catch {
     return null;
@@ -83,7 +83,7 @@ export async function appendAnnotation(recordId, annotation) {
   existing.annotations.push(annotation);
   await put(`${ANNOTATION_PREFIX}${recordId}.json`, JSON.stringify(existing), {
     access: "public",
-    addRandomSuffix: false,
+    addRandomSuffix: false, allowOverwrite: true,
     contentType: "application/json",
   });
   return existing;

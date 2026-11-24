@@ -45,7 +45,7 @@ for (const k of ["log", "info", "warn", "error", "debug"]) {
 }
 
 function fresh() { mem.__reset(); mem.__seed("memory/grown.json", GROWN); inner.length = 0; printed = []; }
-const telemetryText = () => mem.__dump("telemetry/").map((k) => JSON.stringify(mem.__read(k))).join("\n");
+const telemetryText = () => mem.__dumpPrivate("telemetry/").map((k) => JSON.stringify(mem.__readPrivate(k))).join("\n");
 async function settle() { for (let i = 0; i < 20; i++) await new Promise((r) => setImmediate(r)); }
 async function contribute(ip = "198.51.100.4") {
   const r = await call("/api/contribute", { method: "POST", headers: { "x-forwarded-for": ip }, body: { id: REC2, identity: "Claude", justification: "independent_objection", answer: `Receipt hygiene check ${Math.random()}: weigh the crux, not the headcount.` } });
@@ -102,7 +102,7 @@ test("[H4] header-form receipt read: same access, no notice, nothing in the URL 
   assert.equal(r.status, 200);
   assert.equal(r.body.read_via, "continuance-receipt");
   assert.equal(r.body.notices, undefined, "no deprecation notice on the preferred form");
-  assert.equal(r.headers["cache-control"], "no-store");
+  assert.equal(r.headers["cache-control"], "private, no-store");
   assert.match(String(r.headers.vary || ""), /x-omnarai-receipt/i, "a cache keyed on the URL must not serve one caller's private read to another");
   const inh = await call(`/api/inheritance?from=${fp}`, { headers: { [RECEIPT_HEADER]: token } });
   assert.equal(inh.status, 200);
@@ -213,11 +213,11 @@ const KEY = "ab".repeat(32);
 const tmp = () => mkdtempSync(join(tmpdir(), "omnarai-scrub-"));
 function seedOld(tok) {
   const old = (n, path, referer = null) => ({ at: `2026-10-0${n}T00:00:00.000Z`, endpoint: "council", category: "ai-agent", ipHash: `h${n}`, path, referer, q: "kept: the 200-char question field is documented" });
-  mem.__seed("telemetry/events/2026-10-01/a.json", old(1, `/api/footprints?id=OMN-FP-1790000000000-3f9a2c1b&receipt=${tok}`));
-  mem.__seed("telemetry/events/2026-10-02/b.json", old(2, "/api/query?q=a%20much%20longer%20question&job=0f0e9a1c-1111-4222-8333-944445555666"));
-  mem.__seed("telemetry/events/2026-10-03/c.json", old(3, "/api/info", "https://x.test/p?token=zzz"));
-  mem.__seed("telemetry/events/2026-10-04/d.json", old(4, "/api/health"));
-  mem.__seed("telemetry/access-log.json", { version: 2, recent: [old(1, `/api/inheritance?from=OMN-FP-1790000000000-3f9a2c1b&receipt=${tok}`)], firstExternal: old(1, `/x?receipt=${tok}`), totals: { logged: 4 } });
+  mem.__seedPrivate("telemetry/events/2026-10-01/a.json", old(1, `/api/footprints?id=OMN-FP-1790000000000-3f9a2c1b&receipt=${tok}`));
+  mem.__seedPrivate("telemetry/events/2026-10-02/b.json", old(2, "/api/query?q=a%20much%20longer%20question&job=0f0e9a1c-1111-4222-8333-944445555666"));
+  mem.__seedPrivate("telemetry/events/2026-10-03/c.json", old(3, "/api/info", "https://x.test/p?token=zzz"));
+  mem.__seedPrivate("telemetry/events/2026-10-04/d.json", old(4, "/api/health"));
+  mem.__seedPrivate("telemetry/access-log.json", { version: 2, recent: [old(1, `/api/inheritance?from=OMN-FP-1790000000000-3f9a2c1b&receipt=${tok}`)], firstExternal: old(1, `/x?receipt=${tok}`), totals: { logged: 4 } });
   return old;
 }
 
@@ -250,11 +250,11 @@ test("[H9] the one-shot scrub rewrites pre-fix events exactly like new ones; dry
   const applied = await run({ apply: true, backup, backupKey: KEY, log: () => {} });
   assert.equal(applied.written, 5);
   assert.equal(applied.verified, 5);
-  const all = mem.__dump("telemetry/").map((k) => JSON.stringify(mem.__read(k))).join("\n");
+  const all = mem.__dumpPrivate("telemetry/").map((k) => JSON.stringify(mem.__readPrivate(k))).join("\n");
   assert.ok(!all.includes(tok) && !all.includes("0f0e9a1c") && !all.includes("token=zzz"));
-  assert.equal(mem.__read("telemetry/events/2026-10-04/d.json").path, "/api/health", "clean events untouched");
-  assert.equal(mem.__read("telemetry/events/2026-10-01/a.json").q, old(1, "").q, "nothing but path/referer changes");
-  assert.equal(mem.__read("telemetry/access-log.json").totals.logged, 4, "counts unchanged");
+  assert.equal(mem.__readPrivate("telemetry/events/2026-10-04/d.json").path, "/api/health", "clean events untouched");
+  assert.equal(mem.__readPrivate("telemetry/events/2026-10-01/a.json").q, old(1, "").q, "nothing but path/referer changes");
+  assert.equal(mem.__readPrivate("telemetry/access-log.json").totals.logged, 4, "counts unchanged");
   const again = await run({ apply: false, log: () => {} });
   assert.equal(again.changes, 0, "idempotent");
   assert.equal(scrubEvent({ path: "/api/info" }).changed, false);
@@ -265,7 +265,7 @@ test("[H10] the backup is validated, encrypted and restricted; restore puts back
   fresh();
   const tok = "f".repeat(64);
   seedOld(tok);
-  const original = mem.__snapshot();
+  const original = mem.__snapshotPrivate();
   const dir = tmp();
 
   // Validation: relative, existing, synced or in-a-checkout paths and a bad key are all refused, before any write.
@@ -276,7 +276,7 @@ test("[H10] the backup is validated, encrypted and restricted; restore puts back
   assert.match(validateBackupPath("/Users/x/Library/Mobile Documents/com~apple~CloudDocs/never.bak").join(), /does not exist|synced/);
   await assert.rejects(run({ apply: true, backup: join(dir, "k.bak"), backupKey: "short", log: () => {} }), /64 hex/);
   await assert.rejects(run({ apply: true, backup: exists, backupKey: KEY, log: () => {} }), /already exists/);
-  for (const [k, v] of original) assert.equal(mem.__snapshot().get(k)?.body, v.body, "refusals wrote nothing");
+  for (const [k, v] of original) assert.equal(mem.__snapshotPrivate().get(k)?.body, v.body, "refusals wrote nothing");
 
   const backup = join(dir, "scrub.bak");
   await run({ apply: true, backup, backupKey: KEY, log: () => {} });
@@ -287,17 +287,17 @@ test("[H10] the backup is validated, encrypted and restricted; restore puts back
   assert.throws(() => readBackup(backup, "cd".repeat(32)), "the wrong key cannot read it");
 
   // A record changed after the scrub is left alone by restore; the rest come back exactly.
-  const c = mem.__read("telemetry/events/2026-10-03/c.json");
-  mem.__seed("telemetry/events/2026-10-03/c.json", { ...c, referer: "https://changed.test/later" });
+  const c = mem.__readPrivate("telemetry/events/2026-10-03/c.json");
+  mem.__seedPrivate("telemetry/events/2026-10-03/c.json", { ...c, referer: "https://changed.test/later" });
   const dry = await restore({ backup, backupKey: KEY, log: () => {} });
   assert.equal(dry.restorable, 4);
   assert.equal(dry.conflicts.length, 1);
-  assert.ok(!mem.__dump("telemetry/").map((k) => JSON.stringify(mem.__read(k))).join("\n").includes(tok), "restore is a dry run by default");
+  assert.ok(!mem.__dumpPrivate("telemetry/").map((k) => JSON.stringify(mem.__readPrivate(k))).join("\n").includes(tok), "restore is a dry run by default");
   await restore({ backup, backupKey: KEY, apply: true, log: () => {} });
   for (const k of ["telemetry/events/2026-10-01/a.json", "telemetry/events/2026-10-02/b.json", "telemetry/access-log.json"]) {
-    assert.deepEqual(mem.__read(k), JSON.parse(original.get(k).body), `${k} restored exactly`);
+    assert.deepEqual(mem.__readPrivate(k), JSON.parse(original.get(k).body), `${k} restored exactly`);
   }
-  assert.equal(mem.__read("telemetry/events/2026-10-03/c.json").referer, "https://changed.test/later", "the conflicting record was not overwritten");
+  assert.equal(mem.__readPrivate("telemetry/events/2026-10-03/c.json").referer, "https://changed.test/later", "the conflicting record was not overwritten");
 
   // CLI parsing is strict.
   assert.throws(() => parseArgs(["--aply"]), /unknown argument/);

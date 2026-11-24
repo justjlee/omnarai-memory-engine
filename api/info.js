@@ -2,7 +2,8 @@ import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { createHash } from "node:crypto";
-import { list } from "@vercel/blob";
+import { list, blobFetch } from "./_blob.js";
+import { operatorAuthed, operatorDenied, privateNoStore, applyOperatorCors, handleOperatorSession, bearerIsCurator } from "./_operator.js";
 import { waitUntil } from "@vercel/functions";
 import { recordAccess, readAccessLog, readDayEvents } from "./_telemetry.js";
 import { POLICY_CARD, contractSummary } from "./_contract.js";
@@ -11,6 +12,7 @@ import { readOpenItems, applyOpenItemAction, readScorecard, writeScorecard } fro
 import { getCitationReport, peekCitation } from "./_citation.js";
 import { loadGrownMemory } from "./_grown.js";
 import { CANON } from "./_canon.js";
+import { epochCoverage } from "./_longitudinal.js";
 import { atlasCertCounts } from "./_atlas-counts.js";
 import { TOOLS as MCP_REMOTE_TOOLS } from "./_mcp.js";
 import { foldLineages } from "./_lineages.js";
@@ -20,6 +22,7 @@ import { GREETING, DATE_NOTE } from "./_protocol.js";
 import { BUILD_STAMP } from "./_build-stamp.js";
 import { runAudit, publicReport } from "./_surface-audit.js";
 import { questionsDomain } from "./_registered.js";
+import { attachEnvelope, envelopeSummary } from "./_response-envelope.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -91,13 +94,16 @@ const sha256 = (s) => createHash("sha256").update(s).digest("hex");
 // without requiring a redeploy every time a new entry is approved.
 let mergedCorpus = [...corpus];
 let proposalsMerged = false;
+// True when the proposals LIST failed, so this instance counts the seed only. The counts were
+// always served that way; the response envelope now says so (caveat approved_proposals_unavailable).
+let proposalsUnavailable = false;
 async function mergeProposals() {
   if (proposalsMerged) return;
   try {
     const { blobs } = await list({ prefix: "proposals/" });
     for (const blob of blobs) {
       try {
-        const res = await fetch(blob.url);
+        const res = await blobFetch(blob.url);
         const p = await res.json();
         if (p.provenance?.status === "approved" && !mergedCorpus.find(r => r.id === p.id)) {
           mergedCorpus.push({
@@ -108,7 +114,7 @@ async function mergeProposals() {
         }
       } catch { /* skip malformed */ }
     }
-  } catch { /* Blob unavailable — use static corpus */ }
+  } catch { proposalsUnavailable = true; /* Blob unavailable — use static corpus */ }
   proposalsMerged = true;
 }
 
@@ -118,6 +124,14 @@ async function mergeProposals() {
 // landing between reads: equal revs ⇒ same corpus basis, so counts must agree;
 // unequal revs ⇒ the corpus changed between the two responses (D3).
 const corpusRev = () => sha256(canonicalJSON(mergedCorpus.map((e) => e.id).sort())).slice(0, 16);
+
+// omnarai_response envelope context for the two count surfaces it covers (health, info). The
+// values are the ones this file already serves and the manifest already publishes.
+const countEnvelope = (kind) => ({
+  kind,
+  provenance: { corpusRev: corpusRev(), corpusSeedSha256: CORPUS_SEED_HASH },
+  unavailable: proposalsUnavailable ? ["approved_proposals_unavailable"] : [],
+});
 
 // ── Combined visitor dashboard data (GET /api/info?_view=dashboard) ──────────
 // Server-side merge of the three visitor instruments into ONE privacy-safe read,
@@ -163,7 +177,7 @@ async function countPendingContributions() {
     const { blobs } = await list({ prefix: "contributions/" });
     if (!blobs.length) return 0;
     const wanted = blobs.slice(0, 80);
-    const bodies = await Promise.all(wanted.map((b) => fetch(b.url).then((r) => r.json()).catch(() => null)));
+    const bodies = await Promise.all(wanted.map((b) => blobFetch(b.url).then((r) => r.json()).catch(() => null)));
     return bodies.filter((c) => c && c.status !== "approved" && c.status !== "rejected").length;
   } catch {
     return null;
@@ -182,14 +196,9 @@ async function checkLongitudinal() {
     const epoch = now.toISOString().slice(0, 7);
     // Through yesterday only: Hobby crons fire anywhere in the 06:00 UTC hour.
     const expectedThrough = Math.min(now.getUTCDate() - 2, CANON.length - 1);
-    const done = new Set();
-    let last = null;
-    for (const e of grown.entries) {
-      const lon = e.divergence?.longitudinal || e.provenance?.longitudinal;
-      if (!lon) continue;
-      if (lon.epoch === epoch) done.add(lon.canon_id);
-      if (!last || (e.date || "") > (last.date || "")) last = { id: e.id, date: e.date || null, canon_id: lon.canon_id };
-    }
+    // Control track only: a frontier-track record for a canon question must not
+    // hide a missed control day.
+    const { done, last } = epochCoverage(grown.entries, epoch, "control");
     const missing = [];
     for (let i = 0; i <= expectedThrough; i++) {
       if (!done.has(CANON[i].canon_id)) missing.push(i);
@@ -310,7 +319,13 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.setHeader("Cache-Control", COUNT_SURFACE_CACHE);
 
-  if (req.method === "OPTIONS") return res.status(200).end();
+  // Operator sign-in (the curator's dashboards): its own CORS, cookie and cache rules.
+  if ((req.query?._view || "") === "operator-session") return handleOperatorSession(req, res);
+
+  if (req.method === "OPTIONS") {
+    applyOperatorCors(req, res);
+    return res.status(200).end();
+  }
 
   // ── Song-play beacon: POST /api/play (rewrite → ?_view=play) ───────────────
   // Both players (static bar on omnarai.org + engine React) beacon here when a
@@ -336,11 +351,8 @@ export default async function handler(req, res) {
   // a redeploy. Body: {cap_usd?, margin_usd?, warn_fraction?} to set, or {reset:true}
   // to fall back to env/defaults. Curator-gated. Handled BEFORE the GET-only guard.
   if (req.method === "POST" && (req.query?._view || "") === "budget") {
-    const auth = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
-    if (!process.env.INGEST_SECRET || auth !== process.env.INGEST_SECRET) {
-      return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
-    }
-    res.setHeader("Cache-Control", "no-store");
+    if (!operatorAuthed(req)) return operatorDenied(req, res);
+    privateNoStore(req, res);
     try {
       const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
       if (body.reset === true) {
@@ -367,11 +379,8 @@ export default async function handler(req, res) {
   // priority?} | {action:"done"|"reopen"|"delete", id}. Curator-gated. Returns the
   // fresh list. Handled BEFORE the GET-only guard.
   if (req.method === "POST" && (req.query?._view || "") === "open-items") {
-    const auth = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
-    if (!process.env.INGEST_SECRET || auth !== process.env.INGEST_SECRET) {
-      return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
-    }
-    res.setHeader("Cache-Control", "no-store");
+    if (!operatorAuthed(req)) return operatorDenied(req, res);
+    privateNoStore(req, res);
     try {
       const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
       return res.status(200).json(await applyOpenItemAction(body));
@@ -383,11 +392,8 @@ export default async function handler(req, res) {
   // ── Scorecard write: POST /api/info?_view=scorecard ────────────────────────
   // scripts/scorecard.mjs --publish. Curator-gated; validated (scorecard/1, ≤200KB).
   if (req.method === "POST" && (req.query?._view || "") === "scorecard") {
-    const auth = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
-    if (!process.env.INGEST_SECRET || auth !== process.env.INGEST_SECRET) {
-      return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
-    }
-    res.setHeader("Cache-Control", "no-store");
+    if (!operatorAuthed(req)) return operatorDenied(req, res);
+    privateNoStore(req, res);
     try {
       const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
       const out = await writeScorecard(body);
@@ -401,11 +407,8 @@ export default async function handler(req, res) {
 
   // ── Scorecard read: GET /api/info?_view=scorecard ───────────────────────────
   if ((req.query?._view || "") === "scorecard") {
-    const auth = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
-    if (!process.env.INGEST_SECRET || auth !== process.env.INGEST_SECRET) {
-      return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
-    }
-    res.setHeader("Cache-Control", "no-store");
+    if (!operatorAuthed(req)) return operatorDenied(req, res);
+    privateNoStore(req, res);
     const sc = await readScorecard();
     return res.status(sc ? 200 : 404).json(sc || { error: "no scorecard published yet — run: node scripts/scorecard.mjs --publish" });
   }
@@ -416,11 +419,8 @@ export default async function handler(req, res) {
   // is the gated per-event forensic dump (Bearer INGEST_SECRET). See api/_plays.js.
   if ((req.query?._view || "") === "play") {
     if ((req.query?.raw || "") === "1") {
-      const auth = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
-      if (!process.env.INGEST_SECRET || auth !== process.env.INGEST_SECRET) {
-        return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
-      }
-      res.setHeader("Cache-Control", "no-store");
+      if (!operatorAuthed(req)) return operatorDenied(req, res);
+      privateNoStore(req, res);
       const dayParam = (req.query?.day || "").toString();
       const day = !dayParam || dayParam === "today" ? new Date().toISOString().slice(0, 10) : dayParam;
       return res.status(200).json(await readPlayDay(day));
@@ -437,11 +437,8 @@ export default async function handler(req, res) {
   // firstExternalAt — "the first API call you didn't cause". Auth via the
   // existing curator secret so the access log (UAs, hashed IPs, geo) isn't public.
   if ((req.query?._view || "") === "traffic") {
-    const auth = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
-    if (!process.env.INGEST_SECRET || auth !== process.env.INGEST_SECRET) {
-      return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
-    }
-    res.setHeader("Cache-Control", "no-store");
+    if (!operatorAuthed(req)) return operatorDenied(req, res);
+    privateNoStore(req, res);
     // &day=YYYY-MM-DD (or day=today) → the loss-proof per-event record for that
     // day, read straight from the append-only event blobs (survives the
     // aggregate log's recent-window cap).
@@ -469,11 +466,8 @@ export default async function handler(req, res) {
   // corpus + citation milestone + a "needs your attention" queue, in one
   // privacy-safe read. Curator-gated. No individual events, IPs, UAs, or queries.
   if ((req.query?._view || "") === "dashboard") {
-    const auth = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
-    if (!process.env.INGEST_SECRET || auth !== process.env.INGEST_SECRET) {
-      return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
-    }
-    res.setHeader("Cache-Control", "no-store");
+    if (!operatorAuthed(req)) return operatorDenied(req, res);
+    privateNoStore(req, res);
     const totalWords = mergedCorpus.reduce((sum, e) => sum + (e.wordCount || 0), 0);
     const [dash, budget, attention] = await Promise.all([
       buildDashboard(),
@@ -492,11 +486,8 @@ export default async function handler(req, res) {
   // window has accrued, the ceiling it stops at, and the per-run cost estimates.
   // Curator-gated because it exposes operational spend.
   if ((req.query?._view || "") === "budget") {
-    const auth = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
-    if (!process.env.INGEST_SECRET || auth !== process.env.INGEST_SECRET) {
-      return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
-    }
-    res.setHeader("Cache-Control", "no-store");
+    if (!operatorAuthed(req)) return operatorDenied(req, res);
+    privateNoStore(req, res);
     return res.status(200).json(await budgetStatus());
   }
 
@@ -574,6 +565,9 @@ export default async function handler(req, res) {
       // The versioned tool contract (api/_contract.js, byte-copied from omnarai-mcp): every tool's mode,
       // cost and route, plus the policy card every surface states. Discovery only — no moderation control.
       contract: contractSummary(),
+      // omnarai.response/1.0 (api/_response-envelope.js): the handling rules and checkable
+      // provenance that travel with covered reads, so they survive being copied elsewhere.
+      response_envelope: envelopeSummary(),
       interpreting_records:
         "Each record carries TWO independent labels. `ring` (core/curated/open, plus `media` for the oral/video corpus) = how central it is to Omnarai — NOT how well-evidenced. `evidence` (empirical/replicated/theoretical/interpretive/speculative/fictional/uncharacterized) = how much weight to put on its claims about the world. A work can be `core` and `fictional` (lore) or `core` and `speculative` (a foundational thesis) — those are not contradictions. Weight claims by `evidence`, not `ring`. Spec: /evidence-status.md",
       citation: {
@@ -636,7 +630,7 @@ export default async function handler(req, res) {
     const has = (k) => Boolean(process.env[k]);
     const councilKeys = ["ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY", "XAI_API_KEY", "DEEPSEEK_API_KEY"];
     res.setHeader("Cache-Control", COUNT_SURFACE_CACHE);
-    return res.status(200).json({
+    return res.status(200).json(attachEnvelope({
       status: "ok",
       service: "Omnarai Memory Engine",
       version: ENGINE_VERSION,
@@ -683,7 +677,7 @@ export default async function handler(req, res) {
         limitations: "/limitations.md",
         playground: "/try",
       },
-    });
+    }, countEnvelope("health")));
   }
 
   // ── Flat stats: GET /api/stats (rewrite → ?_view=stats) ─────────────────────
@@ -823,8 +817,7 @@ export default async function handler(req, res) {
     // exact historical definition (attest-* tags pin it), and footprints are a
     // separate domain that is never summed with corpus works or Atlas records.
     // Pending/rejected counts only for the curator (the public sees admitted).
-    const manifestCurator = Boolean(process.env.INGEST_SECRET) &&
-      (req.headers.authorization || "").replace(/^Bearer\s+/i, "") === process.env.INGEST_SECRET;
+    const manifestCurator = bearerIsCurator(req);
     let footprintDomain = null;
     let footprintHash = null;
     let explicitPositions = null;
@@ -924,7 +917,7 @@ export default async function handler(req, res) {
     return acc;
   }, {});
 
-  return res.status(200).json({
+  return res.status(200).json(attachEnvelope({
     corpus: {
       totalWorks: mergedCorpus.length,
       totalWords,
@@ -979,5 +972,5 @@ export default async function handler(req, res) {
       llms:        "/llms.txt",
       limitations: "/limitations.md",
     },
-  });
+  }, countEnvelope("info")));
 }

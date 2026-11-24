@@ -1,4 +1,4 @@
-import { list, put, del } from "@vercel/blob";
+import { list, put, del, blobFetch } from "./_blob.js";
 import { randomBytes } from "crypto";
 
 // ── Curator open-items ────────────────────────────────────────────────────────
@@ -24,7 +24,7 @@ export async function readOpenItems() {
   try {
     const { blobs } = await list({ prefix: PREFIX });
     const items = (
-      await Promise.all(blobs.map((b) => fetch(bust(b.url)).then((r) => r.json()).catch(() => null)))
+      await Promise.all(blobs.map((b) => blobFetch(bust(b.url)).then((r) => r.json()).catch(() => null)))
     ).filter(Boolean);
     // Open before done; then by priority; then newest first.
     items.sort(
@@ -53,7 +53,7 @@ export async function addOpenItem({ text, category, priority } = {}) {
   };
   await put(PREFIX + item.id + ".json", JSON.stringify(item), {
     access: "public",
-    addRandomSuffix: false,
+    addRandomSuffix: false, allowOverwrite: true,
     contentType: "application/json",
   });
   return { item };
@@ -62,7 +62,7 @@ export async function addOpenItem({ text, category, priority } = {}) {
 async function loadOne(id) {
   const { blobs } = await list({ prefix: PREFIX + id + ".json" });
   if (!blobs.length) return null;
-  return fetch(bust(blobs[0].url)).then((r) => r.json()).catch(() => null);
+  return blobFetch(bust(blobs[0].url)).then((r) => r.json()).catch(() => null);
 }
 
 export async function setOpenItemStatus(id, status) {
@@ -72,7 +72,7 @@ export async function setOpenItemStatus(id, status) {
   item.doneAt = item.status === "done" ? new Date().toISOString() : null;
   await put(PREFIX + id + ".json", JSON.stringify(item), {
     access: "public",
-    addRandomSuffix: false,
+    addRandomSuffix: false, allowOverwrite: true,
     contentType: "application/json",
   });
   return { item };
@@ -113,7 +113,7 @@ export async function readScorecard() {
   try {
     const { blobs } = await list({ prefix: SC_LATEST });
     if (!blobs.length) return null;
-    const sc = await fetch(bust(blobs[0].url)).then((r) => r.json());
+    const sc = await blobFetch(bust(blobs[0].url)).then((r) => r.json());
     return sc && sc.schema === "scorecard/1" ? sc : null;
   } catch {
     return null; // unreadable ≠ empty: callers show "scorecard unavailable", never zeros
@@ -126,7 +126,7 @@ export async function writeScorecard(sc) {
   }
   const body = JSON.stringify(sc);
   if (Buffer.byteLength(body) > SC_MAX_BYTES) return { error: "scorecard too large (>200KB)" };
-  const opts = { access: "public", addRandomSuffix: false, contentType: "application/json" };
+  const opts = { access: "public", addRandomSuffix: false, allowOverwrite: true, contentType: "application/json" };
   await put(SC_LATEST, body, opts);
   await put(`home/scorecard/${sc.generated.slice(0, 10)}.json`, body, opts);
   return { ok: true, generated: sc.generated, bytes: Buffer.byteLength(body) };

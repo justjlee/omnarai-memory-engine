@@ -1,4 +1,4 @@
-import { put } from "@vercel/blob";
+import { put } from "./_blob.js";
 
 // ── Shared proposal helpers ───────────────────────────────────────────────────
 // store.js builds proposals inline from a deliberation; this module builds the
@@ -42,7 +42,7 @@ export function buildSynthesisProposal({ title, full_text, contributors, lineage
 export async function saveProposal(proposal) {
   await put(BLOB_PREFIX + proposal.id + ".json", JSON.stringify(proposal, null, 2), {
     access: "public",
-    addRandomSuffix: false,
+    addRandomSuffix: false, allowOverwrite: true,
     contentType: "application/json",
   });
 }

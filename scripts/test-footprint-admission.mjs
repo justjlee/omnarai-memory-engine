@@ -32,7 +32,7 @@ const contribute = (body) => call("/api/contribute", { method: "POST", body: { j
 const decide = (action, id, extra = {}) => call("/api/council", { method: "POST", body: { action, id, ...extra }, headers: CURATOR });
 const status = (id) => call(`/api/footprints/status?id=${encodeURIComponent(id)}`);
 const sleep = (ms) => new Promise((s) => setTimeout(s, ms));
-const reviewBodies = (fpId) => mem.__dump(`${FP.REVIEWS_PREFIX}${fpId}/`).map((p) => [p, mem.__read(p)]);
+const reviewBodies = (fpId) => mem.__dumpPrivate(`${FP.REVIEWS_PREFIX}${fpId}/`).map((p) => [p, mem.__readPrivate(p)]);
 
 // Every key a status response may carry. Anything else (answer text, identity,
 // lineage, question, note) would be content leaking through the state route.
@@ -94,7 +94,7 @@ test("[R1] a rejection without a reason code or a note is refused and changes no
     assert.equal(out.body.code, "REVIEW_INPUT_INVALID");
     assert.deepEqual(out.body.reason_codes, FP.REJECTION_REASONS);
   }
-  assert.equal(mem.__read(`contributions/${cid}.json`).status, "pending");
+  assert.equal(mem.__readPrivate(`contributions/${cid}.json`).status, "pending");
   assert.equal(reviewBodies(r.body.footprint_id).length, 0, "no review written");
   assert.equal((await status(r.body.footprint_id)).body.state, "pending");
   // Labels and codes belong to their own action only.
@@ -133,13 +133,13 @@ async function legacyRejected() {
   // What contribute-reject wrote before reason codes existed: a 1.0 review with
   // no reason_code, and the contribution flipped to rejected with a private note.
   const ms = Date.now();
-  mem.__seed(FP.reviewPath(fpId, "reject", ms, Buffer.from("a57ca0d7", "hex")), {
+  mem.__seedPrivate(FP.reviewPath(fpId, "reject", ms, Buffer.from("a57ca0d7", "hex")), {
     schema_version: "footprint-review/1.0", id: `OMN-FPR-${ms}-a57ca0d7`, footprint_id: fpId, action: "reject",
     recorded_at: new Date(ms).toISOString(), reviewer: { kind: "curator", id: null },
     source: { contribution_id: cid, contribution_action: "contribute-reject" }, note: "Curator-run test (private)",
   });
-  const c = mem.__read(`contributions/${cid}.json`);
-  mem.__seed(`contributions/${cid}.json`, { ...c, status: "rejected", rejectedAt: new Date(ms).toISOString(), curatorNote: "Curator-run test (private)" });
+  const c = mem.__readPrivate(`contributions/${cid}.json`);
+  mem.__seedPrivate(`contributions/${cid}.json`, { ...c, status: "rejected", rejectedAt: new Date(ms).toISOString(), curatorNote: "Curator-run test (private)" });
   await sleep(3);
   return { fpId, cid, receipt: r.body.continuance.token };
 }
@@ -168,7 +168,7 @@ test("[A2] re-admission needs a note, keeps both decisions, and carries the labe
   // Both decisions stay — in the footprint's review log and on the contribution.
   const reviews = reviewBodies(fpId).map(([, b]) => [b.schema_version, b.action, b.origin_disclosure ?? null]);
   assert.deepEqual(reviews, [["footprint-review/1.0", "reject", null], ["footprint-review/1.1", "admit", "curator-prompted"]]);
-  const c = mem.__read(`contributions/${cid}.json`);
+  const c = mem.__readPrivate(`contributions/${cid}.json`);
   assert.equal(c.status, "approved");
   assert.equal(c.decision_history.length, 1);
   assert.equal(c.decision_history[0].status, "rejected");
@@ -203,6 +203,40 @@ test("[L1] manifest: admitted ≥ 1, lineage represented, labelled admission cou
   assert.match(after.basis, /NOT a verified count of unprompted arrivals/);
 });
 
+// [L4] (2026-11-24) automated-test: an admitted, UNLABELLED footprint can be labelled later by admitting it again with the
+// label. Nothing is overwritten: the earlier admission stays in the review log and in decision_history. Once labelled, the
+// manifest no longer counts it as unlabelled, so the outside-visitor milestone cannot be met by a test run.
+test("[L4] automated-test: labelling an already-admitted footprint keeps every decision and stops it counting as an outside visit", async () => {
+  const { fpId, cid } = await legacyRejected();
+  assert.deepEqual(FP.validateReviewInput({ action: "admit", origin_disclosure: "automated-test" }), []);
+  assert.match(FP.validateReviewInput({ action: "reject", reason_code: "duplicate", note: "x", origin_disclosure: "automated-test" }).join(" "), /admissions only/);
+  assert.match(FP.ORIGIN_DISCLOSURES["automated-test"], /not counted as an outside visit/);
+
+  const plain = await decide("contribute-approve", cid, { note: "Admitted on its merits, before any trace." });
+  assert.equal(plain.status, 200, JSON.stringify(plain.body));
+  const mid = (await call("/api/manifest")).body.domains.footprints;
+  assert.equal(mid.admitted_without_origin_disclosure, 1, "admitted with no label: counted as unlabelled");
+
+  const labelled = await decide("contribute-approve", cid, { origin_disclosure: "automated-test", note: "Traffic trace: one session sent test inputs to every tool; this footprint was its last step." });
+  assert.equal(labelled.status, 200, JSON.stringify(labelled.body));
+  assert.deepEqual(labelled.body.footprint_review.origin_disclosure, FP.disclosureFor("automated-test"));
+
+  const reviews = reviewBodies(fpId).map(([, b]) => [b.action, b.origin_disclosure ?? null]);
+  assert.deepEqual(reviews, [["reject", null], ["admit", null], ["admit", "automated-test"]], "every decision stays in the log");
+  const c = mem.__readPrivate(`contributions/${cid}.json`);
+  assert.deepEqual(c.decision_history.map((h) => [h.status, h.origin_disclosure ?? null]), [["rejected", null], ["approved", null]]);
+
+  const s = await status(fpId);
+  assert.equal(s.body.state, "admitted");
+  assert.equal(s.body.origin_disclosure.code, "automated-test");
+  const pub = await call(`/api/footprints?id=${fpId}`);
+  assert.equal(pub.body.footprint.moderation.origin_disclosure.text, FP.ORIGIN_DISCLOSURES["automated-test"]);
+  assert.equal(pub.body.footprint.integrity.verified, true, "the label lives outside the content hash");
+  const after = (await call("/api/manifest")).body.domains.footprints;
+  assert.deepEqual(after.origin_disclosures, { "automated-test": 1 });
+  assert.equal(after.admitted_without_origin_disclosure, 0, "a labelled test run is never counted as unlabelled");
+});
+
 test("[L2] the label appears on the record page and every protocol surface that lists the footprint", async () => {
   const { fpId, cid } = await legacyRejected();
   await decide("contribute-approve", cid, { origin_disclosure: "curator-prompted", note: "labelled admission" });
@@ -234,7 +268,7 @@ test("[L3] fail closed: if the admitting review cannot be read, the footprint is
   const { fpId, cid } = await legacyRejected();
   await decide("contribute-approve", cid, { origin_disclosure: "curator-prompted", note: "labelled admission" });
   const [admitPath] = reviewBodies(fpId).map(([p]) => p).filter((p) => p.includes("__admit__"));
-  mem.__seed(admitPath, "not json");
+  mem.__seedPrivate(admitPath, "not json");
   assert.equal((await call(`/api/footprints?id=${fpId}`)).status, 404, "never shown without its label");
   const s = await status(fpId);
   assert.equal(s.body.state, "admitted");

@@ -24,7 +24,7 @@
 //   node scripts/repair-telemetry-monitors.mjs --apply   # write the repaired log
 // Requires BLOB_READ_WRITE_TOKEN (source .env.local).
 
-import { list, put } from "@vercel/blob";
+import { list, put, blobFetch } from "../api/_blob.js";
 
 const LOG_KEY = "telemetry/access-log.json";
 const EVENTS_PREFIX = "telemetry/events/";
@@ -37,7 +37,7 @@ const MONITOR_RE =
 const isMonitor = (ua) => !!ua && MONITOR_RE.test(ua);
 
 async function fetchJson(url) {
-  const r = await fetch(`${url}?ts=${Date.now()}`, { cache: "no-store" });
+  const r = await blobFetch(`${url}?ts=${Date.now()}`, { cache: "no-store" });
   return r.ok ? r.json() : null;
 }
 
@@ -151,7 +151,7 @@ const main = async () => {
   }
   await put(LOG_KEY, JSON.stringify(data), {
     access: "public",
-    addRandomSuffix: false,
+    addRandomSuffix: false, allowOverwrite: true,
     contentType: "application/json",
   });
   console.log("\n  ✓ aggregate log written\n");

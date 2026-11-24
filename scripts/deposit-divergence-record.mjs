@@ -94,7 +94,7 @@ const proposal = {
 };
 
 await put(`proposals/${id}.json`, JSON.stringify(proposal, null, 2), {
-  access: "public", addRandomSuffix: false, contentType: "application/json",
+  access: "public", addRandomSuffix: false, allowOverwrite: true, contentType: "application/json",
 });
 console.log(`\n✓ Pending proposal written: proposals/${id}.json`);
 

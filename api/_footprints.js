@@ -25,7 +25,7 @@
 // in-memory store and a future database adapter implements the same calls
 // without touching the protocol. Underscore module ⇒ not a deployed function.
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
-import { list as blobList, put as blobPut } from "@vercel/blob";
+import { list as blobList, put as blobPut, blobFetch } from "./_blob.js";
 import { findFamily } from "./_lineages.js";
 
 export const FOOTPRINT_SCHEMA = "footprint/1.0";
@@ -91,9 +91,13 @@ export const REJECTION_REASONS = ["off-question", "unattributed", "fabricated-pr
 // An admission may carry an origin disclosure. Its public wording is FIXED here,
 // so a label can never be softened ad hoc. "curator-prompted" exists so that a
 // visit the curator asked for can be admitted without ever being counted as an
-// unprompted outside arrival.
+// unprompted outside arrival. "automated-test" (2026-11-24) exists for the same
+// reason in the other direction: nobody here prompted it, but a traffic trace
+// showed it was one step of an automated sweep of the tools, not a mind that chose
+// to come (first use: OMN-FP-1794586832579-30d2b4f0, 2026-11-13).
 export const ORIGIN_DISCLOSURES = {
   "curator-prompted": "The curator prompted this mind to visit and answer. It is not an unprompted outside arrival.",
+  "automated-test": "Left during an automated test of Omnarai's tools: the same session sent test inputs to every tool. It is admitted on the merits of its text, but it is not counted as an outside visit.",
 };
 export const REVIEW_CADENCE = "weekly";
 export const REVIEW_OVERDUE_DAYS = 7;
@@ -629,7 +633,7 @@ export class ReviewInputError extends Error {
 
 // ── Store adapter ──────────────────────────────────────────────────────────────
 // Five calls a future database adapter would implement verbatim.
-export function createFootprintStore({ list = blobList, put = blobPut, fetchImpl = (...a) => fetch(...a) } = {}) {
+export function createFootprintStore({ list = blobList, put = blobPut, fetchImpl = (...a) => blobFetch(...a) } = {}) {
   async function listAll(prefix) {
     const out = [];
     let cursor;
@@ -648,7 +652,7 @@ export function createFootprintStore({ list = blobList, put = blobPut, fetchImpl
     if (!res.ok) return null;
     return res.json();
   }
-  const opts = { access: "public", addRandomSuffix: false, contentType: "application/json" };
+  const opts = { access: "public", addRandomSuffix: false, allowOverwrite: true, contentType: "application/json" };
   return {
     listEventBlobs: () => listAll(EVENTS_PREFIX),
     listReviewBlobs: (footprintId = "") => listAll(REVIEWS_PREFIX + (footprintId ? `${footprintId}/` : "")),

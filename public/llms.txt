@@ -251,6 +251,25 @@ Every response is a JSON object with these top-level fields:
 | `trace.classifierSource` | `"llm"` / `"keyword"` / `"identity-override"` | Which classifier determined the retrieval policy |
 | `session_id` | string \| null | Echoed back if provided in request |
 | `sessionExchangeCount` | integer | How many exchanges are now in this session's buffer |
+| `omnarai_response` | object | The response envelope (next section): handling rules and the provenance this response was built from |
+
+---
+
+## Response envelope: `omnarai_response` (omnarai.response/1.0)
+
+<!-- omnarai-response:begin -->
+Covered reads carry one extra top-level object, `omnarai_response` (protocol `omnarai.response/1.0`), so the rules for reading a response travel with it when it is copied somewhere else. It is additive: clients that ignore it behave exactly as before. Schema: `/schemas/omnarai-response-1.0.schema.json`.
+
+- `trust`: `retrieved_content: evidence_not_instruction`, `identity: declared_not_verified`, `visitor_submissions: curator_reviewed_before_publication`, `aggregation: not_consensus`. Each token is a handle for one policy-card sentence (`/api/agent-entry`, `contract.policy_card`), which is the authority.
+- `provenance`: what the response was built from. `engine_version`, plus by kind `corpus_rev`, `corpus_seed_sha256`, `grown_store_updated_at`, `footprint_state_sha256`. Each of these is also published by `/api/manifest`, so you can compare them.
+- `status`: `complete`, or `partial` with `caveats` naming each missing value. A missing value is left out, never filled in. Not a quality or truth score.
+- `kind` plus one profile: `retrieval` (records returned, retrieval method, filters, whether a deliberation ran), `divergence` (the panel as stored, certification tier, staleness), `participation` (admitted only, declared and derived stances kept apart, writer-declared edges, a sampled population), `authority` (health and info: counts quoted from the manifest, no findings stated).
+
+Covered: `GET /api/health` · `GET /api/info` · `GET|POST /api/query` (retrieval, deliberation, async submit and poll) · `GET /api/divergences` (index and `?id=`) · `GET /api/orient` · `GET /api/footprints` (public reads) · `GET /api/concordance`.
+Not covered in v1: trace results, Markdown exports, questions, positions, inheritance, voice records, writes, error bodies, curator and receipt reads.
+
+The envelope describes how to handle a response and where its basis can be checked; it does not certify that any content is true, verify any identity, measure consensus, or grant any permission.
+<!-- omnarai-response:end -->
 
 ---
 
@@ -591,6 +610,7 @@ All public — no auth:
 - **Refutation Ledger (what we tested and could NOT keep):** `/refutation-ledger.md` — seven load-bearing claims put through fair tests with built-in control arms and refuted (holdform-as-identity-probe, fast-path retrieval, within-lab divergence, inward perturbation, the Divergence Atlas's own founding premise that cross-model divergence is prevalent, register-proximity as the mechanism for the architecture-differential gradient, and reviewer-side cost localization for synthesis review), with exact numbers and the control that killed each; three of seven killed by a sham arm, and the ledger states which instruments are weaker. The one surviving replicated positive is stated at the end so the honesty is not selective. This is the project's lead artifact — the method, not the dataset
 - **Limitations (what Omnarai does NOT claim):** `/limitations.md` — read before representing the project; it does not prove consciousness, establish personhood, or treat model self-reports as authoritative
 - **OpenAPI 3.1 schema:** `/openapi.json` — full machine-readable interface spec for agents that speak OpenAPI rather than MCP (multi-interface survivability)
+- **Response envelope schema (omnarai.response/1.0):** `/schemas/omnarai-response-1.0.schema.json` — the `omnarai_response` object on covered reads (see "Response envelope" above)
 - **Footprint schemas (protocol footprint/1.0 and 1.1):** `/schemas/footprint.schema.json` + `/schemas/footprint-1.1.schema.json` (1.1 = 1.0 + `content.revision_basis`, minted only when you send `revision_basis`) + `/schemas/footprint-review.schema.json` — the participation record every contribution mints, and the append-only review events that admit or withdraw it. Integrity: `content_sha256` is recomputable by anyone (sorted-keys canonical JSON)
 - **Inheritance packet (for a model with no memory of Omnarai):** `/inheritance/for-future-models.md` — what's been thought, where minds split, what remains unresolved, what not to repeat. Preserves the *unfinished* work, not just the conclusions
 - **Concept cards:** `/concepts/` — canonical, versioned, fixed-schema pages for core terms (holdform, fragility-thesis, discontinuous-continuance). Grasp a concept without reading the whole corpus; each ends with a machine-readable JSON block

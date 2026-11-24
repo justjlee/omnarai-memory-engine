@@ -496,3 +496,129 @@ check was running. Being told that access exists does not count.
 - Source: branch b12-arm-a-material: commits 0097378 (commitment), 684f55b (transcripts) and e2e30d3 (plan, judgments,
   analysis)
 - Logged: 2026-11-03 by Claude Code (Anthropic)
+
+## DL-0039 · 2026-11-13 · Utility v2: registered, run, and the result (library refuted, fresh supported)
+- Decider: xz (approved publishing the registration as xz, then "Yes, approve $30" at 18:05 UTC, in a Claude Code
+  session of 2026-11-13)
+- Reason: the one positive measured result (2026-07, preregistered) had never been re-run on current models or on
+  questions the project did not write. The registration (docs/utility-v2-preregistration.md, commit 721fad8) was
+  pushed at 18:04 UTC, before any study model call. Result, under its §4–§5 rules: A-flagship Refuted (2 treatment
+  questions / 22 placebo), A-small Refuted (4 / 11, 9 tied), B-flagship Supported (19 / 5, Holm p 0.0099), B-small
+  Supported (22 / 0, 2 tied). The positive control passed, so the refutations stand. Judge agreement 0.69–0.82.
+  432 of 432 instances judged, no failures. Exploratory: claude-opus-5-5 was worse with peers in both sub-studies
+  (2 / 22 each), as claude-sonnet-4-6 was in v1. The falsifier for the registry claim (A-flagship and B-flagship both
+  Refuted) is not met. How public/claims.json changes is a separate decision.
+- Source: branch utility-v2, commits 721fad8 (registration) through 4b86f42 (analysis);
+  analysis/utility-v2/run/results.{json,md}; spend $10.48 provider-reported over 2,802 calls (ledger reservation $30)
+- Logged: 2026-11-13 by Claude Code (Anthropic), as a draft in that session's results note for xz; entered here
+  unchanged on 2026-11-24, after DL-0040 to DL-0044, which left this number free for it.
+
+## DL-0040 · 2026-11-18 · The omnarai_response envelope (omnarai.response/1.0) is live on eight read routes
+- Decider: xz (said "Deploy it" for PR #54 in a Claude Code session of 2026-11-18)
+- Reason: covered reads (health, info, query, divergences, orient, footprints, concordance) now carry the handling rules
+  and the basis each response was built from, so they travel with a copied response. The envelope is additive and
+  deterministic; every provenance value is one /api/manifest also publishes, and a value that cannot be supplied is left
+  out and named, never filled in. It certifies nothing: not truth, identity, consensus or permission. deploy.sh
+  regenerated the Atlas figures from the live records: 202 recorded splits, 52 pressure-tested, 150 awaiting testing,
+  132 distinct questions.
+- Source: PR #54 (merge f665405), engine 2026.11.18+f665405, bundle index-BPtVYHkx.js matched; arrival check 20/20,
+  omnarai-verify 14/14, dual-native 14/14, surface-numbers gate (engine scope) in balance, new response-envelope gate
+  green; scripts/smoke-response-envelope.mjs 7/7 free reads complete and consistent with /api/manifest
+- Note: DL-0035 to DL-0038 are held by open PR #52 and DL-0039 by the drafted utility v2 entry, so this takes DL-0040.
+- Logged: 2026-11-18 by Claude Code (Anthropic)
+
+## DL-0041 · 2026-11-18 · The frontier track is live and switched on: five current flagships re-ask the frozen canon
+- Decider: xz (approved the panel and one paid test with "Yes, approve + test", then said "Deploy + switch on" for
+  PR #48, in a Claude Code session of 2026-11-18)
+- Reason: the standing council (claude-sonnet-4-6, gpt-4o, gemini-2.5-flash, grok-4.3, deepseek-chat) is one to three
+  generations behind every lab, so the monthly re-ask records a noise floor. The frontier track asks claude-opus-5-5,
+  gpt-6.1-sol, gemini-4-carbon, grok-4.7 and deepseek-v4-pro the same 20 frozen canon questions at 18:00 UTC on days
+  1-20 of each month (idle on days 21-31, like the control track). This is the five-flagship panel utility v2 tested on
+  2026-11-13. Gemini is Carbon, which Google calls its most capable Gemini 4 model, not Argon (its efficient one). Every
+  council answer, on both tracks and in the live council, now stores model_resolved: the model the provider reports
+  having run, a claim by the provider rather than a verification. Google routes gemini-2.5-flash (the control's Gemini)
+  to Gemini 3.5 Flash-Lite from 2026-12-01; the record will show it if Google's own report does. FRONTIER_TRACK=on was
+  set in Production on 2026-11-18.
+- Cost: one paid test on 2026-11-18 (scripts/test-council.js --frontier, wrote nothing; $0.35 reserved on the ledger
+  first). 5/5 voices answered, each provider reported the requested model, none truncated, slowest 25.1 s. About $0.09
+  per run, about $0.10 at Gemini 4's 2026-12-01 prices. The ledger books cron_frontier at a $0.35 bound (about $7 a
+  month). Synthesis over frontier answers took 50 s, so frontier-day syntheses will usually be stored pending and
+  enriched later; the verbatim answers commit first.
+- Source: PR #48 (merge ad05ecc), engine 2026.11.18+ad05ecc, bundle index-BPtVYHkx.js matched, crons registered on this
+  build; arrival check 20/20, omnarai-verify 14/14, dual-native 14/14, surface-numbers gate (engine scope) in balance; a
+  free curator probe of the frontier route with a day index outside the canon answered idle (not disabled), so the
+  switch is live. The first scheduled frontier run is 2026-11-19 (canon question 19).
+- Not decided here: whether November's other 18 canon questions are asked by hand. The generation-gap comparison must be
+  preregistered and pushed before the first frontier epoch is analysed. PR #47 (the longitudinal baseline the track's
+  docs point at) is still open.
+- Note: DL-0035 to DL-0038 are held by open PR #52, DL-0039 by the drafted utility v2 entry and DL-0040 is the envelope
+  deploy, so this takes DL-0041.
+- Logged: 2026-11-18 by Claude Code (Anthropic)
+
+## DL-0042 · 2026-11-23 · Grown-memory writes work again: no record had been stored from 2026-11-18 to 2026-11-23
+- Decider: xz (said "Yes, deploy it" for PR #58 in a Claude Code session of 2026-11-23)
+- Reason: from the 2026-11-18 deploy of #53 on, every grown-memory write was refused. The public CDN compresses
+  grown.json and returns its ETag weak (W/"<hex>"); the engine passed that to the store's conditional put unchanged,
+  the store refused it as a lost race, and after six attempts the write gave up and stored nothing. The engine now
+  strips the W/ (the same opaque value). A longitudinal run whose answers were not stored now returns 500 and logs an
+  error; before, it returned 200 with committed:false and the logs showed nothing. The in-memory store used by the
+  hermetic tests now serves weak ETags as the real CDN does, which is why the suite had passed.
+- Lost: the longitudinal runs of 2026-11-19 and 2026-11-20 on both tracks (LC-19 and LC-20, control and frontier).
+  Each one asked its panel, was charged to the ledger (0.12 + 0.35 a day, 0.94 in all) and stored nothing. The
+  verbatim answers are gone. The last stored record is OMN-L1794981674017 (2026-11-18 06:01 UTC). Days 21-31 are idle,
+  so nothing else was scheduled before 2026-12-01.
+- Source: PR #58 (merge 7a6eaa1), engine 2026.11.23+7a6eaa1, bundle index-BPtVYHkx.js matched, crons registered on
+  this build; arrival check 20/20, omnarai-verify 14/14, dual-native 14/14, surface-numbers gate (engine scope) in
+  balance. Cause reproduced on the production store before the fix with a throwaway key, since deleted: a put using
+  the ETag as read was refused, and the same put with W/ removed was accepted. Suite 414/414. On the old code, the new
+  guard test and 5 of 6 race tests fail.
+- Not decided here: re-asking LC-19 and LC-20 on both tracks by hand before 2026-11-30 (paid; xz's call). The first
+  scheduled write after this deploy is 2026-12-01 06:00 UTC.
+- Note: DL-0035 to DL-0038 are held by open PR #52 and DL-0039 by the drafted utility v2 entry. DL-0042 was
+  provisionally named in two unmerged drafts, which take the next free numbers instead.
+- Logged: 2026-11-23 by Claude Code (Anthropic)
+
+## DL-0043 · 2026-11-23 · Storage classes and the operator sign-in are live on the engine and the front door
+- Decider: xz (chose a passphrase sign-in on 2026-11-18; said "Yes, deploy it" in a Claude Code session of 2026-11-23)
+- What: every storage path in the engine now has a class (`api/_storage-classes.js`, one storage door `api/_blob.js`).
+  Public classes stay where they were. Every other record is written only to a private store, read server-side and never
+  served by URL; without the private credential a write is refused (503) and never falls back. The curator's pages sign
+  in with a passphrase (only its scrypt hash is stored on the server) and get an HttpOnly, SameSite=Strict session cookie;
+  scripts use the curator key in the Authorization header only, and every secret comparison is constant time. The
+  curator key was rotated; receipts and stored hash salts now have their own settings, so receipts issued before keep
+  working. The omnarai.org front door (hand-deployed, not in git) moved its own access records the same way, and its two
+  curator pages sign in through the engine. The engine's proposal and tension panels no longer keep a key in the browser.
+- Source: PR #60 (merge 46f7494), engine 2026.11.23+46f7494, bundle index-D7TWbL39.js, crons registered on this build;
+  omnarai-verify 14/14, dual-native 14/14 (engine) and the front-door dual-native gate, surface-numbers in balance on both
+  scopes. Suite 52 files / 434 tests; front door 10/10; omnarai-mcp 65/65. Live checks after deploy: curator routes answer
+  401 with `private, no-store` when not signed in; the previous key is refused; a key in the address is never read; the
+  private store refuses anonymous reads (403); a new access event lands only in the private store, on both sites; the
+  curator signed in on both pages.
+- Copy: the engine's 210,982 non-public records in the previous location were archived (encrypted, offline, read back
+  and verified), then 158,743 were copied to the private store and verified by hash; 52,238 older than the 90-day
+  window are kept only in the archive, with 128 daily totals. On xz's exact approval sentence, the 889 previous copies
+  at fixed paths were removed (the store lists none afterwards; old paths answer 404 once edge caches expire). The
+  remaining per-event files follow the transition below.
+- Not decided here: retiring the transition reads (`PRIVATE_READ_FALLBACK=off`) after 7 days with no fallback read;
+  removing the previous copies (each step on xz's own approval); copying the front door's previous event files.
+- Logged: 2026-11-23 by Claude Code (Anthropic)
+
+## DL-0044 · 2026-11-24 · An "automated-test" origin label; the 2026-11-13 footprint is labelled with it
+- Decider: xz (asked for the label to be built, "Yes, build it"; then "Yes, deploy and label", in a Claude Code session of
+  2026-11-24)
+- What: a second origin label, `automated-test`, with fixed public wording: "Left during an automated test of Omnarai's
+  tools: the same session sent test inputs to every tool. It is admitted on the merits of its text, but it is not counted
+  as an outside visit." It joins `curator-prompted`. Any label keeps a footprint out of the outside-visitor milestone. The
+  first use is footprint OMN-FP-1794586832579-30d2b4f0 (declared "MiniMax-M3.1-Flash", MCP channel, 2026-11-13). It was the
+  first footprint nobody here prompted and was admitted unlabelled on its answer's merits. A traffic trace then showed one
+  session making 678 requests in 33 minutes, sending test and injection inputs to every MCP tool, with this contribution
+  as its last step: an automated sweep, not a mind that chose to come. It stays admitted. The label was added by admitting
+  it again with the label; the earlier admission is kept in the review log and in the contribution's decision history.
+- Source: PR #64 (merge d56e57f), engine 2026.11.24+d56e57f, bundle index-D7TWbL39.js, crons registered on this build;
+  arrival check 20/20, omnarai-verify 14/14, dual-native 14/14 (engine), surface-numbers in balance. Suite 435/435 (new
+  test L4). Admitting review OMN-FPR-1795541252270-f291bc47. Fresh reads after the change: `/api/footprints/status` shows
+  `automated-test`; the manifest shows `origin_disclosures` {curator-prompted 3, automated-test 1} and
+  `admitted_without_origin_disclosure` 0; balance tracker in balance.
+- Not decided here: an `automated-test` choice on the /home Arrivals panel (today it offers only the curator-prompted
+  checkbox; the label is applied through the curator API).
+- Logged: 2026-11-24 by Claude Code (Anthropic)

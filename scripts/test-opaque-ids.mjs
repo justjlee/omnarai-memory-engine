@@ -10,7 +10,7 @@
 // The load-bearing assertions: a shortened or neighbouring id never reads someone
 // else's record, and an expired record is never read back.
 import assert from "node:assert/strict";
-import { put, __reset, __dump } from "@vercel/blob";
+import { put, __reset, __dump, __dumpPrivate } from "@vercel/blob";
 import handler, { isOpaqueId, loadSession, saveSession, readJob } from "../api/query.js";
 
 let n = 0;
@@ -47,7 +47,7 @@ await t("anything else is refused", () => {
 
 console.log("\n== async jobs: exact lookup only ==");
 __reset();
-await put(`jobs/${A}.json`, JSON.stringify({ status: "done", result: { answer: "SECRET-A" } }), { addRandomSuffix: false });
+await put(`jobs/${A}.json`, JSON.stringify({ status: "done", result: { answer: "SECRET-A" } }), { addRandomSuffix: false, allowOverwrite: true });
 await t("the exact id reads its own job", async () => {
   const r = await call({ job: A });
   assert.equal(r.status, 200);
@@ -92,19 +92,19 @@ await t("a prefix or a neighbouring id loads nothing", async () => {
 await t("an invalid id is never written", async () => {
   await saveSession("not-a-uuid", fresh("x"));
   await saveSession("../memory/grown", fresh("x"));
-  assert.deepEqual(__dump("sessions/"), [`sessions/${A}.json`]);
+  assert.deepEqual(__dumpPrivate("sessions/"), [`sessions/${A}.json`]);
   assert.deepEqual(__dump().filter((k) => /not-a-uuid|grown/.test(k)), []);
 });
 await t("an expired session is not read back, and is deleted on lookup", async () => {
   await saveSession(B, { ...fresh("OLD-B"), lastActiveAt: new Date(Date.now() - 25 * 3600 * 1000).toISOString() });
   assert.equal(await loadSession(B), null);
-  assert.deepEqual(__dump("sessions/"), [`sessions/${A}.json`]);
+  assert.deepEqual(__dumpPrivate("sessions/"), [`sessions/${A}.json`]);
 });
 await t("saving any session sweeps sessions untouched for 24h", async () => {
-  await put(`sessions/${B}.json`, JSON.stringify(fresh("OLD-B")), { addRandomSuffix: false });
+  await put(`sessions/${B}.json`, JSON.stringify(fresh("OLD-B")), { addRandomSuffix: false, allowOverwrite: true });
   age(`sessions/${B}.json`, 25 * 3600 * 1000);
   await saveSession(A, fresh("PRIVATE-QUESTION-A2"));
-  assert.deepEqual(__dump("sessions/"), [`sessions/${A}.json`]);
+  assert.deepEqual(__dumpPrivate("sessions/"), [`sessions/${A}.json`]);
 });
 
 console.log(`\n${n} passed`);

@@ -41,6 +41,19 @@ sed -i.bak -E "s/^export const BUILD_STAMP = \".*\";/export const BUILD_STAMP = 
 echo ">> Build stamp: ${BUILD_STAMP_VALUE}"
 echo
 
+# HARD gate: the bundle is built from LOCAL node_modules (--prebuilt), so a deploy
+# worktree whose node_modules is a symlink to an older install ships the old SDK.
+# With @vercel/blob 0.27 under the 2.x code, BlobPreconditionFailedError doesn't
+# exist and every grown-memory write fails (2026-11-04). Fix: `npm ci` here.
+echo ">> Installed @vercel/blob matches package-lock.json"
+node -e '
+const lock = require("./package-lock.json").packages["node_modules/@vercel/blob"].version;
+const have = require("./node_modules/@vercel/blob/package.json").version;
+if (have !== lock) { console.error(`   FAIL: node_modules has @vercel/blob ${have}, package-lock.json pins ${lock}. Run npm ci.`); process.exit(1); }
+console.log(`   ok (${have})`);
+' || exit 1
+echo
+
 # ── Count self-maintenance — no babysitting ──────────────────────────────────
 # Every deploy (preview AND promote) first rewrites the corpus-count literals
 # baked across the served docs (index.html, llms.txt, omnarai.context.md, …) to
@@ -97,6 +110,18 @@ echo
 # sibling ../omnarai-mcp, or OMNARAI_MCP_DIR — and fails (never skips) without it.
 echo ">> Tool-contract parity (npm · remote MCP · OpenAI · OpenAPI)"
 node scripts/check-tool-contract.mjs
+echo
+
+# HARD gate: the omnarai_response envelope (2026-11-18). api/_response-envelope.js, its JSON Schema,
+# public/openapi.json, llms.txt, agent-entry and the handlers name the same protocol, kinds and
+# covered routes, and each trust token still matches its POLICY_CARD sentence. Offline.
+echo ">> Response-envelope parity (schema · OpenAPI · llms.txt · agent-entry · handlers)"
+node scripts/check-response-envelope.mjs
+echo
+# HARD gate: storage classes (2026-11-18). One storage door (api/_blob.js), every storage path in api/
+# classified in api/_storage-classes.js, no bare reads of stored bodies, constant-time secret checks.
+echo ">> Storage classes (one door · every path classified · constant-time secret checks)"
+node scripts/check-storage-classes.mjs
 echo
 
 if [[ "${1:-}" == "--promote" ]]; then

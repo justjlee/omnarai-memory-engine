@@ -1,4 +1,4 @@
-import { put, list, del } from "@vercel/blob";
+import { put, list, del, blobFetch } from "./_blob.js";
 import Anthropic from "@anthropic-ai/sdk";
 import { appendGrownEntry } from "./_grown.js";
 import { curatorAuthed, CURATOR_ONLY } from "./_curator.js";
@@ -147,7 +147,7 @@ async function listProposals(statusFilter) {
   const proposals = [];
   for (const blob of blobs) {
     try {
-      const res = await fetch(blob.url);
+      const res = await blobFetch(blob.url);
       const data = await res.json();
       if (!statusFilter || data.provenance.status === statusFilter) {
         proposals.push(data);
@@ -164,7 +164,7 @@ async function listProposals(statusFilter) {
 async function getProposal(id) {
   const { blobs } = await list({ prefix: BLOB_PREFIX + id });
   if (blobs.length === 0) return null;
-  const res = await fetch(blobs[0].url);
+  const res = await blobFetch(blobs[0].url);
   return res.json();
 }
 
@@ -197,7 +197,7 @@ async function saveProposal(proposal) {
   const key = BLOB_PREFIX + proposal.id + ".json";
   await put(key, JSON.stringify(proposal, null, 2), {
     access: "public",
-    addRandomSuffix: false,
+    addRandomSuffix: false, allowOverwrite: true,
     contentType: "application/json",
   });
 }
@@ -317,7 +317,7 @@ export default async function handler(req, res) {
           status: "pending",
           nodes: conceptProposal.nodes,
           edges: conceptProposal.edges,
-        }), { access: "public", addRandomSuffix: false, contentType: "application/json" });
+        }), { access: "public", addRandomSuffix: false, allowOverwrite: true, contentType: "application/json" });
       }
 
       return res.status(200).json({

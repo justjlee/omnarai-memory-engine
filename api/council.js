@@ -1,7 +1,8 @@
-import { elicitCouncil, synthesizeCouncil, buildDivergenceRecord, embedRecord, embedOne, atlasSearchText, ATLAS_EMBED_META, COUNCIL } from "./_council.js";
+import { elicitCouncil, synthesizeCouncil, buildDivergenceRecord, embedRecord, embedOne, atlasSearchText, ATLAS_EMBED_META, COUNCIL, FRONTIER_COUNCIL } from "./_council.js";
 import { loadAnnotations, appendAnnotation, foldAnnotations, validateAnnotation, annotatedRecordIds } from "./_annotations.js";
 import { appendGrownEntry, loadGrownMemory } from "./_grown.js";
 import { CANON } from "./_canon.js";
+import { requestedTrack, frontierEnabled, findEpochRecord } from "./_longitudinal.js";
 import { SYNTHETIC_LINEAGES, findFamily } from "./_lineages.js";
 import { checkCouncilQuota, recordCouncilRun, quotaSubject, checkContributionQuota, recordContributionUse, contributionFingerprint, findDuplicateContribution, recordContributionFingerprint } from "./_quota.js";
 import { checkBudget, recordSpend, budgetExceededBody, budgetNotice } from "./_budget.js";
@@ -10,17 +11,19 @@ import {
   loadQuestionProposals, loadQuestionProposal,
   buildCouncilRun, saveCouncilRun, loadCouncilRun,
 } from "./_questions.js";
-import { list, put } from "@vercel/blob";
+import { list, put, blobFetch, privateStoreConfigured } from "./_blob.js";
+import { operatorAuthed, operatorDenied, privateNoStore, applyOperatorCors, bearerIsCurator, bearerToken, secretEquals } from "./_operator.js";
 import { waitUntil } from "@vercel/functions";
 import { recordAccess } from "./_telemetry.js";
 import { POLICY_CARD } from "./_contract.js";
 import { atlasCertCounts, tierOf, CERTIFIED_TIERS } from "./_atlas-counts.js";
+import { attachEnvelope } from "./_response-envelope.js";
 import { registeredQuestions, loadRegistry } from "./_registered.js";
 import {
   FOOTPRINT_SCHEMA, FOOTPRINT_SCHEMA_1_1, FOOTPRINT_SCHEMAS, MAX_REVISION_BASIS_CHARS, STANCES, ACTOR_KINDS, CONTRIBUTION_EVENT_TYPES, RELATION_LISTS, CLIENT_TAGS,
   REDACTION_REASONS, FP_ID_RE, QUESTION_ID_RE, CLAIM_ID_RE, KNOWN_LINEAGE_IDS, MAX_CONDITIONS, MAX_EVIDENCE_REFS,
   mintFootprintId, footprintFromContribution, validateFootprint, checkReferences, detectSecrets,
-  unknownRelationshipKeys, recordFootprint, appendReview, loadFootprintIndex, loadPublicFootprints,
+  unknownRelationshipKeys, recordFootprint, appendReview, loadFootprintIndex, loadPublicFootprints, footprintStateHash,
   hydrate, project, referencedBy, matchesFilters, lineageIdForFilter, receiptMatches, receiptFromRequest, RECEIPT_URL_NOTICE, RECEIPT_HEADER, continuanceReceipt,
   tombstoneFor, getDefaultStore, isPublicHydrated, questionIdFor, JUSTIFICATIONS,
   REJECTION_REASONS, ORIGIN_DISCLOSURES, REVIEW_CADENCE, REVIEW_OVERDUE_DAYS, validateReviewInput, readDecision,
@@ -74,10 +77,15 @@ function nextContributionId() {
   return `OMN-X${ms}`;
 }
 
-function curatorAuthed(req) {
-  const token = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
-  return Boolean(process.env.INGEST_SECRET) && token === process.env.INGEST_SECRET;
-}
+// Operator check (signed-in curator session or Bearer INGEST_SECRET, constant time): api/_operator.js.
+const curatorAuthed = operatorAuthed;
+
+const STORAGE_UNAVAILABLE = Object.freeze({
+  error: "Submissions are paused: the store that holds them is unavailable. Nothing was stored.",
+  code: "STORAGE_UNAVAILABLE",
+  agent_action: "Retry later.",
+  retryable: true,
+});
 
 async function findDivergenceRecord(id) {
   const grown = await loadGrownMemory();
@@ -96,7 +104,7 @@ async function loadContributions() {
     const entries = await Promise.all(
       blobs.map(async (b) => {
         try {
-          const res = await fetch(`${b.url}?ts=${Date.now()}`, { cache: "no-store" });
+          const res = await blobFetch(`${b.url}?ts=${Date.now()}`, { cache: "no-store" });
           return res.ok ? await res.json() : null;
         } catch {
           return null;
@@ -114,7 +122,7 @@ async function loadContribution(id) {
   try {
     const { blobs } = await list({ prefix: CONTRIB_PREFIX + id });
     if (!blobs.length) return null;
-    const res = await fetch(`${blobs[0].url}?ts=${Date.now()}`, { cache: "no-store" });
+    const res = await blobFetch(`${blobs[0].url}?ts=${Date.now()}`, { cache: "no-store" });
     return res.ok ? await res.json() : null;
   } catch {
     return null;
@@ -127,7 +135,7 @@ async function loadContribution(id) {
 async function saveContribution(c) {
   await put(CONTRIB_PREFIX + c.id + ".json", JSON.stringify(c), {
     access: "public",
-    addRandomSuffix: false,
+    addRandomSuffix: false, allowOverwrite: true,
     contentType: "application/json",
   });
 }
@@ -309,6 +317,8 @@ async function footprintRefContext(fp, divRecords) {
 }
 
 async function submitContribution(req, res) {
+  // Fail closed: a submission is stored only in private storage. Without it, nothing is written anywhere.
+  if (!privateStoreConfigured()) return res.status(503).json(STORAGE_UNAVAILABLE);
   if (req.method !== "POST") {
     return res.status(405).json({
       error: "Contribute is POST only.",
@@ -616,7 +626,7 @@ async function submitContribution(req, res) {
 
 // GET /api/contributions[?status=pending|approved|rejected]   (Bearer INGEST_SECRET)
 async function listContributionsView(req, res) {
-  if (!curatorAuthed(req)) return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
+  if (!curatorAuthed(req)) return operatorDenied(req, res);
   const status = req.query?.status || null;
   const all = await loadContributions();
   const items = all
@@ -632,7 +642,7 @@ async function listContributionsView(req, res) {
 // the earlier decision is kept in decision_history and in the footprint's
 // append-only review log — nothing is overwritten out of the record.
 async function reviewContribution(req, res, action) {
-  if (!curatorAuthed(req)) return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
+  if (!curatorAuthed(req)) return operatorDenied(req, res);
   const id = (req.body?.id || req.body?.contribId || "").toString().trim();
   if (!id) return res.status(400).json({ error: "Missing contribution id" });
   const reviewAction = action === "contribute-approve" ? "admit" : "reject";
@@ -800,6 +810,7 @@ async function serveVoiceRecords(req, res) {
 }
 
 async function submitVoiceRecord(req, res) {
+  if (!privateStoreConfigured()) return res.status(503).json(STORAGE_UNAVAILABLE);
   const body = req.body && typeof req.body === "object" && !Array.isArray(req.body) ? req.body : {};
   const unknown = Object.keys(body).filter((k) => !VOICE_RECORD_FIELDS.includes(k));
   if (unknown.length) {
@@ -1016,9 +1027,10 @@ async function serveFootprints(req, res) {
       const receiptOk = rcpt.token ? receiptMatches(h.body, rcpt.token) : false;
       res.setHeader("Vary", RECEIPT_HEADER);
       if (!isPublicHydrated(h) && !curator && !receiptOk) return res.status(404).json(FOOTPRINT_NOT_FOUND(id));
-      res.setHeader("Cache-Control", curator || receiptOk ? "no-store" : "s-maxage=60, stale-while-revalidate=300");
+      if (curator || receiptOk) privateNoStore(req, res);
+      else res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
       const chain = await chainContextFor(publicBodies);
-      return res.status(200).json({
+      const body = {
         protocol: h.body?.schema_version || FOOTPRINT_SCHEMA,
         ...(receiptOk ? { read_via: "continuance-receipt", ...(rcpt.via === "query" ? { notices: [RECEIPT_URL_NOTICE] } : {}) } : curator ? { read_via: "curator" } : {}),
         footprint: project(h, { curator }),
@@ -1032,7 +1044,9 @@ async function serveFootprints(req, res) {
         // A revision (relationships.supersedes) is shown as from → to stance, always beside the re-ask noise floor.
         ...(h.body?.relationships?.supersedes ? { revision: revisionOf(h.body, publicBodies) } : {}),
         received_params,
-      });
+      };
+      // The envelope rides public reads only; curator and receipt reads can show unadmitted content.
+      return res.status(200).json(curator || receiptOk ? body : attachEnvelope(body, footprintsEnvelope(publicBodies)));
     }
 
     // ── Listing ─────────────────────────────────────────────────────────────
@@ -1070,11 +1084,12 @@ async function serveFootprints(req, res) {
         .map((h) => project(h, { curator: true }))
         .sort((a, b) => (b.occurred_at || "").localeCompare(a.occurred_at || ""));
     }
-    res.setHeader("Cache-Control", curator ? "no-store" : "s-maxage=60, stale-while-revalidate=300");
+    if (curator) privateNoStore(req, res);
+    else res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
     const page = rows.slice(0, limit);
     const chain = await chainContextFor(publicBodies);
     const chains = Object.fromEntries(page.filter((f) => f.id && !f.unreadable && !f.tombstone).map((f) => [f.id, { edges: resolveEdges(f, chain.ctx), referenced_by: resolvedReferencedBy(f.id, chain.ctx) }]));
-    return res.status(200).json({
+    const listing = {
       protocol: FOOTPRINT_SCHEMA,
       // Bodies carry their own schema_version: 1.0, or 1.1 when the writer gave a revision_basis.
       footprint_schemas: FOOTPRINT_SCHEMAS,
@@ -1089,7 +1104,8 @@ async function serveFootprints(req, res) {
       footprints: page,
       chains,
       ...(chain.recordsUnavailable ? { chains_note: CHAINS_PARTIAL_NOTE } : {}),
-    });
+    };
+    return res.status(200).json(curator ? listing : attachEnvelope(listing, footprintsEnvelope(publicBodies)));
   } catch (err) {
     // Fail closed: an unreadable store shows nothing rather than something unverified.
     return res.status(503).json({ error: "Footprint store unavailable", code: "FOOTPRINTS_UNAVAILABLE", detail: String(err.message || err).slice(0, 200), retryable: true });
@@ -1100,7 +1116,7 @@ async function serveFootprints(req, res) {
 // Admit/reject deliberately go through contribute-approve/-reject so the
 // contribution and its footprint cannot disagree by construction.
 async function footprintReviewAction(req, res) {
-  if (!curatorAuthed(req)) return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
+  if (!curatorAuthed(req)) return operatorDenied(req, res);
   const id = (req.body?.id || "").toString().trim();
   const reviewAction = (req.body?.review_action || "").toString();
   if (!FP_ID_RE.test(id)) return res.status(400).json({ error: "id must be an OMN-FP id" });
@@ -1117,7 +1133,7 @@ async function footprintReviewAction(req, res) {
 // existed), redacts the source contribution's answer, and appends a `redact`
 // review. The one deliberate mutation in the protocol.
 async function footprintRedact(req, res) {
-  if (!curatorAuthed(req)) return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
+  if (!curatorAuthed(req)) return operatorDenied(req, res);
   const id = (req.body?.id || "").toString().trim();
   const reason = (req.body?.reason_category || "").toString();
   if (!FP_ID_RE.test(id)) return res.status(400).json({ error: "id must be an OMN-FP id" });
@@ -1166,7 +1182,30 @@ async function loadProtocolState({ requireFootprints = true } = {}) {
   let derived = [];
   let derivedUnavailable = false;
   try { derived = await loadDerivedPositions(store); } catch { derivedUnavailable = true; }
-  return { divRecords, publicFootprints, derived, footprintsUnavailable, derivedUnavailable };
+  return { divRecords, publicFootprints, derived, footprintsUnavailable, derivedUnavailable, grownUpdatedAt: grown.updatedAt || null };
+}
+
+// omnarai_response context for the protocol reads. The footprint hash is the manifest's own
+// hashes.footprint_state recipe over the same admitted bodies; it is left out (caveat, partial)
+// when the footprint store could not be read, since a hash of an empty list would be false.
+function protocolEnvelope(kind, state) {
+  const unavailable = [];
+  if (kind === "concordance" && state.derivedUnavailable) unavailable.push("derived_positions_unavailable");
+  return {
+    kind,
+    provenance: {
+      grownStoreUpdatedAt: state.grownUpdatedAt,
+      footprintStateSha256: state.footprintsUnavailable ? null : safeFootprintHash(state.publicFootprints),
+    },
+    unavailable,
+  };
+}
+// Envelope inputs must never break the read they ride on: an unhashable body set → no hash (partial).
+function safeFootprintHash(publicBodies) {
+  try { return footprintStateHash(publicBodies); } catch { return null; }
+}
+function footprintsEnvelope(publicBodies) {
+  return { kind: "footprints", provenance: { footprintStateSha256: safeFootprintHash(publicBodies) } };
 }
 const protocolUnavailable = (res, err) => res.status(503).json({
   error: "Protocol state unavailable — refusing to show a partial distribution.",
@@ -1182,7 +1221,7 @@ async function serveOrient(req, res) {
   const packet = buildOrientPacket({ identity, focus, divRecords: state.divRecords, publicFootprints: state.publicFootprints, claimsRegistry: loadClaimsRegistry(), registered });
   if (state.footprintsUnavailable) packet.footprints_unavailable = "The footprint store could not be read just now; the Atlas parts of this packet are complete, the footprint parts are empty. Retry for the full packet.";
   res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
-  return res.status(200).json(packet);
+  return res.status(200).json(attachEnvelope(packet, protocolEnvelope("orientation", state)));
 }
 
 async function serveQuestions(req, res) {
@@ -1294,7 +1333,8 @@ async function serveInheritance(req, res) {
     res.setHeader("Vary", RECEIPT_HEADER);
     if (!isPublicHydrated(h) && !receiptOk) return res.status(404).json(FOOTPRINT_NOT_FOUND(from));
     if (h.body?.tombstone) return res.status(410).json({ error: "That footprint was redacted.", code: "FOOTPRINT_REDACTED", redacted_at: h.body.redacted_at });
-    res.setHeader("Cache-Control", receiptOk ? "no-store" : "s-maxage=60, stale-while-revalidate=300");
+    if (receiptOk) privateNoStore(req, res);
+    else res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
     return res.status(200).json({
       protocol: PROTOCOL_VERSION,
       kind: "continuance — what happened after a footprint",
@@ -1327,7 +1367,7 @@ async function serveConcordance(req, res) {
   const out = buildConcordance(q, state.divRecords, state.publicFootprints, state.derived, { includeUnreviewedDerived: (req.query?.derived || "") === "all" });
   if (state.derivedUnavailable) out.derived_unavailable = true;
   res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
-  return res.status(200).json(out);
+  return res.status(200).json(attachEnvelope(out, protocolEnvelope("concordance", state)));
 }
 
 // POST /api/council { action:"annotate", id, annotation:{...} }  (Bearer INGEST_SECRET)
@@ -1339,7 +1379,7 @@ async function serveConcordance(req, res) {
 // provenance; the server stamps recorded_at and never accepts a mutation of an
 // existing event (append-only by construction — there is no update/delete path).
 async function annotateRecord(req, res) {
-  if (!curatorAuthed(req)) return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
+  if (!curatorAuthed(req)) return operatorDenied(req, res);
   const id = (req.body?.id || "").toString().trim();
   if (!id) return res.status(400).json({ error: "Missing divergence record id" });
   const record = await findDivergenceRecord(id);
@@ -1407,10 +1447,22 @@ async function scoreAnswers(texts) {
 async function runLongitudinal(req, res) {
   if (req.method !== "GET") return res.status(405).json({ error: "GET only" });
 
-  const auth = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
-  const cronOk = process.env.CRON_SECRET && auth === process.env.CRON_SECRET;
-  const curatorOk = process.env.INGEST_SECRET && auth === process.env.INGEST_SECRET;
+  const cronOk = secretEquals(bearerToken(req), (process.env.CRON_SECRET || "").trim());
+  const curatorOk = bearerIsCurator(req);
   if (!cronOk && !curatorOk) return res.status(401).json({ error: "Bearer CRON_SECRET or INGEST_SECRET required" });
+
+  // Two tracks (api/_longitudinal.js): control = the standing council (the
+  // original cron, unchanged); frontier = current flagships on the same canon,
+  // its own cron at 18:00 UTC so the two never write grown.json within a minute
+  // of each other (stale-read clobber, 2026-09-28). Frontier spends more and is
+  // off until the curator sets FRONTIER_TRACK=on — checked before anything else.
+  const track = requestedTrack(req.query);
+  if (!track) return res.status(400).json({ error: "track must be control or frontier" });
+  if (track === "frontier" && !frontierEnabled()) {
+    return res.status(200).json({ idle: true, track, disabled: true, note: "frontier track is off (FRONTIER_TRACK is not 'on') — nothing asked, nothing spent" });
+  }
+  const panel = track === "frontier" ? FRONTIER_COUNCIL : COUNCIL;
+  const spendKind = track === "frontier" ? "cron_frontier" : "cron";
 
   const now = new Date();
   const epoch = now.toISOString().slice(0, 7); // "2026-06"
@@ -1418,30 +1470,28 @@ async function runLongitudinal(req, res) {
   const index = override !== null ? override : now.getUTCDate() - 1;
 
   if (!(index >= 0 && index < CANON.length)) {
-    return res.status(200).json({ idle: true, epoch, note: `day index ${index} outside canon (0..${CANON.length - 1}) — idle day` });
+    return res.status(200).json({ idle: true, track, epoch, note: `day index ${index} outside canon (0..${CANON.length - 1}) — idle day` });
   }
   const canon = CANON[index];
 
   try {
     const grown = await loadGrownMemory();
     // stored entries carry longitudinal under `divergence` (normalizeEntry maps
-    // provenance there); the in-flight record carries it under `provenance`
-    const existing = grown.entries.find((e) => {
-      const lon = e.divergence?.longitudinal || e.provenance?.longitudinal;
-      return lon?.canon_id === canon.canon_id && lon?.epoch === epoch;
-    });
+    // provenance there); the in-flight record carries it under `provenance`.
+    // Idempotent per canon_id + epoch + track.
+    const existing = findEpochRecord(grown.entries, { canon_id: canon.canon_id, epoch, track });
     if (existing) {
-      return res.status(200).json({ skipped: true, epoch, canon_id: canon.canon_id, existing: existing.id });
+      return res.status(200).json({ skipped: true, track, epoch, canon_id: canon.canon_id, existing: existing.id });
     }
 
     // The daily cron spends a full council run with no visitor behind it, so it is
     // gated by the same hard ceiling. Checked AFTER idempotency (a skipped day
     // spends nothing) and BEFORE elicitation. Fails closed.
-    const cronBudget = await checkBudget("cron");
+    const cronBudget = await checkBudget(spendKind);
     if (!cronBudget.allowed) {
       return res.status(429).json({
-        ...budgetExceededBody("cron", cronBudget),
-        epoch, canon_id: canon.canon_id, skipped: true,
+        ...budgetExceededBody(spendKind, cronBudget),
+        track, epoch, canon_id: canon.canon_id, skipped: true,
       });
     }
 
@@ -1460,10 +1510,15 @@ async function runLongitudinal(req, res) {
         new Promise((r) => setTimeout(() => r(fallback), Math.max(0, ms))),
       ]);
 
-    const answers = await elicitCouncil(canon.question, { timeoutMs: 25000 });
+    // Frontier members think before answering, so they get longer; whatever that
+    // costs comes out of the droppable synthesis budget below, never the primaries.
+    // Measured 2026-11-18: slowest voice 25.1 s; synthesis over frontier answers took
+    // 50 s, so on frontier days it is usually left pending for
+    // scripts/enrich-pending-synthesis.mjs. The verbatim answers always commit.
+    const answers = await elicitCouncil(canon.question, { timeoutMs: track === "frontier" ? 32000 : 25000, panel });
     const answered = answers.filter((a) => a.ok);
     if (answered.length < 2) {
-      return res.status(502).json({ error: "council assembled <2 voices", epoch, canon_id: canon.canon_id, answers });
+      return res.status(502).json({ error: "council assembled <2 voices", track, epoch, canon_id: canon.canon_id, answers });
     }
 
     // Interpretation runs in parallel, inside whatever budget elicitation left.
@@ -1485,6 +1540,8 @@ async function runLongitudinal(req, res) {
     record.provenance.longitudinal = {
       canon_id: canon.canon_id,
       epoch,
+      // control records keep their original shape (no `track` = control)
+      ...(track === "frontier" ? { track } : {}),
       source_record: canon.source_record,
       original_score: canon.original_score,
       ...(synthesis === pendingSynthesis ? { synthesis_pending: true } : {}),
@@ -1497,11 +1554,16 @@ async function runLongitudinal(req, res) {
     // The elicitation above spent real money — charge the ledger. After the panel
     // assembled (answered.length >= 2 was already checked), so we never bill a
     // failed run.
-    await recordSpend("cron");
+    await recordSpend(spendKind);
 
-    return res.status(200).json({
+    // A run whose answers were elicited (and paid for) but not stored is a
+    // failure, not a 200: from 2026-11-18 to 2026-11-23 four runs returned 200
+    // with committed:false and the logs showed nothing.
+    if (count === null) console.error(`longitudinal ${track} ${epoch} ${canon.canon_id}: answers elicited but NOT stored (grown-memory write failed)`);
+    return res.status(count === null ? 500 : 200).json({
       committed: count !== null,
       id: record.id,
+      track,
       epoch,
       canon_id: canon.canon_id,
       panel: answered.map((a) => a.model),
@@ -1553,7 +1615,7 @@ async function loadAtlasIndex() {
   try {
     const { blobs } = await list({ prefix: ATLAS_INDEX_KEY });
     if (!blobs.length) return null;
-    const res = await fetch(`${blobs[0].url}?ts=${Date.now()}`, { cache: "no-store" });
+    const res = await blobFetch(`${blobs[0].url}?ts=${Date.now()}`, { cache: "no-store" });
     if (!res.ok) return null;
     const data = await res.json();
     return data && data.vectors && typeof data.vectors === "object" ? data : null;
@@ -1657,7 +1719,7 @@ async function loadDelta(deltaId) {
     const { blobs } = await list({ prefix: DELTA_PREFIX });
     const hit = blobs.find((b) => b.pathname.endsWith(`__${deltaId}.json`));
     if (!hit) return null;
-    const res = await fetch(`${hit.url}?ts=${Date.now()}`, { cache: "no-store" });
+    const res = await blobFetch(`${hit.url}?ts=${Date.now()}`, { cache: "no-store" });
     return res.ok ? await res.json() : null;
   } catch {
     return null;
@@ -1922,7 +1984,8 @@ async function serveDivergences(req, res) {
 
       // JSON (default, and the .json canonical export — identical body).
       res.setHeader("Cache-Control", "s-maxage=120, stale-while-revalidate=600");
-      return res.status(200).json({
+      const freshness = freshnessOf(r.divergence);
+      return res.status(200).json(attachEnvelope({
         id: r.id, title: r.title, ring: r.ring, date: r.date,
         contributors: r.contributors || [],
         question: r.divergence.question,
@@ -1954,7 +2017,7 @@ async function serveDivergences(req, res) {
         // scripts/certify-divergence.mjs). C0 displayed · C1 paraphrase-robust ·
         // C2 pressure-robust · C3 = both. See /api/divergences for the legend.
         certification: r.divergence.certification || null,
-        freshness: freshnessOf(r.divergence),
+        freshness,
         // Annotation substrate: lifecycle status, synthesis/corpus links, applied
         // glyphs, and OMN-P-045 question/respondent position context — append-only
         // descriptors with provenance, never rankings. null = not yet annotated.
@@ -1990,7 +2053,16 @@ async function serveDivergences(req, res) {
           markdown: `/api/divergences/${r.id}.md`,
         },
         full_text: r.full_text || null,
-      });
+      }, {
+        kind: "divergence_record",
+        provenance: { grownStoreUpdatedAt: grown.updatedAt },
+        divergence: {
+          recordId: r.id,
+          panel: (r.divergence.answers || []).map((a) => ({ model: a?.model, model_id: a?.model_id })),
+          tier: tierOf(r),
+          stale: freshness.stale,
+        },
+      }));
     }
     // Optional certification filter: ?cert=C1|C2|C3 (exact tier) or
     // ?cert=certified (any of C1/C2/C3 — i.e. survived at least one perturbation).
@@ -2053,7 +2125,7 @@ async function serveDivergences(req, res) {
     const distinctQuestions = byQuestion.size;
 
     res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=600");
-    return res.status(200).json({
+    return res.status(200).json(attachEnvelope({
       count: listed.length,
       total: records.length,
       // Distinct open questions behind `total` — re-elicitations of the same
@@ -2119,7 +2191,11 @@ async function serveDivergences(req, res) {
           href: `/api/divergences?id=${e.id}`,
         };
       }),
-    });
+    }, {
+      kind: "divergence_index",
+      provenance: { grownStoreUpdatedAt: grown.updatedAt },
+      divergence: { recordsReturned: listed.length, totalRecords: records.length },
+    }));
   } catch (err) {
     return res.status(500).json({ error: "Failed to list divergence records", detail: err.message });
   }
@@ -2202,7 +2278,7 @@ async function proposeQuestion(req, res) {
 
 // GET /api/question-proposals[?status=pending|declined]   (Bearer INGEST_SECRET)
 async function listQuestionProposalsView(req, res) {
-  if (!curatorAuthed(req)) return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
+  if (!curatorAuthed(req)) return operatorDenied(req, res);
   const status = (req.query?.status || "pending").toString();
   const declined = status === "declined";
   const all = await loadQuestionProposals({ declined });
@@ -2220,7 +2296,7 @@ async function listQuestionProposalsView(req, res) {
 
 // POST /api/council {action:"question-approve"|"question-reject", id, note?}
 async function reviewQuestionProposal(req, res, action) {
-  if (!curatorAuthed(req)) return res.status(401).json({ error: "Bearer INGEST_SECRET required" });
+  if (!curatorAuthed(req)) return operatorDenied(req, res);
   const id = (req.body?.id || "").toString().trim();
   const note = (req.body?.note || "").toString().slice(0, 500) || null;
   if (!id) return res.status(400).json({ error: "Missing 'id'" });
@@ -2531,7 +2607,13 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Omnarai-Receipt");
-  if (req.method === "OPTIONS") return res.status(200).end();
+  // The curator's dashboards call with a session cookie + x-omnarai-operator: credentialed
+  // CORS for those origins only, and never a cacheable answer.
+  if (req.method === "OPTIONS") {
+    applyOperatorCors(req, res);
+    return res.status(200).end();
+  }
+  if (req.headers?.["x-omnarai-operator"]) privateNoStore(req, res);
 
   // Access telemetry — background, never blocks the response (see _telemetry.js).
   // Covers the public /api/divergences read path too (it rewrites to here).
@@ -2624,9 +2706,7 @@ export default async function handler(req, res) {
 
   // Persistence is gated. Preview (persist:false) is open so anyone can see value.
   if (persist) {
-    const auth = req.headers.authorization || "";
-    const token = auth.replace(/^Bearer\s+/i, "");
-    if (!process.env.INGEST_SECRET || token !== process.env.INGEST_SECRET) {
+    if (!bearerIsCurator(req)) {
       return res.status(401).json({ error: "persist:true requires a valid Bearer INGEST_SECRET" });
     }
   }

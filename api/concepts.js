@@ -11,7 +11,7 @@
  *   POST {action:"reject", id}      — reject a concept proposal
  */
 
-import { put, list } from "@vercel/blob";
+import { put, list, blobFetch } from "./_blob.js";
 import { waitUntil } from "@vercel/functions";
 import { recordAccess } from "./_telemetry.js";
 import { readFileSync } from "fs";
@@ -144,7 +144,7 @@ async function buildLineage(node, { includeTensions = true, spineLimit = 60 } = 
       // Fetch tension blobs in parallel — sequential reads of the whole store
       // (hundreds of blobs) would risk the 60s wall.
       const records = await Promise.all(
-        blobs.map((b) => fetch(b.url).then((r) => r.json()).catch(() => null))
+        blobs.map((b) => blobFetch(b.url).then((r) => r.json()).catch(() => null))
       );
       const matched = [];
       for (const t of records) {
@@ -231,7 +231,7 @@ async function listConceptProposals(statusFilter) {
   const proposals = [];
   for (const blob of blobs) {
     try {
-      const res = await fetch(blob.url);
+      const res = await blobFetch(blob.url);
       const data = await res.json();
       if (!statusFilter || data.status === statusFilter) {
         proposals.push(data);
@@ -247,7 +247,7 @@ async function listConceptProposals(statusFilter) {
 async function getConceptProposal(id) {
   const { blobs } = await list({ prefix: CP_PREFIX + id });
   if (blobs.length === 0) return null;
-  const res = await fetch(blobs[0].url);
+  const res = await blobFetch(blobs[0].url);
   return res.json();
 }
 
@@ -255,7 +255,7 @@ async function saveConceptProposal(proposal) {
   const key = CP_PREFIX + proposal.sourceId + ".json";
   await put(key, JSON.stringify(proposal, null, 2), {
     access: "public",
-    addRandomSuffix: false,
+    addRandomSuffix: false, allowOverwrite: true,
     contentType: "application/json",
   });
 }

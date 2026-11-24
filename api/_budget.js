@@ -35,7 +35,7 @@
 //     simultaneous runs before the true $100 could be touched. The unbypassable
 //     floor is still provider-side spend limits — this is the graceful layer.
 
-import { list, put } from "@vercel/blob";
+import { list, put, blobFetch } from "./_blob.js";
 
 const PREFIX = "budget/spend/";
 const CONFIG_KEY = "budget/config.json"; // runtime override — adjust the cap without a redeploy
@@ -50,6 +50,12 @@ const WINDOW_DAYS = 30;
 const COST_USD = {
   council: 0.12, // 5 frontier members + synthesis pass + moderation gate
   cron: 0.12, //    the daily longitudinal council run (same shape as council)
+  // The frontier-track run: five flagship reasoning models + synthesis. Booked at a
+  // worst-case bound, not the typical cost. Measured 2026-11-18 (one run of
+  // `scripts/test-council.js --frontier`): about $0.09 (members $0.045, Sonnet
+  // synthesis $0.04), about $0.10 at Gemini 4's 2026-12-01 prices. The bound from
+  // each member's output cap at those prices is about $0.27.
+  cron_frontier: 0.35,
   trace: 0.08, //   baseline + augmented + delta = 3 Sonnet passes
   query: 0.04, //   one Sonnet deliberation (+ Haiku classifier)
 };
@@ -82,7 +88,7 @@ export async function readBudgetConfig() {
   try {
     const { blobs } = await list({ prefix: CONFIG_KEY });
     if (!blobs.length) return {};
-    const res = await fetch(`${blobs[0].url}?ts=${Date.now()}`, { cache: "no-store" });
+    const res = await blobFetch(`${blobs[0].url}?ts=${Date.now()}`, { cache: "no-store" });
     if (!res.ok) return {};
     const cfg = await res.json();
     return cfg && typeof cfg === "object" ? cfg : {};
@@ -102,7 +108,7 @@ export async function writeBudgetConfig(patch) {
   await put(CONFIG_KEY, JSON.stringify(next), {
     access: "public",
     contentType: "application/json",
-    addRandomSuffix: false,
+    addRandomSuffix: false, allowOverwrite: true,
   });
   return next;
 }
@@ -114,7 +120,7 @@ export async function resetBudgetConfig() {
   await put(CONFIG_KEY, JSON.stringify({ updated_at: new Date().toISOString() }), {
     access: "public",
     contentType: "application/json",
-    addRandomSuffix: false,
+    addRandomSuffix: false, allowOverwrite: true,
   });
   return {};
 }
@@ -261,7 +267,7 @@ export async function recordSpend(kind, { usd } = {}) {
     await put(key, JSON.stringify({ at: now.toISOString(), kind, usd: cost }), {
       access: "public",
       contentType: "application/json",
-      addRandomSuffix: false,
+      addRandomSuffix: false, allowOverwrite: true,
     });
     return true;
   } catch {
