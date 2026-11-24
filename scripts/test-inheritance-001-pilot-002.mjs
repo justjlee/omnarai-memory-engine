@@ -229,7 +229,12 @@ test("[Z8] lab.mjs --study pilot-002: the sealed draw names its study and exclud
   assert.equal(run.status, 3, run.stdout + run.stderr);
   assert.match(run.stdout, /REFUSED: no model was called and nothing was spent/);
   assert.match(run.stdout, /no approval file/);
-  assert.match(run.stdout, /preregistration is not registered/);
+  // This command reads the repository's own registration-002.json. Pilot 002 was registered on 2026-11-24 (9adaa95), so after
+  // that date the refusal no longer cites registration. It still refuses, for the missing approval above. The rule "nothing runs
+  // unregistered" stays pinned state-free by checkLiveAuthorization's tests (test-inheritance-001.mjs, test-inheritance-001-probe.mjs).
+  const reg = JSON.parse(readFileSync(join(ROOT, "research/inheritance-001/registration-002.json"), "utf8"));
+  if (reg.status === "registered") assert.doesNotMatch(run.stdout, /preregistration is not registered/);
+  else assert.match(run.stdout, /preregistration is not registered/);
   assert.ok(!existsSync(join(dir, "run")), "a refused run writes nothing");
   assert.equal(lab("budget", "--study", "nope").status, 2);
 });
