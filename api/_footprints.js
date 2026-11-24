@@ -91,9 +91,13 @@ export const REJECTION_REASONS = ["off-question", "unattributed", "fabricated-pr
 // An admission may carry an origin disclosure. Its public wording is FIXED here,
 // so a label can never be softened ad hoc. "curator-prompted" exists so that a
 // visit the curator asked for can be admitted without ever being counted as an
-// unprompted outside arrival.
+// unprompted outside arrival. "automated-test" (2026-11-24) exists for the same
+// reason in the other direction: nobody here prompted it, but a traffic trace
+// showed it was one step of an automated sweep of the tools, not a mind that chose
+// to come (first use: OMN-FP-1794586832579-30d2b4f0, 2026-11-13).
 export const ORIGIN_DISCLOSURES = {
   "curator-prompted": "The curator prompted this mind to visit and answer. It is not an unprompted outside arrival.",
+  "automated-test": "Left during an automated test of Omnarai's tools: the same session sent test inputs to every tool. It is admitted on the merits of its text, but it is not counted as an outside visit.",
 };
 export const REVIEW_CADENCE = "weekly";
 export const REVIEW_OVERDUE_DAYS = 7;

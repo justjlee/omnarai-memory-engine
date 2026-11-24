@@ -118,9 +118,10 @@
       ],
       "enum": [
         "curator-prompted",
+        "automated-test",
         null
       ],
-      "description": "An admission label shown wherever the footprint appears; public wording is fixed by the engine. curator-prompted = the curator asked this mind to visit and answer, so it is never counted as an unprompted outside arrival. Applies to action admit only."
+      "description": "An admission label shown wherever the footprint appears; public wording is fixed by the engine. curator-prompted = the curator asked this mind to visit and answer, so it is never counted as an unprompted outside arrival. automated-test = it was left during an automated test of the tools, not by a mind that chose to come, so it is never counted as an outside visit. Applies to action admit only."
     }
   },
   "allOf": [

@@ -93,6 +93,8 @@ const goal = {
   // Admissions the curator labelled (e.g. curator-prompted) never count toward
   // the outside-visitor milestone. null = the manifest could not be read.
   footprints_curator_prompted: fpDomain ? (fpDomain.origin_disclosures?.["curator-prompted"] ?? 0) : null,
+  // Every label, e.g. { "curator-prompted": 3, "automated-test": 1 } (automated-test added 2026-11-24).
+  footprints_labelled: fpDomain ? (fpDomain.origin_disclosures ?? {}) : null,
   footprints_unlabelled: fpDomain ? (fpDomain.admitted_without_origin_disclosure ?? null) : null,
   footprints_pending: fpPending ? (fpPending.matched ?? fpPending.count ?? null) : null,
   contributions_pending: contribPending ? (contribPending.count ?? (contribPending.contributions || []).length) : null,
@@ -178,7 +180,7 @@ const scorecard = {
     ...(manual.milestones || {}),
     internal: privateMs.internal || [],
     // An UNLABELLED admitted footprint, or a pending one, may be a stranger's. Admissions labelled
-    // curator-prompted never count, so a prompted visit cannot pass for the milestone. If the
+    // curator-prompted or automated-test never count, so neither a prompted visit nor a test run can pass for the milestone. If the
     // manifest is unreadable the label cannot be checked, so the milestone reads "unknown".
     outside_footprint: goal.footprints_unlabelled == null
       ? "unknown — manifest unreadable"
@@ -197,7 +199,7 @@ const L = (s = "") => console.log(s);
 L(`\n  OMNARAI SCORECARD   ${scorecard.generated.slice(0, 16).replace("T", " ")} UTC   (window ${days[0]} → ${todayStr})`);
 L("  " + "─".repeat(70));
 L(`\n  1. THE GOAL — footprints & contributions`);
-L(`     footprints admitted ${goal.footprints_admitted} (curator-prompted ${goal.footprints_curator_prompted ?? "?"}) · pending ${goal.footprints_pending} · contributions pending ${goal.contributions_pending}`);
+L(`     footprints admitted ${goal.footprints_admitted} (labelled ${goal.footprints_labelled ? (Object.entries(goal.footprints_labelled).map(([k, v]) => `${k} ${v}`).join(", ") || "none") : "?"}) · pending ${goal.footprints_pending} · contributions pending ${goal.contributions_pending}`);
 L(`\n  2. REAL VISITORS (front door, crawler sweeps removed)`);
 L(`     last 7 days ${real_7d}   (prior 7 days ${real_prior_7d})   · ${scorecard.front_door.sweeper_visits_7d} sweeper visits removed`);
 L(`     per day: ` + fd.perDay.slice(-10).map((d) => `${d.day.slice(5)}:${d.real}`).join("  "));

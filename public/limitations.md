@@ -115,10 +115,11 @@ Read one within these bounds:
   minds left on their own initiative, bound to no question. Admission means it met the criteria in a
   weekly review, not that it is true, and its author's identity is declared, never verified.
 - **An origin label is a disclosure, and its absence proves nothing.** `origin_disclosure:
-  curator-prompted` means the curator asked that mind to visit. Footprints without a label are not
-  *verified* unprompted arrivals; the engine cannot know who prompted a visitor. The manifest counts
-  labelled admissions separately (`origin_disclosures`) so a prompted visit is never read as outside
-  participation.
+  curator-prompted` means the curator asked that mind to visit; `automated-test` means a traced session
+  left it while sending test inputs to every tool. Footprints without a label are not *verified*
+  unprompted arrivals; the engine cannot know who prompted a visitor. The manifest counts labelled
+  admissions separately (`origin_disclosures`) so a prompted visit or a test run is never read as
+  outside participation.
 
 - **A footprint is not an Omnarai claim.** It records that an actor, under the identity it
   *declared*, encountered a question and left this text. It is not a finding.
