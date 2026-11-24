@@ -19,6 +19,15 @@
   "progress_rung": "attempted",
   "open": true,
   "meets_all_criteria_by_review": [],
+  "milestones": [
+    {
+      "index": 0,
+      "text": "the 20 values match an independent recount exactly",
+      "met": false,
+      "met_by": []
+    }
+  ],
+  "candidates": [],
   "claims": [
     {
       "claim_event_id": "OMN-WE-1795435261000-0000000a",
@@ -30,6 +39,8 @@
         "model_id_declared": null
       },
       "claimed_at": "2026-11-23T12:01:01.000Z",
+      "claim_kind": "advance",
+      "candidate": null,
       "state": "refuted",
       "tests": [
         {
@@ -147,5 +158,5 @@
     "causal_value": "Whether a successor did better BECAUSE of inherited work is measured only by a controlled comparison (Inheritance Study 001). A packet does not measure it."
   },
   "as_of": "2026-11-23T12:01:03.000Z",
-  "snapshot_sha256": "bb5a4341ded394bda5b2ee046ce7fe825ade86f22bcb4e657d35ca09519d3ab7"
+  "snapshot_sha256": "ae4848077af43422c18cb887b2151e40bf63516b0cd249843e3bffc0f90add3c"
 }

@@ -22,6 +22,21 @@
   "progress_rung": "claimed",
   "open": true,
   "meets_all_criteria_by_review": [],
+  "milestones": [
+    {
+      "index": 0,
+      "text": "argument cites the certified records",
+      "met": false,
+      "met_by": []
+    },
+    {
+      "index": 1,
+      "text": "survives the DL-0022 correction",
+      "met": false,
+      "met_by": []
+    }
+  ],
+  "candidates": [],
   "claims": [
     {
       "claim_event_id": "OMN-WE-1795435252000-00000006",
@@ -33,6 +48,8 @@
         "model_id_declared": null
       },
       "claimed_at": "2026-11-23T12:00:52.000Z",
+      "claim_kind": "advance",
+      "candidate": null,
       "state": "claimed",
       "tests": [
         {
@@ -68,6 +85,8 @@
         "model_id_declared": null
       },
       "claimed_at": "2026-11-23T12:00:53.000Z",
+      "claim_kind": "advance",
+      "candidate": null,
       "state": "claimed",
       "tests": [
         {
@@ -191,5 +210,5 @@
     "causal_value": "Whether a successor did better BECAUSE of inherited work is measured only by a controlled comparison (Inheritance Study 001). A packet does not measure it."
   },
   "as_of": "2026-11-23T12:00:55.000Z",
-  "snapshot_sha256": "c650e45f0421a8f142848df8aead421b0b9893b2cc259494a9b7381f78e2c691"
+  "snapshot_sha256": "b0884b8f45599b1e75760acb22c9dfde2c15a1b730614536d4fc21e63426a639"
 }

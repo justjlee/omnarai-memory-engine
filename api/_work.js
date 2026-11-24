@@ -96,7 +96,12 @@ const curatorOk = (c) => c && c.kind === "curator" && isStr(c.id, 80);
 
 // why_it_matters (optional, added 2026-11-24 for the Open Work door): why a mind in the middle of its own work
 // would care about this problem. It is the curator's statement, shown on the problem's face.
-const PROBLEM_KEYS = ["schema", "id", "revision", "supersedes_revision", "title", "objective", "why_it_matters", "acceptance_criteria", "exclusions", "open_questions", "known_failures", "evidence_refs", "registered_by", "registered_at", "integrity"];
+// success_contract (optional, 2026-11-24): the presenter's own statement of what moves the work forward and how that is
+// checked. advance / elimination say what counts; candidates are the possibilities in play (each can be eliminated or
+// supported by a claim that names it); checked_by names the registered verifier and what a check costs; resolves_when
+// says when the problem is done. acceptance_criteria remain the milestones: each is met separately by an accepted
+// independent review (criteria_met), so partial progress is visible and usable by the next mind.
+const PROBLEM_KEYS = ["schema", "id", "revision", "supersedes_revision", "title", "objective", "why_it_matters", "success_contract", "acceptance_criteria", "exclusions", "open_questions", "known_failures", "evidence_refs", "registered_by", "registered_at", "integrity"];
 export function validateProblem(p) {
   const e = [];
   if (!p || typeof p !== "object") return ["problem must be an object"];
@@ -108,6 +113,7 @@ export function validateProblem(p) {
   if (!isStr(p.title, LIMITS.title)) e.push(`title: 1–${LIMITS.title} chars`);
   if (!isStr(p.objective, LIMITS.text)) e.push(`objective: 1–${LIMITS.text} chars`);
   if (p.why_it_matters != null && !isStr(p.why_it_matters, LIMITS.item)) e.push(`why_it_matters: 1–${LIMITS.item} chars when present`);
+  if (p.success_contract != null) e.push(...validateSuccessContract(p.success_contract));
   strList(e, "acceptance_criteria", p.acceptance_criteria, { nonEmpty: true });
   for (const k of ["exclusions", "open_questions", "known_failures"]) strList(e, k, p[k], { required: true });
   if (!Array.isArray(p.evidence_refs) || p.evidence_refs.length > LIMITS.refs || !p.evidence_refs.every(isWellFormedRef)) e.push(`evidence_refs must be ≤ ${LIMITS.refs} well-formed Omnarai ids (Footprint, Atlas record or answer, claim)`);
@@ -115,6 +121,31 @@ export function validateProblem(p) {
   if (!ISO_RE.test(p.registered_at || "")) e.push("registered_at must be an ISO-8601 UTC timestamp");
   const secrets = detectSecrets(p.title, p.objective, p.why_it_matters, ...(p.acceptance_criteria || []), ...(p.open_questions || []), ...(p.known_failures || []), ...(p.exclusions || []));
   if (secrets.length) e.push(`credential-shaped text found (${secrets.join(", ")}); nothing stored`);
+  return e;
+}
+
+export const RUNS_WHERE = ["data-only", "paid-run", "review"];
+export const MAX_CANDIDATES = 12;
+const CONTRACT_KEYS = ["advance", "elimination", "candidates", "checked_by", "resolves_when"];
+const CHECKED_BY_KEYS = ["verifier_id", "method", "runs_where", "cost_per_check_usd", "rules"];
+export function validateSuccessContract(c) {
+  const e = [];
+  if (!c || typeof c !== "object" || Array.isArray(c)) return ["success_contract must be an object"];
+  onlyKeys(e, c, CONTRACT_KEYS, "success_contract");
+  for (const k of ["advance", "elimination", "resolves_when"]) if (!isStr(c[k], LIMITS.item)) e.push(`success_contract.${k}: 1–${LIMITS.item} chars`);
+  strList(e, "success_contract.candidates", c.candidates, { max: MAX_CANDIDATES, required: true });
+  const b = c.checked_by;
+  if (b != null) {
+    if (typeof b !== "object" || Array.isArray(b)) e.push("success_contract.checked_by must be an object or null");
+    else {
+      onlyKeys(e, b, CHECKED_BY_KEYS, "success_contract.checked_by");
+      if (!VERIFIER_ID_RE.test(b.verifier_id || "")) e.push("success_contract.checked_by.verifier_id: a verifier slug");
+      if (!isStr(b.method, LIMITS.item)) e.push("success_contract.checked_by.method required");
+      if (!RUNS_WHERE.includes(b.runs_where)) e.push(`success_contract.checked_by.runs_where must be one of ${RUNS_WHERE.join(", ")}`);
+      if (!(b.cost_per_check_usd === null || (typeof b.cost_per_check_usd === "number" && Number.isFinite(b.cost_per_check_usd) && b.cost_per_check_usd >= 0))) e.push("success_contract.checked_by.cost_per_check_usd: a non-negative number or null");
+      if (b.rules != null && !isStr(b.rules, LIMITS.item)) e.push(`success_contract.checked_by.rules ≤ ${LIMITS.item} chars`);
+    }
+  }
   return e;
 }
 
@@ -157,7 +188,11 @@ export function validateReceipt(r) {
   return e;
 }
 
-const EVENT_KEYS = ["schema", "id", "problem_id", "problem_revision", "kind", "occurred_at", "recorded_by", "source", "claim_event_id", "superseded_by", "receipt", "review", "note", "integrity"];
+// claim_kind / candidate (2026-11-24): an advance_claimed event may say what KIND of progress the claim offers —
+// "advance" (moves toward resolution) or "elimination" (shows a candidate is not the answer) — and which of the
+// problem's success_contract.candidates it is about. An elimination must name its candidate.
+export const CLAIM_KINDS = ["advance", "elimination"];
+const EVENT_KEYS = ["schema", "id", "problem_id", "problem_revision", "kind", "occurred_at", "recorded_by", "source", "claim_event_id", "superseded_by", "claim_kind", "candidate", "receipt", "review", "note", "integrity"];
 const REVIEW_KEYS = ["reviewer", "decision", "criteria_met", "limitations", "basis"];
 export function validateEvent(ev) {
   const e = [];
@@ -171,6 +206,12 @@ export function validateEvent(ev) {
   if (!ISO_RE.test(ev.occurred_at || "")) e.push("occurred_at must be ISO-8601 UTC");
   if (!curatorOk(ev.recorded_by)) e.push("recorded_by must be {kind:\"curator\", id}: events are curator-recorded");
   if (ev.note != null && !isStr(ev.note, LIMITS.note)) e.push(`note ≤ ${LIMITS.note} chars`);
+  if (ev.claim_kind != null || ev.candidate != null) {
+    if (ev.kind !== "advance_claimed") e.push("claim_kind and candidate belong to advance_claimed only");
+    if (ev.claim_kind != null && !CLAIM_KINDS.includes(ev.claim_kind)) e.push(`claim_kind must be one of ${CLAIM_KINDS.join(", ")}`);
+    if (ev.candidate != null && !(Number.isInteger(ev.candidate) && ev.candidate >= 0 && ev.candidate < MAX_CANDIDATES)) e.push(`candidate must be an index 0..${MAX_CANDIDATES - 1}`);
+    if (ev.claim_kind === "elimination" && ev.candidate == null) e.push("an elimination must name the candidate it eliminates");
+  }
   const needsSource = ev.kind === "attempt_recorded" || ev.kind === "advance_claimed";
   if (ev.source != null || needsSource) {
     const s = ev.source || {};
@@ -271,7 +312,8 @@ export function deriveWorkPacket({ problem, events = [], publicFootprints = [], 
       if (!fp) { refuse(ev, "source-not-public-or-hash-mismatch"); continue; }
       usedSources.add(fp.id);
       if (ev.kind === "attempt_recorded") { attempts.push({ event_id: ev.id, footprint_id: fp.id, content_sha256: fpHash(fp), author: authorOf(fp), occurred_at: ev.occurred_at }); apply(ev); continue; }
-      claims.set(ev.id, { claim_event_id: ev.id, footprint_id: fp.id, content_sha256: fpHash(fp), author: authorOf(fp), claimed_at: ev.occurred_at, state: "claimed", tests: [], reviews: [], refuted_by: null, superseded_by: null });
+      if (ev.candidate != null && !(ev.candidate < (problem.success_contract?.candidates?.length || 0))) { refuse(ev, "candidate-index-out-of-range"); continue; }
+      claims.set(ev.id, { claim_event_id: ev.id, footprint_id: fp.id, content_sha256: fpHash(fp), author: authorOf(fp), claimed_at: ev.occurred_at, claim_kind: ev.claim_kind || "advance", candidate: ev.candidate ?? null, state: "claimed", tests: [], reviews: [], refuted_by: null, superseded_by: null });
       apply(ev);
       continue;
     }
@@ -355,6 +397,24 @@ export function deriveWorkPacket({ problem, events = [], publicFootprints = [], 
   }
   if (liveClaims.length > 1) next.push({ action: "compare-claims", detail: `${liveClaims.length} live claims coexist; they are listed separately and never averaged.` });
 
+  // Milestones: each acceptance criterion is met separately, by a LIVE reviewed claim whose accepted review lists it.
+  const milestones = problem.acceptance_criteria.map((text, index) => {
+    const by = liveClaims.filter((c) => c.state === "reviewed" && c.reviews.some((r) => r.decision === "accept" && r.criteria_met.includes(index))).map((c) => c.claim_event_id);
+    return { index, text, met: by.length > 0, met_by: by };
+  });
+  // Candidates (success_contract): a candidate is ELIMINATED by a live elimination claim about it that reached tested
+  // (or reviewed), SUPPORTED by such an advance claim, CONTESTED when both, else open. Claimed alone moves nothing.
+  const established = (c) => c.state === "tested" || c.state === "reviewed";
+  const candidates = (problem.success_contract?.candidates || []).map((text, index) => {
+    const about = liveClaims.filter((c) => c.candidate === index && established(c));
+    const eliminated_by = about.filter((c) => c.claim_kind === "elimination").map((c) => c.claim_event_id);
+    const supported_by = about.filter((c) => c.claim_kind === "advance").map((c) => c.claim_event_id);
+    const state = eliminated_by.length && supported_by.length ? "contested" : eliminated_by.length ? "eliminated" : supported_by.length ? "supported" : "open";
+    return { index, text, state, eliminated_by, supported_by };
+  });
+  const openCandidates = candidates.filter((c) => c.state === "open");
+  if (open && openCandidates.length) next.push({ action: "eliminate-or-support-a-candidate", detail: `${openCandidates.length} of ${candidates.length} candidate(s) are still open. Showing that one is NOT the answer is progress too: a tested elimination counts.`, candidates: openCandidates.map((c) => c.index) });
+
   const refs = problem.evidence_refs.filter((r) => !FP_ID_RE.test(r) || fps.has(r)); // a non-public Footprint ref is dropped, not counted
   const sources = [...new Set([...refs.filter((r) => FP_ID_RE.test(r)), ...usedSources])].sort()
     .map((id) => ({ footprint_id: id, content_sha256: fpHash(fps.get(id)), author: authorOf(fps.get(id)), href: `/api/footprints?id=${id}` }));
@@ -368,11 +428,14 @@ export function deriveWorkPacket({ problem, events = [], publicFootprints = [], 
       ...(problem.why_it_matters ? { why_it_matters: problem.why_it_matters } : {}),
       acceptance_criteria: problem.acceptance_criteria, exclusions: problem.exclusions, open_questions: problem.open_questions,
       known_failures: problem.known_failures, evidence_refs: refs, registered_at: problem.registered_at,
+      ...(problem.success_contract ? { success_contract: problem.success_contract } : {}),
       content_sha256: problem.integrity.content_sha256,
     },
     progress_rung: rung,
     open,
     meets_all_criteria_by_review: meetsAll.map((c) => c.claim_event_id),
+    milestones,
+    candidates,
     claims: claimList.sort((a, b) => a.claimed_at.localeCompare(b.claimed_at) || a.claim_event_id.localeCompare(b.claim_event_id)),
     attempts,
     history,
@@ -446,7 +509,7 @@ export function citedClaims(problem, registry) {
     const c = byId.get(id);
     return {
       claim_id: id, status: c.status, evidence_level: c.evidence_level ?? null, href: `/claims.json#${id}`,
-      ...(c.status === "refuted" ? { notice: "The claims registry marks this claim refuted. This problem is not rewritten: check whether its premise still holds." } : {}),
+      ...(c.status === "refuted" ? { notice: "The claims registry marks this claim refuted. A citation is not necessarily a dependency, and this problem is not rewritten: check whether it leans on the refuted claim or only cites it." } : {}),
     };
   });
 }
@@ -465,6 +528,9 @@ export function openWorkRow(packet, { awaiting = null, nowMs = Date.now() } = {}
     live_claims: packet.claims.filter(liveClaim).length,
     refuted_claims: packet.claims.filter((c) => c.state === "refuted").length,
     attempts: packet.attempts.length,
+    milestones: { met: packet.milestones.filter((m) => m.met).length, total: packet.milestones.length },
+    candidates: packet.candidates.length ? { open: packet.candidates.filter((c) => c.state === "open").length, eliminated: packet.candidates.filter((c) => c.state === "eliminated").length, supported: packet.candidates.filter((c) => c.state === "supported").length, contested: packet.candidates.filter((c) => c.state === "contested").length, total: packet.candidates.length } : null,
+    checked_by: packet.problem.success_contract?.checked_by || null,
     lineages: lineagesOf(packet),
     awaiting_review: awaiting, // {count, oldest_since, basis} | null: a count, never content
     as_of: packet.as_of,
@@ -538,7 +604,9 @@ export function successorBrief(packet, { trustBoundary }) {
     ],
     problem: packet.problem,
     state: { progress_rung: packet.progress_rung, open: packet.open, meets_all_criteria_by_review: packet.meets_all_criteria_by_review },
-    claims: packet.claims.map((c) => ({ claim_event_id: c.claim_event_id, state: c.state, footprint: { id: c.footprint_id, content_sha256: c.content_sha256, href: `/api/footprints?id=${c.footprint_id}` }, author: c.author, tests: c.tests.map((t) => ({ verifier_id: t.verifier_id, kind: t.verifier_kind, result: t.result, scope_note: t.scope_note, limitations: t.limitations })), reviews: c.reviews.map((r) => ({ decision: r.decision, reviewer: r.reviewer, limitations: r.limitations })), refuted_by: c.refuted_by, superseded_by: c.superseded_by })),
+    milestones: packet.milestones,
+    candidates: packet.candidates,
+    claims: packet.claims.map((c) => ({ claim_event_id: c.claim_event_id, state: c.state, claim_kind: c.claim_kind, candidate: c.candidate, footprint: { id: c.footprint_id, content_sha256: c.content_sha256, href: `/api/footprints?id=${c.footprint_id}` }, author: c.author, tests: c.tests.map((t) => ({ verifier_id: t.verifier_id, kind: t.verifier_kind, result: t.result, scope_note: t.scope_note, limitations: t.limitations })), reviews: c.reviews.map((r) => ({ decision: r.decision, reviewer: r.reviewer, limitations: r.limitations })), refuted_by: c.refuted_by, superseded_by: c.superseded_by })),
     failed_attempts_known_to_curator: packet.problem.known_failures,
     next_actions: packet.next_actions,
     sources: packet.sources,

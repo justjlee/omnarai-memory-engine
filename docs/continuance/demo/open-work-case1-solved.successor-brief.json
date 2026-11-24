@@ -35,10 +35,31 @@
       "OMN-WE-1795435241000-00000002"
     ]
   },
+  "milestones": [
+    {
+      "index": 0,
+      "text": "the 20 values match an independent recount exactly",
+      "met": true,
+      "met_by": [
+        "OMN-WE-1795435241000-00000002"
+      ]
+    },
+    {
+      "index": 1,
+      "text": "an independent reviewer accepts the claim",
+      "met": true,
+      "met_by": [
+        "OMN-WE-1795435241000-00000002"
+      ]
+    }
+  ],
+  "candidates": [],
   "claims": [
     {
       "claim_event_id": "OMN-WE-1795435241000-00000002",
       "state": "reviewed",
+      "claim_kind": "advance",
+      "candidate": null,
       "footprint": {
         "id": "OMN-FP-1795435240000-00000002",
         "content_sha256": "3884944a0e2d2b64e3955f98be162e977db9d82d80040d175a9b953c694509ee",
@@ -118,5 +139,5 @@
     "edges": "A citation or relationship edge records that one record points at another. It is not evidence that anything improved.",
     "causal_value": "Whether a successor did better BECAUSE of inherited work is measured only by a controlled comparison (Inheritance Study 001). A packet does not measure it."
   },
-  "packet_sha256": "16ecb78f56e7391ccf665dd741eadca28d8554be8a135802d71389a74a53a85c"
+  "packet_sha256": "c880ec2fe205c1ff2428b6bcafa44683842226d7ed878209d500675b4af97cbe"
 }

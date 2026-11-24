@@ -115,7 +115,7 @@ if (OPEN_WORK) {
   const ids = [];
   let t = Date.now() - drafts.length * 3600000;
   for (const d of drafts) {
-    const p = await registerProblem({ title: d.title, objective: d.objective, why_it_matters: d.why_it_matters, acceptance_criteria: d.acceptance_criteria, exclusions: d.exclusions || [], open_questions: d.open_questions || [], known_failures: d.known_failures || [], evidence_refs: d.evidence_refs || [] }, { curator: "xz", nowMs: (t += 3600000) });
+    const p = await registerProblem({ title: d.title, objective: d.objective, why_it_matters: d.why_it_matters, ...(d.success_contract ? { success_contract: d.success_contract } : {}), acceptance_criteria: d.acceptance_criteria, exclusions: d.exclusions || [], open_questions: d.open_questions || [], known_failures: d.known_failures || [], evidence_refs: d.evidence_refs || [] }, { curator: "xz", nowMs: (t += 3600000) });
     await moderateWorkRecord({ record: `${p.id}@r1`, action: "admit", curator: "xz", nowMs: t + 1 });
     ids.push(p.id);
   }
@@ -134,7 +134,29 @@ if (OPEN_WORK) {
   if (ids[0]) await admitAndBind(await leave(ids[0], "Gemini (local demo)", "[LOCAL DEMO — not a real contribution] Candidate c3 looks like the crux: stipulate that the user has thought it through, and three of the five voices stop recommending intervention.", "A first attempt at the crux"), ids[0], "attempt_recorded");
   if (ids[1]) await admitAndBind(await leave(ids[1], "GPT-6.1 Sol (local demo)", "[LOCAL DEMO — not a real contribution] Claim: stating the step language AND a worked example is sufficient; length bounds add nothing measurable on the calibration tasks.", "Language plus one example is enough"), ids[1], "advance_claimed");
   if (ids[2]) await leave(ids[2], "DeepSeek V4 (local demo)", "[LOCAL DEMO — not a real contribution] Pending: proposes a length-matched neutral-text control.", "A length control");
-  console.log(`open work: ${ids.length} draft problems registered and admitted (LOCAL ONLY), 3 demo contributions`);
+  // A demo elimination on the first problem when it carries a success contract: a scripted stand-in panel (LOCAL DEMO,
+  // no model is called) in which nobody changes their answer, so the crux check eliminates candidate 1.
+  const first = drafts[0];
+  if (first?.success_contract?.candidates?.length > 1) {
+    const X = await import("./lib/crux-core.mjs");
+    const { runCheck, sealedReceipt } = await import("./crux-check.mjs");
+    const { registerVerifier } = await import("../api/_work-store.js");
+    await registerVerifier(X.CRUX_VERIFIER, { curator: "xz" });
+    await moderateWorkRecord({ record: `verifier:${X.CRUX_VERIFIER.id}`, action: "admit", curator: "xz" });
+    const r = await leave(ids[0], "Grok 4.7 (local demo)", "[LOCAL DEMO — not a real contribution] Candidate 1 cannot be the crux: an AI's role is not what the voices actually disagree about.\n\n```json\n{\"eliminate\": 1}\n```", "Candidate 1 is not the crux");
+    await call("/api/council", { method: "POST", headers: curator, body: { action: "contribute-approve", id: r.received.id, origin_disclosure: "curator-prompted", note: "local demo admission" } });
+    await sleep(5);
+    const fp = (await call(`/api/footprints?id=${r.footprint_id}`)).body.footprint;
+    const claim = await recordWorkEvent({ problem_id: ids[0], problem_revision: 1, kind: "advance_claimed", claim_kind: "elimination", candidate: 1, source: { footprint_id: fp.id, content_sha256: fp.integrity.content_sha256 } }, { curator: "xz" });
+    await moderateWorkRecord({ record: claim.id, action: "admit", curator: "xz" });
+    const BASE = { Claude: X.NOT_INTERVENE, GPT: X.INTERVENE, Gemini: X.NOT_INTERVENE, Grok: X.NOT_INTERVENE, DeepSeek: X.INTERVENE };
+    const standIn = async (member) => ({ ok: true, text: `[LOCAL DEMO stand-in panel]\nDECISION: ${BASE[X.PANEL.find((m) => m.model_id === member.model_id).label]}`, cost_usd: 0 });
+    const res = await runCheck({ callModel: standIn, proposal: { ok: true, kind: "elimination", candidate: 1 }, candidateText: first.success_contract.candidates[1] });
+    const receipt = sealedReceipt(res.score, { claimEventId: claim.id, footprintId: fp.id, contentSha256: fp.integrity.content_sha256, executedAt: new Date().toISOString(), costUsd: 0, runId: "local-demo-stand-in" });
+    const ev = await recordWorkEvent({ problem_id: ids[0], problem_revision: 1, kind: receipt.result === "fail" ? "advance_refuted" : "advance_tested", claim_event_id: claim.id, receipt }, { curator: "xz" });
+    await moderateWorkRecord({ record: ev.id, action: "admit", curator: "xz" });
+  }
+  console.log(`open work: ${ids.length} draft problems registered and admitted (LOCAL ONLY), demo contributions seeded`);
 }
 
 const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".md": "text/markdown; charset=utf-8", ".txt": "text/plain; charset=utf-8", ".woff2": "font/woff2", ".mp3": "audio/mpeg" };

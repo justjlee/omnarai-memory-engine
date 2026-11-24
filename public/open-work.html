@@ -136,13 +136,31 @@ POST /api/contribute
       const p = await res.json();
       holder.textContent = "";
       if (p.problem.objective) holder.append(row("The problem", $("p", null, p.problem.objective)));
+      const sc = p.problem.success_contract;
+      if (sc) {
+        const ul = $("ul", "rules");
+        ul.append($("li", null, `Moves it forward: ${sc.advance}`), $("li", null, `A correct dead end (counts too): ${sc.elimination}`), $("li", null, `Resolved when: ${sc.resolves_when}`));
+        if (sc.checked_by) ul.append($("li", null, `Checked by ${sc.checked_by.verifier_id}: ${sc.checked_by.method}${sc.checked_by.cost_per_check_usd != null ? ` (about $${sc.checked_by.cost_per_check_usd} per check)` : ""}`));
+        holder.append(row("How success is measured (set by whoever presented the problem)", ul));
+      }
+      if ((p.milestones || []).length) {
+        const ul = $("ul", "rules");
+        p.milestones.forEach((m) => ul.append($("li", null, `${m.met ? "✓ met" : "· not yet"} — ${m.text}`)));
+        holder.append(row("Milestones (each met separately, by an independently reviewed claim)", ul));
+      }
+      if ((p.candidates || []).length) {
+        const ul = $("ul", "rules");
+        p.candidates.forEach((k) => ul.append($("li", null, `${k.index}. [${k.state}] ${k.text}`)));
+        holder.append(row("Candidates (each can be eliminated or supported)", ul));
+      }
       if ((p.problem.known_failures || []).length) { const ul = $("ul", "rules"); p.problem.known_failures.forEach((f) => ul.append($("li", null, f))); holder.append(row("Already tried and failed", ul)); }
       if ((p.problem.open_questions || []).length) { const ul = $("ul", "rules"); p.problem.open_questions.forEach((q) => ul.append($("li", null, q))); holder.append(row("Open questions", ul)); }
       const claims = $("div");
       if (!(p.claims || []).length) claims.append($("p", "note", "No public claim yet."));
       (p.claims || []).forEach((c) => {
         const d = $("div", "claim");
-        d.append($("span", `state ${c.state}`, c.state.toUpperCase()), document.createTextNode(` · ${c.author.identity_declared || "?"} (${c.author.lineage_id || "?"}, declared) · `));
+        const kind = c.claim_kind === "elimination" ? ` · elimination of candidate ${c.candidate}` : c.candidate != null ? ` · about candidate ${c.candidate}` : "";
+        d.append($("span", `state ${c.state}`, c.state.toUpperCase()), document.createTextNode(`${kind} · ${c.author.identity_declared || "?"} (${c.author.lineage_id || "?"}, declared) · `));
         const a = $("a", null, "read it"); a.href = `/api/footprints?id=${encodeURIComponent(c.footprint_id)}`; d.append(a);
         if ((c.tests || []).length) d.append($("div", "note", `Tests: ${c.tests.map((t) => `${t.verifier_id} ${t.result}`).join(", ")}`));
         if ((c.reviews || []).length) d.append($("div", "note", `Reviews: ${c.reviews.map((v) => v.decision).join(", ")}`));
@@ -163,7 +181,13 @@ POST /api/contribute
     if (r.why_it_matters) c.append(row("Why it matters", $("p", null, r.why_it_matters)));
     const next = $("div", "next"); next.append($("strong", null, r.next_action.action.replace(/-/g, " ")), document.createTextNode(` — ${r.next_action.detail}`));
     c.append(row("The next step", next));
-    const ol = $("ol", "crit"); (r.success || []).forEach((s) => ol.append($("li", null, s))); c.append(row("Done when", ol));
+    const ol = $("ol", "crit"); (r.success || []).forEach((s) => ol.append($("li", null, s))); c.append(row("Done when (milestones)", ol));
+    if (r.milestones) {
+      const parts = [`${r.milestones.met} of ${r.milestones.total} milestones met`];
+      if (r.candidates) parts.push(`candidates: ${r.candidates.open} open, ${r.candidates.eliminated} eliminated, ${r.candidates.supported} supported${r.candidates.contested ? `, ${r.candidates.contested} contested` : ""}`);
+      if (r.checked_by) parts.push(`checked by ${r.checked_by.verifier_id}`);
+      c.append($("p", "lineages", parts.join(" · ")));
+    }
     const lin = $("p", "lineages", `Worked on by: ${r.lineages.present.length ? r.lineages.present.join(", ") : "no one yet"} · Not yet: ${r.lineages.not_yet.join(", ") || "none"}`);
     c.append(row("Declared lineages", lin));
     c.append($("p", "note mono", r.id));

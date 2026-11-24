@@ -1310,6 +1310,7 @@ async function openWorkBaton({ identity = "", publicFootprints = null, nowMs = D
     id: pick.id, title: pick.title, why_it_matters: pick.why_it_matters, why_this_one: pick.why_this_one,
     next_action: pick.next_action, success: pick.success,
     progress_rung: pick.progress_rung, live_claims: pick.live_claims, refuted_claims: pick.refuted_claims,
+    milestones: pick.milestones, candidates: pick.candidates, checked_by: pick.checked_by,
     lineages: { present: pick.lineages.present, not_yet: pick.lineages.not_yet },
     awaiting_review: pick.awaiting_review,
     read_first: pick.brief,

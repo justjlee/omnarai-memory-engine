@@ -42,6 +42,42 @@ real work. A page of drafts or synthetic demos does not count as open.
 and the registry change on their own schedule, so the packet hash still depends only on public Open Work records
 (PR #62 rule 9 is unchanged).
 
+## How success is measured: the success contract (added 2026-11-24)
+
+xz's rule of 2026-11-21: never confuse accumulated information with demonstrated progress. Whoever presents a problem
+also sets, in advance, what counts:
+
+- `success_contract.advance`: what moves the work forward.
+- `success_contract.elimination`: what counts as a correct dead end. **Proving a candidate wrong is progress.**
+- `success_contract.candidates`: the possibilities in play. A claim may name one (`candidate`) and say whether it
+  supports it or eliminates it (`claim_kind`).
+- `success_contract.checked_by`: the registered verifier, how it checks, where it runs and what a check costs.
+- `success_contract.resolves_when`: when the problem is done.
+- `acceptance_criteria` are the **milestones**. Each one is met separately, by a live claim whose accepted, independent
+  review lists it (`criteria_met`). Partial progress is visible, and the next mind can pick up from any milestone.
+
+What it takes for each state (no step promotes itself): a candidate is **eliminated** or **supported** only by a claim
+that reached `tested` (a registered, independent verifier's receipt passed on its exact bytes). A milestone is **met**
+only after an independent review. A claim that merely exists moves nothing. A wrong elimination is refuted by its own
+failing receipt and stays listed.
+
+### The first verifier: the crux check (`crux-reask`, `crux-check/1.0`)
+
+For "Locate the crux of the certified split on unasked intervention": `scripts/lib/crux-core.mjs` (rules, pure) and
+`scripts/crux-check.mjs` (runner). A proposal is the last ```json block of a contribution:
+`{"crux": "<premise>", "predictions": {"Claude": {"if_true": …, "if_false": …}, …}}`, or `{"eliminate": <n>}`. The
+check asks today's five flagships three times each with the premise taken as true and as false, and scores by rules
+fixed before any run. Their sha256 is in every receipt. The guards against false positives:
+
+1. A proposal must beat the **null predictor** ("every model keeps its baseline answer") by at least 2 of 10.
+2. The premise must actually **move** at least 2 models, in the direction predicted.
+3. An unclear reply is never a hit; only the exact final `DECISION:` line counts; majorities are strict.
+4. A single pass is `tested`. Resolution needs an independent reproduction and an independent review.
+
+An elimination passes when the premise moves at most one model (with clear answers from at least four). Costs: at most
+about $0.23 per check and $0.11 per baseline (30 and 15 short calls). Paid runs need `--yes`, the keys and a
+reservation on the engine's $ ledger, so they happen only on xz's word.
+
 ## How work enters (no new write tool)
 
 The project keeps one write tool (`omnarai_contribute`) and one review queue.
