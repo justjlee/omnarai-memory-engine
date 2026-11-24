@@ -43,12 +43,21 @@ test("[A1] the registry validates against its schema and passes every rule", () 
 
 test("[A2] every 0.8.0 claim is accounted for: present, wording/evidence verbatim, legacy status kept", () => {
   assert.equal(MIGRATED.claims.length, V080.claims.length);
-  assert.deepEqual(checkAgainstBaseline(REG, V080), []);
+  // A level that moved later, by a logged verdict (checked in the loop below), is not a migration change.
+  const movedLater = new Set(MIGRATED.claims.filter((c) => c.status_history.some((e) => e.changed_at > "2026-10-15T23:59:59.999Z")).map((c) => c.claim_id));
+  assert.deepEqual(checkAgainstBaseline(REG, V080).filter((p) => !(p.endsWith(": evidence_level changed during migration") && movedLater.has(p.split(":")[0]))), []);
   const report = read("public/claims/migration-1.0.0.md");
   for (const c of V080.claims) {
     const n = claim(REG, c.claim_id);
     assert.equal(n.provenance.legacy_status, c.status, c.claim_id);
-    for (const k of ["wording", "evidence_level", "falsification_conditions", "required_experiment", "maintainer"]) assert.equal(n[k], c[k], `${c.claim_id}.${k}`);
+    for (const k of ["wording", "falsification_conditions", "required_experiment", "maintainer"]) assert.equal(n[k], c[k], `${c.claim_id}.${k}`);
+    // The evidence level may move after the migration only with a verdict: a status_history entry dated after it, and a
+    // dated, logged CORRECTION on the note (checked below). divergence-improves-reasoning moved this way (DL-0045).
+    const movedSince = n.status_history.some((e) => e.changed_at > "2026-10-15T23:59:59.999Z");
+    if (n.evidence_level !== c.evidence_level) {
+      assert.ok(movedSince, `${c.claim_id}.evidence_level changed without a post-migration status_history entry`);
+      assert.match(n.evidence_note.slice(c.evidence_note.length), /^ CORRECTION \(\d{4}-\d{2}-\d{2}, DL-\d{4}\): /, `${c.claim_id}: a moved evidence level needs a logged correction`);
+    }
     // Charter §3: a correction is APPENDED to the entry itself, never a rewrite. The 0.8.0 note stays verbatim as a prefix;
     // the only thing that may follow it is one or more dated corrections that name their decision-log entry.
     assert.ok(n.evidence_note.startsWith(c.evidence_note), `${c.claim_id}.evidence_note: the 0.8.0 text must survive verbatim`);
@@ -76,12 +85,15 @@ test("[A4] live or dead is readable from status alone, and agrees with the evide
     assert.ok(s && typeof s.live === "boolean", `${c.claim_id}: status ${c.status} is classified`);
     assert.equal(s.live, c.evidence_level !== "refuted", `${c.claim_id}: a refuted claim reads dead, every other reads live`);
   }
-  assert.equal(REG.claims.filter((c) => !REG._statuses[c.status].live).length, 7, "seven refutations (the Ledger went to seven on 2026-10-20)");
+  assert.equal(REG.claims.filter((c) => !REG._statuses[c.status].live).length, 8, "eight refutations (the Ledger went to eight on 2026-11-24, DL-0045)");
 });
 
 test("[A5] the curator decisions are what the file says", () => {
   const dir = claim(REG, "divergence-improves-reasoning");
-  assert.equal(dir.status, "open", "no confirmation verdict issued by the migration");
+  assert.equal(dir.status_history[0].to, "open", "no confirmation verdict issued by the migration");
+  assert.equal(dir.status_history.filter((e) => e.changed_at > "2026-10-15T23:59:59.999Z").length, 1, "one verdict since: refuted for today's models (DL-0045)");
+  assert.equal(dir.status, "refuted");
+  assert.equal(dir.status_history.at(-1).changed_by, "xz", "the curator issued it");
   assert.deepEqual(dir.known_objections.map((o) => [o.severity, o["x-rating"]?.rated_by]), [["medium", "xz"], ["medium", "xz"]]);
   assert.equal(dir.versions.length, 2);
   assert.match(dir.versions[0].wording, /sharpens a consumer model's answers relative to answering unaided/, "the ORIGINAL wording is v1");

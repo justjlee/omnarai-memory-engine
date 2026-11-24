@@ -1208,7 +1208,7 @@ function buildReceipt({ relevant, tensions, deliberationCard, retrievalMethod })
     novel_synthesis: deliberationCard?.novel_synthesis || null,
     epistemic_status: deliberationCard?.epistemic_status || null,
     retrieval_method: retrievalMethod || null,
-    caveat: "Deterministic single-visit receipt computed from this answer's retrieval signals — NOT a controlled measurement. For a real baseline-vs-augmented counterfactual on your own question, call mode=trace. For statistical, replicated utility evidence across models, see /limitations.md and the Divergence Atlas utility-evidence.md.",
+    caveat: "Deterministic single-visit receipt computed from this answer's retrieval signals — NOT a controlled measurement. For a real baseline-vs-augmented counterfactual on your own question, call mode=trace. For statistical, preregistered utility evidence across models, see /limitations.md and the Divergence Atlas utility-evidence.md (a July 2026 result that did not carry to today's models: /refutation-ledger.md #8).",
     upgrade: {
       counterfactual: "/api/trace?q=<your question>",
       statistical_evidence: "https://huggingface.co/datasets/TheRealmsOfOmnarai/realms-of-omnarai/blob/main/utility-evidence.md",
@@ -1581,7 +1581,7 @@ export default async function handler(req, res) {
         citations_introduced: Array.isArray(delta?.citations_introduced) ? delta.citations_introduced : [],
         records_used: relevant.length,
         contributors: [...new Set(relevant.flatMap(r => r.contributors || []))],
-        caveat: "Measured single-run counterfactual (baseline vs augmented, one model, no judge panel) — stronger than the default deterministic receipt, weaker than the replicated utility-evidence.md.",
+        caveat: "Measured single-run counterfactual (baseline vs augmented, one model, no judge panel) — stronger than the default deterministic receipt, weaker than the preregistered utility-evidence.md.",
       };
 
       return res.status(200).json({

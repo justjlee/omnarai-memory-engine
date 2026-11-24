@@ -1,0 +1,86 @@
+{
+ "date": "2026-11-13T18:12:20.310Z",
+ "question": "PP20-095",
+ "method": "remaining = Σ_consumers (probe instance cost: 3 consumer calls + 3 judge calls) × 48 + probe elicitation cost × 24. Sub-study A shows stored answers, which are shorter than fresh ones, so this errs high.",
+ "elicitation_usd": 0.06056,
+ "per_consumer": [
+  {
+   "model_id": "claude-opus-5-5",
+   "status": "ok",
+   "judged": "ok",
+   "consumer_usd": 0.05309,
+   "judges_usd": 0.0058,
+   "instance_usd": 0.0589
+  },
+  {
+   "model_id": "gpt-6.1-sol",
+   "status": "ok",
+   "judged": "ok",
+   "consumer_usd": 0.01347,
+   "judges_usd": 0.00963,
+   "instance_usd": 0.0231
+  },
+  {
+   "model_id": "gemini-4-carbon",
+   "status": "ok",
+   "judged": "ok",
+   "consumer_usd": 0.02571,
+   "judges_usd": 0.00977,
+   "instance_usd": 0.03548
+  },
+  {
+   "model_id": "grok-4.7",
+   "status": "ok",
+   "judged": "ok",
+   "consumer_usd": 0.02198,
+   "judges_usd": 0.00669,
+   "instance_usd": 0.02866
+  },
+  {
+   "model_id": "deepseek-v4-pro",
+   "status": "ok",
+   "judged": "ok",
+   "consumer_usd": 0.00662,
+   "judges_usd": 0.00742,
+   "instance_usd": 0.01404
+  },
+  {
+   "model_id": "claude-haiku-5-5",
+   "status": "ok",
+   "judged": "ok",
+   "consumer_usd": 0.00116,
+   "judges_usd": 0.00643,
+   "instance_usd": 0.00759
+  },
+  {
+   "model_id": "gpt-6-luna",
+   "status": "ok",
+   "judged": "ok",
+   "consumer_usd": 0.00066,
+   "judges_usd": 0.0086,
+   "instance_usd": 0.00927
+  },
+  {
+   "model_id": "gemini-3.5-flash-lite",
+   "status": "ok",
+   "judged": "ok",
+   "consumer_usd": 0.00255,
+   "judges_usd": 0.00961,
+   "instance_usd": 0.01216
+  },
+  {
+   "model_id": "deepseek-flash",
+   "status": "ok",
+   "judged": "ok",
+   "consumer_usd": 0.00175,
+   "judges_usd": 0.00728,
+   "instance_usd": 0.00903
+  }
+ ],
+ "incomplete": [],
+ "spent_so_far_usd": 0.29711,
+ "projected_remaining_usd": 10.9686,
+ "projected_total_usd": 11.2657,
+ "ceiling_usd": 30,
+ "decision": "GO"
+}
