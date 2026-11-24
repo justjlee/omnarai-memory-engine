@@ -56,7 +56,7 @@
   "curators": [
     "xz"
   ],
-  "updated_at": "2026-10-15",
+  "updated_at": "2026-11-24",
   "migrated_from": "0.8.0",
   "previous_versions": [
     "https://engine.omnarai.org/claims/v0.8.0.json"
@@ -219,8 +219,8 @@
       "wording": "Consulting the Divergence Atlas measurably sharpens SOME consumer models' answers relative to placebo self-reflection — an architecture-dependent effect, not a universal one.",
       "version": 2,
       "scope": null,
-      "evidence_level": "replicated",
-      "evidence_note": "PREREGISTERED CONFIRMATORY STUDY (locked 2026-06-18, run 2026-07-15): all five registered predictions confirmed. GPT-4o 148–12 and Gemini 137–35 (Holm-adjusted p<1e-6, surviving 3/3 paraphrase variants at both length caps); Grok and DeepSeek null as registered; Claude null-predicted but came back significantly NEGATIVE (35–126 — Atlas exposure degrades Claude's revisions vs plain self-reflection). H4 (adversarial durability) NOT supported for any consumer. Full transcripts + Holm analysis published: utility-evidence-v2.md.",
+      "evidence_level": "refuted",
+      "evidence_note": "PREREGISTERED CONFIRMATORY STUDY (locked 2026-06-18, run 2026-07-15): all five registered predictions confirmed. GPT-4o 148–12 and Gemini 137–35 (Holm-adjusted p<1e-6, surviving 3/3 paraphrase variants at both length caps); Grok and DeepSeek null as registered; Claude null-predicted but came back significantly NEGATIVE (35–126 — Atlas exposure degrades Claude's revisions vs plain self-reflection). H4 (adversarial durability) NOT supported for any consumer. Full transcripts + Holm analysis published: utility-evidence-v2.md. CORRECTION (2026-11-24, DL-0045): REFUTED FOR TODAY'S MODELS by the preregistered retest of 2026-11-13 (utility v2, sub-study A; rules pushed 18:04 UTC before any study model call, commit 721fad8; analysis 4b86f42). Shown the Atlas's stored answers on 24 Atlas questions, today's flagships (claude-opus-5-5, gpt-6.1-sol, gemini-4-carbon, grok-4.7, deepseek-v4-pro) revised better than after placebo self-reflection on 2 questions and worse on 22; small models (claude-haiku-5-5, gpt-6-luna, gemini-3.5-flash-lite, deepseek-flash) on 4 and 11, with 9 tied. Both cells are Refuted under the registration's §5 rule (treatment questions no more than placebo questions). The same run's positive control passed (small models shown fresh flagship answers: 22 better, 0 worse), so the test could see an effect where one existed. Judge agreement 0.69-0.82 against a 0.60 bar; 432 of 432 instances judged. The July models (gpt-4o, gemini-2.5-flash) were not re-tested, and the July numbers above stay true of them; what does not carry forward is the Atlas's stored record sharpening today's models. The run cannot say why: the stored answers come from mid-2026 models weaker than today's readers, and the Atlas questions are mostly about AI minds. In the same run, fresh answers from today's other flagships did help; that is a separate claim, fresh-peer-answers-improve-reasoning. The falsification condition above is kept as written; what would rehabilitate this claim is a preregistered test, with a positive control that passes, in which today's models shown the Atlas's stored answers revise better than after placebo self-reflection on more decided questions than not. Results: analysis/utility-v2/run/results.md.",
       "falsification_conditions": "An independent replication with new questions or a materially different judge pool failing to reproduce the GPT-4o/Gemini effect; or the pending human-rater subset (30 blind triples) disagreeing sharply with the model panel.",
       "precommitments": [],
       "known_objections": [
@@ -259,7 +259,7 @@
       ],
       "required_experiment": "Human-rater subset scoring; then an out-of-Atlas question replication.",
       "maintainer": "xz",
-      "status": "open",
+      "status": "refuted",
       "status_history": [
         {
           "from": null,
@@ -268,10 +268,18 @@
           "changed_by": "xz",
           "reason": "Registered in claims.json 0.1.0 at evidence_level \"measured_differential\" (git 06bab7a: \"Review-synthesis session: §5 verification, primary backup script, B11/B5 draft schemas, B3 claim registry seed\"). Reconstructed at migration.",
           "evidence_ref": "git:06bab7a"
+        },
+        {
+          "from": "open",
+          "to": "refuted",
+          "changed_at": "2026-11-24T17:40:00.000Z",
+          "changed_by": "xz",
+          "reason": "Curator accepted utility v2's registered verdicts for the library (A-flagship Refuted, 2 / 22; A-small Refuted, 4 / 11) and chose this wording on 2026-11-24, eleven days after the run. The interpretation he approved before the run reads: \"Library helps neither: the Atlas is a record, not a harness ... an eighth refutation.\"",
+          "evidence_ref": "analysis/utility-v2/run/results.md"
         }
       ],
-      "closed_at": null,
-      "closed_reason": null,
+      "closed_at": "2026-11-24T17:40:00.000Z",
+      "closed_reason": "Refuted for the current generation by utility v2 (preregistered, run 2026-11-13): shown the Atlas's stored answers, today's flagships revised worse than after a plain re-examination on 22 of 24 decided questions and better on 2 (small models: 4 better, 11 worse). The July 2026 effect for gpt-4o and gemini-2.5-flash was not re-tested and stays on the record; it does not carry to today's models. The curator accepted the registered verdict on 2026-11-24.",
       "provenance": {
         "created_at": "2026-07-15T10:39:22.000Z",
         "created_by": "xz",
@@ -1196,6 +1204,86 @@
           "changed_at": "2026-10-20T18:56:53.000Z",
           "changed_by": "xz (standing direction \"creation is open\": build, try with the panel, report; drafted by Claude)",
           "reason": "Original wording, registered with the preregistration."
+        }
+      ]
+    },
+    {
+      "claim_id": "fresh-peer-answers-improve-reasoning",
+      "wording": "Showing a current model fresh answers from other labs' current flagships improves its revised answer vs a plain 'think again', for most current models, not all.",
+      "version": 1,
+      "scope": "Covers the November 2026 generation: nine consumers (flagships claude-opus-5-5, gpt-6.1-sol, gemini-4-carbon, grok-4.7, deepseek-v4-pro; small claude-haiku-5-5, gpt-6-luna, gemini-3.5-flash-lite, deepseek-flash), each shown four answers elicited on 2026-11-13 from the flagships of the four other labs, on 24 questions from the 2020 PhilPapers Survey that this project did not write; every model at its lowest reasoning setting; three blind model judges per instance. Not every model: claude-opus-5-5 revised worse with peers (2 better / 22 worse) and gpt-6.1-sol did not benefit (8 / 16); per-model figures are exploratory. Does not cover other generations, higher reasoning settings, other questions, stored or older answers (see divergence-improves-reasoning, refuted), or human judgment.",
+      "evidence_level": "measured_differential",
+      "evidence_note": "Utility v2, sub-study B (preregistered; rules pushed 2026-11-13 18:04 UTC before any study model call, commit 721fad8; run 18:05-18:43 UTC; analysis 4b86f42). Question-level sign test against placebo self-reflection: flagships 19 questions better / 5 worse (Holm p = 0.0099, Supported); small models 22 / 0, 2 tied (Supported; the registered positive control). Judge agreement 0.82 and 0.72 against a 0.60 bar; 216 of 216 instances judged. Exploratory, per model (questions better / worse): grok-4.7 23/1, deepseek-v4-pro 21/3, gemini-4-carbon 18/6, gpt-6.1-sol 8/16, claude-opus-5-5 2/22 (worse with peers, as claude-sonnet-4-6 was in July); small: gpt-6-luna 22/2, gemini-3.5-flash-lite 22/2, deepseek-flash 20/4, claude-haiku-5-5 19/5. Whole run (both sub-studies) $10.48 provider-reported. Results: analysis/utility-v2/run/results.md.",
+      "falsification_conditions": "Refuted at this scope if a blind human rating of a 30-instance subset disagrees sharply with the model judges, or if a preregistered re-run under the same §4-§5 rules finds treatment questions no more than placebo questions for current flagships. Narrowed if the advantage disappears when consumers reason at their default or higher settings.",
+      "precommitments": [
+        {
+          "falsifier_text": "Falsifier for the registry claim. If A-flagship and B-flagship are both Refuted, the claim \"showing a model other lineages' answers improves its answer\" does not carry to the current flagship generation. That is reported as a refutation, with the same prominence a positive would get. How the registry entry is reworded is the curator's decision.",
+          "sha256": "526dad9dda2237204b88ac056b57a74edb141c4b5cdd29818e33fe57e96ff316",
+          "frozen_at": "2026-11-13T18:04:23.000Z",
+          "frozen_by": "xz",
+          "context": "docs/utility-v2-preregistration.md §5, verbatim (line breaks joined, bold markers removed), frozen in public commit 721fad8 before any study model call. The digest was computed when the claim entered this registry on 2026-11-24; the commit is what dates the text.",
+          "outcome": {
+            "verdict": "not_fired",
+            "ran_at": "2026-11-13T18:43:33.000Z",
+            "predicted_direction": "B-flagship Inconclusive or Supported, no confident prediction (§6)",
+            "observed_direction": "B-flagship Supported (19 / 5); A-flagship Refuted (2 / 22), so not both Refuted",
+            "effect_size": "B-flagship 19 vs 5 decided questions, Holm-adjusted one-sided p = 0.0099"
+          }
+        }
+      ],
+      "known_objections": [
+        {
+          "objection": "The judges are models. A blind human rating of a 30-instance subset is still open, as it was in July.",
+          "severity": "medium",
+          "status": "open",
+          "raised_by": "Claude | xz",
+          "date": "2026-11-13"
+        },
+        {
+          "objection": "Every consumer and judge ran at its lowest reasoning setting. With more thinking, the plain re-examination might close the gap.",
+          "severity": "medium",
+          "status": "open",
+          "raised_by": "Claude | xz",
+          "date": "2026-11-13"
+        },
+        {
+          "objection": "Sub-studies A and B differ in both their questions and their peers, so this run cannot say why fresh answers helped where the Atlas's stored answers did not: newer peers, peers as strong as the reader, or questions not about AI minds.",
+          "severity": "low",
+          "status": "open",
+          "raised_by": "Claude | xz",
+          "date": "2026-11-13"
+        }
+      ],
+      "required_experiment": "The blind human rating of a 30-instance subset; then the same test at the consumers' default reasoning settings.",
+      "maintainer": "xz",
+      "status": "confirmed",
+      "status_history": [
+        {
+          "from": null,
+          "to": "confirmed",
+          "changed_at": "2026-11-24T17:40:00.000Z",
+          "changed_by": "xz (chose this wording from options drafted by Claude, 2026-11-24)",
+          "reason": "Entered in this registry with the curator's verdict on 2026-11-24. It was registered as sub-study B of the utility v2 preregistration (commit 721fad8, pushed 2026-11-13 18:04 UTC, before any study model call) and run that day; the registered verdicts were B-flagship Supported and B-small Supported.",
+          "evidence_ref": "analysis/utility-v2/run/results.md"
+        }
+      ],
+      "closed_at": "2026-11-24T17:40:00.000Z",
+      "closed_reason": "Supported at its stated scope by utility v2 sub-study B (2026-11-13): for the November 2026 generation only, with claude-opus-5-5 and gpt-6.1-sol as named exceptions.",
+      "provenance": {
+        "created_at": "2026-11-24T17:40:00.000Z",
+        "created_by": "xz (chose this wording from options drafted by Claude, 2026-11-24)",
+        "source_claims": [
+          "divergence-improves-reasoning"
+        ],
+        "supersedes": null
+      },
+      "versions": [
+        {
+          "version": 1,
+          "wording": "Showing a current model fresh answers from other labs' current flagships improves its revised answer vs a plain 'think again', for most current models, not all.",
+          "changed_at": "2026-11-24T17:40:00.000Z",
+          "changed_by": "xz (chose this wording from options drafted by Claude, 2026-11-24)",
+          "reason": "Original wording, chosen by the curator after utility v2."
         }
       ]
     }
