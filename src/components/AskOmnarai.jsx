@@ -232,7 +232,7 @@ function ReceiptCard({ receipt: r, query }) {
             </div>
           )}
           <div style={{ marginTop: 8, fontSize: 11, color: "#6e7681", fontStyle: "italic" }}>
-            Measured single-run counterfactual (baseline vs augmented, one model) — stronger than the receipt above, weaker than the replicated utility-evidence.md.
+            Measured single-run counterfactual (baseline vs augmented, one model) — stronger than the receipt above, weaker than the preregistered utility-evidence.md.
           </div>
         </div>
       )}

@@ -412,21 +412,27 @@ For MCP-compatible clients (Claude Desktop and others), an MCP server is availab
 
 This project distinguishes what it asserts from what it has measured. The full registry —
 every load-bearing claim, its evidence level, and what would falsify it — is machine-readable
-at `/claims.json`. Since registry 1.0.0 (2026-10-15) each claim carries two independent labels: `evidence_level` (the evidence) and `status` (the lifecycle: `open`, `refuted`, `confirmed`, …). Whether a claim is live or dead is readable from `status` alone (the file's `_statuses` table). Wording, status and objections change only by appending to `versions[]`, `status_history[]` and the objections list; the deploy gate refuses any rewrite of what was published. Schema: `/schemas/claims-registry-1.0.0.schema.json` · migration report: `/claims/migration-1.0.0.md` · the 0.8.0 file, frozen: `/claims/v0.8.0.json`. As of 2026-07-15:
+at `/claims.json`. Since registry 1.0.0 (2026-10-15) each claim carries two independent labels: `evidence_level` (the evidence) and `status` (the lifecycle: `open`, `refuted`, `confirmed`, …). Whether a claim is live or dead is readable from `status` alone (the file's `_statuses` table). Wording, status and objections change only by appending to `versions[]`, `status_history[]` and the objections list; the deploy gate refuses any rewrite of what was published. Schema: `/schemas/claims-registry-1.0.0.schema.json` · migration report: `/claims/migration-1.0.0.md` · the 0.8.0 file, frozen: `/claims/v0.8.0.json`. As of 2026-07-15, with the 2026-11-24 update marked:
 
-- **Replicated:** Atlas exposure sharpens some consumers' answers. A preregistered confirmatory
-  study (locked 2026-06-18, run 2026-07-15) confirmed all five registered predictions —
-  GPT-4o 148–12 and Gemini 137–35 vs placebo (Holm p<1e-6, robust to paraphrase and answer
-  length); null for Grok and DeepSeek as registered; significantly NEGATIVE for Claude. The
-  effect is architecture-differential, not universal.
+- **Replicated in July 2026; refuted for today's models (2026-11-24):** Atlas exposure
+  sharpened some consumers' answers. A preregistered confirmatory study (locked 2026-06-18, run
+  2026-07-15) confirmed all five registered predictions — GPT-4o 148–12 and Gemini 137–35 vs
+  placebo (Holm p<1e-6, robust to paraphrase and answer length); null for Grok and DeepSeek as
+  registered; significantly NEGATIVE for Claude. A preregistered retest on 2026-11-13 found the
+  Atlas's stored answers made today's models' revisions worse (flagships better on 2 questions,
+  worse on 22; small models 4 / 11): refutation #8 (`divergence-improves-reasoning`).
+- **Supported for today's models (2026-11-24):** fresh answers from other labs' current
+  flagships improve a model's revision over a plain re-examination (flagships 19 / 5, small
+  models 22 / 0; `fresh-peer-answers-improve-reasoning`), but not for Claude Opus 5.5 (2 / 22,
+  worse) or GPT-6.1 Sol (8 / 16). Model judges; every model at its lowest reasoning setting.
 - **Refuted:** undifferentiated excerpt retrieval. A blind A/B found injecting the fast path's
   retrieved excerpts made GPT-4o's answers WORSE than answering cold (35/102, p=0.002). This is
   why retrieval is now layered — pick `layers=` that serve your task.
 - **Supported and replicating:** the Atlas is not simulable by one strong model. In every
   cross-prediction run to date (5/5 across all certified questions), a single model simulating
   all five voices failed to match real peer-prediction accuracy.
-- **Not supported:** adversarial durability — Atlas exposure sharpens answers but does not make
-  them more defensible under attack.
+- **Not supported:** adversarial durability — Atlas exposure sharpened answers (July 2026) but did
+  not make them more defensible under attack.
 
 Counts quoted anywhere should be checked against `/api/manifest`, the self-attesting single
 source of truth; its hashes are pinned to public git tags so history cannot be silently

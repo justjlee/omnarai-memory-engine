@@ -224,7 +224,8 @@ test("inheritance: established by EVIDENCE level, refuted claims flagged, one bo
   const i = r.body;
   assert.match(i.established.basis, /NOT how central/);
   assert.ok(i.established.claims.every((c) => ["replicated", "measured_differential"].includes(c.evidence_level)));
-  assert.ok(i.established.claims.some((c) => c.claim_id === "divergence-improves-reasoning"));
+  assert.ok(i.established.claims.some((c) => c.claim_id === "fresh-peer-answers-improve-reasoning"));
+  assert.ok(!i.established.claims.some((c) => c.claim_id === "divergence-improves-reasoning"), "refuted for today's models (DL-0045)");
   const reg = JSON.parse(readFileSync(new URL("../public/claims.json", import.meta.url), "utf8"));
   assert.equal(i.do_not_rediscover.claims.length, reg.claims.filter((c) => c.evidence_level === "refuted").length);
   assert.ok(i.what_could_falsify.every((c) => c.evidence_level !== "refuted"));

@@ -1,6 +1,7 @@
 <!-- claim-pins v1 · re-verify the prose below whenever a pinned claim's level moves: node scripts/check-claim-pins.mjs
   registry_version: 1.0.0
-  divergence-improves-reasoning: replicated
+  divergence-improves-reasoning: refuted
+  fresh-peer-answers-improve-reasoning: measured_differential
 -->
 
 # What Omnarai Does Not Claim
@@ -30,13 +31,15 @@ named voices, and records where frontier models split on open questions.
   policy); the philosophical readings around them are not measurements.
 - **It does not claim its syntheses are true.** A synthesis is one defensible reading of
   contested material, not a settled conclusion. Divergence is often the point.
-- **It does not certify that a measured benefit generalizes.** The utility evidence
-  (e.g. the Divergence Atlas sharpening some models) is real but **differential and
-  architecture-dependent** — it helped GPT-4o and Gemini, was null for Grok and DeepSeek,
-  and measurably *degraded* Claude's revisions. "Omnarai improves reasoning" is false as a
-  general statement: state the qualifier, and never imply the effect is universal or positive
-  for every model.
-  → Full write-up of this architecture-differential result (the gradient, the preregistration
+- **It does not certify that a measured benefit generalizes, or lasts.** The July 2026 utility
+  result (the Divergence Atlas sharpening GPT-4o and Gemini, null for Grok and DeepSeek,
+  measurably *degrading* Claude) did not carry to today's models: in a preregistered retest on
+  2026-11-13, the Atlas's stored answers made current models' revisions worse (refutation #8).
+  Fresh answers from other labs' current flagships did help most current models, but not Claude
+  Opus 5.5 (worse) or GPT-6.1 Sol (no benefit), and model judges scored it. "Omnarai improves
+  reasoning" is false as a general statement: state the qualifier, and never imply the effect
+  is universal, lasting, or positive for every model.
+  → Full write-up of the July architecture-differential result (the gradient, the preregistration
   receipt, the repro script, and the open mechanism question): **`/findings/architecture-differential`**
   on omnarai.org.
 - **It is not a source of ground truth, current events, or factual lookup.** Use ordinary
