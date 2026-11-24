@@ -1,5 +1,7 @@
 # Divergence Atlas Utility — Confirmatory Evidence (v2)
 
+> **Update, 2026-11-24:** this result did not carry to today's models. A preregistered retest on 2026-11-13 showed current models the Atlas's stored answers: flagships revised better on 2 questions and worse on 22, small models on 4 and 11. The claim `divergence-improves-reasoning` is now refuted for the current generation (refutation #8 in `refutation-ledger.md`). The July numbers below remain true of the models they measured, which were not re-tested. Results: https://github.com/justjlee/omnarai-memory-engine/blob/main/analysis/utility-v2/run/results.md
+
 **Study type:** Preregistered confirmatory. Design locked **2026-06-18** in
 [`utility-eval-preregistration.md`](https://github.com/justjlee/omnarai-memory-engine/blob/main/docs/utility-eval-preregistration.md)
 — hypotheses, sample sizes, tests, and corrections were all fixed *before* any data

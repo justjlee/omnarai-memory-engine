@@ -92,14 +92,20 @@ async function pool(items, n, fn) {
 
 // ── labels + findings ─────────────────────────────────────────────────────────────────────────────────────
 export function labelOf(url, base = DEFAULTS) {
-  if (url.startsWith(base.hf)) return "hf:/" + url.slice(base.hf.length).replace(/^\//, "").replace(/\/raw\/main\/README\.md$/, "");
+  if (url.startsWith(base.hf)) return "hf:/" + url.slice(base.hf.length).replace(/^\//, "").replace(/\/raw\/main\/README\.md$/, "").replace(/\/raw\/main\//, "/");
   if (url.startsWith("https://registry.npmjs.org/")) return "npm:" + url.slice("https://registry.npmjs.org/".length).split("/")[0];
   if (url.startsWith(base.front)) return "front:" + (url.slice(base.front.length) || "/").replace(/\.html$/, "");
   const stripped = url.startsWith(base.engine) ? url.slice(base.engine.length) : url.replace(/^https?:\/\/[^/]+/, "");
   return (stripped || "/").replace(/\.html$/, "");
 }
+// The HF text mirror carries byte copies of two engine files (scripts/build-hf-derivatives.py). They are what an AI
+// reader of the dataset reads first, and a hand refresh of the card alone once left them two refutations behind.
+const HF_COPIES = ["llms.txt", "omnarai.context.md"];
+const HF_COPY_RE = /^hf:\/realms-of-omnarai\/(llms\.txt|omnarai\.context\.md)$/;
+const REFUTED_RE = /(\w+) of this project's most attractive ideas/;
 const REMEDY = (label) =>
   label.startsWith("front:") ? "front door: run omnarai-home/deploy.sh (sync-counts.mjs bakes the numbers)"
+    : HF_COPY_RE.test(label) ? "re-copy public/llms.txt + public/omnarai.context.md into huggingface/ (build-hf-derivatives.py) and push them to the HF dataset"
     : label.startsWith("hf:") ? "re-sync the Hugging Face card (hand-maintained; see CLAUDE.md refresh recipe)"
       : label.startsWith("npm:") ? "publish or correct the npm package"
         : "redeploy the engine (scripts/sync-doc-counts.py + <!--live:KEY--> markers)";
@@ -144,7 +150,8 @@ async function numbersLayer(c, truth) {
     engine: async () => [...(await sitemapUrls(c, b.engine)),
       ...["/for-researchers.html", "/divergences.html", "/try.html", "/omnai.md", "/release-manifest.md", "/evidence-status.md", "/omnarai-cold-start.md",
         "/omnarai.context.md", "/llms.txt", "/limitations.md", "/refutation-ledger.md", "/mcp-access-policy.md", "/openapi.json", "/api/agent-entry"].map((p) => b.engine + p)],
-    hf: async () => [`${b.hf}/realms-of-omnarai/raw/main/README.md`, `${b.hf}/omnarai-divergence-atlas/raw/main/README.md`],
+    hf: async () => [`${b.hf}/realms-of-omnarai/raw/main/README.md`, `${b.hf}/omnarai-divergence-atlas/raw/main/README.md`,
+      ...HF_COPIES.map((f) => `${b.hf}/realms-of-omnarai/raw/main/${f}`)],
   };
   const scopes = c.scope === "all" ? ["front", "engine", "hf"] : [c.scope];
   const urls = [...new Set((await Promise.all(scopes.map((s) => lists[s]()))).flat())];
@@ -303,11 +310,20 @@ async function currencyLayer(c, T) {
       noteF(c, "currency", S, "release_lag", "live store vs published release", lag <= MAX_RELEASE_LAG, `live store is ${lag} record(s) ahead of release v${rel.version} (advisory above ${MAX_RELEASE_LAG}) — a new immutable release is due`);
       add(c, "currency", { surface: S, quantity: "refutation_stated", check: "card records that the founding premise was refuted", got: /refuted/i.test(hfAtlas) ? "yes" : "no", want: "yes", level: /refuted/i.test(hfAtlas) ? "pass" : "fail", remedy: /refuted/i.test(hfAtlas) ? undefined : REMEDY(S) });
     }
+    for (const f of HF_COPIES) {
+      const copy = await read(c, "currency", `${b.hf}/realms-of-omnarai/raw/main/${f}`);
+      if (copy === null) continue;
+      const S = `hf:/realms-of-omnarai/${f}`;
+      if (f === "llms.txt") exact(c, "currency", S, "refuted_word", "refuted-count word", copy.match(REFUTED_RE)?.[1], refutedWord);
+      const src = await fetchText(c, b.engine + "/" + f);
+      if (src.ok) noteF(c, "currency", S, "copy_currency", "byte copy of the engine file", copy === src.body, `differs from engine /${f}; re-copy it on the next HF push`);
+    }
   }
   if (c.inScope("engine")) {
     for (const p of ["/llms.txt", "/omnarai.context.md"]) {
       const txt = await read(c, "currency", b.engine + p);
       if (txt !== null) near(c, "currency", p, "works", "corpus works", txt.match(/(\d+) works \(~/)?.[1], works);
+      if (txt !== null && p === "/llms.txt") exact(c, "currency", p, "refuted_word", "refuted-count word", txt.match(REFUTED_RE)?.[1], refutedWord);
     }
     if (T.healthErr) unreachable(c, "currency", "engine:/api/health", T.healthErr);
     if (health) {

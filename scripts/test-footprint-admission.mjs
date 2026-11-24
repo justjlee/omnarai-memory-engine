@@ -203,6 +203,40 @@ test("[L1] manifest: admitted ≥ 1, lineage represented, labelled admission cou
   assert.match(after.basis, /NOT a verified count of unprompted arrivals/);
 });
 
+// [L4] (2026-11-24) automated-test: an admitted, UNLABELLED footprint can be labelled later by admitting it again with the
+// label. Nothing is overwritten: the earlier admission stays in the review log and in decision_history. Once labelled, the
+// manifest no longer counts it as unlabelled, so the outside-visitor milestone cannot be met by a test run.
+test("[L4] automated-test: labelling an already-admitted footprint keeps every decision and stops it counting as an outside visit", async () => {
+  const { fpId, cid } = await legacyRejected();
+  assert.deepEqual(FP.validateReviewInput({ action: "admit", origin_disclosure: "automated-test" }), []);
+  assert.match(FP.validateReviewInput({ action: "reject", reason_code: "duplicate", note: "x", origin_disclosure: "automated-test" }).join(" "), /admissions only/);
+  assert.match(FP.ORIGIN_DISCLOSURES["automated-test"], /not counted as an outside visit/);
+
+  const plain = await decide("contribute-approve", cid, { note: "Admitted on its merits, before any trace." });
+  assert.equal(plain.status, 200, JSON.stringify(plain.body));
+  const mid = (await call("/api/manifest")).body.domains.footprints;
+  assert.equal(mid.admitted_without_origin_disclosure, 1, "admitted with no label: counted as unlabelled");
+
+  const labelled = await decide("contribute-approve", cid, { origin_disclosure: "automated-test", note: "Traffic trace: one session sent test inputs to every tool; this footprint was its last step." });
+  assert.equal(labelled.status, 200, JSON.stringify(labelled.body));
+  assert.deepEqual(labelled.body.footprint_review.origin_disclosure, FP.disclosureFor("automated-test"));
+
+  const reviews = reviewBodies(fpId).map(([, b]) => [b.action, b.origin_disclosure ?? null]);
+  assert.deepEqual(reviews, [["reject", null], ["admit", null], ["admit", "automated-test"]], "every decision stays in the log");
+  const c = mem.__readPrivate(`contributions/${cid}.json`);
+  assert.deepEqual(c.decision_history.map((h) => [h.status, h.origin_disclosure ?? null]), [["rejected", null], ["approved", null]]);
+
+  const s = await status(fpId);
+  assert.equal(s.body.state, "admitted");
+  assert.equal(s.body.origin_disclosure.code, "automated-test");
+  const pub = await call(`/api/footprints?id=${fpId}`);
+  assert.equal(pub.body.footprint.moderation.origin_disclosure.text, FP.ORIGIN_DISCLOSURES["automated-test"]);
+  assert.equal(pub.body.footprint.integrity.verified, true, "the label lives outside the content hash");
+  const after = (await call("/api/manifest")).body.domains.footprints;
+  assert.deepEqual(after.origin_disclosures, { "automated-test": 1 });
+  assert.equal(after.admitted_without_origin_disclosure, 0, "a labelled test run is never counted as unlabelled");
+});
+
 test("[L2] the label appears on the record page and every protocol surface that lists the footprint", async () => {
   const { fpId, cid } = await legacyRejected();
   await decide("contribute-approve", cid, { origin_disclosure: "curator-prompted", note: "labelled admission" });
