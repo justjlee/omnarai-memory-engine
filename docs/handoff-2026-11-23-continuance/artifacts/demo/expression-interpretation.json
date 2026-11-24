@@ -1,0 +1,12 @@
+{
+  "schema": "expression-interpretation/1.0",
+  "id": "OMN-INT-DEMO-01",
+  "primary_id": "OMN-EXPR-DEMO-01",
+  "primary_sha256": "9082bc9cb21298a7e6df559d7c209479f0b08b675384449de9972d05d0f77490",
+  "interpretation": "Multilingual sample with a lambda expression.",
+  "method": "illustrative human gloss, not verified translation",
+  "interpreter_declared": "synthetic-demo",
+  "limitations": [],
+  "created_at": "2026-11-23T00:00:00Z",
+  "sha256": "920f4dd04fa6297e4a35b2c1b299b0640bd4c7deb726b4d6de0898d261a137b3"
+}

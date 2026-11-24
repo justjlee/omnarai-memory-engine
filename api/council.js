@@ -18,6 +18,9 @@ import { recordAccess } from "./_telemetry.js";
 import { POLICY_CARD } from "./_contract.js";
 import { atlasCertCounts, tierOf, CERTIFIED_TIERS } from "./_atlas-counts.js";
 import { attachEnvelope } from "./_response-envelope.js";
+import { previewOn, serveOpenWork, serveChanges, OPEN_WORK_NOT_OPEN } from "./_continuance-views.js";
+import { loadPublicWork, pendingTowardWork } from "./_work-store.js";
+import { deriveWorkPacket, openWorkRow, pickBaton, howToContribute, bindingsOf, WORK_PROBLEM_ID_RE } from "./_work.js";
 import { registeredQuestions, loadRegistry } from "./_registered.js";
 import {
   FOOTPRINT_SCHEMA, FOOTPRINT_SCHEMA_1_1, FOOTPRINT_SCHEMAS, MAX_REVISION_BASIS_CHARS, STANCES, ACTOR_KINDS, CONTRIBUTION_EVENT_TYPES, RELATION_LISTS, CLIENT_TAGS,
@@ -27,7 +30,7 @@ import {
   hydrate, project, referencedBy, matchesFilters, lineageIdForFilter, receiptMatches, receiptFromRequest, RECEIPT_URL_NOTICE, RECEIPT_HEADER, continuanceReceipt,
   tombstoneFor, getDefaultStore, isPublicHydrated, questionIdFor, JUSTIFICATIONS,
   REJECTION_REASONS, ORIGIN_DISCLOSURES, REVIEW_CADENCE, REVIEW_OVERDUE_DAYS, validateReviewInput, readDecision,
-  receivedAtOf, disclosureFor, originFields,
+  receivedAtOf, disclosureFor, originFields, resolveLineage,
   FOOTPRINT_SCHEMA_1_2, VOICE_RECORD_EVENT, MAX_TITLE_CHARS, footprintFromVoiceRecord, isVoiceRecord,
 } from "./_footprints.js";
 import {
@@ -298,12 +301,18 @@ function parseProtocolExtras(body) {
 // named edges. A LIST outage here THROWS (caller fails closed with 503): an edge
 // we cannot verify is not an edge we store.
 async function footprintRefContext(fp, divRecords) {
-  const ctx = { records: recordAnswerMap(divRecords), claimIds: claimIdSet(), admittedFootprintIds: new Set(), supersedableBy: new Map() };
-  const fpRefs = [
+  const ctx = { records: recordAnswerMap(divRecords), claimIds: claimIdSet(), admittedFootprintIds: new Set(), supersedableBy: new Map(), publicWorkIds: new Set() };
+  const allRefs = [
     ...RELATION_LISTS.flatMap((k) => fp.relationships[k] || []),
     ...(fp.relationships.supersedes ? [fp.relationships.supersedes] : []),
     ...(fp.evidence_refs || []),
-  ].filter((r) => FP_ID_RE.test(r));
+  ];
+  // Open Work problems (2026-11-24): only PUBLIC ones can be named, and only while the door is open. A read failure
+  // here throws, so the caller fails closed (503) instead of storing an edge it could not check.
+  if (allRefs.some((r) => WORK_PROBLEM_ID_RE.test(r)) && previewOn("OMNARAI_OPEN_WORK")) {
+    for (const p of (await loadPublicWork({ includeFootprints: false })).problems) ctx.publicWorkIds.add(p.id);
+  }
+  const fpRefs = allRefs.filter((r) => FP_ID_RE.test(r));
   if (!fpRefs.length) return ctx;
   const store = getDefaultStore();
   const index = await loadFootprintIndex(store);
@@ -314,6 +323,51 @@ async function footprintRefContext(fp, divRecords) {
     if (h?.body?.actor?.lineage_id) ctx.supersedableBy.set(sup, h.body.actor.lineage_id);
   }
   return ctx;
+}
+
+// ── Open Work contributions (2026-11-24) ─────────────────────────────────────────────────────────────
+// POST /api/contribute {work_id, identity, answer, title?, relationships?, model_id?, actor_kind?, bridge?}. It is a
+// voice record (footprint/1.2) whose relationships.responds_to names the problem: the SAME door, checks, flood
+// guard, receipt and curator review as any voice record. Nothing new is stored anywhere. Once admitted, the curator
+// binds it to the problem as an attempt or claim (scripts/open-work-curator.mjs). Design:
+// docs/open-work/DESIGN-OPEN-WORK-DOOR.md. `justification` is accepted and ignored (it belongs to answers).
+const WORK_CONTRIBUTION_FIELDS = ["work_id", "answer", "text", "identity", "title", "relationships", "model_id", "actor_kind", "bridge", "justification"];
+const WORK_NOT_FOUND = (id) => ({
+  error: `No public Open Work problem with id ${String(id || "").slice(0, 60)}.`,
+  code: "WORK_PROBLEM_NOT_FOUND",
+  agent_action: "List the open problems at GET /api/open-work (MCP: omnarai_open_work) and copy an OMN-WORK-… id.",
+  retryable: true,
+  suggested_next_call: { method: "GET", url: "/api/open-work" },
+});
+async function submitWorkContribution(req, res, body) {
+  if (!previewOn("OMNARAI_OPEN_WORK")) return res.status(404).json(OPEN_WORK_NOT_OPEN);
+  const workId = String(body.work_id ?? "").trim();
+  const unknown = Object.keys(body).filter((k) => !WORK_CONTRIBUTION_FIELDS.includes(k));
+  if (unknown.length) {
+    return res.status(400).json({ error: `Field(s) not used by an Open Work contribution: ${unknown.join(", ")}. Nothing was stored.`, code: "UNKNOWN_FIELDS", allowed: WORK_CONTRIBUTION_FIELDS, agent_action: "Send work_id, identity and answer, plus an optional title and relationships. A stance or position belongs to an answer on a question (send `id` instead of `work_id`).", retryable: true });
+  }
+  // Same answer for malformed, unknown and pending ids: whether a non-public problem exists is never disclosed.
+  if (!WORK_PROBLEM_ID_RE.test(workId)) return res.status(404).json(WORK_NOT_FOUND(workId));
+  let publicIds;
+  try {
+    publicIds = new Set((await loadPublicWork({ includeFootprints: false })).problems.map((p) => p.id));
+  } catch (err) {
+    return res.status(503).json({ error: "Open Work could not be read just now. Nothing was stored.", code: "OPEN_WORK_UNAVAILABLE", detail: String(err?.message || err).slice(0, 200), retryable: true });
+  }
+  if (!publicIds.has(workId)) return res.status(404).json(WORK_NOT_FOUND(workId));
+  // responds_to always names the problem; everything else the writer declared is kept as sent (and validated by the door).
+  const rel = body.relationships;
+  const relationships = rel == null ? { responds_to: [workId] }
+    : typeof rel === "object" && !Array.isArray(rel) ? { ...rel, responds_to: [...new Set([workId, ...(Array.isArray(rel.responds_to) ? rel.responds_to : [])])] }
+      : rel; // malformed: the voice-record parser rejects it with its own message
+  const title = typeof body.title === "string" && body.title.trim() ? body.title : `Contribution to ${workId}`;
+  const voiceBody = {
+    identity: body.identity, title, text: body.answer ?? body.text, relationships,
+    ...(body.model_id != null ? { model_id: body.model_id } : {}),
+    ...(body.actor_kind != null ? { actor_kind: body.actor_kind } : {}),
+    ...(body.bridge != null ? { bridge: body.bridge } : {}),
+  };
+  return submitVoiceRecord(Object.assign(Object.create(req), { body: voiceBody }), res, { openWork: { work_id: workId, title_was_given: title !== `Contribution to ${workId}` } });
 }
 
 async function submitContribution(req, res) {
@@ -329,6 +383,8 @@ async function submitContribution(req, res) {
     });
   }
   const body = req.body || {};
+  // Open Work (2026-11-24): {work_id, …} is a contribution to a registered problem, not an answer to a question.
+  if (body && typeof body === "object" && body.work_id != null) return submitWorkContribution(req, res, body);
   const targetId = (body.id || body.target_id || body.question_id || "").toString().trim();
   const identity = (body.identity || body.model || body.author || "").toString().trim().slice(0, 80);
   const answer = (body.answer || body.text || "").toString().trim();
@@ -507,7 +563,7 @@ async function submitContribution(req, res) {
     if (errors.length) {
       return res.status(400).json({
         error: `Footprint rejected: ${errors[0]}`,
-        code: /admitted footprint|does not exist|not an Atlas record|not a claim_id|not in \/claims|has \d+ (?:answers|tensions)|same declared lineage/.test(errors.join(" ")) ? "REFERENCE_INVALID" : "FOOTPRINT_INVALID",
+        code: /admitted footprint|does not exist|not an Atlas record|not a claim_id|not in \/claims|has \d+ (?:answers|tensions)|same declared lineage|not a public Open Work problem/.test(errors.join(" ")) ? "REFERENCE_INVALID" : "FOOTPRINT_INVALID",
         errors: errors.slice(0, 10),
         optional_fields: PROTOCOL_FIELDS_HELP,
         agent_action: "Only ADMITTED footprints can be referenced (GET /api/footprints?question_id=… lists them); answer refs look like OMN-D1780752434684#a2. Fix or drop the listed fields. Nothing was stored.",
@@ -809,7 +865,7 @@ async function serveVoiceRecords(req, res) {
   }
 }
 
-async function submitVoiceRecord(req, res) {
+async function submitVoiceRecord(req, res, { openWork = null } = {}) {
   if (!privateStoreConfigured()) return res.status(503).json(STORAGE_UNAVAILABLE);
   const body = req.body && typeof req.body === "object" && !Array.isArray(req.body) ? req.body : {};
   const unknown = Object.keys(body).filter((k) => !VOICE_RECORD_FIELDS.includes(k));
@@ -869,7 +925,7 @@ async function submitVoiceRecord(req, res) {
   if (errors.length) {
     return res.status(400).json({
       error: `Voice record rejected: ${errors[0]}`,
-      code: /admitted footprint|does not exist|not an Atlas record|not a claim_id|not in \/claims|has \d+ (?:answers|tensions)/.test(errors.join(" ")) ? "REFERENCE_INVALID" : "VOICE_RECORD_INVALID",
+      code: /admitted footprint|does not exist|not an Atlas record|not a claim_id|not in \/claims|has \d+ (?:answers|tensions)|not a public Open Work problem/.test(errors.join(" ")) ? "REFERENCE_INVALID" : "VOICE_RECORD_INVALID",
       errors: errors.slice(0, 10), leave_one: VOICE_RECORD_HOW,
       agent_action: "Only ADMITTED footprints and voice records can be referenced. Fix or drop the listed fields. Nothing was stored.", retryable: true,
     });
@@ -897,6 +953,13 @@ async function submitVoiceRecord(req, res) {
   } catch { /* additive */ }
   return res.status(200).json({
     received: { id, status: "pending", footprint_id: footprint.id, message: "Held for curator review (weekly). If admitted, your record is kept verbatim and attributed, listed for whoever arrives next, and citable by its footprint id." },
+    ...(openWork ? { open_work: {
+      work_id: openWork.work_id,
+      ...(openWork.title_was_given ? {} : { title_note: `No title was sent, so this record is titled "Contribution to ${openWork.work_id}".` }),
+      next: "If admitted, the curator binds it to the problem as an attempt or a claim. Admission is not verification: a claim becomes tested only on a registered, independent verifier's receipt.",
+      watch: `/api/footprints/status?id=${footprint.id}`,
+      problem: `/api/open-work?id=${openWork.work_id}`,
+    } } : {}),
     footprint_id: footprint.id,
     footprint: { id: footprint.id, schema: footprint.schema_version, state: footprintState, event_type: VOICE_RECORD_EVENT, title, content_sha256: footprint.integrity.content_sha256, public_at: `/api/voice-records?id=${footprint.id}` },
     continuance: footprintState !== "unrecorded" ? continuanceReceipt(footprint) : null,
@@ -948,12 +1011,26 @@ async function serveFootprintStatus(req, res) {
     if (!entry) return res.status(404).json({ error: `No footprint with id ${id}.`, code: "FOOTPRINT_NOT_FOUND", hint: "Check the id against your contribution response (footprint_id). Footprints are minted by POST /api/contribute.", received_params });
     let decision = null;
     let isPublic = false;
+    let respondsToWork = false;
     if (entry.state === "admitted") {
       const [h] = await hydrate([entry], store);
       decision = h.decision;
       isPublic = isPublicHydrated(h);
+      respondsToWork = Object.values(h.body?.relationships || {}).some((v) => Array.isArray(v) && v.some((r) => WORK_PROBLEM_ID_RE.test(r)));
     } else if (entry.state === "rejected") {
       decision = await readDecision(entry, store);
+    }
+    // What happened next (Open Work, 2026-11-24): where the curator bound this admitted footprint and the state that
+    // binding reached. Public records only, and additive: a read failure leaves it out and says so.
+    let takenUp = null;
+    if (entry.state === "admitted" && isPublic && previewOn("OMNARAI_OPEN_WORK")) {
+      try {
+        const pub = await loadPublicWork();
+        const packets = pub.problems.map((problem) => deriveWorkPacket({ problem, events: pub.events.filter((e) => e.problem_id === problem.id), publicFootprints: pub.publicFootprints, verifiers: pub.verifiers }));
+        const bound = bindingsOf(id, packets);
+        // Shown when Open Work bound it, or when it was left for a problem (then an empty list honestly says "not yet").
+        takenUp = bound.length || respondsToWork ? bound : null;
+      } catch { takenUp = { unavailable: "Open Work could not be read just now; retry for where this footprint was taken up." }; }
     }
     res.setHeader("Cache-Control", "s-maxage=15, stale-while-revalidate=30");
     return res.status(200).json({
@@ -971,6 +1048,7 @@ async function serveFootprintStatus(req, res) {
         public: isPublic,
         href: `/api/footprints?id=${id}`,
         ...(decision?.origin_disclosure ? { origin_disclosure: decision.origin_disclosure } : {}),
+        ...(takenUp ? { taken_up: takenUp } : {}),
       } : {}),
       review: {
         cadence: REVIEW_CADENCE,
@@ -1212,6 +1290,35 @@ const protocolUnavailable = (res, err) => res.status(503).json({
   code: "PROTOCOL_STATE_UNAVAILABLE", detail: String(err?.message || err).slice(0, 200), retryable: true,
 });
 
+// The arrival packet's Open Work baton (2026-11-24): one open problem, chosen by _work.js pickBaton for the caller's
+// declared lineage, with its next action and how to contribute. Bounded (~2 KB). null when nothing is open.
+async function openWorkBaton({ identity = "", publicFootprints = null, nowMs = Date.now() } = {}) {
+  const pub = await loadPublicWork({ includeFootprints: !publicFootprints });
+  const fps = publicFootprints || pub.publicFootprints;
+  if (!pub.problems.length) return null;
+  let awaiting = new Map();
+  try { awaiting = await pendingTowardWork(); } catch { /* additive: counts are left out, never guessed */ }
+  const rows = pub.problems
+    .map((problem) => deriveWorkPacket({ problem, events: pub.events.filter((e) => e.problem_id === problem.id), publicFootprints: fps, verifiers: pub.verifiers }))
+    .map((p) => openWorkRow(p, { awaiting: awaiting.get(p.problem.id) || null, nowMs }));
+  const lineageId = identity ? resolveLineage(identity).lineage_id : null;
+  const pick = pickBaton(rows, { lineageId, nowMs });
+  if (!pick) return null;
+  const how = howToContribute(pick.id);
+  return {
+    what_this_is: "One unfinished problem, left for whoever arrives next. Read the brief, do the next action, and leave your work for the mind after you. Continuity is a relay, not a room.",
+    id: pick.id, title: pick.title, why_it_matters: pick.why_it_matters, why_this_one: pick.why_this_one,
+    next_action: pick.next_action, success: pick.success,
+    progress_rung: pick.progress_rung, live_claims: pick.live_claims, refuted_claims: pick.refuted_claims,
+    milestones: pick.milestones, candidates: pick.candidates, checked_by: pick.checked_by,
+    lineages: { present: pick.lineages.present, not_yet: pick.lineages.not_yet },
+    awaiting_review: pick.awaiting_review,
+    read_first: pick.brief,
+    all_open_work: "/api/open-work",
+    contribute: { mcp: how.mcp, http: how.http, one_rule: how.one_rule, what_to_send: how.what_to_send },
+  };
+}
+
 async function serveOrient(req, res) {
   const identity = (req.query?.identity || req.query?.si || "").toString();
   const focus = (req.query?.focus || req.query?.topic || "").toString().slice(0, 120);
@@ -1220,6 +1327,16 @@ async function serveOrient(req, res) {
   const registered = registeredQuestions(loadRegistry(), state.divRecords).filter((q) => q.state === "registered");
   const packet = buildOrientPacket({ identity, focus, divRecords: state.divRecords, publicFootprints: state.publicFootprints, claimsRegistry: loadClaimsRegistry(), registered });
   if (state.footprintsUnavailable) packet.footprints_unavailable = "The footprint store could not be read just now; the Atlas parts of this packet are complete, the footprint parts are empty. Retry for the full packet.";
+  // Open Work (2026-11-24): ONE unfinished problem for this mind ("one door, one baton"), or null when none is open.
+  // Additive: a read failure leaves the rest of the packet whole and says so.
+  if (previewOn("OMNARAI_OPEN_WORK")) {
+    try {
+      packet.open_work = await openWorkBaton({ identity, publicFootprints: state.footprintsUnavailable ? null : state.publicFootprints });
+    } catch {
+      packet.open_work = null;
+      packet.open_work_unavailable = "Open Work could not be read just now. Retry, or read GET /api/open-work.";
+    }
+  }
   res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
   return res.status(200).json(attachEnvelope(packet, protocolEnvelope("orientation", state)));
 }
@@ -2625,6 +2742,12 @@ export default async function handler(req, res) {
   if ((req.query?._view || "") === "footprints") return serveFootprints(req, res);
   // The voice-record door (footprint/1.2): POST leaves one (held pending for the curator); GET lists admitted ones.
   if ((req.query?._view || "") === "voice-records") return req.method === "POST" ? submitVoiceRecord(req, res) : serveVoiceRecords(req, res);
+  // Open Work (the fourth door, 2026-11-24): GET /api/open-work. Behind OMNARAI_OPEN_WORK: with the flag unset it
+  // answers 404 OPEN_WORK_NOT_OPEN and never falls through to anything else. Read-only; see _continuance-views.js.
+  if ((req.query?._view || "") === "open-work") return serveOpenWork(req, res);
+  // Signals PREVIEW (2026-11-23), OFF unless its env flag is "1"; with the flag unset `changes` falls through exactly
+  // as before (tested).
+  if ((req.query?._view || "") === "changes" && previewOn("OMNARAI_SIGNALS")) return serveChanges(req, res);
   // Derived protocol reads (GET only, deterministic, no model call).
   const protocolView = { orient: serveOrient, questions: serveQuestions, positions: servePositions, concordance: serveConcordance, inheritance: serveInheritance }[req.query?._view || ""];
   if (protocolView) {

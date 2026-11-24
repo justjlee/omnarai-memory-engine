@@ -1,0 +1,23 @@
+{
+  "manifest_version":"handoff-tasks/1.0",
+  "created_at":"2026-11-23",
+  "attribution":"Omnai (GPT-6, OpenAI) in collaboration with Yonotai",
+  "constraints":{"production_deploy":false,"paid_calls":false,"production_writes":false,"automatic_admissions":false,"public_claims_upgrade":false,"visitor_notifications":false},
+  "tasks":[
+    {"id":"C00","phase":0,"title":"Reconcile source HEADs and deployed read-only contracts","depends_on":[],"exit":"sha matrix, route parity, dirty worktree, baseline tests, source deltas"},
+    {"id":"C01","phase":0,"title":"P0 verify grown-memory durability and actual restore","depends_on":["C00"],"exit":"weak ETag, stale reader, concurrent writer, failed write and isolated restore; no false-success paths"},
+    {"id":"C02","phase":0,"title":"Verify private-store migration, credential and fallback boundary","depends_on":["C00"],"exit":"document redacted access checks, transition reads, old copies and explicit decisions"},
+    {"id":"E01","phase":1,"title":"Integrate Protocol 001 research record registry and integrity checks","depends_on":["C00"],"exit":"10 versioned kinds, immutable hashes, sealed snapshots and adapter contract"},
+    {"id":"E02","phase":1,"title":"Implement six-arm blocked randomized planner","depends_on":["E01"],"exit":"A/A+/B/C/D/E, provider IDs, strict chronology, context/cost balancing"},
+    {"id":"E03","phase":1,"title":"Build isolated real-handler offline test harness","depends_on":["E02"],"exit":"no network; tamper, poison, leakage, timeout, verifier fail, same generation red tests"},
+    {"id":"E04","phase":1,"title":"Implement independent evaluation and causal contrast analysis","depends_on":["E03"],"exit":"blind evaluation, C−A+ and cost, uncertainty, negative transfer, ablation, missingness"},
+    {"id":"E05","phase":1,"title":"Freeze preregistration and pilot-ready dry-run budget","depends_on":["E04"],"exit":"public commitment hash, no paid execution, exact approval request"},
+    {"id":"W01","phase":2,"title":"Design curated problem/event storage over existing substrate","depends_on":["C00","C02"],"exit":"no duplicate Footprints, append-only work events, source allowlist, separate visibility rules"},
+    {"id":"W02","phase":2,"title":"Implement pure deterministic Work packet read model","depends_on":["W01"],"exit":"attributed problems, failed attempts, reviewed/tested rungs, reconstructable source graph"},
+    {"id":"W03","phase":2,"title":"Prototype read route and MCP contract under deployment cap","depends_on":["W02"],"exit":"preview-ready gated adapter, schema/response parity, full handler-level tests"},
+    {"id":"S01","phase":3,"title":"Build Signals admitted-only change projector","depends_on":["C02","W02"],"exit":"stable cursor, replay, idempotence, visibility transitions, redaction tests"},
+    {"id":"R01","phase":3,"title":"Implement byte-preserving UTF-8 expression prototype","depends_on":["C00"],"exit":"sha256/size fidelity, multiple languages, formal notation, separate interpretations"},
+    {"id":"S02","phase":3,"title":"Model opt-in follows without enabling notifications","depends_on":["S01"],"exit":"privacy threat model, capability/revocation/retention contract; no public writes"},
+    {"id":"REL01","phase":4,"title":"Collect tests, approvals and release plan","depends_on":["E05","W03","S01","R01"],"exit":"exact files/SHAs, tests, zero spend, defects, gates, smallest approved pilot"}
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omnarai.org/schemas/proposals/work-packet-1.0.schema.json",
+  "title": "work-packet-1.0",
+  "description": "Proposed 2026-11-23 contract; not deployed; intended for repo-adapted validation.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "work-packet/1.0"
+    },
+    "problem_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160
+    },
+    "objective": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4000
+    },
+    "acceptance_criteria": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 1000
+      }
+    },
+    "open_questions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 1000
+      }
+    },
+    "failed_attempts": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 1000
+      }
+    },
+    "source_refs": {
+      "type": "array",
+      "maxItems": 200,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200
+      }
+    },
+    "progress_rung": {
+      "enum": [
+        "registered",
+        "attempted",
+        "claimed",
+        "tested",
+        "reviewed",
+        "refuted",
+        "open"
+      ]
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "snapshot_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "required": [
+    "schema",
+    "problem_id",
+    "title",
+    "objective",
+    "acceptance_criteria",
+    "open_questions",
+    "failed_attempts",
+    "source_refs",
+    "progress_rung",
+    "steps",
+    "issues",
+    "snapshot_sha256"
+  ]
+}

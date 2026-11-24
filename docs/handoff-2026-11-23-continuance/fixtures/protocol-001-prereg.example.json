@@ -1,0 +1,19 @@
+{
+  "status": "UNFROZEN DESIGN EXAMPLE — DO NOT USE AS IF PREREGISTERED",
+  "protocol": "omnarai-inheritance-experiment/001",
+  "version": "draft-2026-11-23",
+  "research_question": "Does independently validated prior work produce task-level quality improvement in successor models above a compute-matched uninformed control?",
+  "primary_contrast": "C minus A+",
+  "arms": ["A","A+","B","C","D","E"],
+  "unit_of_analysis": "task-family-blocked sealed task; paired successor outcomes",
+  "outcomes": ["objective correctness","independent verification expense","consumer inference expense","prior production expense","negative transfer","oracle leakage","source fidelity","excluded/missing trials"],
+  "consumer_eligibility": "Exact provider-reported ID, release chronology independently verified and preregistered earlier-generation cohort; prior model family must differ",
+  "failure_conditions": ["no benefit vs A+","positive mean but cost-inefficient","contaminated data not detected","source attribution unverified","evaluation oracle accessible to consumer"],
+  "sample_size": null,
+  "task_seals": [],
+  "providers_and_model_ids": [],
+  "pricing_snapshot": null,
+  "max_paid_usd": null,
+  "approval_status": "NOT APPROVED",
+  "notes": "Freeze definitions, hashes, sample size and analysis BEFORE a real-model trial; this is a template, not a completed preregistration."
+}

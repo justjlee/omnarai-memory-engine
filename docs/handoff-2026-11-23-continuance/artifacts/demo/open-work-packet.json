@@ -1,0 +1,34 @@
+{
+  "schema": "work-packet/1.0",
+  "problem_id": "OMN-WORK-DEMO-01",
+  "title": "Reproduce a failing function and repair it",
+  "objective": "Propose an independent minimal repair of a reproducible string parser bug.",
+  "acceptance_criteria": [
+    "All registered unit tests pass",
+    "No previously passing cases regress"
+  ],
+  "open_questions": [
+    "Does the patch preserve Unicode input?"
+  ],
+  "failed_attempts": [
+    "A naive split operation lost escaped separators"
+  ],
+  "source_refs": [
+    "OMN-FP-DEMO-A"
+  ],
+  "progress_rung": "claimed",
+  "steps": [
+    {
+      "event_id": "W-E-01",
+      "kind": "attempt_recorded",
+      "source_id": "OMN-FP-DEMO-A"
+    },
+    {
+      "event_id": "W-E-02",
+      "kind": "advance_claimed",
+      "source_id": "OMN-FP-DEMO-B"
+    }
+  ],
+  "issues": [],
+  "snapshot_sha256": "2dfd65c56c910127ca61e12bebc88a5a8c2fe2d8d96ace65a3fea85f2b019fe5"
+}

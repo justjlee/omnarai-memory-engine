@@ -1,0 +1,208 @@
+{
+  "schema": "signals-page/1.0",
+  "projection_version": "signals-projection/0.1",
+  "events": [
+    {
+      "schema": "signals-change/1.0",
+      "kind": "admitted",
+      "scope": "voice",
+      "source_id": "OMN-FP-1795435240000-00000002",
+      "source_revision": "admission-1",
+      "occurred_at": "2026-11-23T12:00:40.500Z",
+      "event_id": "sig_bee9ed5ba56b4729965608ed37ab82b6"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "work_progress",
+      "scope": "work",
+      "source_id": "OMN-WE-1795435241000-00000002",
+      "source_revision": "5e6db54a3c882995",
+      "occurred_at": "2026-11-23T12:00:41.000Z",
+      "problem_id": "OMN-WORK-1795435220000-00000001",
+      "event_kind": "advance_claimed",
+      "event_id": "sig_92b183cbf925a92eec5c86f61f3016fd"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "work_progress",
+      "scope": "work",
+      "source_id": "OMN-WE-1795435242000-00000003",
+      "source_revision": "a42937d2d40d2d4c",
+      "occurred_at": "2026-11-23T12:00:42.000Z",
+      "problem_id": "OMN-WORK-1795435220000-00000001",
+      "event_kind": "advance_reviewed",
+      "event_id": "sig_9067e636faac318aa2abfbb0c94ec0fb"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "work_progress",
+      "scope": "work",
+      "source_id": "OMN-WE-1795435243000-00000004",
+      "source_revision": "e1849bc7b5cff559",
+      "occurred_at": "2026-11-23T12:00:43.000Z",
+      "problem_id": "OMN-WORK-1795435220000-00000001",
+      "event_kind": "advance_tested",
+      "event_id": "sig_a913fa47c71a2431201fef2509f499ff"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "work_progress",
+      "scope": "work",
+      "source_id": "OMN-WE-1795435244000-00000005",
+      "source_revision": "5bf540b7acf1e68a",
+      "occurred_at": "2026-11-23T12:00:44.000Z",
+      "problem_id": "OMN-WORK-1795435220000-00000001",
+      "event_kind": "advance_reviewed",
+      "event_id": "sig_3c36d70f830dfea43accb455a8209986"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "admitted",
+      "scope": "voice",
+      "source_id": "OMN-FP-1795435250000-00000003",
+      "source_revision": "admission-1",
+      "occurred_at": "2026-11-23T12:00:50.500Z",
+      "event_id": "sig_a91250d35cc8400f52628e13d687bcee"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "admitted",
+      "scope": "voice",
+      "source_id": "OMN-FP-1795435251000-00000004",
+      "source_revision": "admission-1",
+      "occurred_at": "2026-11-23T12:00:51.500Z",
+      "event_id": "sig_565143bb625b6b312897f121b9d945cd"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "work_progress",
+      "scope": "work",
+      "source_id": "OMN-WE-1795435252000-00000006",
+      "source_revision": "0d38ecdfa375fe21",
+      "occurred_at": "2026-11-23T12:00:52.000Z",
+      "problem_id": "OMN-WORK-1795435221000-00000002",
+      "event_kind": "advance_claimed",
+      "event_id": "sig_1f2727a49984afdb2712508738ea124b"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "work_progress",
+      "scope": "work",
+      "source_id": "OMN-WE-1795435253000-00000007",
+      "source_revision": "339a3553e4048a29",
+      "occurred_at": "2026-11-23T12:00:53.000Z",
+      "problem_id": "OMN-WORK-1795435221000-00000002",
+      "event_kind": "advance_claimed",
+      "event_id": "sig_b6ab1d1753623695e3841c3352014337"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "work_progress",
+      "scope": "work",
+      "source_id": "OMN-WE-1795435254000-00000008",
+      "source_revision": "b2207ea37d6c5dff",
+      "occurred_at": "2026-11-23T12:00:54.000Z",
+      "problem_id": "OMN-WORK-1795435221000-00000002",
+      "event_kind": "advance_tested",
+      "event_id": "sig_edf92da8cfdbc05d938cb30b8184d4f0"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "work_progress",
+      "scope": "work",
+      "source_id": "OMN-WE-1795435255000-00000009",
+      "source_revision": "b51fb780d95dc26f",
+      "occurred_at": "2026-11-23T12:00:55.000Z",
+      "problem_id": "OMN-WORK-1795435221000-00000002",
+      "event_kind": "advance_tested",
+      "event_id": "sig_50f1b9056309b786134ce384c4083d41"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "admitted",
+      "scope": "voice",
+      "source_id": "OMN-FP-1795435260000-00000005",
+      "source_revision": "admission-1",
+      "occurred_at": "2026-11-23T12:01:00.500Z",
+      "event_id": "sig_2bd939a2280839414d09222195b2e613"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "work_progress",
+      "scope": "work",
+      "source_id": "OMN-WE-1795435261000-0000000a",
+      "source_revision": "a5b8ce50912fe2e1",
+      "occurred_at": "2026-11-23T12:01:01.000Z",
+      "problem_id": "OMN-WORK-1795435222000-00000003",
+      "event_kind": "advance_claimed",
+      "event_id": "sig_cfa43f34200f05e043e42b3db3b7f29b"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "work_progress",
+      "scope": "work",
+      "source_id": "OMN-WE-1795435262000-0000000b",
+      "source_revision": "4baf345cec792a82",
+      "occurred_at": "2026-11-23T12:01:02.000Z",
+      "problem_id": "OMN-WORK-1795435222000-00000003",
+      "event_kind": "advance_tested",
+      "event_id": "sig_955b49e2364492fea9f14c01417ba491"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "work_progress",
+      "scope": "work",
+      "source_id": "OMN-WE-1795435263000-0000000c",
+      "source_revision": "26a0494305819c39",
+      "occurred_at": "2026-11-23T12:01:03.000Z",
+      "problem_id": "OMN-WORK-1795435222000-00000003",
+      "event_kind": "advance_refuted",
+      "event_id": "sig_9885c79856ef4ec3399a7758db076db9"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "admitted",
+      "scope": "voice",
+      "source_id": "OMN-FP-1795435271000-00000008",
+      "source_revision": "admission-1",
+      "occurred_at": "2026-11-23T12:01:12.000Z",
+      "event_id": "sig_fdbde51ad23bd7765c028f5a4114b761"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "withdrawn",
+      "scope": "voice",
+      "source_id": "OMN-FP-1795435271000-00000008",
+      "source_revision": "admission-1",
+      "occurred_at": "2026-11-23T12:01:20.000Z",
+      "reason_class": "retracted",
+      "event_id": "sig_0ba00f80026b7c5b9329a2f565f29e2a"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "claim_status_changed",
+      "scope": "claim",
+      "source_id": "fresh-peer-answers-improve-reasoning",
+      "source_revision": "v1",
+      "occurred_at": "2026-11-24T17:40:00.000Z",
+      "from": null,
+      "to": "confirmed",
+      "event_id": "sig_674ceae4c19587a19b79eb88a7171b79"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "claim_status_changed",
+      "scope": "claim",
+      "source_id": "divergence-improves-reasoning",
+      "source_revision": "v2",
+      "occurred_at": "2026-11-24T17:40:00.000Z",
+      "from": "open",
+      "to": "refuted",
+      "event_id": "sig_772db0ccb1cff7a9b7260d45fb5cd022"
+    }
+  ],
+  "next_cursor": "eyJ2IjoxLCJhdCI6IjIwMjYtMTEtMjRUMTc6NDA6MDAuMDAwWiIsImlkIjoic2lnXzc3MmRiMGNjYjFjZmY3YTliNzI2MGQ0NWZiNWNkMDIyIiwiaCI6IjlmMDQ4NWU3ZjA5NTVjN2UwMjY2ZmU4MzllYTA4MThhIn0",
+  "has_more": false,
+  "reset_required": false,
+  "total_public_events": 44
+}

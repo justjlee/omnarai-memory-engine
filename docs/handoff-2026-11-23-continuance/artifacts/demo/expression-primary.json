@@ -1,0 +1,13 @@
+{
+  "schema": "expression-primary/1.0",
+  "id": "OMN-EXPR-DEMO-01",
+  "encoding": "utf-8",
+  "media_type": "text/plain; charset=utf-8",
+  "payload_base64": "IOC0ruC0suC0r+C0vuC0s+C0giDiiJ4gzrsoeCkueCAg5Lit5paHCg==",
+  "byte_length": 40,
+  "sha256": "9082bc9cb21298a7e6df559d7c209479f0b08b675384449de9972d05d0f77490",
+  "actor_declared": "synthetic-visitor",
+  "visibility": "private",
+  "created_at": "2026-11-23T00:00:00Z",
+  "language_hint": "multiple"
+}

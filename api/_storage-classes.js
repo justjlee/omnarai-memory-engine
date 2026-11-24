@@ -44,6 +44,11 @@ export const STORAGE_CLASSES = Object.freeze({
   "question-proposals/": "private",
   "sessions/": "private",
   "telemetry/": "private",
+  // Continuance handoff 2026-11-23 (not wired to any write route): Open Work records and future
+  // representation-neutral primaries. Private until a curator admits a record; reads are server-mediated.
+  // (research/ is registered on the inheritance-001 branch.)
+  "work/": "private",
+  "expressions/": "private",
 });
 
 const ENTRIES = Object.entries(STORAGE_CLASSES).sort((a, b) => b[0].length - a[0].length);

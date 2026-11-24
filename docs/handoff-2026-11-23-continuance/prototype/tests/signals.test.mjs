@@ -1,0 +1,11 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {buildSignals,pageSignals} from '../signals.mjs';
+const e=(source_id,kind='admitted',extra={})=>({source_id,source_revision:'1',kind,occurred_at:'2026-11-23T00:00:00Z',public_scope:'footprint',visibility:'public',source_visibility:'public',reviewed:true,private_actor:'do-not-leak',receipt_token:'secret',...extra});
+test('replay and duplicate transitions deduplicated',()=>{const x=buildSignals([e('a'),e('a')]);assert.equal(x.length,1);assert.deepEqual(x,buildSignals([e('a')]))});
+test('pending and private never appear',()=>{const x=buildSignals([e('a'),e('b','admitted',{visibility:'pending'}),e('c','admitted',{source_visibility:'private'}),e('d','admitted',{reviewed:false})]);assert.deepEqual(x.map(y=>y.source_id),['a'])});
+test('allowlisted fields prevent token and actor leak',()=>{const x=JSON.stringify(buildSignals([e('a')]));assert.doesNotMatch(x,/do-not-leak|receipt_token|secret|private_actor/)});
+test('stable chronological ordering with tie breaker',()=>{const events=[e('b'),e('a'),e('c','admitted',{occurred_at:'2026-11-23T00:00:01Z'})];const x=buildSignals(events);assert.equal(x.at(-1).source_id,'c');assert.deepEqual(x,buildSignals(events.reverse()))});
+test('cursor paging never repeats or skips',()=>{const x=buildSignals([e('a'),e('b'),e('c'),e('d')]);const got=[];let cursor=null;do{const r=pageSignals(x,{cursor,limit:2});got.push(...r.events.map(y=>y.event_id));cursor=r.next_cursor;if(!r.has_more)break;}while(true);assert.deepEqual(got,x.map(y=>y.event_id))});
+test('invalid cursors fail',()=>assert.throws(()=>pageSignals([], {cursor:'garbage'}),/Invalid cursor/));
+test('page limit enforced',()=>assert.throws(()=>pageSignals([],{limit:101}),/limit/));
+test('redaction tombstone has no payload',()=>{const x=buildSignals([e('a','redacted',{payload:{secret:'bad'}})]);assert.equal(x.length,1);assert.equal(Object.hasOwn(x[0],'payload'),false)});

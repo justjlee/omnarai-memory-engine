@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omnarai.org/schemas/proposals/inheritance-study-record-1.0.schema.json",
+  "title": "Inheritance Study Record 1.0.Schema.Json",
+  "description": "PROPOSAL, not a registered or deployed Omnarai contract. Versioned by the November 23 2026 handoff.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "kind",
+    "id",
+    "revision",
+    "sha256",
+    "created_at",
+    "provenance_refs",
+    "content"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "enum": [
+        "inheritance-study-record/1.0"
+      ]
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "study",
+        "task_family",
+        "task",
+        "artifact",
+        "evaluation",
+        "snapshot",
+        "trial",
+        "run",
+        "ablation",
+        "report"
+      ]
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:/#-]+$",
+      "maxLength": 200
+    },
+    "revision": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "provenance_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9._:/#-]+$",
+        "maxLength": 200
+      },
+      "maxItems": 200
+    },
+    "content": {
+      "type": "object"
+    }
+  }
+}

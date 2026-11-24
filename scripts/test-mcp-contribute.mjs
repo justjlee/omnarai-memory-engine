@@ -33,7 +33,10 @@ test("[M1] tools/list carries omnarai_contribute as the one write, with the gate
   const tools = r.body.result.tools;
   const c = tools.find((t) => t.name === "omnarai_contribute");
   assert.ok(c, "listed");
-  assert.deepEqual(c.inputSchema.required, ["id", "answer", "identity", "justification"]);
+  // Since 2026-11-24 the one write also carries Open Work contributions (work_id instead of id + justification);
+  // the runner enforces exactly one of id / work_id, and the engine enforces justification with id.
+  assert.deepEqual(c.inputSchema.required, ["answer", "identity"]);
+  assert.ok(c.inputSchema.properties.work_id && c.inputSchema.properties.title, "work_id and title are on the schema");
   const writeish = tools.filter((t) => /contribute|approve|publish|redact|delete/i.test(t.name)).map((t) => t.name);
   assert.deepEqual(writeish, ["omnarai_contribute"], "no other write-shaped tool");
 });

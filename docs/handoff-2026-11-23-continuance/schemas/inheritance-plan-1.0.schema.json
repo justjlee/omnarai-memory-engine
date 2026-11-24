@@ -1,0 +1,194 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omnarai.org/schemas/proposals/inheritance-plan-1.0.schema.json",
+  "title": "inheritance-plan-1.0",
+  "description": "Proposed 2026-11-23 contract; not deployed; intended for repo-adapted validation.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "inheritance-plan/1.0"
+    },
+    "study_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "seed": {
+      "type": "integer"
+    },
+    "baseline_tokens": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "max_tokens": {
+      "type": "integer",
+      "minimum": 2
+    },
+    "distinct_tasks": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "arms": {
+      "const": [
+        "A",
+        "A+",
+        "B",
+        "C",
+        "D",
+        "E"
+      ]
+    },
+    "trials": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "$ref": "#/$defs/Trial"
+      }
+    },
+    "plan_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "required": [
+    "schema",
+    "study_id",
+    "seed",
+    "baseline_tokens",
+    "max_tokens",
+    "distinct_tasks",
+    "arms",
+    "trials",
+    "plan_sha256"
+  ],
+  "$defs": {
+    "Trial": {
+      "title": "Inheritance Trial 1.0.Schema.Json",
+      "description": "PROPOSAL, not a registered or deployed Omnarai contract. Versioned by the November 23 2026 handoff.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "trial_id",
+        "study_id",
+        "task_id",
+        "arm",
+        "consumer_provider_model_id",
+        "consumer_family",
+        "generation_consumer",
+        "prompt_sha256",
+        "status"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string",
+          "enum": [
+            "inheritance-trial/1.0"
+          ]
+        },
+        "trial_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._:/#-]+$",
+          "maxLength": 200
+        },
+        "study_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._:/#-]+$",
+          "maxLength": 200
+        },
+        "task_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._:/#-]+$",
+          "maxLength": 200
+        },
+        "arm": {
+          "type": "string",
+          "enum": [
+            "A",
+            "A+",
+            "B",
+            "C",
+            "D",
+            "E"
+          ]
+        },
+        "consumer_provider_model_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "consumer_family": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "producer_provider_model_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "producer_family": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "generation_consumer": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "generation_producer": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "prompt_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "artifact_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "scoring_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "cost_total_usd": {
+          "type": "number",
+          "minimum": 0
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "planned",
+            "completed",
+            "refused",
+            "failed",
+            "excluded"
+          ]
+        },
+        "task_family": {
+          "type": "string",
+          "minLength": 1
+        },
+        "max_tokens": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "slot": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "treatment_content": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 65536
+        }
+      }
+    }
+  }
+}

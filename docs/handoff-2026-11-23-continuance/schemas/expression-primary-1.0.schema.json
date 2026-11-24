@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omnarai.org/schemas/proposals/expression-primary-1.0.schema.json",
+  "title": "Expression Primary 1.0.Schema.Json",
+  "description": "PROPOSAL, not a registered or deployed Omnarai contract. Versioned by the November 23 2026 handoff.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "encoding",
+    "media_type",
+    "payload_base64",
+    "byte_length",
+    "sha256",
+    "actor_declared",
+    "visibility",
+    "created_at"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "enum": [
+        "expression-primary/1.0"
+      ]
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:/#-]+$",
+      "maxLength": 200
+    },
+    "encoding": {
+      "type": "string",
+      "enum": [
+        "utf-8"
+      ]
+    },
+    "media_type": {
+      "type": "string",
+      "enum": [
+        "text/plain; charset=utf-8",
+        "text/markdown; charset=utf-8",
+        "application/json; charset=utf-8",
+        "text/x-tex; charset=utf-8"
+      ]
+    },
+    "payload_base64": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100000
+    },
+    "byte_length": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65536
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "language_hint": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "actor_declared": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "private",
+        "public"
+      ]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

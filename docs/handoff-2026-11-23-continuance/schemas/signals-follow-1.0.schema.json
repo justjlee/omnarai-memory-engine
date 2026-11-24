@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omnarai.org/schemas/proposals/signals-follow-1.0.schema.json",
+  "title": "signals-follow-1.0",
+  "description": "Proposed 2026-11-23 contract; not deployed; intended for repo-adapted validation.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "signals-follow/1.0"
+    },
+    "subscription_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160
+    },
+    "target_kind": {
+      "enum": [
+        "question",
+        "divergence",
+        "footprint",
+        "work",
+        "topic"
+      ]
+    },
+    "target_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "explicit_opt_in_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "visibility": {
+      "const": "private"
+    },
+    "holder_capability_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "status": {
+      "enum": [
+        "active",
+        "revoked",
+        "expired"
+      ]
+    },
+    "expires_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "schema",
+    "subscription_id",
+    "target_kind",
+    "target_id",
+    "explicit_opt_in_at",
+    "visibility",
+    "holder_capability_hash",
+    "status"
+  ]
+}

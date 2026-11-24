@@ -205,6 +205,10 @@
       "destination": "/api/council?_view=footprints"
     },
     {
+      "source": "/api/open-work",
+      "destination": "/api/council?_view=open-work"
+    },
+    {
       "source": "/api/orient",
       "destination": "/api/council?_view=orient"
     },
@@ -231,6 +235,21 @@
     {
       "source": "/api/cron-longitudinal-frontier",
       "destination": "/api/council?_cron=longitudinal&track=frontier"
+    },
+    {
+      "source": "/open-work",
+      "has": [
+        {
+          "type": "header",
+          "key": "accept",
+          "value": "(.*)application/json(.*)"
+        }
+      ],
+      "destination": "/api/council?_view=open-work"
+    },
+    {
+      "source": "/open-work",
+      "destination": "/open-work.html"
     },
     {
       "source": "/arrive",

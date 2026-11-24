@@ -1,0 +1,10 @@
+[
+  {
+    "schema":"work-problem/1.0","id":"OMN-WORK-DEMO-01","title":"Reproduce a failing function and repair it","objective":"Propose an independent minimal repair of a reproducible string parser bug.","acceptance_criteria":["All registered unit tests pass","No previously passing cases regress"],"open_questions":["Does the patch preserve Unicode input?"],"failed_attempts":["A naive split operation lost escaped separators"],"source_refs":["OMN-FP-DEMO-A"],"visibility":"public",
+    "provenance":{"registered_by":"synthetic-fixture","registered_at":"2026-11-23T00:00:00Z","source_revision":"fixture-1"}
+  },
+  {
+    "schema":"work-problem/1.0","id":"OMN-WORK-DEMO-02","title":"Revisit a refuted claim","objective":"Describe a failed hypothesis and determine whether any new admissible counterevidence exists.","acceptance_criteria":["Preserve the refutation with original source ids"],"open_questions":["What independent falsifier would be decisive?"],"failed_attempts":["The original test did not discriminate a decoy"],"source_refs":[],"visibility":"public",
+    "provenance":{"registered_by":"synthetic-fixture","registered_at":"2026-11-23T00:00:00Z","source_revision":"fixture-1"}
+  }
+]
