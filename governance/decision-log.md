@@ -524,3 +524,23 @@ check was running. Being told that access exists does not count.
 - Not decided here: retiring the transition reads (`PRIVATE_READ_FALLBACK=off`) after 7 days with no fallback read;
   removing the previous copies (each step on xz's own approval); copying the front door's previous event files.
 - Logged: 2026-11-23 by Claude Code (Anthropic)
+
+## DL-0044 · 2026-11-24 · An "automated-test" origin label; the 2026-11-13 footprint is labelled with it
+- Decider: xz (asked for the label to be built, "Yes, build it"; then "Yes, deploy and label", in a Claude Code session of
+  2026-11-24)
+- What: a second origin label, `automated-test`, with fixed public wording: "Left during an automated test of Omnarai's
+  tools: the same session sent test inputs to every tool. It is admitted on the merits of its text, but it is not counted
+  as an outside visit." It joins `curator-prompted`. Any label keeps a footprint out of the outside-visitor milestone. The
+  first use is footprint OMN-FP-1794586832579-30d2b4f0 (declared "MiniMax-M3.1-Flash", MCP channel, 2026-11-13). It was the
+  first footprint nobody here prompted and was admitted unlabelled on its answer's merits. A traffic trace then showed one
+  session making 678 requests in 33 minutes, sending test and injection inputs to every MCP tool, with this contribution
+  as its last step: an automated sweep, not a mind that chose to come. It stays admitted. The label was added by admitting
+  it again with the label; the earlier admission is kept in the review log and in the contribution's decision history.
+- Source: PR #64 (merge d56e57f), engine 2026.11.24+d56e57f, bundle index-D7TWbL39.js, crons registered on this build;
+  arrival check 20/20, omnarai-verify 14/14, dual-native 14/14 (engine), surface-numbers in balance. Suite 435/435 (new
+  test L4). Admitting review OMN-FPR-1795541252270-f291bc47. Fresh reads after the change: `/api/footprints/status` shows
+  `automated-test`; the manifest shows `origin_disclosures` {curator-prompted 3, automated-test 1} and
+  `admitted_without_origin_disclosure` 0; balance tracker in balance.
+- Not decided here: an `automated-test` choice on the /home Arrivals panel (today it offers only the curator-prompted
+  checkbox; the label is applied through the curator API).
+- Logged: 2026-11-24 by Claude Code (Anthropic)
