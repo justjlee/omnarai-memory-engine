@@ -622,3 +622,29 @@ check was running. Being told that access exists does not count.
 - Not decided here: an `automated-test` choice on the /home Arrivals panel (today it offers only the curator-prompted
   checkbox; the label is applied through the curator API).
 - Logged: 2026-11-24 by Claude Code (Anthropic)
+
+## DL-0045 · 2026-11-24 · Utility v2 in the claims registry: the July finding is the eighth refutation; fresh answers are supported
+- Decider: xz (chose "Eighth refutation" from three wordings, then "Yes, merge and publish", in a Claude Code session of
+  2026-11-24)
+- What: `divergence-improves-reasoning` moves from open / replicated to refuted. Shown the Atlas's stored answers, today's
+  flagships revised better than after a plain re-examination on 2 questions and worse on 22, small models on 4 and 11
+  (utility v2, DL-0039). The July 2026 numbers stay on the record as true of the models they measured, which were not
+  re-tested. Charter §3: the correction is appended to the note, dated and naming this entry; the July text, the
+  falsification condition, the required experiment and the objections are unchanged. A new claim,
+  `fresh-peer-answers-improve-reasoning`, is confirmed for the November 2026 generation at measured_differential: fresh
+  answers from the other labs' current flagships helped (flagships 19 / 5, Holm p 0.0099; small models 22 / 0), with
+  claude-opus-5-5 (2 / 22, worse) and gpt-6.1-sol (8 / 16) named as exceptions. It carries the registration's falsifier
+  as a precommitment (text from commit 721fad8, outcome not_fired; the digest was computed on entry, as its context
+  says). This follows the interpretation xz approved before the run: "Library helps neither ... an eighth refutation".
+  The Refutation Ledger goes from seven to eight, and the pages that still described the July result as current were
+  brought up to date: limitations.md, inheritance/for-future-models.md, llms.txt, for-researchers.html,
+  omnarai-cold-start.md, omnarai.context.md, the receipt captions, and on omnarai.org the homepage's refutation count and
+  "Flagship finding" card, explore.html, llms.txt and a dated update on /findings/architecture-differential.
+- Source: PR #66 (merge 55328c9; it also merges branch utility-v2, so registration 721fad8 and analysis 4b86f42 are on
+  main), engine 2026.11.24+55328c9, bundle index-BAwIjt_u.js, crons registered on this
+  build; arrival check 20/20, omnarai-verify 14/14, dual-native 14/14 (engine) and 7/7 (front door), surface-numbers in
+  balance on the engine and front-door scopes and on --scope all (32 surfaces, 72 facts). Suite 455/455. Hugging Face
+  realms-of-omnarai commit 5a8392b984 (README card, refutation-ledger.md, a dated update atop utility-evidence-v2.md),
+  each file verified against main through /raw/. With PR #52 (merge 65b48a2) placing DL-0035 to DL-0039, the log runs
+  DL-0001 to DL-0045 with no gap.
+- Logged: 2026-11-24 by Claude Code (Anthropic)
