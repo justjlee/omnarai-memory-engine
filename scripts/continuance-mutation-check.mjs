@@ -13,6 +13,8 @@ const SUITES = {
   signals: ["scripts/test-signals.mjs", "scripts/test-continuance-e2e.mjs"],
   expr: ["scripts/test-expressions.mjs"],
   e2e: ["scripts/test-continuance-e2e.mjs"],
+  bind: ["scripts/test-open-work-bind.mjs"],
+  door: ["scripts/test-open-work-door.mjs"],
 };
 const M = [
   ["api/_work.js", "events visibility filter removed", ".filter((ev) => ev?.moderation?.public === true && ev.problem_id === problem.id)", ".filter((ev) => ev.problem_id === problem.id)", "work"],
@@ -35,9 +37,24 @@ const M = [
   ["api/_expressions.js", "lenient UTF-8 decoding", "fatal: true", "fatal: false", "expr"],
   ["api/_expressions.js", "unmeasured confidence accepted", "if (measured !== null && (", "if (false && (", "expr"],
   ["api/_expressions.js", "BOM stripped on decode", "ignoreBOM: true", "ignoreBOM: false", "expr"],
-  ["api/council.js", "Open Work flag bypassed", '=== "problems" && previewOn("OMNARAI_OPEN_WORK")', '=== "problems"', "e2e"],
+  // The /api/problems preview became GET /api/open-work (PR #69); its flag check now lives in serveOpenWork.
+  ["api/_continuance-views.js", "Open Work flag bypassed", 'if (!previewOn("OMNARAI_OPEN_WORK")) return res.status(404).json(OPEN_WORK_NOT_OPEN);\n  const id =', "const id =", "door"],
   ["api/council.js", "Signals flag bypassed", '=== "changes" && previewOn("OMNARAI_SIGNALS")', '=== "changes"', "e2e"],
   ["api/_work-store.js", "write-once dropped", "allowOverwrite: false", "allowOverwrite: true", "e2e"],
+  // Binding from the dashboard (D-003, 2026-11-24): POST /api/council {action:"work-bind"} → _work-store.js bindFootprint.
+  ["api/council.js", "bind: curator check dropped", "async function workBindAction(req, res) {\n  if (!curatorAuthed(req)) return operatorDenied(req, res);", "async function workBindAction(req, res) {", "bind"],
+  ["api/council.js", "bind: a GET may write", 'if (req.method !== "POST") return res.status(405).json({ error: "POST only: binding', 'if (false) return res.status(405).json({ error: "POST only: binding', "bind"],
+  ["api/council.js", "bind: Open Work flag bypassed", 'if (!previewOn("OMNARAI_OPEN_WORK")) return res.status(404).json(OPEN_WORK_NOT_OPEN);\n  let r;', "let r;", "bind"],
+  ["api/council.js", "bind: private no-store dropped", "  privateNoStore(req, res);\n  if (req.method !== \"POST\") return res.status(405).json({ error: \"POST only: binding", "  if (req.method !== \"POST\") return res.status(405).json({ error: \"POST only: binding", "bind"],
+  ["api/_work-store.js", "bind: pending footprints bindable", "(await loadPublicFootprints(footprintStore)).publicBodies.find((f) => f.id === b.footprint_id)", "(await loadPublicFootprints(footprintStore, { includeAll: true })).hydrated.map((h) => h.body).filter(Boolean).find((f) => f.id === b.footprint_id)", "bind"],
+  ["api/_work-store.js", "bind: duplicate check dropped", "if (same) throw new WorkBindError(\"ALREADY_BOUND\"", "if (false) throw new WorkBindError(\"ALREADY_BOUND\"", "bind"],
+  ["api/_work-store.js", "bind: duplicate check ignores the candidate", " && (ev.candidate ?? null) === b.candidate)));", ")));", "bind"],
+  ["api/_work-store.js", "bind: candidate range unchecked", "if (b.candidate != null && b.candidate >= n) {", "if (false) {", "bind"],
+  ["api/_work-store.js", "bind: kind/candidate allowed on an attempt", 'if (as !== "claim" && (claim_kind != null || candidate != null))', "if (false)", "bind"],
+  ["api/_work-store.js", "bind: event never admitted", 'action: "admit", curator, note: plan.note, nowMs }', 'action: "note", curator, note: plan.note, nowMs }', "bind"],
+  ["api/_work-store.js", "bind: admit failure swallowed", 'throw new WorkBindError("WORK_BIND_ADMIT_FAILED"', 'void new WorkBindError("WORK_BIND_ADMIT_FAILED"', "bind"],
+  ["api/_work-store.js", "bind: source hash not the footprint's", "source: { footprint_id: fp.id, content_sha256: fp.integrity.content_sha256 },", "source: { footprint_id: fp.id, content_sha256: \"0\".repeat(64) },", "bind"],
+  ["api/_work-store.js", "bind: references_problem always true", "(Array.isArray(v) ? v.includes(problem.id) : v === problem.id)", "true", "bind"],
   ["api/_work-store.js", "unadmitted events loaded", "const moderation = mod.fold(m[2]);\n    if (!moderation.public) continue;", "const moderation = { ...mod.fold(m[2]), public: true };", "e2e"],
 ];
 

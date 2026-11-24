@@ -9,16 +9,17 @@
 // Every record is published only by a later `admit` review, folded by the Footprint rule (foldModeration),
 // so an unknown or malformed review can never publish anything.
 //
-// There is NO HTTP write path. Registering a problem, recording an event and moderating are curator
-// operations called from scripts or a future authenticated curator action (decision D-003). Visiting minds
-// contribute exactly as they do today, by leaving Footprints, which the curator then binds to a problem.
+// There is no PUBLIC write path. Registering a problem and recording receipts are curator operations called from
+// scripts. Binding an admitted Footprint to a problem also has one curator-only HTTP action, on the operator session
+// (decision D-003, built 2026-11-24 once real problems were registered): POST /api/council {action:"work-bind"}.
+// Visiting minds contribute exactly as they do today, by leaving Footprints, which the curator then binds.
 import { Buffer } from "node:buffer";
 import { randomBytes } from "node:crypto";
 import { list as blobList, put as blobPut, blobFetch } from "./_blob.js";
-import { foldModeration, REVIEW_ACTIONS, loadPublicFootprints, loadFootprintIndex, hydrate, getDefaultStore as getFootprintStore } from "./_footprints.js";
+import { foldModeration, REVIEW_ACTIONS, loadPublicFootprints, loadFootprintIndex, hydrate, getDefaultStore as getFootprintStore, FP_ID_RE } from "./_footprints.js";
 import {
   WORK_PROBLEM_SCHEMA, WORK_EVENT_SCHEMA, VERIFIER_SCHEMA, WORK_PROBLEM_ID_RE, WORK_EVENT_ID_RE, VERIFIER_ID_RE,
-  validateProblem, validateEvent, validateVerifier, seal, isIntact, mintProblemId, mintEventId,
+  validateProblem, validateEvent, validateVerifier, seal, isIntact, mintProblemId, mintEventId, CLAIM_KINDS, LIMITS,
 } from "./_work.js";
 
 export const WORK_PREFIX = "work/";
@@ -139,6 +140,95 @@ export async function moderateWorkRecord({ record, action, curator, note = null,
   const path = `${REVIEWS_PREFIX}${record}/${String(nowMs).padStart(13, "0")}__${action}__${hex}.json`;
   const body = seal({ schema: "work-review/1.0", record, action, recorded_at: new Date(nowMs).toISOString(), reviewer: { kind: "curator", id: curator }, note: note ? String(note).slice(0, 500) : null });
   return store.putOnce(path, body);
+}
+
+// ── Binding (decision D-003) ──────────────────────────────────────────────────────────────────────────
+// Binding records where an ADMITTED contribution sits in a problem's history: as an attempt, or as a claim that may
+// say what kind of progress it offers (advance | elimination) and which success-contract candidate it is about.
+// Binding is not verification: a claim reaches "tested" only on a registered, independent verifier's receipt.
+// One implementation, used by scripts/open-work-curator.mjs and by POST /api/council {action:"work-bind"}.
+export const BIND_AS = ["attempt", "claim"];
+export class WorkBindError extends Error {
+  constructor(code, status, message, extra = {}) { super(message); this.code = code; this.status = status; Object.assign(this, extra); }
+}
+const INDEX_RE = /^\d{1,2}$/;
+const HEX64_RE = /^[0-9a-f]{64}$/;
+
+/** Shape-check a binding request (no reads). Throws WorkBindError BIND_INPUT_INVALID listing every problem. */
+export function parseBindInput(raw) {
+  const r = raw && typeof raw === "object" ? raw : {};
+  const errors = [];
+  const problem_id = String(r.problem_id ?? "").trim();
+  const footprint_id = String(r.footprint_id ?? "").trim();
+  const as = String(r.as ?? "").trim();
+  const claim_kind = r.claim_kind == null || r.claim_kind === "" ? null : String(r.claim_kind);
+  let candidate = null;
+  if (r.candidate != null && r.candidate !== "") {
+    if ((Number.isInteger(r.candidate) && r.candidate >= 0) || (typeof r.candidate === "string" && INDEX_RE.test(r.candidate))) candidate = Number(r.candidate);
+    else errors.push("candidate must be a whole-number index into the problem's success_contract.candidates");
+  }
+  const note = r.note == null || String(r.note).trim() === "" ? null : String(r.note).trim();
+  if (!WORK_PROBLEM_ID_RE.test(problem_id)) errors.push("problem_id must be an OMN-WORK id");
+  if (!FP_ID_RE.test(footprint_id)) errors.push("footprint_id must be an OMN-FP id");
+  if (!BIND_AS.includes(as)) errors.push(`as must be one of ${BIND_AS.join(", ")}`);
+  if (as !== "claim" && (claim_kind != null || candidate != null)) errors.push("claim_kind and candidate apply to a claim only");
+  if (claim_kind != null && !CLAIM_KINDS.includes(claim_kind)) errors.push(`claim_kind must be one of ${CLAIM_KINDS.join(", ")}`);
+  if (claim_kind === "elimination" && candidate == null) errors.push("an elimination must name the candidate it eliminates");
+  if (note != null && note.length > LIMITS.note) errors.push(`note ≤ ${LIMITS.note} chars`);
+  if (errors.length) throw new WorkBindError("BIND_INPUT_INVALID", 400, errors.join("; "), { errors });
+  return { problem_id, footprint_id, as, claim_kind, candidate, note };
+}
+
+/**
+ * Everything a binding needs, read and checked, with nothing written: the problem must be public, the footprint
+ * admitted (and not redacted), a candidate must index the problem's success contract, and the exact same binding
+ * must not already be public. Returns the work-event input plus what the curator is shown.
+ */
+export async function planBinding(raw, { store = getDefaultWorkStore(), footprintStore = getFootprintStore() } = {}) {
+  const b = parseBindInput(raw);
+  const pub = await loadPublicWork({ store, includeFootprints: false });
+  const problem = pub.problems.find((p) => p.id === b.problem_id);
+  if (!problem) throw new WorkBindError("WORK_PROBLEM_NOT_FOUND", 404, `${b.problem_id} is not a public problem (unknown, or registered but not admitted)`);
+  const n = problem.success_contract?.candidates?.length || 0;
+  if (b.candidate != null && b.candidate >= n) {
+    throw new WorkBindError("BIND_INPUT_INVALID", 400, n ? `candidate must be 0..${n - 1}: this problem's success contract has ${n} candidate(s)` : "this problem has no success-contract candidates; bind the claim without one", { errors: ["candidate-out-of-range"] });
+  }
+  const fp = (await loadPublicFootprints(footprintStore)).publicBodies.find((f) => f.id === b.footprint_id);
+  if (!fp || fp.tombstone || !HEX64_RE.test(fp.integrity?.content_sha256 || "")) {
+    throw new WorkBindError("FOOTPRINT_NOT_ADMITTED", 409, `${b.footprint_id} is not an admitted footprint (pending, rejected, redacted or unknown): admit the contribution first`);
+  }
+  const kind = b.as === "claim" ? "advance_claimed" : "attempt_recorded";
+  const same = pub.events.find((ev) => ev.problem_id === problem.id && ev.kind === kind && ev.source?.footprint_id === fp.id
+    && (kind === "attempt_recorded" || ((ev.claim_kind || "advance") === (b.claim_kind || "advance") && (ev.candidate ?? null) === b.candidate)));
+  if (same) throw new WorkBindError("ALREADY_BOUND", 409, `${fp.id} is already bound to ${problem.id} this way (event ${same.id}); nothing was written`, { event_id: same.id });
+  const input = {
+    problem_id: problem.id, problem_revision: problem.revision, kind,
+    source: { footprint_id: fp.id, content_sha256: fp.integrity.content_sha256 },
+    ...(b.claim_kind ? { claim_kind: b.claim_kind } : {}),
+    ...(b.candidate != null ? { candidate: b.candidate } : {}),
+  };
+  const references_problem = Object.values(fp.relationships || {}).some((v) => (Array.isArray(v) ? v.includes(problem.id) : v === problem.id));
+  return {
+    as: b.as, note: b.note, input, references_problem,
+    problem: { id: problem.id, revision: problem.revision, title: problem.title },
+    footprint: { id: fp.id, identity_declared: fp.actor?.identity_declared ?? null, title: fp.content?.title ?? null },
+    candidate_text: b.candidate != null ? problem.success_contract.candidates[b.candidate] : null,
+  };
+}
+
+/**
+ * Bind: record the work event, then admit it (both append-only). If the admit fails, the event stays PRIVATE, which
+ * is the fail-closed state: it never shows anywhere, and a retry records and admits a fresh one.
+ */
+export async function bindFootprint(raw, { curator, nowMs = Date.now(), bytes, store = getDefaultWorkStore(), footprintStore = getFootprintStore() }) {
+  const plan = await planBinding(raw, { store, footprintStore });
+  const event = await recordWorkEvent(plan.input, { curator, nowMs, bytes, store });
+  try {
+    await moderateWorkRecord({ record: event.id, action: "admit", curator, note: plan.note, nowMs }, { store });
+  } catch (err) {
+    throw new WorkBindError("WORK_BIND_ADMIT_FAILED", 502, `the binding was recorded as ${event.id} but could not be admitted, so it stays private and shows nowhere; try again`, { event_id: event.id, detail: String(err?.message || err).slice(0, 200) });
+  }
+  return { ...plan, event };
 }
 
 // ── Reads ─────────────────────────────────────────────────────────────────────────────────────────────

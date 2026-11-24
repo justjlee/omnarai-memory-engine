@@ -19,7 +19,7 @@ import { POLICY_CARD } from "./_contract.js";
 import { atlasCertCounts, tierOf, CERTIFIED_TIERS } from "./_atlas-counts.js";
 import { attachEnvelope } from "./_response-envelope.js";
 import { previewOn, serveOpenWork, serveChanges, OPEN_WORK_NOT_OPEN } from "./_continuance-views.js";
-import { loadPublicWork, pendingTowardWork } from "./_work-store.js";
+import { loadPublicWork, pendingTowardWork, bindFootprint, WorkBindError, WorkValidationError } from "./_work-store.js";
 import { deriveWorkPacket, openWorkRow, pickBaton, howToContribute, bindingsOf, WORK_PROBLEM_ID_RE } from "./_work.js";
 import { registeredQuestions, loadRegistry } from "./_registered.js";
 import {
@@ -1239,6 +1239,50 @@ async function footprintRedact(req, res) {
   }
   const r = await appendReview({ footprint_id: id, action: "redact", reviewer: { kind: "curator", id: null }, note: `reason: ${reason}` });
   return res.status(200).json({ tombstone: tomb, contribution_redacted, review: r });
+}
+
+// POST /api/council {action:"work-bind", problem_id, footprint_id, as:"attempt"|"claim", claim_kind?, candidate?, note?}
+// Curator only: the operator session (the /home Arrivals panel) or Bearer INGEST_SECRET. Decision D-003, built
+// 2026-11-24 once real problems were registered. Binds an ADMITTED footprint to a PUBLIC Open Work problem as an
+// attempt, or as a claim that may name its kind (advance | elimination) and a success-contract candidate. It records
+// one work event and admits it, both append-only, through the same code as scripts/open-work-curator.mjs bind.
+// Binding is not verification. Receipts and reviews are still recorded by the curator script. Behind
+// OMNARAI_OPEN_WORK: with the door closed this answers 404 OPEN_WORK_NOT_OPEN and writes nothing.
+const WORK_CURATOR = "xz"; // the curator's public handle; events record {kind:"curator", id}
+async function workBindAction(req, res) {
+  if (!curatorAuthed(req)) return operatorDenied(req, res);
+  privateNoStore(req, res);
+  if (req.method !== "POST") return res.status(405).json({ error: "POST only: binding writes a record.", code: "METHOD_NOT_ALLOWED" });
+  if (!previewOn("OMNARAI_OPEN_WORK")) return res.status(404).json(OPEN_WORK_NOT_OPEN);
+  let r;
+  try {
+    r = await bindFootprint(req.body || {}, { curator: WORK_CURATOR });
+  } catch (err) {
+    if (err instanceof WorkBindError) {
+      return res.status(err.status).json({ error: err.message, code: err.code, ...(err.errors ? { errors: err.errors } : {}), ...(err.event_id ? { event_id: err.event_id } : {}), ...(err.detail ? { detail: err.detail } : {}) });
+    }
+    if (err instanceof WorkValidationError) return res.status(400).json({ error: err.message, code: "BIND_INPUT_INVALID", errors: err.errors });
+    return res.status(500).json({ error: "Could not bind just now; nothing was published.", code: "WORK_BIND_FAILED", detail: String(err?.message || err).slice(0, 200), retryable: true });
+  }
+  const what = r.as === "attempt" ? "an attempt"
+    : r.input.claim_kind === "elimination" ? `a claim that eliminates candidate ${r.input.candidate}`
+    : r.input.candidate != null ? `a claim that supports candidate ${r.input.candidate}` : "a claim";
+  return res.status(200).json({
+    bound: true,
+    as: r.as,
+    claim_kind: r.input.claim_kind ?? (r.as === "claim" ? "advance" : null),
+    candidate: r.input.candidate ?? null,
+    candidate_text: r.candidate_text,
+    problem: r.problem,
+    footprint: r.footprint,
+    references_problem: r.references_problem,
+    event_id: r.event.id,
+    state: "admitted",
+    message: `Bound ${r.footprint.identity_declared ? `${r.footprint.identity_declared}'s` : "this"} contribution to "${r.problem.title}" as ${what}. Binding is not verification.`,
+    ...(r.as === "claim" ? { next: "The claim moves a candidate or a milestone only once a registered, independent verifier's receipt (tested) or an independent review (reviewed) is recorded on it." } : {}),
+    packet_href: `/api/open-work?id=${r.problem.id}`,
+    status_href: `/api/footprints/status?id=${r.footprint.id}`,
+  });
 }
 
 // ── Derived protocol surfaces (Phases 2–4): orient / questions / positions /
@@ -2777,6 +2821,7 @@ export default async function handler(req, res) {
   if (action === "annotate") return annotateRecord(req, res);
   if (action === "footprint-review") return footprintReviewAction(req, res);
   if (action === "footprint-redact") return footprintRedact(req, res);
+  if (action === "work-bind") return workBindAction(req, res);
   if ((req.query?._view || "") === "contributions") return listContributionsView(req, res);
   if ((req.query?._view || "") === "kin") return serveKin(req, res);
   if ((req.query?._view || "") === "invite") return serveInvite(req, res);

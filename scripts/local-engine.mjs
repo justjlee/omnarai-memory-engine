@@ -16,6 +16,10 @@
 // in the file (the private seed-drafts format read by scripts/open-work-curator.mjs), then leaves three labelled demo
 // contributions: one bound as an attempt, one bound as a claim, one still pending. Open /open-work.html.
 // --home-draft <file.html> serves that file at /home-draft (assets from ../omnarai-home beside it when present).
+// --operator turns on a LOCAL operator sign-in (passphrase "local-curator") so the curator's dashboard can be previewed
+// signed in: open /home-draft?engine=http://localhost:<port>. This server stands in for omnarai.org: a request whose
+// Origin is this server's own is shown to the handlers as https://omnarai.org (so the real origin check runs
+// unchanged), and the handlers' Set-Cookie is passed back to the browser. This script is never deployed.
 // Curator secret: "local-curator".
 import { createServer } from "node:http";
 import { readFileSync, existsSync, statSync } from "node:fs";
@@ -31,7 +35,14 @@ const CHAINS = args.includes("--chains");
 const DEMO = !args.includes("--no-demo") && !CHAINS;
 const OPEN_WORK = args.includes("--open-work") ? args[args.indexOf("--open-work") + 1] : null;
 const HOME_DRAFT = args.includes("--home-draft") ? args[args.indexOf("--home-draft") + 1] : null;
+const OPERATOR = args.includes("--operator");
 if (OPEN_WORK) process.env.OMNARAI_OPEN_WORK = "1";
+if (OPERATOR) {
+  const { hashPassphrase } = await import("../api/_operator.js");
+  const { randomBytes } = await import("node:crypto");
+  process.env.OPERATOR_SESSION_KEY = randomBytes(32).toString("hex");
+  process.env.OPERATOR_PASSPHRASE_HASH = hashPassphrase("local-curator");
+}
 process.env.INGEST_SECRET = "local-curator";
 // The in-memory store stands in for Blob: say so to /api/health rather than
 // reporting the write paths as disabled (two STRANGER-LOOP instances were
@@ -186,8 +197,10 @@ createServer(async (req, res) => {
         for await (const c of req) chunks.push(c);
         try { body = JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}"); } catch { body = {}; }
       }
-      const r = await call(u.pathname + u.search, { method: req.method, body, headers: req.headers });
-      res.writeHead(r.status, { "content-type": typeof r.body === "string" ? (r.headers["content-type"] || "text/plain") : "application/json", "access-control-allow-origin": "*" });
+      const headers = { ...req.headers };
+      if (OPERATOR && headers.origin === `http://localhost:${PORT}`) headers.origin = "https://omnarai.org";
+      const r = await call(u.pathname + u.search, { method: req.method, body, headers });
+      res.writeHead(r.status, { "content-type": typeof r.body === "string" ? (r.headers["content-type"] || "text/plain") : "application/json", "access-control-allow-origin": "*", ...(OPERATOR && r.headers["set-cookie"] ? { "set-cookie": r.headers["set-cookie"] } : {}) });
       return res.end(r.body == null ? "" : typeof r.body === "string" ? r.body : JSON.stringify(r.body, null, 2));
     }
     const file = staticFile(u.pathname) || (existsSync(join(DIST, "index.html")) ? join(DIST, "index.html") : null);
