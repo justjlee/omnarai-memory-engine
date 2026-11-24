@@ -177,10 +177,32 @@
       "occurred_at": "2026-11-23T12:01:20.000Z",
       "reason_class": "retracted",
       "event_id": "sig_0ba00f80026b7c5b9329a2f565f29e2a"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "claim_status_changed",
+      "scope": "claim",
+      "source_id": "fresh-peer-answers-improve-reasoning",
+      "source_revision": "v1",
+      "occurred_at": "2026-11-24T17:40:00.000Z",
+      "from": null,
+      "to": "confirmed",
+      "event_id": "sig_674ceae4c19587a19b79eb88a7171b79"
+    },
+    {
+      "schema": "signals-change/1.0",
+      "kind": "claim_status_changed",
+      "scope": "claim",
+      "source_id": "divergence-improves-reasoning",
+      "source_revision": "v2",
+      "occurred_at": "2026-11-24T17:40:00.000Z",
+      "from": "open",
+      "to": "refuted",
+      "event_id": "sig_772db0ccb1cff7a9b7260d45fb5cd022"
     }
   ],
-  "next_cursor": "eyJ2IjoxLCJhdCI6IjIwMjYtMTEtMjNUMTI6MDE6MjAuMDAwWiIsImlkIjoic2lnXzBiYTAwZjgwMDI2YjdjNWI5MzI5YTJmNTY1ZjI5ZTJhIiwiaCI6IjA2YmE5ZmFmM2RmYzMzMjBhZDQ3YWY1ZDMxZDEyZWQzIn0",
+  "next_cursor": "eyJ2IjoxLCJhdCI6IjIwMjYtMTEtMjRUMTc6NDA6MDAuMDAwWiIsImlkIjoic2lnXzc3MmRiMGNjYjFjZmY3YTliNzI2MGQ0NWZiNWNkMDIyIiwiaCI6IjlmMDQ4NWU3ZjA5NTVjN2UwMjY2ZmU4MzllYTA4MThhIn0",
   "has_more": false,
   "reset_required": false,
-  "total_public_events": 42
+  "total_public_events": 44
 }
