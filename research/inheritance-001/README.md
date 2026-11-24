@@ -36,6 +36,7 @@ node --import ./scripts/lib/register-mem-blob.mjs --test scripts/test-inheritanc
 
 0. **For the current state:** `RESULTS-PILOT-002.md` (the latest run, with every contrast and its interval), then
    `REVIEW-PILOT-002-INSTRUMENT.md` (why that run is not yet a fair test, and the seven proposed fixes), then
+   `REFUSAL-DIAGNOSTIC-001.md` (the $0.47 re-send: every refusal was Anthropic's `reasoning_extraction` safeguard, at random), then
    `DECISIONS_REQUIRED.md` (what is decided and what is still open). Every deviation, run and production change is dated in
    `deviations.ndjson`.
 1. `PROTOCOL.md`: what is measured, the six arms, the pawl of verification, the analysis, the falsifiers.
@@ -60,6 +61,7 @@ research/inheritance-001/
   preregistration.draft.yaml   # Pilot 001: registered (d24005d); frozen and pushed BY ITSELF before any live run; never edited afterwards
   preregistration-002.draft.yaml  registration-002.json   # Pilot 002: registered (9adaa95), frozen; run 2026-11-24
   RESULTS-PILOT-002.md  REVIEW-PILOT-002-INSTRUMENT.md     # Pilot 002 results and the $0 instrument review
+  REFUSAL-DIAGNOSTIC-001.md                                # why Claude refused (re-send of the 33 refusals, $0.47)
   deviations.ndjson            # dated, append-only
   schemas/                     # ten record schemas (study … report), engine validator subset
   pilot/                       # projection for the proposed pilot (stand-in families, no sealed data)
