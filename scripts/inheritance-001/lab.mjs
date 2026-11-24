@@ -49,7 +49,8 @@ import { VERIFIER } from "./lib/verify.mjs";
 import { ORACLE } from "./lib/oracle.mjs";
 import { drawFamilySet, setKey } from "./lib/families.mjs";
 import { familyRecord } from "./lib/tasks.mjs";
-import { checkLiveAuthorization, createLiveAdapter, createSpendGuard, remainingCaps } from "./lib/adapters.mjs";
+import { checkLiveAuthorization, createLiveAdapter, createSpendGuard, remainingCaps, callWithRetries } from "./lib/adapters.mjs";
+import { loadRun, buildResendPlan, runResend, summarizeResend } from "./lib/resend.mjs";
 import { priceFor, PRICES_AS_OF } from "./lib/prices.mjs";
 import { envValue } from "../lib/env-value.mjs";
 import { buildProbe, runProbe, renderProbe, PROBES, LATEST_PROBE_ID, DEFAULT_PROBE_ID, calibrationOpSets } from "./lib/probe.mjs";
@@ -80,7 +81,7 @@ function sealedStudyFor(sealed, opts) {
 }
 
 const OFFLINE = ["demo", "summarize", "verify", "validate-instrument", "budget", "plan", "draw-sealed", "pilot-plan"];
-if (OFFLINE.includes(cmd) || (cmd === "probe" && !argv.includes("--live"))) installNetworkGuard();
+if (OFFLINE.includes(cmd) || ((cmd === "probe" || cmd === "resend") && !argv.includes("--live"))) installNetworkGuard();
 
 async function demo() {
   const world = opt("--world", "positive-shared");
@@ -376,7 +377,7 @@ async function runModels() {
   const adapter = { ...live, async call(req) {
     const r = await live.call(req);
     n++;
-    appendFileSync(callLog, JSON.stringify({ n, at: new Date().toISOString(), tracing_id: req.tracing_id, model_id: req.model_id, max_output_tokens: req.max_output_tokens, returned: r.provider_returned_model_id ?? null, error: r.error?.code ?? null, usage: r.usage ?? null, stop: r.provider_response_metadata?.stop_reason || r.provider_response_metadata?.finish_reason || null, duration_ms: r.duration_ms ?? null }) + "\n");
+    appendFileSync(callLog, JSON.stringify({ n, at: new Date().toISOString(), tracing_id: req.tracing_id, model_id: req.model_id, max_output_tokens: req.max_output_tokens, returned: r.provider_returned_model_id ?? null, error: r.error?.code ?? null, usage: r.usage ?? null, stop: r.provider_response_metadata?.stop_reason || r.provider_response_metadata?.finish_reason || null, stop_details: r.provider_response_metadata?.stop_details ?? null, duration_ms: r.duration_ms ?? null }) + "\n");
     out(`  ${n} ${req.tracing_id} ${req.model_id} -> ${r.error ? r.error.code : "ok"} out=${r.usage?.out ?? "?"} (guard $${guard.state.usd.toFixed(4)})`);
     return r;
   } };
@@ -445,6 +446,71 @@ async function probe() {
   out(`Probe finished: ${summary.calls_made} calls, recorded $${summary.spend_usd_recorded}. Results (private): ${dir}`);
 }
 
+// Diagnostic re-send of a finished run's refused consumer calls (lib/resend.mjs). Offline by default: prints the plan and
+// its hash (--plan-out FILE writes it). With --live, the same gate as a probe: xz's approval file naming the plan hash and
+// caps, OMNARAI_LAB_LIVE=1, --live --yes, --experiment, repeated caps, and a shared-ledger reservation before any call.
+const RESEND_DECISION_RULE = [
+  "Pre-committed before any call. Read the re-sent refusals (kind refused-before) by stop_details.category.",
+  "R1: if at least half of them refuse again, refusal on this input is mostly reproducible; report the category counts, and the most frequent category names which safeguard area the requests fall into.",
+  "R2: if fewer than half refuse again, refusal is mostly not reproducible on identical input; report it as such.",
+  "R3: controls (answered before) that now refuse are reported, and change neither R1 nor R2.",
+  "Either way: no claim, no change to Pilot 002's registered analysis, and the next design step is chosen with xz after reading the categories. No step is designed to get around a provider safeguard.",
+].join(" ");
+
+async function resendCmd() {
+  const runDir = opt("--run");
+  if (!runDir || !existsSync(join(resolve(runDir), "plan.json"))) { out("resend needs --run DIR (a finished run-models directory)"); process.exit(2); }
+  const run = loadRun(resolve(runDir));
+  const maxUsd = Number(opt("--max-usd", 0)), maxCalls = Number(opt("--max-calls", 0));
+  const plan = buildResendPlan(run, { controls: Number(opt("--controls", 8)), maxUsd, maxCalls, priceDate: run.plan.projection?.price_date ?? null, decisionRule: RESEND_DECISION_RULE });
+  const live = argv.includes("--live");
+  if (!live) {
+    out(`Re-send ${plan.study_id} (offline preview, nothing called): ${plan.counts.refused_before} refused-before + ${plan.counts.controls} controls = ${plan.counts.total} calls; every request rebuilt byte-identical to the source run.`);
+    out(`  plan_sha256 ${plan.plan_sha256}`);
+    out(`  caps: $${maxUsd}, ${maxCalls} calls; controls go last, so a cap can only cut controls`);
+    const planOut = opt("--plan-out");
+    if (planOut) { writeFileSync(resolve(planOut), JSON.stringify(plan, null, 2) + "\n"); out(`  wrote ${resolve(planOut)}`); }
+    return;
+  }
+  const approvalFile = opt("--approval"), envFile = opt("--env-file"), outDir = opt("--out");
+  const problems = [];
+  if (!outDir || insideRepo(outDir)) problems.push("--out DIR outside the repository is required (results stay private until reviewed)");
+  else if (existsSync(join(resolve(outDir), "resend-plan.json"))) problems.push("--out already holds a re-send; use a new directory");
+  if (!envFile || !existsSync(envFile)) problems.push("--env-file FILE with the provider keys is required");
+  const approval = approvalFile && existsSync(approvalFile) ? JSON.parse(readFileSync(approvalFile, "utf8")) : null;
+  const authorization = { approval, preregistration: null, plan, planSha256: plan.plan_sha256, argv: process.argv, env: process.env, requireRegistration: false };
+  const missing = [...problems, ...checkLiveAuthorization(authorization)];
+  if (missing.length) { out("REFUSED: no model was called and nothing was spent. Missing:"); for (const m of missing) out(`  - ${m}`); process.exit(3); }
+  const need = [...new Set(plan.models.map((m) => KEY_ENV[m.provider]))];
+  const keys = {};
+  for (const line of readFileSync(envFile, "utf8").split("\n")) { const m = /^\s*([A-Z_]+)\s*=\s*(.*)$/.exec(line); if (m && [...need, "BLOB_READ_WRITE_TOKEN"].includes(m[1])) keys[m[1]] = envValue(m[2]); }
+  for (const k of [...need, "BLOB_READ_WRITE_TOKEN"]) if (!keys[k]) { out(`REFUSED: ${k} not found in the env file. Nothing was called.`); process.exit(3); }
+  const reserve = spawnSync(process.execPath, [join(ROOT, "scripts/budget-preflight.mjs"), "--reserve", String(approval.max_usd), "--label", `inheritance-001 ${plan.study_id}`], { env: { ...process.env, BLOB_READ_WRITE_TOKEN: keys.BLOB_READ_WRITE_TOKEN }, stdio: "inherit" });
+  if (reserve.status !== 0) { out("REFUSED: the shared budget ledger did not accept the reservation. Nothing was called."); process.exit(3); }
+  const dir = resolve(outDir);
+  mkdirSync(join(dir, "raw"), { recursive: true });
+  writeFileSync(join(dir, "resend-plan.json"), JSON.stringify(plan, null, 2) + "\n");
+  const killFile = join(RESEARCH, "KILL");
+  const guard = createSpendGuard({ maxCalls: approval.max_calls, maxUsd: approval.max_usd, onDate: plan.price_date, killSwitch: () => existsSync(killFile) });
+  const liveAdapter = createLiveAdapter({ authorization, keys: Object.fromEntries(need.map((k) => [k, keys[k]])) });
+  const callLog = join(dir, "calls.log.jsonl");
+  let n = 0;
+  const adapter = { ...liveAdapter, async call(req) {
+    const r = await liveAdapter.call(req);
+    n++;
+    appendFileSync(callLog, JSON.stringify({ n, at: new Date().toISOString(), tracing_id: req.tracing_id, model_id: req.model_id, max_output_tokens: req.max_output_tokens, returned: r.provider_returned_model_id ?? null, error: r.error?.code ?? null, usage: r.usage ?? null, stop: r.provider_response_metadata?.stop_reason ?? null, stop_details: r.provider_response_metadata?.stop_details ?? null, duration_ms: r.duration_ms ?? null }) + "\n");
+    return r;
+  } };
+  const { records, outputs, stopped } = await runResend({ plan, run, adapter, guard, callWithRetries, maxAttempts: run.plan.params?.max_attempts ?? 2,
+    onCall: (r) => out(`  ${r.call_id} ${r.kind} ${r.arm} -> ${r.error ?? r.stop_reason}${r.stop_details?.category ? ` [${r.stop_details.category}]` : ""} out=${r.usage.out} $${r.cost_usd ?? "?"} (guard $${guard.state.usd.toFixed(4)})`) });
+  const summary = summarizeResend(plan, records, stopped);
+  writeFileSync(join(dir, "resend-records.jsonl"), records.map((r) => JSON.stringify(r)).join("\n") + "\n");
+  writeFileSync(join(dir, "raw", "outputs.jsonl"), outputs.map((r) => JSON.stringify(r)).join("\n") + (outputs.length ? "\n" : ""));
+  writeFileSync(join(dir, "resend-summary.json"), JSON.stringify({ ...summary, finished_at: new Date().toISOString(), guard: guard.state }, null, 2) + "\n");
+  out(`Re-send ${stopped ? "STOPPED at the cap" : "finished"}: ${records.length} of ${plan.counts.total} calls, recorded $${guard.state.usd.toFixed(4)}. Results (private): ${dir}`);
+  out(JSON.stringify({ refused_before: summary.refused_before, controls: summary.controls }));
+}
+
 function planCmd() {
   const { study } = demoStudy({ world: opt("--world", "positive-shared") });
   const { plan } = buildPlan(study);
@@ -453,6 +519,6 @@ function planCmd() {
   out(`plan ${plan.plan_sha256} → ${file}`);
 }
 
-const COMMANDS = { demo, summarize: () => { const d = resolve(opt("--out")); const r = summarizeDir(d); out(`summary ${r.id} → ${d}/summary.json, REPORT.md`); }, verify: () => { const r = verifyRunDir(resolve(opt("--out"))); out(JSON.stringify(r)); if (!r.ok) process.exit(1); }, "validate-instrument": validateInstrument, budget, plan: planCmd, "draw-sealed": drawSealed, "run-models": runModels, probe, "pilot-plan": pilotPlanCmd };
+const COMMANDS = { demo, summarize: () => { const d = resolve(opt("--out")); const r = summarizeDir(d); out(`summary ${r.id} → ${d}/summary.json, REPORT.md`); }, verify: () => { const r = verifyRunDir(resolve(opt("--out"))); out(JSON.stringify(r)); if (!r.ok) process.exit(1); }, "validate-instrument": validateInstrument, budget, plan: planCmd, "draw-sealed": drawSealed, "run-models": runModels, probe, "pilot-plan": pilotPlanCmd, resend: resendCmd };
 if (!COMMANDS[cmd]) { out(`usage: lab.mjs <${Object.keys(COMMANDS).join("|")}> [options]`); process.exit(2); }
 await COMMANDS[cmd]();

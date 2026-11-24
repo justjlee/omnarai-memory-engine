@@ -197,13 +197,22 @@ export function createHttpsTransport(keys, { post = postJSON } = {}) {
   };
 }
 
+// Anthropic returns stop_details only on stop_reason "refusal": { type, category (an open set, e.g. cyber, bio, frontier_llm,
+// reasoning_extraction, general_harms, or null), explanation? }. Pilot 002 dropped it, so its 33 refusals could not be
+// classified (REVIEW-PILOT-002-INSTRUMENT.md). Kept as metadata: the category and a short explanation, never model text.
+// Opaque fallback-credit fields are not kept.
+export function anthropicStopDetails(sd) {
+  if (!sd || typeof sd !== "object") return null;
+  return { type: sd.type ?? null, category: sd.category ?? null, explanation: typeof sd.explanation === "string" ? sd.explanation.slice(0, 300) : null };
+}
+
 // Parse a provider response into the honest call record.
 export function parseProviderResponse(provider, res) {
   const d = res.json || {};
   const reqId = res.headers?.["request-id"] || res.headers?.["x-request-id"] || d.id || d.responseId || null;
   if (res.status === 429 || res.status >= 500) return { error: { code: `HTTP_${res.status}`, retryable: true }, request_id: reqId, duration_ms: res.duration_ms, usage: null };
   if (res.status >= 400 || d.error) return { error: { code: `HTTP_${res.status}`, detail: d.error?.message || res.text?.slice(0, 200), retryable: false }, request_id: reqId, duration_ms: res.duration_ms, usage: null };
-  if (provider === "anthropic") return { provider_returned_model_id: d.model || null, output: (d.content || []).map((c) => c.text || "").join(""), usage: { in: d.usage?.input_tokens || 0, out: d.usage?.output_tokens || 0 }, request_id: reqId, duration_ms: res.duration_ms, provider_response_metadata: { stop_reason: d.stop_reason || null, raw_usage: d.usage || null }, error: null };
+  if (provider === "anthropic") return { provider_returned_model_id: d.model || null, output: (d.content || []).map((c) => c.text || "").join(""), usage: { in: d.usage?.input_tokens || 0, out: d.usage?.output_tokens || 0 }, request_id: reqId, duration_ms: res.duration_ms, provider_response_metadata: { stop_reason: d.stop_reason || null, stop_details: anthropicStopDetails(d.stop_details), raw_usage: d.usage || null }, error: null };
   if (provider === "gemini" && (Array.isArray(d.steps) || d.usage?.total_input_tokens !== undefined)) {
     // Interactions API. Its documented example has total_tokens = input + output + thought, so the thought tokens are NOT
     // inside total_output_tokens: billed output = output + thought (the documented cap covers both).
