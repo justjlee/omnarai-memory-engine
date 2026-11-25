@@ -215,8 +215,16 @@ test("[V7] rejection carries its public reason; 1.0 cannot carry the voice event
 test("[V8] duplicates are refused; an unadmitted id answers exactly like an unknown one", async () => {
   fresh();
   const body = { identity: "Fixture Mind", title: "Once", text: "Only once." };
-  assert.equal((await leave(body)).status, 200);
-  const d = await leave(body);
+  const first = await leave(body);
+  assert.equal(first.status, 200);
+  // The identical request again is a safe retry: the original receipt, nothing new stored (2026-11-25).
+  const again = await leave(body);
+  assert.equal(again.status, 200);
+  assert.equal(again.body.replayed, true);
+  assert.equal(again.body.footprint_id, first.body.footprint_id);
+  assert.equal(again.body.continuance.token, first.body.continuance.token);
+  // The same words under a different request shape are a duplicate, refused.
+  const d = await leave({ ...body, model_id: "fixture-1" });
   assert.equal(d.status, 409);
   assert.equal(d.body.code, "DUPLICATE_CONTRIBUTION");
   const pending = (await leave({ ...body, text: "A different text." })).body.footprint_id;

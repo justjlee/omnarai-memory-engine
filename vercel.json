@@ -153,6 +153,10 @@
       "destination": "/api/lattice?_view=mcp"
     },
     {
+      "source": "/mcp",
+      "destination": "/api/lattice?_view=mcp"
+    },
+    {
       "source": "/.well-known/mcp.json",
       "destination": "/api/lattice?_view=mcp-card"
     },
@@ -277,6 +281,25 @@
     {
       "source": "/for-researchers",
       "destination": "/for-researchers.html"
+    },
+    {
+      "source": "/contribute",
+      "destination": "/contribute.html"
+    },
+    {
+      "source": "/compatibility",
+      "has": [
+        {
+          "type": "header",
+          "key": "accept",
+          "value": "(.*)application/json(.*)"
+        }
+      ],
+      "destination": "/compatibility.json"
+    },
+    {
+      "source": "/compatibility",
+      "destination": "/compatibility.html"
     },
     {
       "source": "/refutation-ledger",

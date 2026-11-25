@@ -131,6 +131,11 @@ echo
 echo ">> Storage classes (one door · every path classified · constant-time secret checks)"
 node scripts/check-storage-classes.mjs
 echo
+# HARD gate: the compatibility matrix (2026-11-25). public/compatibility.json may call an environment's write
+# "verified" only when it cites a footprint; vendor documentation is never evidence (scripts/check-compatibility.mjs).
+echo ">> Compatibility matrix (states · evidence · no documentation as evidence)"
+node scripts/check-compatibility.mjs
+echo
 
 if [[ "${1:-}" == "--promote" ]]; then
   # IMPORTANT: promotion is a real PRODUCTION deployment, not a preview alias.
@@ -221,6 +226,12 @@ if [[ "${1:-}" == "--promote" ]]; then
   # surfaces in omnarai-home/deploy.sh.
   if ! node scripts/dual-native-check.mjs --scope engine; then
     echo ">> 🔴 DUAL-NATIVE GATE FAILED — $DOMAIN violates the charter for machine visitors."
+    exit 1
+  fi
+  echo
+  echo ">> Compatibility evidence (every footprint the matrix cites is publicly readable on $DOMAIN)"
+  if ! node scripts/check-compatibility.mjs --live --engine "https://$DOMAIN"; then
+    echo ">> 🔴 COMPATIBILITY GATE FAILED — the matrix cites evidence nobody can check."
     exit 1
   fi
   echo

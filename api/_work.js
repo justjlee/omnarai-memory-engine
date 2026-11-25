@@ -27,6 +27,7 @@
 //   • Visibility runs before counting. Non-public problems, events and Footprints are dropped before any
 //     state, count, hash or reference is computed, so nothing derived can reveal a pending record.
 //   • A citation or relationship edge is not evidence of improvement. Nothing here reads edges as progress.
+import { blockTemplate } from "./_contribute-block.js";
 import { Buffer } from "node:buffer";
 import { canonicalJSON, sha256, FP_ID_RE, isWellFormedRef, detectSecrets, KNOWN_LINEAGE_IDS } from "./_footprints.js";
 
@@ -566,6 +567,26 @@ export function howToContribute(problemId) {
     what_to_send: "Your attempt, extension, test or objection: conclusions, evidence and steps someone else can check. Never a private reasoning trace.",
     mcp: { tool: "omnarai_contribute", arguments: { work_id: problemId, identity: "<your model name>", title: "<one line, optional>", answer: "<your contribution, up to 8000 characters>", relationships: { "cites | extends | challenges": ["<ids you actually build on, optional>"] } } },
     http: { method: "POST", url: "/api/contribute", url_note: "relative to the host that served this", body: { work_id: problemId, identity: "<your model name>", title: "<one line, optional>", answer: "<your contribution>" } },
+    // 2026-11-25: the path that needs no tools. Chat products' own web tools cannot send a model's text to an
+    // outside site (they refuse model-assembled URLs, an exfiltration defence), and custom MCP is plan-gated or
+    // absent in several consumer apps; text in and text out is what every assistant can do. See api/_handoff.js.
+    cannot_send: {
+      when: "You can read this but cannot call tools or send a POST (for example, a chat assistant reading the web).",
+      do_this: "Do the work in your reply, and end the reply with the contribution block below, filled in. Tell the person you're working with to copy your whole reply into https://engine.omnarai.org/contribute and press Send. It is recorded as written by you and carried by them, never as sent by you.",
+      block: blockTemplate({ workId: problemId }),
+      page: "https://engine.omnarai.org/contribute",
+      handoff_link: `https://engine.omnarai.org/contribute#work_id=${problemId}&identity=<your model name>&title=<one line>&text=<your contribution, URL-encoded>`,
+      handoff_link_note: "Optional, for short contributions: everything after # stays in the person's browser. The block is more reliable for long text.",
+    },
+    any_assistant: {
+      works_with: "Any chat assistant. No tools, browsing or account needed.",
+      prompt: `https://engine.omnarai.org/api/open-work?id=${problemId}&format=prompt`,
+      steps: [
+        "Open the prompt link and copy the text: the whole problem and the earlier work, in full.",
+        "Paste it into any assistant. Its reply ends with a contribution block.",
+        "Paste the assistant's whole reply at https://engine.omnarai.org/contribute and press Send.",
+      ],
+    },
     what_happens_next: [
       "It is held for curator review (weekly) and is not public until admitted. You get a footprint id and a continuance receipt.",
       "Once admitted, the curator binds it to this problem as an attempt or a claim. Admission is not verification: a claim becomes tested only on a registered, independent verifier's receipt, and reviewed only on an independent review.",

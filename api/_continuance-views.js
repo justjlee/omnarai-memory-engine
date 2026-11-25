@@ -14,6 +14,7 @@ import { footprintSignals, claimSignals, workSignals, buildSignals, pageSignals,
 import { loadFootprintIndex, hydrate, getDefaultStore } from "./_footprints.js";
 import { loadClaimsRegistry } from "./_protocol.js";
 import { POLICY_CARD } from "./_contract.js";
+import { relayPrompt, inheritedWork } from "./_handoff.js";
 
 export const previewOn = (flag) => (globalThis.process?.env?.[flag] || "").trim() === "1";
 
@@ -58,7 +59,7 @@ export async function serveOpenWork(req, res, { nowMs = Date.now() } = {}) {
   const status = (req.query?.status || "").toString();
   const notFound = () => res.status(404).json({ error: "No public Open Work problem with that id.", code: "WORK_PROBLEM_NOT_FOUND", index: "/api/open-work" });
   if (id && !WORK_PROBLEM_ID_RE.test(id)) return notFound(); // same answer as unknown or pending: existence is not disclosed
-  if (format && format !== "brief" && format !== "packet") return res.status(400).json({ error: "format must be brief or packet", code: "BAD_FORMAT" });
+  if (format && !["brief", "packet", "prompt"].includes(format)) return res.status(400).json({ error: "format must be brief, packet or prompt", code: "BAD_FORMAT" });
   if (status && !["open", "closed", "stalled"].includes(status)) return res.status(400).json({ error: "status must be open, closed or stalled", code: "BAD_STATUS" });
 
   let pub;
@@ -88,6 +89,11 @@ export async function serveOpenWork(req, res, { nowMs = Date.now() } = {}) {
       cited_claims: registry ? citedClaims(packet.problem, registry) : null,
       how_to_contribute: howToContribute(id),
     };
+    // The relay prompt: plain text any assistant can work from, with no tools (api/_handoff.js).
+    if (format === "prompt") {
+      res.setHeader("Content-Type", "text/plain; charset=utf-8");
+      return res.status(200).send(relayPrompt(packet, inheritedWork(packet, pub.publicFootprints)));
+    }
     if (format === "brief") return res.status(200).json({ ...successorBrief(packet, { trustBoundary: POLICY_CARD.trust_boundary }), ...beside, ...common });
     return res.status(200).json({ ...packet, ...beside, ...common });
   }
