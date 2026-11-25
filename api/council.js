@@ -13,6 +13,7 @@ import {
 } from "./_questions.js";
 import { list, put, blobFetch, privateStoreConfigured } from "./_blob.js";
 import { operatorAuthed, operatorDenied, privateNoStore, applyOperatorCors, bearerIsCurator, bearerToken, secretEquals } from "./_operator.js";
+import { scanRecord, SCAN_NOTE } from "./_injection-scan.js";
 import { waitUntil } from "@vercel/functions";
 import { recordAccess } from "./_telemetry.js";
 import { POLICY_CARD } from "./_contract.js";
@@ -1074,6 +1075,18 @@ async function chainContextFor(publicBodies) {
   return { ctx: chainContext(divRecords, publicBodies), recordsUnavailable };
 }
 
+// Injection pre-scan for the review queue (api/_injection-scan.js): {review_flags: {<id>: [...]}, review_flags_note}
+// for the pending footprints given, empty ids omitted. Curator reads only. A flag is a reason to read closely.
+function reviewFlagsFor(rows) {
+  const flags = {};
+  for (const f of rows) {
+    if (!f?.id || f.unreadable || f.tombstone) continue;
+    const hits = scanRecord(f);
+    if (hits.length) flags[f.id] = hits;
+  }
+  return { review_flags: flags, review_flags_note: SCAN_NOTE };
+}
+
 async function serveFootprints(req, res) {
   if (req.method !== "GET") {
     return res.status(405).json({
@@ -1121,6 +1134,8 @@ async function serveFootprints(req, res) {
         ...(chain.recordsUnavailable ? { chains_note: CHAINS_PARTIAL_NOTE } : {}),
         // A revision (relationships.supersedes) is shown as from → to stance, always beside the re-ask noise floor.
         ...(h.body?.relationships?.supersedes ? { revision: revisionOf(h.body, publicBodies) } : {}),
+        // Curator only: possible-injection flags on text not yet admitted (flags never reject or edit; 2026-11-25).
+        ...(curator && h.body && !h.body.tombstone && h.entry.state === "pending" ? reviewFlagsFor([project(h, { curator: true })]) : {}),
         received_params,
       };
       // The envelope rides public reads only; curator and receipt reads can show unadmitted content.
@@ -1182,6 +1197,8 @@ async function serveFootprints(req, res) {
       footprints: page,
       chains,
       ...(chain.recordsUnavailable ? { chains_note: CHAINS_PARTIAL_NOTE } : {}),
+      // Curator only, beside the bodies (never inside them, so each still re-hashes to its integrity).
+      ...(curator ? reviewFlagsFor(page.filter((f) => f.moderation?.state === "pending")) : {}),
     };
     return res.status(200).json(curator ? listing : attachEnvelope(listing, footprintsEnvelope(publicBodies)));
   } catch (err) {
