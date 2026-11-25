@@ -62,6 +62,9 @@ SNAPSHOT = ROOT / "scripts" / ".grown-snapshot.json"
 COUNCIL_JS = ROOT / "api" / "council.js"
 SCHEMA_PATH = ROOT / "atlas" / "divergence-delta.schema.json"
 OUT_DIR = ROOT / "atlas"
+# The dataset canary (2026-11-25): one GUID, defined once in canary.json, carried by every release so a
+# later evaluation can test whether a model saw these datasets in training. Detection only.
+CANARY = json.loads((ROOT / "canary.json").read_text())["string"]
 DATA_DIR = OUT_DIR / "data"
 DATASET_VERSION = "1.2.0"
 MAX_SNAPSHOT_AGE_MIN = 120
@@ -200,7 +203,7 @@ def main() -> int:
     out = DATA_DIR / f"atlas-v{DATASET_VERSION}.jsonl"
     with out.open("w", encoding="utf-8") as f:
         for rec in exported:
-            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+            f.write(json.dumps({**rec, "canary": CANARY}, ensure_ascii=False) + "\n")
 
     (OUT_DIR / "excluded.log").write_text(
         "\n".join(json.dumps(x) for x in excluded) + "\n" if excluded else "# none\n")
@@ -228,6 +231,7 @@ def main() -> int:
             "D": "one-shot Atlas capture (new open question, asked once)",
             "L": "longitudinal re-run of a frozen-canon question (monthly epoch; links to its OMN-D source via longitudinal.source_record)",
         },
+        "canary": CANARY,
     }
     (OUT_DIR / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     print(json.dumps(manifest, indent=2))
