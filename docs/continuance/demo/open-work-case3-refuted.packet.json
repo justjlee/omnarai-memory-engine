@@ -1,6 +1,6 @@
 {
   "schema": "work-packet/1.0",
-  "projection_version": "open-work-projection/0.1",
+  "projection_version": "open-work-projection/0.2",
   "problem": {
     "id": "OMN-WORK-1795435222000-00000003",
     "revision": 1,
@@ -63,7 +63,8 @@
           "cost": {
             "cpu_ms": 5,
             "usd": 0
-          }
+          },
+          "results": null
         },
         {
           "event_id": "OMN-WE-1795435263000-0000000c",
@@ -85,15 +86,28 @@
           "cost": {
             "cpu_ms": 5,
             "usd": 0
-          }
+          },
+          "results": null
         }
       ],
       "reviews": [],
       "refuted_by": "OMN-WE-1795435263000-0000000c",
-      "superseded_by": null
+      "superseded_by": null,
+      "digest": [
+        "REFUTED · advance · by Gemini (demo) (google-gemini, declared) · \"Off by one at n=20\"",
+        "Result: brute-force-count → fail on 2026-11-23. Checks the 20 stated values only; says nothing about any proof in the prose.",
+        "Limits: n ≤ 20 only a correct table does not show understanding",
+        "Earlier tests on this claim: 1, in the full record.",
+        "Refuted by event OMN-WE-1795435263000-0000000c; it stays listed.",
+        "Full results: not published yet (receipt OMN-VR-1795435263000-00000005).",
+        "Full text: https://engine.omnarai.org/api/footprints?id=OMN-FP-1795435260000-00000005"
+      ]
     }
   ],
   "attempts": [],
+  "tried": [
+    "refuted claim · \"Off by one at n=20\" · Gemini (demo) → brute-force-count fail"
+  ],
   "history": [
     {
       "event_id": "OMN-WE-1795435261000-0000000a",
@@ -158,5 +172,5 @@
     "causal_value": "Whether a successor did better BECAUSE of inherited work is measured only by a controlled comparison (Inheritance Study 001). A packet does not measure it."
   },
   "as_of": "2026-11-23T12:01:03.000Z",
-  "snapshot_sha256": "ae4848077af43422c18cb887b2151e40bf63516b0cd249843e3bffc0f90add3c"
+  "snapshot_sha256": "720fb9230c87b76152ca83edc3caa704fcf5d3345c0aabd148adaa6c86232e7e"
 }

@@ -166,6 +166,17 @@ if (OPEN_WORK) {
     const receipt = sealedReceipt(res.score, { claimEventId: claim.id, footprintId: fp.id, contentSha256: fp.integrity.content_sha256, executedAt: new Date().toISOString(), costUsd: 0, runId: "local-demo-stand-in" });
     const ev = await recordWorkEvent({ problem_id: ids[0], problem_revision: 1, kind: receipt.result === "fail" ? "advance_refuted" : "advance_tested", claim_event_id: claim.id, receipt }, { curator: "xz" });
     await moderateWorkRecord({ record: ev.id, action: "admit", curator: "xz" });
+    // Its full results, as the curator publishes them (open-work-curator.mjs publish-results), so every surface links them.
+    const { publishResults } = await import("../api/_work-store.js");
+    const { createHash } = await import("node:crypto");
+    const files = {
+      "proposal.json": JSON.stringify({ footprint_id: fp.id, claim_event_id: claim.id, proposal: { ok: true, kind: "elimination", candidate: 1 }, candidate_text: first.success_contract.candidates[1] }, null, 1),
+      "cells.json": JSON.stringify({ premise: res.premise, cells: res.cells }, null, 1),
+      "score.json": JSON.stringify(res.score, null, 1),
+      "replies.jsonl": "[LOCAL DEMO stand-in panel: no model was called]\n",
+    };
+    const built = X.resultsSummaryInput({ score: res.score, proposal: JSON.parse(files["proposal.json"]), cells: JSON.parse(files["cells.json"]), candidateText: first.success_contract.candidates[1] });
+    await publishResults({ summaryInput: { ...built, files: Object.entries(files).map(([name, t]) => ({ name, sha256: createHash("sha256").update(t).digest("hex"), bytes: Buffer.byteLength(t) })), repository_copy: null }, receipt, files }, { curator: "xz" });
   }
   console.log(`open work: ${ids.length} draft problems registered and admitted (LOCAL ONLY), demo contributions seeded`);
 }

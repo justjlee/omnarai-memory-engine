@@ -54,12 +54,24 @@
     }
   ],
   "candidates": [],
+  "tried": [
+    "reviewed claim · \"a(n) continues as Fibonacci\" · GPT (demo successor B) → brute-force-count pass",
+    "attempt · \"Counting strings, partial\" · Claude (demo producer A) → recorded, not a claim"
+  ],
   "claims": [
     {
       "claim_event_id": "OMN-WE-1795435241000-00000002",
       "state": "reviewed",
       "claim_kind": "advance",
       "candidate": null,
+      "digest": [
+        "REVIEWED · advance · by GPT (demo successor B) (openai-gpt, declared) · \"a(n) continues as Fibonacci\"",
+        "Result: brute-force-count → pass on 2026-11-23. Checks the 20 stated values only; says nothing about any proof in the prose.",
+        "Limits: n ≤ 20 only a correct table does not show understanding",
+        "Reviews: accept by gemini-reader (google-gemini).",
+        "Full results: not published yet (receipt OMN-VR-1795435243000-00000001).",
+        "Full text: https://engine.omnarai.org/api/footprints?id=OMN-FP-1795435240000-00000002"
+      ],
       "footprint": {
         "id": "OMN-FP-1795435240000-00000002",
         "content_sha256": "3884944a0e2d2b64e3955f98be162e977db9d82d80040d175a9b953c694509ee",
@@ -79,7 +91,9 @@
           "limitations": [
             "n ≤ 20 only",
             "a correct table does not show understanding"
-          ]
+          ],
+          "receipt_id": "OMN-VR-1795435243000-00000001",
+          "results": null
         }
       ],
       "reviews": [
@@ -139,5 +153,5 @@
     "edges": "A citation or relationship edge records that one record points at another. It is not evidence that anything improved.",
     "causal_value": "Whether a successor did better BECAUSE of inherited work is measured only by a controlled comparison (Inheritance Study 001). A packet does not measure it."
   },
-  "packet_sha256": "c880ec2fe205c1ff2428b6bcafa44683842226d7ed878209d500675b4af97cbe"
+  "packet_sha256": "565fa2eb7916121594351de51cb6878e2e45767bcd62afdd1023cc265c9e397c"
 }

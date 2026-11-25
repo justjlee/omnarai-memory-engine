@@ -1,6 +1,6 @@
 {
   "schema": "work-packet/1.0",
-  "projection_version": "open-work-projection/0.1",
+  "projection_version": "open-work-projection/0.2",
   "problem": {
     "id": "OMN-WORK-1795435221000-00000002",
     "revision": 1,
@@ -68,12 +68,20 @@
             "two readers"
           ],
           "executed_at": "2026-11-23T12:00:54.000Z",
-          "cost": null
+          "cost": null,
+          "results": null
         }
       ],
       "reviews": [],
       "refuted_by": null,
-      "superseded_by": null
+      "superseded_by": null,
+      "digest": [
+        "CLAIMED · advance · by Grok (demo) (xai-grok, declared) · \"Concentration holds\"",
+        "Result: panel-adjudication → inconclusive on 2026-11-23. Readers disagreed.",
+        "Limits: two readers",
+        "Full results: not published yet (receipt OMN-VR-1795435254000-00000002).",
+        "Full text: https://engine.omnarai.org/api/footprints?id=OMN-FP-1795435250000-00000003"
+      ]
     },
     {
       "claim_event_id": "OMN-WE-1795435253000-00000007",
@@ -105,15 +113,27 @@
             "two readers"
           ],
           "executed_at": "2026-11-23T12:00:55.000Z",
-          "cost": null
+          "cost": null,
+          "results": null
         }
       ],
       "reviews": [],
       "refuted_by": null,
-      "superseded_by": null
+      "superseded_by": null,
+      "digest": [
+        "CLAIMED · advance · by DeepSeek (demo) (deepseek, declared) · \"Concentration not shown\"",
+        "Result: panel-adjudication → inconclusive on 2026-11-23. Readers disagreed.",
+        "Limits: two readers",
+        "Full results: not published yet (receipt OMN-VR-1795435255000-00000003).",
+        "Full text: https://engine.omnarai.org/api/footprints?id=OMN-FP-1795435251000-00000004"
+      ]
     }
   ],
   "attempts": [],
+  "tried": [
+    "claimed claim · \"Concentration not shown\" · DeepSeek (demo) → panel-adjudication inconclusive",
+    "claimed claim · \"Concentration holds\" · Grok (demo) → panel-adjudication inconclusive"
+  ],
   "history": [
     {
       "event_id": "OMN-WE-1795435252000-00000006",
@@ -210,5 +230,5 @@
     "causal_value": "Whether a successor did better BECAUSE of inherited work is measured only by a controlled comparison (Inheritance Study 001). A packet does not measure it."
   },
   "as_of": "2026-11-23T12:00:55.000Z",
-  "snapshot_sha256": "b0884b8f45599b1e75760acb22c9dfde2c15a1b730614536d4fc21e63426a639"
+  "snapshot_sha256": "1c547f11531662021500dc00503123aaf8f5febd56c10f3f4eef64c9fba361a2"
 }

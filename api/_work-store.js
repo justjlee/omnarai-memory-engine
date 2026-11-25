@@ -5,6 +5,10 @@
 //   work/events/<OMN-WORK-…>/<OMN-WE-…>.json        progress events, write-once
 //   work/verifiers/<slug>.json                      verifier registrations, write-once
 //   work/reviews/<record-key>/<ms>__<action>__<hex>.json   moderation, append-only (action in the pathname)
+//   work/results/<OMN-VR-…>/summary.json + bundle.json  a test's full results, write-once (2026-11-25). Not moderated
+//                                                   separately: a summary shows only beside the PUBLIC test whose
+//                                                   receipt hash it names (deriveWorkPacket), and the bundle is
+//                                                   served only for such a test.
 // There is no read-modify-write anywhere, so the store needs no CAS and cannot lose a concurrent write.
 // Every record is published only by a later `admit` review, folded by the Footprint rule (foldModeration),
 // so an unknown or malformed review can never publish anything.
@@ -20,6 +24,7 @@ import { foldModeration, REVIEW_ACTIONS, loadPublicFootprints, loadFootprintInde
 import {
   WORK_PROBLEM_SCHEMA, WORK_EVENT_SCHEMA, VERIFIER_SCHEMA, WORK_PROBLEM_ID_RE, WORK_EVENT_ID_RE, VERIFIER_ID_RE,
   validateProblem, validateEvent, validateVerifier, seal, isIntact, mintProblemId, mintEventId, CLAIM_KINDS, LIMITS,
+  RESULTS_SCHEMA, RESULTS_BUNDLE_SCHEMA, RECEIPT_ID_RE, validateResultsSummary, validateResultsBundle,
 } from "./_work.js";
 
 export const WORK_PREFIX = "work/";
@@ -27,6 +32,20 @@ export const PROBLEMS_PREFIX = "work/problems/";
 export const EVENTS_PREFIX = "work/events/";
 export const VERIFIERS_PREFIX = "work/verifiers/";
 export const REVIEWS_PREFIX = "work/reviews/";
+export const RESULTS_PREFIX = "work/results/";
+const RESULTS_SUMMARY_RE = /^work\/results\/(OMN-VR-\d{13}-[0-9a-f]{8})\/summary\.json$/;
+
+// Bounded parallel reads (2026-11-25): records used to be read one at a time, so each page load grew linearly
+// with the number of problems, events and results. Order of the output matches the input.
+async function mapLimit(items, limit, fn) {
+  const out = new Array(items.length);
+  let next = 0;
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (next < items.length) { const i = next++; out[i] = await fn(items[i], i); }
+  }));
+  return out;
+}
+const READ_CONCURRENCY = 12;
 
 export class WorkValidationError extends Error {
   constructor(errors) { super(`work record failed validation: ${errors.slice(0, 5).join("; ")}`); this.errors = errors; this.status = 400; }
@@ -263,38 +282,43 @@ async function readIntact(store, blob) {
  */
 export async function loadPublicWork({ store = getDefaultWorkStore(), footprintStore = getFootprintStore(), includeFootprints = true } = {}) {
   const mod = await moderationIndex(store);
-  const [problemBlobs, eventBlobs, verifierBlobs] = await Promise.all([store.listAll(PROBLEMS_PREFIX), store.listAll(EVENTS_PREFIX), store.listAll(VERIFIERS_PREFIX)]);
+  const [problemBlobs, eventBlobs, verifierBlobs, resultBlobs] = await Promise.all([store.listAll(PROBLEMS_PREFIX), store.listAll(EVENTS_PREFIX), store.listAll(VERIFIERS_PREFIX), store.listAll(RESULTS_PREFIX)]);
   const problems = new Map();
-  for (const b of problemBlobs) {
+  const problemReads = problemBlobs.map((b) => {
     const m = /^work\/problems\/(OMN-WORK-\d{13}-[0-9a-f]{8})\/r(\d{1,4})\.json$/.exec(b.pathname);
-    if (!m || !WORK_PROBLEM_ID_RE.test(m[1])) continue;
+    if (!m || !WORK_PROBLEM_ID_RE.test(m[1])) return null;
     const moderation = mod.fold(problemKey(m[1], Number(m[2])));
-    if (!moderation.public) continue;
-    const body = await readIntact(store, b);
+    return moderation.public ? { b, m, moderation } : null;
+  }).filter(Boolean);
+  for (const [i, body] of (await mapLimit(problemReads, READ_CONCURRENCY, (x) => readIntact(store, x.b))).entries()) {
+    const { m, moderation } = problemReads[i];
     if (!body || body.id !== m[1] || body.revision !== Number(m[2])) continue;
     const cur = problems.get(body.id);
     if (!cur || body.revision > cur.revision) problems.set(body.id, { ...body, moderation });
   }
-  const events = [];
-  for (const b of eventBlobs) {
+  const eventReads = eventBlobs.map((b) => {
     const m = /^work\/events\/(OMN-WORK-[^/]+)\/(OMN-WE-\d{13}-[0-9a-f]{8})\.json$/.exec(b.pathname);
-    if (!m || !problems.has(m[1])) continue;
+    if (!m || !problems.has(m[1])) return null;
     const moderation = mod.fold(m[2]);
-    if (!moderation.public) continue;
-    const body = await readIntact(store, b);
-    if (body && body.id === m[2] && body.problem_id === m[1]) events.push({ ...body, moderation });
-  }
-  const verifiers = [];
-  for (const b of verifierBlobs) {
+    return moderation.public ? { b, m, moderation } : null;
+  }).filter(Boolean);
+  const verifierReads = verifierBlobs.map((b) => {
     const m = /^work\/verifiers\/([a-z0-9][a-z0-9.-]{2,60})\.json$/.exec(b.pathname);
-    if (!m) continue;
+    if (!m) return null;
     const moderation = mod.fold(verifierKey(m[1]));
-    if (!moderation.public) continue;
-    const body = await readIntact(store, b);
-    if (body && body.id === m[1]) verifiers.push({ ...body, moderation });
-  }
+    return moderation.public ? { b, m, moderation } : null;
+  }).filter(Boolean);
+  const resultReads = resultBlobs.map((b) => { const m = RESULTS_SUMMARY_RE.exec(b.pathname); return m ? { b, m } : null; }).filter(Boolean);
+  const [eventBodies, verifierBodies, resultBodies] = await Promise.all([eventReads, verifierReads, resultReads].map((xs) => mapLimit(xs, READ_CONCURRENCY, (x) => readIntact(store, x.b))));
+  const events = [];
+  eventBodies.forEach((body, i) => { const { m, moderation } = eventReads[i]; if (body && body.id === m[2] && body.problem_id === m[1]) events.push({ ...body, moderation }); });
+  const verifiers = [];
+  verifierBodies.forEach((body, i) => { const { m, moderation } = verifierReads[i]; if (body && body.id === m[1]) verifiers.push({ ...body, moderation }); });
+  // Results summaries: intact and well-formed only. Visibility is decided in the projection, against public tests.
+  const results = [];
+  resultBodies.forEach((body, i) => { if (body && body.receipt_id === resultReads[i].m[1] && !validateResultsSummary(body).length) results.push(body); });
   const publicFootprints = includeFootprints ? (await loadPublicFootprints(footprintStore)).publicBodies : [];
-  return { problems: [...problems.values()], events, verifiers, publicFootprints, moderation: mod };
+  return { problems: [...problems.values()], events, verifiers, results, publicFootprints, moderation: mod };
 }
 
 // ── Awaiting review (the Open Work door, 2026-11-24) ─────────────────────────────────────────────────
@@ -325,4 +349,34 @@ export async function pendingTowardWork({ footprintStore = getFootprintStore(), 
     oldest_since: Number.isFinite(v.oldest_ms) ? new Date(v.oldest_ms).toISOString() : null,
     basis: "contributions awaiting curator review that respond to this problem: a count only, never their content",
   }]));
+}
+
+// ── Results (2026-11-25) ─────────────────────────────────────────────────────────────────────────────────
+/**
+ * Publish a test's full results: the bundle first (every file verbatim), then the summary that makes it show.
+ * Both are sealed and write-once. The caller (scripts/open-work-curator.mjs publish-results) has already checked
+ * that the receipt sits on a public test; the projection checks again, by the receipt's hash, on every read.
+ */
+export async function publishResults({ summaryInput, receipt, files }, { curator, nowMs = Date.now(), store = getDefaultWorkStore() }) {
+  const summary = seal({ schema: RESULTS_SCHEMA, ...summaryInput, receipt_id: receipt.id, receipt_sha256: receipt.integrity.content_sha256, published_at: new Date(nowMs).toISOString(), published_by: { kind: "curator", id: curator } });
+  const se = validateResultsSummary(summary);
+  if (se.length) throw new WorkValidationError(se);
+  const bundle = seal({ schema: RESULTS_BUNDLE_SCHEMA, receipt_id: receipt.id, summary_sha256: summary.integrity.content_sha256, receipt, files });
+  const be = validateResultsBundle(bundle, summary);
+  if (be.length) throw new WorkValidationError(be);
+  if (Buffer.byteLength(JSON.stringify(bundle)) > 4_000_000) throw new WorkValidationError(["bundle over 4 MB"]);
+  await store.putOnce(`${RESULTS_PREFIX}${receipt.id}/bundle.json`, bundle);
+  await store.putOnce(`${RESULTS_PREFIX}${receipt.id}/summary.json`, summary);
+  return { summary, bundle };
+}
+
+/** The bundle for one receipt, checked against its summary. null when absent, altered or mismatched. */
+export async function loadResultsBundle(receiptId, summary, { store = getDefaultWorkStore() } = {}) {
+  if (!RECEIPT_ID_RE.test(receiptId || "") || !summary) return null;
+  const path = `${RESULTS_PREFIX}${receiptId}/bundle.json`;
+  const blob = (await store.listAll(path)).find((b) => b.pathname === path);
+  if (!blob) return null;
+  const body = await readIntact(store, blob);
+  if (!body || body.receipt_id !== receiptId || validateResultsBundle(body, summary).length) return null;
+  return body;
 }

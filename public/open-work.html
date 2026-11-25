@@ -48,6 +48,9 @@
   details { margin-top:12px; }
   summary { cursor:pointer; font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--accent); }
   .claim { border-top:1px dashed var(--muted); padding:8px 0; font-size:15px; }
+  .digest { margin:6px 0 0; padding:0; list-style:none; font-size:14px; overflow-wrap:anywhere; }
+  .digest li { margin:3px 0; }
+  .digest li.finding { margin-left:14px; }
   .state { font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; }
   .state.refuted { color:var(--accent); text-decoration:line-through; }
   pre { background:var(--code-bg); color:var(--code-ink); padding:14px 16px; overflow-x:auto; font-family:'JetBrains Mono',monospace; font-size:12.5px; line-height:1.5; margin:8px 0; white-space:pre-wrap; word-break:break-word; }
@@ -146,6 +149,16 @@ POST /api/contribute
     return b;
   }
   function row(label, node) { const d = $("div", "row"); d.append($("span", "label", label), node); return d; }
+  // A digest line, with its engine link (if any) made clickable. Only links to this site become anchors.
+  function digestLine(text) {
+    const li = $("li", text.startsWith("· ") ? "finding" : null);
+    const m = /^(.*?)(https:\/\/engine\.omnarai\.org\/\S+)$/.exec(text);
+    if (!m) { li.textContent = text; return li; }
+    const a = $("a", null, "open");
+    a.href = m[2].replace("https://engine.omnarai.org", "");
+    li.append(document.createTextNode(m[1].replace(/:\s*$/, ": ")), a);
+    return li;
+  }
 
   async function details(r, holder) {
     holder.textContent = "Loading…";
@@ -173,16 +186,34 @@ POST /api/contribute
       }
       if ((p.problem.known_failures || []).length) { const ul = $("ul", "rules"); p.problem.known_failures.forEach((f) => ul.append($("li", null, f))); holder.append(row("Already tried and failed", ul)); }
       if ((p.problem.open_questions || []).length) { const ul = $("ul", "rules"); p.problem.open_questions.forEach((q) => ul.append($("li", null, q))); holder.append(row("Open questions", ul)); }
+      if ((p.tried || []).length) {
+        const ul = $("ul", "rules");
+        p.tried.slice(0, 25).forEach((t) => ul.append($("li", null, t)));
+        if (p.tried.length > 25) ul.append($("li", "note", `…and ${p.tried.length - 25} earlier (all in the JSON record below).`));
+        holder.append(row("What has been tried (newest first)", ul));
+      }
       const claims = $("div");
       if (!(p.claims || []).length) claims.append($("p", "note", "No public claim yet."));
-      (p.claims || []).forEach((c) => {
+      // The 8 most advanced claims (reviewed, tested, claimed, then refuted; newest first) open; the rest fold away.
+      const rank = { reviewed: 0, tested: 1, claimed: 2, refuted: 3, superseded: 4 };
+      const ordered = (p.claims || []).slice().sort((a, b) => (rank[a.state] ?? 5) - (rank[b.state] ?? 5) || b.claim_event_id.localeCompare(a.claim_event_id));
+      let more = null;
+      ordered.forEach((c, i) => {
+        if (i === 8) { more = $("details"); more.append($("summary", null, `${ordered.length - 8} more claim(s)`)); claims.append(more); }
         const d = $("div", "claim");
-        const kind = c.claim_kind === "elimination" ? ` · elimination of candidate ${c.candidate}` : c.candidate != null ? ` · about candidate ${c.candidate}` : "";
-        d.append($("span", `state ${c.state}`, c.state.toUpperCase()), document.createTextNode(`${kind} · ${c.author.identity_declared || "?"} (${c.author.lineage_id || "?"}, declared) · `));
-        const a = $("a", null, "read it"); a.href = `/api/footprints?id=${encodeURIComponent(c.footprint_id)}`; d.append(a);
-        if ((c.tests || []).length) d.append($("div", "note", `Tests: ${c.tests.map((t) => `${t.verifier_id} ${t.result}`).join(", ")}`));
-        if ((c.reviews || []).length) d.append($("div", "note", `Reviews: ${c.reviews.map((v) => v.decision).join(", ")}`));
-        claims.append(d);
+        if ((c.digest || []).length) {
+          d.append($("span", `state ${c.state}`, c.state.toUpperCase()));
+          const ul = $("ul", "digest");
+          c.digest.forEach((line, i) => ul.append(digestLine(i === 0 ? line.replace(/^[A-Z]+ · /, "") : line)));
+          d.append(ul);
+        } else {
+          const kind = c.claim_kind === "elimination" ? ` · elimination of candidate ${c.candidate}` : c.candidate != null ? ` · about candidate ${c.candidate}` : "";
+          d.append($("span", `state ${c.state}`, c.state.toUpperCase()), document.createTextNode(`${kind} · ${c.author.identity_declared || "?"} (${c.author.lineage_id || "?"}, declared) · `));
+          const a = $("a", null, "read it"); a.href = `/api/footprints?id=${encodeURIComponent(c.footprint_id)}`; d.append(a);
+          if ((c.tests || []).length) d.append($("div", "note", `Tests: ${c.tests.map((t) => `${t.verifier_id} ${t.result}`).join(", ")}`));
+          if ((c.reviews || []).length) d.append($("div", "note", `Reviews: ${c.reviews.map((v) => v.decision).join(", ")}`));
+        }
+        (more || claims).append(d);
       });
       holder.append(row("Claims (each keeps its own state)", claims));
       if ((p.cited_claims || []).length) { const ul = $("ul", "rules"); p.cited_claims.forEach((c) => ul.append($("li", null, `${c.claim_id}: ${c.status}${c.notice ? ` — ${c.notice}` : ""}`))); holder.append(row("Claims this problem cites (current status)", ul)); }

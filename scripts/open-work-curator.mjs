@@ -9,6 +9,10 @@
 //                                         binds an ADMITTED footprint to a problem (records the event and admits it);
 //                                         a claim may say which success-contract candidate it supports or eliminates
 //   node scripts/open-work-curator.mjs register-verifier crux-reask        the crux check (scripts/lib/crux-core.mjs)
+//   node scripts/open-work-curator.mjs publish-results <run-dir> [--repository-copy "<repo>: <path>"]
+//                                         a recorded receipt's FULL results (every file of the run, verbatim) plus a
+//                                         rule-built summary, so every surface links them (2026-11-25). Run it right
+//                                         after record-receipt. The receipt must already sit on a public test.
 //   node scripts/open-work-curator.mjs record-receipt <OMN-WORK-…> <OMN-WE-claim> <receipt.json>
 //                                         a sealed verifier receipt → advance_tested (pass/inconclusive/error) or
 //                                         advance_refuted (fail); the projection decides what it changes
@@ -17,15 +21,17 @@
 // Registration is a curator decision with a decision-log entry (DL) first. Binding records where a contribution
 // sits in a problem's history; it is not verification (tested and reviewed need a verifier receipt / an independent
 // review, recorded separately). Design: docs/open-work/DESIGN-OPEN-WORK-DOOR.md.
-import { readFileSync } from "node:fs";
-import { registerProblem, registerVerifier, recordWorkEvent, moderateWorkRecord, loadPublicWork, pendingTowardWork, planBinding, bindFootprint } from "../api/_work-store.js";
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import path from "node:path";
+import { createHash } from "node:crypto";
+import { registerProblem, registerVerifier, recordWorkEvent, moderateWorkRecord, loadPublicWork, pendingTowardWork, planBinding, bindFootprint, publishResults } from "../api/_work-store.js";
 import { WORK_PROBLEM_ID_RE, WORK_EVENT_ID_RE, validateProblem, validateReceipt, isIntact, seal, WORK_PROBLEM_SCHEMA, deriveWorkPacket, openWorkRow } from "../api/_work.js";
-import { CRUX_VERIFIER } from "./lib/crux-core.mjs";
+import { CRUX_VERIFIER, resultsSummaryInput } from "./lib/crux-core.mjs";
 
 const argv = process.argv.slice(2);
 const flag = (name) => argv.includes(name);
 const opt = (name, dflt = null) => { const i = argv.indexOf(name); return i >= 0 && argv[i + 1] ? argv[i + 1] : dflt; };
-const positional = argv.filter((a, i) => !a.startsWith("--") && !(i > 0 && ["--env-file", "--curator", "--note", "--kind", "--candidate"].includes(argv[i - 1])));
+const positional = argv.filter((a, i) => !a.startsWith("--") && !(i > 0 && ["--env-file", "--curator", "--note", "--kind", "--candidate", "--repository-copy"].includes(argv[i - 1])));
 const [cmd, ...args] = positional;
 const write = flag("--yes");
 const curator = opt("--curator", "xz");
@@ -46,7 +52,7 @@ async function main() {
   if (cmd === "list") {
     const pub = await loadPublicWork();
     const awaiting = await pendingTowardWork();
-    const rows = pub.problems.map((problem) => openWorkRow(deriveWorkPacket({ problem, events: pub.events.filter((e) => e.problem_id === problem.id), publicFootprints: pub.publicFootprints, verifiers: pub.verifiers }), { awaiting: awaiting.get(problem.id) || null }));
+    const rows = pub.problems.map((problem) => openWorkRow(deriveWorkPacket({ problem, events: pub.events.filter((e) => e.problem_id === problem.id), publicFootprints: pub.publicFootprints, verifiers: pub.verifiers, results: pub.results }), { awaiting: awaiting.get(problem.id) || null }));
     if (!rows.length) say("No public problem.");
     for (const r of rows) say(`${r.id}  ${r.open ? (r.stalled ? "STALLED" : "open") : "closed"}  ${r.progress_rung}  claims:${r.live_claims} refuted:${r.refuted_claims} attempts:${r.attempts} awaiting:${r.awaiting_review?.count ?? 0} milestones:${r.milestones.met}/${r.milestones.total}${r.candidates ? ` candidates(open/elim/supp):${r.candidates.open}/${r.candidates.eliminated}/${r.candidates.supported}` : ""}  ${r.title}`);
     const orphan = [...awaiting.keys()].filter((id) => !rows.some((r) => r.id === id));
@@ -95,6 +101,32 @@ async function main() {
     await registerVerifier(CRUX_VERIFIER, { curator });
     await moderateWorkRecord({ record: `verifier:${which}`, action: "admit", curator, note: opt("--note") });
     say(`registered and admitted verifier:${which}`);
+    return;
+  }
+  if (cmd === "publish-results") {
+    const [dir] = args;
+    if (!dir) throw new Error("usage: publish-results <run-dir> [--repository-copy \"<repo>: <path>\"]");
+    const read = (f) => readFileSync(path.join(dir, f), "utf8");
+    const receipt = JSON.parse(read("receipt.json"));
+    if (validateReceipt(receipt).length || !isIntact(receipt)) throw new Error("receipt.json is invalid or altered");
+    // It must already be a public test (record-receipt first), matched by the receipt's own hash.
+    const pub = await loadPublicWork();
+    const onTest = pub.problems.some((problem) => deriveWorkPacket({ problem, events: pub.events.filter((e) => e.problem_id === problem.id), publicFootprints: pub.publicFootprints, verifiers: pub.verifiers, results: pub.results })
+      .claims.some((c) => c.tests.some((t) => t.receipt_id === receipt.id && t.receipt_sha256 === receipt.integrity.content_sha256)));
+    if (!onTest) throw new Error(`${receipt.id} is not on a public test yet: run record-receipt first`);
+    if (receipt.verifier_id !== CRUX_VERIFIER.id) throw new Error(`no results builder for verifier ${receipt.verifier_id} yet`);
+    const names = readdirSync(dir).filter((f) => !f.startsWith(".") && statSync(path.join(dir, f)).isFile()).sort();
+    const files = Object.fromEntries(names.map((f) => [f, read(f)]));
+    const proposal = JSON.parse(files["proposal.json"]);
+    const built = resultsSummaryInput({ score: JSON.parse(files["score.json"]), proposal, cells: JSON.parse(files["cells.json"]), candidateText: proposal.candidate_text ?? null });
+    const summaryInput = {
+      ...built,
+      files: names.map((f) => ({ name: f, sha256: createHash("sha256").update(files[f]).digest("hex"), bytes: Buffer.byteLength(files[f]) })),
+      repository_copy: opt("--repository-copy"),
+    };
+    if (!write) return dry(`publish the full results of ${receipt.id} (${names.length} files, ${Object.values(files).reduce((n, t) => n + Buffer.byteLength(t), 0)} bytes)`, summaryInput);
+    const r = await publishResults({ summaryInput, receipt, files }, { curator });
+    say(`published results for ${receipt.id}: /api/open-work?results=${receipt.id} (summary ${r.summary.integrity.content_sha256.slice(0, 12)}…)`);
     return;
   }
   if (cmd === "record-receipt") {

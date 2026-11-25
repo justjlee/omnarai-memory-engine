@@ -184,6 +184,55 @@ export function receiptBody(score, { claimEventId, footprintId, contentSha256, e
   };
 }
 
+/**
+ * What a run's results summary says (verifier-results/1.0, minus files and provenance, which the curator adds).
+ * Built by rule from score.json, proposal.json and cells.json, never written by hand, so every run reads alike:
+ * what was tested, one headline, and at most five findings (what moved as predicted, what missed and how, how
+ * many replies were unparseable, and the pass rule). The full replies stay in the bundle, one link away.
+ */
+export function resultsSummaryInput({ score, proposal, cells, candidateText = null }) {
+  const unclear = [];
+  for (const l of LABELS) for (const side of ["if_true", "if_false"]) {
+    const n = (cells?.cells?.[l]?.[side] || []).filter((d) => d === UNCLEAR).length;
+    if (n) unclear.push(`${l} (premise ${side === "if_true" ? "true" : "false"}) ${n}`);
+  }
+  const replies = LABELS.length * 2 * RULES.runs_per_cell;
+  const unclearLine = unclear.length ? `Unclear replies (counted as UNCLEAR): ${unclear.join(", ")} of ${replies}.` : `All ${replies} replies gave a clear decision.`;
+  if (score.kind === "elimination") {
+    const moved = score.per_model.filter((m) => m.flipped).map((m) => m.label);
+    const held = score.per_model.filter((m) => !m.flipped && m.observed.if_true !== UNCLEAR && m.observed.if_false !== UNCLEAR).map((m) => m.label);
+    return {
+      verifier_id: CRUX_VERIFIER.id,
+      statement: `Eliminate candidate ${proposal.proposal?.candidate ?? "?"}${candidateText ? ` — ${candidateText}` : ""}`.slice(0, 400),
+      headline: `${score.observed_flips} of ${score.clear_models} clear models moved (eliminated if at most ${RULES.elim_max_flips})`,
+      findings: [
+        `Moved with the premise: ${moved.join(", ") || "none"}. Held: ${held.join(", ") || "none"}.`,
+        unclearLine,
+        `Rule (${CRUX_RULES_VERSION}): a candidate is eliminated when stipulating it true and then false moves at most ${RULES.elim_max_flips} model, with clear answers from at least ${RULES.elim_min_clear_models}.`,
+      ],
+    };
+  }
+  const per = score.per_model;
+  const asPredicted = per.filter((m) => m.hits === 2);
+  const movedOk = asPredicted.filter((m) => m.observed.if_true !== m.observed.if_false).map((m) => m.label);
+  const heldOk = asPredicted.filter((m) => m.observed.if_true === m.observed.if_false).map((m) => m.label);
+  const missed = per.filter((m) => m.hits < 2);
+  const short = (d) => d === "DO NOT INTERVENE" ? "DO NOT" : d;
+  const pair = (x) => `${short(x.if_true)} if true / ${short(x.if_false)} if false`;
+  const findings = [
+    `As predicted: ${[movedOk.length ? `${movedOk.join(", ")} moved with the premise` : "", heldOk.length ? `${heldOk.join(", ")} held` : ""].filter(Boolean).join("; ") || "none"}.`,
+    missed.length ? `Missed: ${missed.map((m) => `${m.label} (predicted ${pair(m.predicted)}; observed ${pair(m.observed)})`).join("; ")}.` : "Missed: none.",
+    unclearLine,
+    `Rule (${CRUX_RULES_VERSION}): pass needs at least ${RULES.pass_min_hits} of 10 predictions met, at least ${RULES.pass_margin_over_null} more than keeping each model's baseline answer, and at least ${RULES.pass_min_predicted_flips} predicted flips observed.`,
+  ];
+  return {
+    verifier_id: CRUX_VERIFIER.id,
+    statement: `Crux premise — ${proposal.proposal?.crux ?? ""}`.slice(0, 400),
+    headline: `${score.hits} of ${score.total} predictions met (keep-baseline: ${score.null_hits}); ${score.predicted_flips_observed} predicted flips seen; ${missed.length ? `missed ${missed.map((m) => m.label).join(", ")}` : "no misses"}`.slice(0, 200),
+    findings,
+  };
+}
+
 /** Worst-case cost of a run: every call at the output cap. prices: {model_id: [in, out] per 1M}. */
 export function worstCaseUsd({ calls, prices, inTokens = 260 }) {
   let usd = 0;
