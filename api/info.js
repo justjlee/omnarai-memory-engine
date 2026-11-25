@@ -8,7 +8,7 @@ import { waitUntil } from "@vercel/functions";
 import { recordAccess, readAccessLog, readDayEvents } from "./_telemetry.js";
 import { POLICY_CARD, contractSummary } from "./_contract.js";
 import { normalizePlay, recordPlay, readPlays, readPlayDay } from "./_plays.js";
-import { readOpenItems, applyOpenItemAction, readScorecard, writeScorecard } from "./_home.js";
+import { readOpenItems, applyOpenItemAction, readScorecard, writeScorecard, readScorecardRun, writeScorecardRun } from "./_home.js";
 import { getCitationReport, peekCitation } from "./_citation.js";
 import { loadGrownMemory } from "./_grown.js";
 import { CANON } from "./_canon.js";
@@ -226,7 +226,7 @@ async function flaggedPending() {
 
 async function buildAttention() {
   // AUTO — detected from live data; read-only, resolves itself when the data changes.
-  const [pending, openItems, longitudinal, fpQueue, flagged] = await Promise.all([countPendingContributions(), readOpenItems(), checkLongitudinal(), footprintQueue(), flaggedPending()]);
+  const [pending, openItems, longitudinal, fpQueue, flagged, scRun] = await Promise.all([countPendingContributions(), readOpenItems(), checkLongitudinal(), footprintQueue(), flaggedPending(), readScorecardRun()]);
   let draftAudio = 0;
   try {
     const m = JSON.parse(readFileSync(join(projectRoot, "public", "audio", "manifest.json"), "utf-8"));
@@ -258,6 +258,15 @@ async function buildAttention() {
       label: "Daily re-ask missed " + n + " of " + longitudinal.expected + " questions so far in " + longitudinal.epoch +
         " — missed days are lost for good at month end" + (longitudinal.last?.date ? " (last record " + longitudinal.last.date + ")" : ""),
       where: "/api/cron-longitudinal?index=" + longitudinal.missing_indexes[0],
+    });
+  }
+
+  // The scheduled scorecard run failed (2026-11-25): say so, with the time and reason, rather than
+  // letting the last good scorecard age silently into "stale".
+  if (scRun && !scRun.ok) {
+    auto.push({
+      label: "Scorecard failed at " + scRun.at.slice(0, 16).replace("T", " ") + " UTC: " + scRun.reason + " — the last good scorecard is still shown",
+      where: scRun.run_url || "/home#scorecard",
     });
   }
 
@@ -316,7 +325,7 @@ async function buildDashboard() {
 
   // `scorecard` = crawler-filtered, authoritative numbers (scripts/scorecard.mjs). When
   // present, /home prefers it over the rollups above; null = never published / unreadable.
-  return { generated: new Date().toISOString(), frontDoor: front, engine, music, scorecard };
+  return { generated: new Date().toISOString(), frontDoor: front, engine, music, scorecard, scorecard_run: await readScorecardRun() };
 }
 
 /**
@@ -418,6 +427,25 @@ export default async function handler(req, res) {
     } catch (e) {
       return res.status(500).json({ error: "scorecard write failed", detail: String(e?.message || e) });
     }
+  }
+
+  // ── Scorecard run status: POST /api/info?_view=scorecard-run (2026-11-25) ──
+  // The scheduled job reports a FAILED run here ({ok:false, reason, run_url?}); a successful publish
+  // records ok by itself. Curator-gated like the write above. GET returns the last run.
+  if ((req.query?._view || "") === "scorecard-run") {
+    if (!operatorAuthed(req)) return operatorDenied(req, res);
+    privateNoStore(req, res);
+    if (req.method === "POST") {
+      try {
+        const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
+        const out = await writeScorecardRun(body);
+        return res.status(out.error ? 400 : 200).json(out);
+      } catch (e) {
+        return res.status(500).json({ error: "scorecard run write failed", detail: String(e?.message || e) });
+      }
+    }
+    const run = await readScorecardRun();
+    return res.status(run ? 200 : 404).json(run || { error: "no scorecard run recorded yet" });
   }
 
   if (req.method !== "GET") return res.status(405).json({ error: "GET only" });

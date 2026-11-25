@@ -1,0 +1,61 @@
+# NOT YET ENABLED. To turn it on, this file must be copied to .github/workflows/scorecard.yml (GitHub only
+# accepts workflow files from a token with the `workflow` scope, which the token Claude uses does not have;
+# xz does it in the GitHub web UI: see the hand-off) and two repository secrets must exist:
+#   INGEST_SECRET          the engine's curator key (Vercel → omnarai-memory-engine → Environment Variables)
+#   TELEMETRY_READ_SECRET  the front door's telemetry read key (Vercel → omnarai.org project → Environment Variables)
+#
+# Every 6 hours: compute the Mission Control scorecard (scripts/scorecard.mjs) and store it where /home
+# already reads it (POST /api/info?_view=scorecard). No redeploy, no human in the loop.
+# A run that cannot produce honest numbers publishes NOTHING: it records "Scorecard failed at <time>:
+# <reason>" (shown on /home under "needs your attention", linking to this run), keeps the last good
+# scorecard in place, and is marked failed here (GitHub emails the repo owner).
+# Read-only against telemetry (requests carry x-omnarai-self, so they are never counted as visitors).
+# No model calls, no spend.
+name: Scorecard (every 6 hours)
+
+on:
+  schedule:
+    - cron: "23 */6 * * *" # 00:23, 06:23, 12:23, 18:23 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: scorecard
+  cancel-in-progress: false
+
+jobs:
+  scorecard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            scripts/scorecard.mjs
+            scripts/lib/scorecard-core.mjs
+            analysis/scorecard-manual.json
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Compute and publish the scorecard
+        id: run
+        env:
+          INGEST_SECRET: ${{ secrets.INGEST_SECRET }}
+          TELEMETRY_READ_SECRET: ${{ secrets.TELEMETRY_READ_SECRET }}
+        # --carry-forward: GitHub traffic (needs the owner's login) and the private milestones file are not
+        # visible here; the last published values are kept, each marked with the date they came from.
+        run: node scripts/scorecard.mjs --publish --carry-forward
+      # The script records its own failures. This covers a failure BEFORE it ran (checkout, Node setup).
+      - name: Record a failure that happened before the scorecard ran
+        if: failure() && steps.run.outcome != 'failure'
+        env:
+          INGEST_SECRET: ${{ secrets.INGEST_SECRET }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          [ -n "$INGEST_SECRET" ] || exit 0
+          curl -sS -X POST "https://engine.omnarai.org/api/info?_view=scorecard-run" \
+            -H "Authorization: Bearer $INGEST_SECRET" -H "content-type: application/json" -H "x-omnarai-self: 1" \
+            -d "{\"ok\":false,\"reason\":\"the scheduled job failed before the scorecard script ran (see the run log)\",\"source\":\"github-actions\",\"run_url\":\"$RUN_URL\"}"
