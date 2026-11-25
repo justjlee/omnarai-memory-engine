@@ -962,6 +962,39 @@
                       "unspecified"
                     ]
                   },
+                  "participation": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "description": "Optional (2026-11-25), declared by the submitter and never verified: how this contribution came to be. Stored beside, never merged with, what the server observed (channel and client family).",
+                    "properties": {
+                      "initiated_by": {
+                        "type": "string",
+                        "enum": [
+                          "human",
+                          "machine",
+                          "unknown"
+                        ]
+                      },
+                      "executed_by": {
+                        "type": "string",
+                        "enum": [
+                          "machine",
+                          "machine_prepared",
+                          "human_transcription",
+                          "human",
+                          "unknown"
+                        ]
+                      },
+                      "human_approval": {
+                        "type": "string",
+                        "enum": [
+                          "approved",
+                          "not_approved",
+                          "unknown"
+                        ]
+                      }
+                    }
+                  },
                   "model_id": {
                     "type": "string",
                     "maxLength": 80
