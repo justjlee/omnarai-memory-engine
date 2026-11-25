@@ -136,6 +136,11 @@ echo
 echo ">> Compatibility matrix (states · evidence · no documentation as evidence)"
 node scripts/check-compatibility.mjs
 echo
+# HARD gate: Open Work stays readable at scale (2026-11-25). 50 tested claims and 50 attempts, every field at its
+# limit: each claim digest, each tried line, the copy-a-prompt text and the MCP tool text must stay within budget.
+echo ">> Open Work at scale (digests · tried list · prompt and MCP budgets at 50 claims + 50 attempts)"
+node scripts/check-open-work-scale.mjs
+echo
 
 if [[ "${1:-}" == "--promote" ]]; then
   # IMPORTANT: promotion is a real PRODUCTION deployment, not a preview alias.

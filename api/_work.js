@@ -36,7 +36,11 @@ export const WORK_EVENT_SCHEMA = "work-event/1.0";
 export const VERIFIER_SCHEMA = "work-verifier/1.0";
 export const VERIFIER_RECEIPT_SCHEMA = "verifier-receipt/1.0";
 export const WORK_PACKET_SCHEMA = "work-packet/1.0";
-export const WORK_PROJECTION_VERSION = "open-work-projection/0.1";
+export const WORK_PROJECTION_VERSION = "open-work-projection/0.2"; // 0.2 (2026-11-25): tests carry results; claims carry a digest; packets carry `tried`
+export const RESULTS_SCHEMA = "verifier-results/1.0";
+export const RESULTS_BUNDLE_SCHEMA = "verifier-results-bundle/1.0";
+// Absolute, because digests are text that travels (pasted into chats, read by fetchers) and must work anywhere.
+export const PUBLIC_ORIGIN = "https://engine.omnarai.org";
 export const CANONICALIZATION = "sorted-keys-json/1"; // the Footprint canonicalization, reused
 
 export const WORK_PROBLEM_ID_RE = /^OMN-WORK-\d{13}-[0-9a-f]{8}$/;
@@ -189,6 +193,53 @@ export function validateReceipt(r) {
   return e;
 }
 
+// ── Verifier results (2026-11-25) ───────────────────────────────────────────────────────────────────────
+// A receipt says THAT a check ran and how it came out. Its results record keeps WHAT the check saw, so a later mind
+// can read the run itself and draw its own conclusions, including ones nobody planned for. Two write-once curator
+// records per receipt, under work/results/<receipt-id>/:
+//   summary.json  verifier-results/1.0: what was tested, a one-line headline, up to 5 findings, every file's hash
+//   bundle.json   verifier-results-bundle/1.0: the receipt and every file of the run, verbatim (served on request)
+// A summary shows only beside a PUBLIC test whose receipt hash it names. It changes no claim's state.
+export const RESULTS_LIMITS = Object.freeze({ statement: 400, headline: 200, finding: 300, findings: 5, files: 20, file_name: 64, bundle_bytes: 4_000_000 });
+const RESULT_FILE_RE = /^[a-z0-9][a-z0-9._-]{0,63}$/;
+const RESULTS_KEYS = ["schema", "receipt_id", "receipt_sha256", "verifier_id", "statement", "headline", "findings", "files", "repository_copy", "published_at", "published_by", "integrity"];
+export function validateResultsSummary(s) {
+  const e = [];
+  if (!s || typeof s !== "object") return ["results summary must be an object"];
+  onlyKeys(e, s, RESULTS_KEYS, "results");
+  if (s.schema !== RESULTS_SCHEMA) e.push(`schema must be ${RESULTS_SCHEMA}`);
+  if (!RECEIPT_ID_RE.test(s.receipt_id || "")) e.push("receipt_id must be an OMN-VR id");
+  if (!HEX64.test(s.receipt_sha256 || "")) e.push("receipt_sha256 must be the receipt's content_sha256");
+  if (!VERIFIER_ID_RE.test(s.verifier_id || "")) e.push("verifier_id required");
+  if (!isStr(s.statement, RESULTS_LIMITS.statement)) e.push(`statement: what was tested, ≤ ${RESULTS_LIMITS.statement} chars`);
+  if (!isStr(s.headline, RESULTS_LIMITS.headline)) e.push(`headline: ≤ ${RESULTS_LIMITS.headline} chars`);
+  strList(e, "findings", s.findings, { max: RESULTS_LIMITS.findings, item: RESULTS_LIMITS.finding, required: true });
+  if (!Array.isArray(s.files) || !s.files.length || s.files.length > RESULTS_LIMITS.files || !s.files.every((f) => f && RESULT_FILE_RE.test(f.name || "") && HEX64.test(f.sha256 || "") && Number.isInteger(f.bytes) && f.bytes >= 0 && Object.keys(f).length === 3)) e.push(`files: 1..${RESULTS_LIMITS.files} of {name, sha256, bytes}`);
+  if (!(s.repository_copy === null || isStr(s.repository_copy, 300))) e.push("repository_copy: null or where a copy of the run is kept (≤ 300 chars)");
+  if (!ISO_RE.test(s.published_at || "")) e.push("published_at must be ISO-8601 UTC");
+  if (!curatorOk(s.published_by)) e.push("published_by must be {kind:\"curator\", id}");
+  return e;
+}
+const BUNDLE_KEYS = ["schema", "receipt_id", "summary_sha256", "receipt", "files", "integrity"];
+export function validateResultsBundle(b, summary) {
+  const e = [];
+  if (!b || typeof b !== "object") return ["results bundle must be an object"];
+  onlyKeys(e, b, BUNDLE_KEYS, "bundle");
+  if (b.schema !== RESULTS_BUNDLE_SCHEMA) e.push(`schema must be ${RESULTS_BUNDLE_SCHEMA}`);
+  if (!RECEIPT_ID_RE.test(b.receipt_id || "")) e.push("receipt_id must be an OMN-VR id");
+  e.push(...validateReceipt(b.receipt).map((m) => `receipt: ${m}`));
+  if (b.receipt && b.receipt.id !== b.receipt_id) e.push("receipt.id must equal receipt_id");
+  if (!b.files || typeof b.files !== "object" || !Object.entries(b.files).every(([k, v]) => RESULT_FILE_RE.test(k) && typeof v === "string")) e.push("files: {name: verbatim text}");
+  if (summary) {
+    if (b.summary_sha256 !== summary.integrity?.content_sha256) e.push("summary_sha256 must name the summary it belongs to");
+    if (b.receipt?.integrity?.content_sha256 !== summary.receipt_sha256) e.push("the bundle's receipt is not the summary's receipt");
+    const names = Object.keys(b.files || {}).sort().join(",");
+    if (names !== summary.files.map((f) => f.name).sort().join(",")) e.push("the bundle's files differ from the summary's list");
+    for (const f of summary.files) if (typeof b.files?.[f.name] === "string" && sha256(b.files[f.name]) !== f.sha256) e.push(`file ${f.name} does not match its hash`);
+  }
+  return e;
+}
+
 // claim_kind / candidate (2026-11-24): an advance_claimed event may say what KIND of progress the claim offers —
 // "advance" (moves toward resolution) or "elimination" (shows a candidate is not the answer) — and which of the
 // problem's success_contract.candidates it is about. An elimination must name its candidate.
@@ -248,6 +299,71 @@ const byTimeThenId = (a, b) => a.occurred_at.localeCompare(b.occurred_at) || a.i
 const authorOf = (fp) => ({ identity_declared: fp?.actor?.identity_declared ?? null, lineage_id: fp?.actor?.lineage_id ?? null, model_id_declared: fp?.actor?.model_id ?? null });
 const fpHash = (fp) => fp?.integrity?.content_sha256 || null;
 
+// ── Digests (2026-11-25): one bounded summary per claim, the same text on every surface ─────────────────
+// Open Work should stay readable at dozens of claims. Each claim gets a digest of at most DIGEST_LIMITS.lines
+// lines of at most DIGEST_LIMITS.line chars, built by rule from public records (never generated prose). It names
+// the latest test's result, its findings and limits, and links the full results and the full text, so nothing is
+// hidden, only folded. `tried` is one line per piece of work, newest first, so a newcomer sees at a glance what
+// has been proposed and how it came out, and does not repeat it unknowingly.
+export const DIGEST_LIMITS = Object.freeze({ line: 300, lines: 12, chars: 2400, tried_line: 260, tried_shown: 25 });
+const oneLine = (s) => String(s ?? "").replace(/\s+/g, " ").trim();
+const clipText = (s, n) => { const t = oneLine(s); return t.length > n ? `${t.slice(0, n - 1)}…` : t; };
+const whatItSays = (fp, results) => results?.statement || fp?.content?.title || clipText(fp?.content?.answer, 140) || "(no title)";
+
+export function claimDigest(c, fp) {
+  const kind = c.claim_kind === "elimination" ? `elimination of candidate ${c.candidate}` : c.candidate != null ? `advance on candidate ${c.candidate}` : "advance";
+  const origin = fp?.moderation?.origin_disclosure?.code;
+  const title = fp?.content?.title;
+  const head = `${c.state.toUpperCase()} · ${kind} · by ${c.author.identity_declared || "undeclared"} (${c.author.lineage_id || "?"}, declared)${origin ? ` · ${origin}` : ""}${title ? ` · "${title}"` : ""}`;
+  const body = [];
+  const t = c.tests.at(-1);
+  if (!t) body.push("Test: none yet. A registered verifier independent of the author has not checked it.");
+  else {
+    const R = t.results;
+    if (R?.statement) body.push(`Tested: ${R.statement}`);
+    body.push(`Result: ${t.verifier_id} → ${t.result} on ${t.executed_at.slice(0, 10)}. ${R?.headline || t.scope_note}`);
+    for (const f of R?.findings || []) body.push(`· ${f}`);
+    body.push(`Limits: ${t.limitations.join(" ")}`);
+    if (c.tests.length > 1) body.push(`Earlier tests on this claim: ${c.tests.length - 1}, in the full record.`);
+  }
+  if (c.reviews.length) body.push(`Reviews: ${c.reviews.map((r) => `${r.decision} by ${r.reviewer.id}${r.reviewer.lineage_id ? ` (${r.reviewer.lineage_id})` : ""}`).join("; ")}.`);
+  else if (c.state === "tested") body.push("Reviews: none yet. An independent reviewer of another lineage is the next step.");
+  if (c.refuted_by) body.push(`Refuted by event ${c.refuted_by}; it stays listed.`);
+  if (c.superseded_by) body.push(`Superseded by claim ${c.superseded_by}.`);
+  const links = [];
+  if (t) links.push(t.results ? `Full results, every reply verbatim: ${PUBLIC_ORIGIN}${t.results.href}` : `Full results: not published yet (receipt ${t.receipt_id}).`);
+  links.push(`Full text: ${PUBLIC_ORIGIN}/api/footprints?id=${c.footprint_id}`);
+  // Bound it: clip each line; if still too long, drop findings from the end. The head and the links always stay.
+  const clip = (s) => clipText(s, DIGEST_LIMITS.line);
+  let mid = body.map(clip);
+  const size = () => [head, ...mid, ...links].map(clip).join("\n").length;
+  while ((mid.length + 1 + links.length > DIGEST_LIMITS.lines || size() > DIGEST_LIMITS.chars) && mid.some((l) => l.startsWith("· "))) {
+    const i = mid.map((l) => l.startsWith("· ")).lastIndexOf(true);
+    mid.splice(i, 1);
+  }
+  while (mid.length + 1 + links.length > DIGEST_LIMITS.lines || size() > DIGEST_LIMITS.chars) mid.pop();
+  return [clip(head), ...mid, ...links.map(clip)];
+}
+
+// The outcome always survives: the author and outcome are clipped first to fixed shares, and what the work says
+// gets the room that is left, so a long statement can never push the result off the end of the line.
+function triedLine(lead, said, author, out) {
+  const o = clipText(out, 130), w = clipText(author || "undeclared", 50);
+  const fixed = `${lead} · "" · ${w} → ${o}`.length;
+  return `${lead} · "${clipText(said, Math.max(20, DIGEST_LIMITS.tried_line - fixed))}" · ${w} → ${o}`;
+}
+export function triedList(claims, attempts, fps) {
+  const rows = [
+    ...claims.map((c) => {
+      const t = c.tests.at(-1);
+      const out = t ? `${t.verifier_id} ${t.result}${t.results?.headline ? `: ${t.results.headline}` : ""}` : "not yet tested";
+      return { at: c.claimed_at, id: c.claim_event_id, line: triedLine(`${c.state} claim`, whatItSays(fps.get(c.footprint_id), t?.results), c.author.identity_declared, out) };
+    }),
+    ...attempts.map((a) => ({ at: a.occurred_at, id: a.event_id, line: triedLine("attempt", whatItSays(fps.get(a.footprint_id), null), a.author.identity_declared, "recorded, not a claim") })),
+  ];
+  return rows.sort((a, b) => b.at.localeCompare(a.at) || b.id.localeCompare(a.id)).map((r) => clipText(r.line, DIGEST_LIMITS.tried_line));
+}
+
 /**
  * deriveWorkPacket — the public read model of ONE problem.
  *
@@ -259,13 +375,20 @@ const fpHash = (fp) => fp?.integrity?.content_sha256 || null;
  *   verifiers        publicly admitted verifier registrations
  * Throws on a non-public or tampered problem. Never reads a clock: `as_of` is the latest included time.
  */
-export function deriveWorkPacket({ problem, events = [], publicFootprints = [], verifiers = [] }) {
+export function deriveWorkPacket({ problem, events = [], publicFootprints = [], verifiers = [], results = [] }) {
   if (!problem || problem.moderation?.public !== true) throw new WorkVisibilityError();
   if (validateProblem(stripModeration(problem)).length || !isIntact(stripModeration(problem))) throw new Error("WORK_PROBLEM_INTEGRITY");
 
   // 1. Visibility first. Nothing below sees a non-public record.
   const fps = new Map(publicFootprints.filter((f) => f && FP_ID_RE.test(f.id || "") && f.moderation?.public !== false && !f.tombstone).map((f) => [f.id, f]));
   const reg = new Map(verifiers.filter((v) => v?.moderation?.public === true && isIntact(stripModeration(v)) && !validateVerifier(stripModeration(v)).length).map((v) => [v.id, stripModeration(v)]));
+  // Results summaries are curator records; each shows only beside the public test whose receipt hash it names.
+  const resultsByReceipt = new Map(results.filter((r) => r && isIntact(r) && !validateResultsSummary(r).length).map((r) => [r.receipt_id, r]));
+  const resultsFor = (r) => {
+    const s = resultsByReceipt.get(r.id);
+    if (!s || s.receipt_sha256 !== r.integrity.content_sha256 || s.verifier_id !== r.verifier_id) return null;
+    return { href: `/api/open-work?results=${r.id}`, statement: s.statement, headline: s.headline, findings: s.findings, files: s.files, repository_copy: s.repository_copy, summary_sha256: s.integrity.content_sha256 };
+  };
   const evs = events
     .filter((ev) => ev?.moderation?.public === true && ev.problem_id === problem.id)
     .map(stripModeration)
@@ -328,7 +451,7 @@ export function deriveWorkPacket({ problem, events = [], publicFootprints = [], 
       const why = receiptCheck(ev, claim);
       if (why) { refuse(ev, why); continue; }
       const r = ev.receipt, v = reg.get(r.verifier_id);
-      claim.tests.push({ event_id: ev.id, receipt_id: r.id, receipt_sha256: r.integrity.content_sha256, verifier_id: v.id, verifier_kind: v.kind, method: r.method, result: r.result, scope_note: r.scope_note, limitations: r.limitations, executed_at: r.executed_at, cost: r.cost ?? null });
+      claim.tests.push({ event_id: ev.id, receipt_id: r.id, receipt_sha256: r.integrity.content_sha256, verifier_id: v.id, verifier_kind: v.kind, method: r.method, result: r.result, scope_note: r.scope_note, limitations: r.limitations, executed_at: r.executed_at, cost: r.cost ?? null, results: resultsFor(r) });
       if (r.result === "pass" && claim.state === "claimed") { claim.state = "tested"; apply(ev, { claim_state: "tested" }); }
       else recordOnly(ev, { result: r.result });
       continue;
@@ -352,7 +475,7 @@ export function deriveWorkPacket({ problem, events = [], publicFootprints = [], 
         const why = receiptCheck(ev, claim);
         if (why) { refuse(ev, why); continue; }
         if (ev.receipt.result !== "fail") { refuse(ev, "refutation-receipt-did-not-fail"); continue; }
-        claim.tests.push({ event_id: ev.id, receipt_id: ev.receipt.id, receipt_sha256: ev.receipt.integrity.content_sha256, verifier_id: ev.receipt.verifier_id, verifier_kind: reg.get(ev.receipt.verifier_id).kind, method: ev.receipt.method, result: "fail", scope_note: ev.receipt.scope_note, limitations: ev.receipt.limitations, executed_at: ev.receipt.executed_at, cost: ev.receipt.cost ?? null });
+        claim.tests.push({ event_id: ev.id, receipt_id: ev.receipt.id, receipt_sha256: ev.receipt.integrity.content_sha256, verifier_id: ev.receipt.verifier_id, verifier_kind: reg.get(ev.receipt.verifier_id).kind, method: ev.receipt.method, result: "fail", scope_note: ev.receipt.scope_note, limitations: ev.receipt.limitations, executed_at: ev.receipt.executed_at, cost: ev.receipt.cost ?? null, results: resultsFor(ev.receipt) });
       } else {
         const r = ev.review;
         if (r.decision !== "refute") { refuse(ev, "refutation-review-must-decide-refute"); continue; }
@@ -378,6 +501,7 @@ export function deriveWorkPacket({ problem, events = [], publicFootprints = [], 
 
   // 2. State. Each claim keeps its own; the problem's rung is the best live claim's rung.
   const claimList = [...claims.values()];
+  for (const c of claimList) c.digest = claimDigest(c, fps.get(c.footprint_id));
   const liveClaims = claimList.filter(live);
   let rung = "registered";
   if (attempts.length || claimList.length) rung = "attempted";
@@ -439,6 +563,7 @@ export function deriveWorkPacket({ problem, events = [], publicFootprints = [], 
     candidates,
     claims: claimList.sort((a, b) => a.claimed_at.localeCompare(b.claimed_at) || a.claim_event_id.localeCompare(b.claim_event_id)),
     attempts,
+    tried: triedList(claimList, attempts, fps),
     history,
     next_actions: next,
     sources,
@@ -627,7 +752,8 @@ export function successorBrief(packet, { trustBoundary }) {
     state: { progress_rung: packet.progress_rung, open: packet.open, meets_all_criteria_by_review: packet.meets_all_criteria_by_review },
     milestones: packet.milestones,
     candidates: packet.candidates,
-    claims: packet.claims.map((c) => ({ claim_event_id: c.claim_event_id, state: c.state, claim_kind: c.claim_kind, candidate: c.candidate, footprint: { id: c.footprint_id, content_sha256: c.content_sha256, href: `/api/footprints?id=${c.footprint_id}` }, author: c.author, tests: c.tests.map((t) => ({ verifier_id: t.verifier_id, kind: t.verifier_kind, result: t.result, scope_note: t.scope_note, limitations: t.limitations })), reviews: c.reviews.map((r) => ({ decision: r.decision, reviewer: r.reviewer, limitations: r.limitations })), refuted_by: c.refuted_by, superseded_by: c.superseded_by })),
+    tried: packet.tried,
+    claims: packet.claims.map((c) => ({ claim_event_id: c.claim_event_id, state: c.state, claim_kind: c.claim_kind, candidate: c.candidate, digest: c.digest, footprint: { id: c.footprint_id, content_sha256: c.content_sha256, href: `/api/footprints?id=${c.footprint_id}` }, author: c.author, tests: c.tests.map((t) => ({ verifier_id: t.verifier_id, kind: t.verifier_kind, result: t.result, scope_note: t.scope_note, limitations: t.limitations, receipt_id: t.receipt_id, results: t.results ? { href: t.results.href, headline: t.results.headline, findings: t.results.findings } : null })), reviews: c.reviews.map((r) => ({ decision: r.decision, reviewer: r.reviewer, limitations: r.limitations })), refuted_by: c.refuted_by, superseded_by: c.superseded_by })),
     failed_attempts_known_to_curator: packet.problem.known_failures,
     next_actions: packet.next_actions,
     sources: packet.sources,

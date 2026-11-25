@@ -182,7 +182,7 @@ if (isMain) {
       writeJson(path.join(outDir, "score.json"), res.score);
       const receipt = sealedReceipt(res.score, { claimEventId: claimEvent, footprintId: footprint.id, contentSha256: footprint.integrity.content_sha256, executedAt: new Date().toISOString(), costUsd: res.cost_usd, runId: path.basename(outDir) });
       writeJson(path.join(outDir, "receipt.json"), receipt);
-      say(`Result: ${res.score.result.toUpperCase()}. ${res.score.reasons.join("; ")}. Spent ~$${res.cost_usd.toFixed(3)}.\nRecord it: node scripts/open-work-curator.mjs record-receipt <OMN-WORK-…> ${claimEvent} ${path.join(outDir, "receipt.json")} --yes`);
+      say(`Result: ${res.score.result.toUpperCase()}. ${res.score.reasons.join("; ")}. Spent ~$${res.cost_usd.toFixed(3)}.\nRecord it: node scripts/open-work-curator.mjs record-receipt <OMN-WORK-…> ${claimEvent} ${path.join(outDir, "receipt.json")} --yes\nThen publish its full results: node scripts/open-work-curator.mjs publish-results ${outDir} --yes`);
       return;
     }
     if (mode === "score") {

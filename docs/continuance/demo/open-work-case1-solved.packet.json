@@ -1,6 +1,6 @@
 {
   "schema": "work-packet/1.0",
-  "projection_version": "open-work-projection/0.1",
+  "projection_version": "open-work-projection/0.2",
   "problem": {
     "id": "OMN-WORK-1795435220000-00000001",
     "revision": 1,
@@ -82,7 +82,8 @@
           "cost": {
             "cpu_ms": 5,
             "usd": 0
-          }
+          },
+          "results": null
         }
       ],
       "reviews": [
@@ -106,7 +107,15 @@
         }
       ],
       "refuted_by": null,
-      "superseded_by": null
+      "superseded_by": null,
+      "digest": [
+        "REVIEWED · advance · by GPT (demo successor B) (openai-gpt, declared) · \"a(n) continues as Fibonacci\"",
+        "Result: brute-force-count → pass on 2026-11-23. Checks the 20 stated values only; says nothing about any proof in the prose.",
+        "Limits: n ≤ 20 only a correct table does not show understanding",
+        "Reviews: accept by gemini-reader (google-gemini).",
+        "Full results: not published yet (receipt OMN-VR-1795435243000-00000001).",
+        "Full text: https://engine.omnarai.org/api/footprints?id=OMN-FP-1795435240000-00000002"
+      ]
     }
   ],
   "attempts": [
@@ -121,6 +130,10 @@
       },
       "occurred_at": "2026-11-23T12:00:30.000Z"
     }
+  ],
+  "tried": [
+    "reviewed claim · \"a(n) continues as Fibonacci\" · GPT (demo successor B) → brute-force-count pass",
+    "attempt · \"Counting strings, partial\" · Claude (demo producer A) → recorded, not a claim"
   ],
   "history": [
     {
@@ -217,5 +230,5 @@
     "causal_value": "Whether a successor did better BECAUSE of inherited work is measured only by a controlled comparison (Inheritance Study 001). A packet does not measure it."
   },
   "as_of": "2026-11-23T12:00:44.000Z",
-  "snapshot_sha256": "c880ec2fe205c1ff2428b6bcafa44683842226d7ed878209d500675b4af97cbe"
+  "snapshot_sha256": "565fa2eb7916121594351de51cb6878e2e45767bcd62afdd1023cc265c9e397c"
 }

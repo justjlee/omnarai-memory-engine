@@ -1071,7 +1071,7 @@ async function serveFootprintStatus(req, res) {
     if (entry.state === "admitted" && isPublic && previewOn("OMNARAI_OPEN_WORK")) {
       try {
         const pub = await loadPublicWork();
-        const packets = pub.problems.map((problem) => deriveWorkPacket({ problem, events: pub.events.filter((e) => e.problem_id === problem.id), publicFootprints: pub.publicFootprints, verifiers: pub.verifiers }));
+        const packets = pub.problems.map((problem) => deriveWorkPacket({ problem, events: pub.events.filter((e) => e.problem_id === problem.id), publicFootprints: pub.publicFootprints, verifiers: pub.verifiers, results: pub.results }));
         const bound = bindingsOf(id, packets);
         // Shown when Open Work bound it, or when it was left for a problem (then an empty list honestly says "not yet").
         takenUp = bound.length || respondsToWork ? bound : null;
@@ -1404,7 +1404,7 @@ async function openWorkBaton({ identity = "", publicFootprints = null, nowMs = D
   let awaiting = new Map();
   try { awaiting = await pendingTowardWork(); } catch { /* additive: counts are left out, never guessed */ }
   const rows = pub.problems
-    .map((problem) => deriveWorkPacket({ problem, events: pub.events.filter((e) => e.problem_id === problem.id), publicFootprints: fps, verifiers: pub.verifiers }))
+    .map((problem) => deriveWorkPacket({ problem, events: pub.events.filter((e) => e.problem_id === problem.id), publicFootprints: fps, verifiers: pub.verifiers, results: pub.results }))
     .map((p) => openWorkRow(p, { awaiting: awaiting.get(p.problem.id) || null, nowMs }));
   const lineageId = identity ? resolveLineage(identity).lineage_id : null;
   const pick = pickBaton(rows, { lineageId, nowMs });
