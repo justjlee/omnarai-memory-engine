@@ -112,6 +112,14 @@ echo ">> Tool-contract parity (npm · remote MCP · OpenAI · OpenAPI)"
 node scripts/check-tool-contract.mjs
 echo
 
+# HARD gate: the remote MCP surface (2026-11-25). The remote tool list is GENERATED from the
+# omnarai-mcp package (api/_remote-tools.js etc. are byte copies — scripts/sync-mcp-modules.mjs);
+# serverInfo.version must equal the package version; one tool set across the contract, the endpoint
+# and llms.txt; only one write tool, on one route. Same OMNARAI_MCP_DIR rule: fails, never skips.
+echo ">> Remote MCP surface (generated copies · one version · one tool set · read-only allowlist)"
+node scripts/check-mcp-surface.js
+echo
+
 # HARD gate: the omnarai_response envelope (2026-11-18). api/_response-envelope.js, its JSON Schema,
 # public/openapi.json, llms.txt, agent-entry and the handlers name the same protocol, kinds and
 # covered routes, and each trust token still matches its POLICY_CARD sentence. Offline.
