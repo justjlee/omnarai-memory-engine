@@ -13,6 +13,16 @@
 //   node scripts/scorecard.mjs --days 21        # wider window (default 14)
 //   node scripts/scorecard.mjs --json out.json  # also write the JSON
 //   node scripts/scorecard.mjs --publish        # also store it for /home
+//   node scripts/scorecard.mjs --publish --carry-forward   # the scheduled run (GitHub Actions)
+//
+// SCHEDULED (2026-11-25): docs/ci/scorecard.yml runs this every 6 hours with --publish --carry-forward,
+// so the scorecard no longer waits for someone to ask Claude. Secrets come from the environment
+// (INGEST_SECRET, TELEMETRY_READ_SECRET; GitHub Actions secrets), falling back to .env.local locally.
+// A run that cannot produce honest numbers does NOT publish: it records "failed at <time>: <reason>"
+// (POST /api/info?_view=scorecard-run), which /home shows under "needs your attention", and the last
+// good scorecard stays in place. --carry-forward fills what a CI runner cannot see (GitHub traffic,
+// which needs the owner's login; the private milestones file outside the repo) from the last
+// published scorecard, each marked with the date it was carried from.
 //
 // Read-only against production telemetry (sends x-omnarai-self so the reads are not
 // logged as strangers). Manual inputs (Reddit stats, pinned milestones) live in
@@ -28,13 +38,39 @@ const flag = (n) => args.includes(n);
 const opt = (n, d) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : d; };
 const DAYS = Math.max(8, Math.min(30, parseInt(opt("--days", "14"), 10) || 14));
 
-const envText = readFileSync(new URL("../.env.local", import.meta.url), "utf8");
-const envVal = (k) => (envText.match(new RegExp("^" + k + "=(.*)$", "m"))?.[1] || "").trim().replace(/^["']|["']$/g, "");
+// Secrets: the environment first (GitHub Actions), then .env.local (a local run). `vercel env pull`
+// values can carry quotes and a literal "\n"; both are stripped.
+const envPath = new URL("../.env.local", import.meta.url);
+const envText = existsSync(envPath) ? readFileSync(envPath, "utf8") : "";
+const clean = (v) => String(v || "").trim().replace(/^["']|["']$/g, "").replace(/\\n$/, "").trim();
+const envVal = (k) => clean(process.env[k] || envText.match(new RegExp("^" + k + "=(.*)$", "m"))?.[1]);
 const INGEST = envVal("INGEST_SECRET");
 const TELE = envVal("TELEMETRY_READ_SECRET");
-if (!INGEST || !TELE) { console.error("Need INGEST_SECRET and TELEMETRY_READ_SECRET in .env.local"); process.exit(1); }
 const ENGINE = process.env.OMNARAI_BASE || "https://engine.omnarai.org";
 const FRONT = "https://omnarai.org";
+const SOURCE = process.env.GITHUB_ACTIONS ? "github-actions" : "local";
+const RUN_URL = process.env.GITHUB_RUN_ID ? `${process.env.GITHUB_SERVER_URL || "https://github.com"}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}` : null;
+
+// A failed run says so on /home (only when publishing, and only if the key is there to say it with),
+// then exits non-zero so the scheduler marks the run failed too.
+async function fail(reason) {
+  console.error(`Scorecard FAILED: ${reason}`);
+  if (flag("--publish") && INGEST) {
+    try {
+      const r = await fetch(`${ENGINE}/api/info?_view=scorecard-run`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${INGEST}`, "content-type": "application/json", "x-omnarai-self": "1" },
+        body: JSON.stringify({ ok: false, reason: String(reason).slice(0, 480), source: SOURCE, run_url: RUN_URL }),
+        signal: AbortSignal.timeout(20000),
+      });
+      console.error(r.ok ? "Recorded the failure for /home." : `Could not record the failure: HTTP ${r.status}`);
+    } catch (e) { console.error(`Could not record the failure: ${e.message}`); }
+  }
+  process.exit(1);
+}
+process.on("unhandledRejection", (e) => fail(`unexpected error: ${e?.message || e}`));
+process.on("uncaughtException", (e) => fail(`unexpected error: ${e?.message || e}`));
+if (!INGEST || !TELE) await fail(`missing secret(s): ${[!INGEST && "INGEST_SECRET", !TELE && "TELEMETRY_READ_SECRET"].filter(Boolean).join(", ")}`);
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function getJson(url, headers = {}, tries = 2, timeout = 70000) {
@@ -67,6 +103,10 @@ const missing = (res) => days.filter((_, i) => !res[i]);
 const frontEvents = frontRes.flatMap((r) => r?.events || []);
 const engEvents = engRes.flatMap((r) => r?.events || []);
 const truncated = [...frontRes, ...engRes].some((r) => r && r.truncated);
+
+// Honest or nothing: if a whole source could not be read, these are not the real numbers.
+if (missing(frontRes).length === days.length) await fail(`front-door telemetry unreadable for all ${days.length} days (omnarai.org/api/telemetry; check TELEMETRY_READ_SECRET)`);
+if (missing(engRes).length === days.length) await fail(`engine telemetry unreadable for all ${days.length} days (engine /api/info?_view=traffic; check INGEST_SECRET)`);
 
 const fd = summarizeFrontDoor(frontEvents, days);
 const en = summarizeEngine(engEvents, days);
@@ -149,11 +189,35 @@ const posts = (manual.posts || []).map((p) => {
   };
 });
 
+// ── carry forward what this runner cannot see (scheduled runs) ───────────────
+let carried = null;
+if (flag("--carry-forward")) {
+  const prev = await getJson(`${ENGINE}/api/info?_view=scorecard`, { Authorization: `Bearer ${INGEST}`, "x-omnarai-self": "1" });
+  if (prev?.schema === "scorecard/1") {
+    carried = { from: prev.generated, fields: [] };
+    const prevRepos = prev.endorsements?.github?.repos || [];
+    for (const row of github.repos) {
+      const p = prevRepos.find((x) => x.name === row.name);
+      if (row.views_14d == null && p && p.views_14d != null) {
+        Object.assign(row, { views_14d: p.views_14d, unique_viewers_14d: p.unique_viewers_14d, clones_14d: p.clones_14d, traffic_carried_from: p.traffic_carried_from || prev.generated });
+        carried.fields.push(`github traffic (${row.name})`);
+      }
+    }
+    if (!existsSync(privatePath) && (prev.milestones?.internal || []).length) {
+      privateMs.internal = prev.milestones.internal;
+      carried.fields.push("private milestones");
+    }
+  }
+}
+
 // ── assemble ────────────────────────────────────────────────────────────────
 const real_7d = realOf(last7), real_prior_7d = realOf(prior7);
 const scorecard = {
   schema: "scorecard/1",
   generated: new Date().toISOString(),
+  source: SOURCE,
+  ...(RUN_URL ? { run_url: RUN_URL } : {}),
+  ...(carried?.fields.length ? { carried_forward: carried } : {}),
   window: { from: days[0], to: todayStr, days: DAYS },
   headline_note: "'Real' = browser visitors minus scripted sweeps (4+ pages in a minute). Everything labelled crawler/unidentified is machine traffic or unknown — never counted as a person.",
   goal,
@@ -230,6 +294,6 @@ if (flag("--publish")) {
     headers: { Authorization: `Bearer ${INGEST}`, "content-type": "application/json", "x-omnarai-self": "1" },
     body: JSON.stringify(scorecard),
   });
-  console.error(r.ok ? `Published → ${ENGINE}/api/info?_view=scorecard` : `Publish FAILED: HTTP ${r.status} ${await r.text()}`);
-  if (!r.ok) process.exit(1);
+  if (!r.ok) await fail(`publish rejected: HTTP ${r.status} ${(await r.text()).slice(0, 200)}`);
+  console.error(`Published → ${ENGINE}/api/info?_view=scorecard`);
 }

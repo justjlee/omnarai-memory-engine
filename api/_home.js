@@ -120,6 +120,37 @@ export async function readScorecard() {
   }
 }
 
+// The last scheduled run, success or failure (2026-11-25). The scorecard is computed by a scheduled
+// GitHub Actions job now, not only when someone asks Claude, so a run that FAILS must say so on /home
+// ("Scorecard failed at <time>: <reason>") instead of letting the last good copy age silently into
+// "stale". A successful publish records ok; a failed run records its reason here and leaves the last
+// good scorecard in place (a failure never overwrites real numbers with nothing).
+const SC_RUN = "home/scorecard/last-run.json";
+const RUN_REASON_MAX = 500;
+
+export async function readScorecardRun() {
+  try {
+    const { blobs } = await list({ prefix: SC_RUN });
+    if (!blobs.length) return null;
+    const r = await blobFetch(bust(blobs[0].url)).then((x) => x.json());
+    return r && typeof r.ok === "boolean" && typeof r.at === "string" ? r : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function writeScorecardRun(run) {
+  if (!run || typeof run !== "object" || typeof run.ok !== "boolean") return { error: "body must be {ok: boolean, at?, reason?, source?, run_url?}" };
+  const at = typeof run.at === "string" && !Number.isNaN(Date.parse(run.at)) ? new Date(run.at).toISOString() : new Date().toISOString();
+  const str = (v, n) => (typeof v === "string" && v.trim() ? v.trim().slice(0, n) : null);
+  const reason = str(run.reason, RUN_REASON_MAX);
+  if (!run.ok && !reason) return { error: "a failed run needs a reason" };
+  const runUrl = str(run.run_url, 300);
+  const rec = { ok: run.ok, at, reason: run.ok ? null : reason, source: str(run.source, 80) || "unknown", run_url: runUrl && /^https:\/\/github\.com\//.test(runUrl) ? runUrl : null };
+  await put(SC_RUN, JSON.stringify(rec), { access: "public", addRandomSuffix: false, allowOverwrite: true, contentType: "application/json" });
+  return { ok: true, run: rec };
+}
+
 export async function writeScorecard(sc) {
   if (!sc || typeof sc !== "object" || sc.schema !== "scorecard/1" || typeof sc.generated !== "string" || Number.isNaN(Date.parse(sc.generated))) {
     return { error: "body must be a scorecard/1 object with an ISO `generated`" };
@@ -129,5 +160,6 @@ export async function writeScorecard(sc) {
   const opts = { access: "public", addRandomSuffix: false, allowOverwrite: true, contentType: "application/json" };
   await put(SC_LATEST, body, opts);
   await put(`home/scorecard/${sc.generated.slice(0, 10)}.json`, body, opts);
+  await writeScorecardRun({ ok: true, at: sc.generated, source: typeof sc.source === "string" ? sc.source : "scorecard.mjs" });
   return { ok: true, generated: sc.generated, bytes: Buffer.byteLength(body) };
 }
