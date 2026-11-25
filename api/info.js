@@ -17,7 +17,8 @@ import { atlasCertCounts } from "./_atlas-counts.js";
 import { TOOLS as MCP_REMOTE_TOOLS, mcpSummary } from "./_mcp.js";
 import { foldLineages } from "./_lineages.js";
 import { budgetStatus, writeBudgetConfig, resetBudgetConfig } from "./_budget.js";
-import { loadPublicFootprints, loadFootprintIndex, footprintDomainCounts, footprintStateHash, questionIdFor, reviewQueueSummary } from "./_footprints.js";
+import { loadPublicFootprints, loadFootprintIndex, footprintDomainCounts, footprintStateHash, questionIdFor, reviewQueueSummary, project as projectFootprint } from "./_footprints.js";
+import { scanRecord } from "./_injection-scan.js";
 import { GREETING, DATE_NOTE } from "./_protocol.js";
 import { BUILD_STAMP } from "./_build-stamp.js";
 import { runAudit, publicReport } from "./_surface-audit.js";
@@ -214,9 +215,18 @@ async function footprintQueue() {
   try { return reviewQueueSummary(await loadFootprintIndex()); } catch { return null; }
 }
 
+// Pending arrivals whose text trips the injection pre-scan (2026-11-25). null = unreadable. Flags only.
+async function flaggedPending() {
+  try {
+    const { hydrated } = await loadPublicFootprints(undefined, { includeAll: true });
+    return hydrated.filter((h) => h.entry.state === "pending" && h.body && !h.body.tombstone)
+      .filter((h) => scanRecord(projectFootprint(h, { curator: true })).length).map((h) => h.entry.id);
+  } catch { return null; }
+}
+
 async function buildAttention() {
   // AUTO — detected from live data; read-only, resolves itself when the data changes.
-  const [pending, openItems, longitudinal, fpQueue] = await Promise.all([countPendingContributions(), readOpenItems(), checkLongitudinal(), footprintQueue()]);
+  const [pending, openItems, longitudinal, fpQueue, flagged] = await Promise.all([countPendingContributions(), readOpenItems(), checkLongitudinal(), footprintQueue(), flaggedPending()]);
   let draftAudio = 0;
   try {
     const m = JSON.parse(readFileSync(join(projectRoot, "public", "audio", "manifest.json"), "utf-8"));
@@ -235,6 +245,12 @@ async function buildAttention() {
   } else if (pending) {
     auto.push({ label: pending + " visitor contribution" + (pending === 1 ? "" : "s") + " awaiting review", where: "/api/contributions?status=pending" });
   }
+  if (flagged?.length) {
+    auto.push({
+      label: flagged.length + " waiting arrival" + (flagged.length === 1 ? " has" : "s have") + " text that may be a prompt injection (addresses the reading model, tries to override instructions, or hides encoded content) — read before admitting; flags never reject anything",
+      where: "/home#arrivals",
+    });
+  }
   if (draftAudio) auto.push({ label: draftAudio + " audio transcripts are draft (v0.5) — your review promotes them to v1.0", where: "/audio/manifest.json" });
   if (longitudinal?.missing_indexes.length) {
     const n = longitudinal.missing_indexes.length;
@@ -252,6 +268,7 @@ async function buildAttention() {
     open_items: openItems, // editable; each has id/text/category/priority/status
     pending_contributions: pending,
     footprint_queue: fpQueue, // null = unreadable
+    flagged_pending: flagged, // ids of waiting arrivals the injection pre-scan flagged; null = unreadable
     draft_audio_transcripts: draftAudio,
     longitudinal, // null = unknown (blob unreadable), never "all clear"
     open_count: openCount,
