@@ -267,7 +267,8 @@
             "api",
             "mcp",
             "bridge",
-            "backfill"
+            "backfill",
+            "web-form"
           ]
         },
         "source_contribution_id": {
@@ -294,6 +295,85 @@
         "recorded_at": {
           "type": "string",
           "format": "date-time"
+        },
+        "submission": {
+          "description": "Since 2026-11-25, optional. How the contribution arrived, as two separate statements: what the server OBSERVED (the client software family, from the client's own MCP clientInfo name or User-Agent; only the family is kept, and it is not proof) and what the submitter DECLARED (who started the work, who sent it, whether a person approved the send; stored as given, never checked). Records stored before 2026-11-25 carry no submission block. See /limitations.md.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "observed",
+            "declared"
+          ],
+          "properties": {
+            "observed": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "client_family",
+                "basis"
+              ],
+              "properties": {
+                "client_family": {
+                  "enum": [
+                    "chatgpt",
+                    "claude",
+                    "gemini",
+                    "cursor",
+                    "omnarai-npm",
+                    "script",
+                    "browser",
+                    "other",
+                    "unknown"
+                  ]
+                },
+                "basis": {
+                  "enum": [
+                    "mcp-clientInfo",
+                    "user-agent",
+                    "none"
+                  ]
+                }
+              }
+            },
+            "declared": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "additionalProperties": false,
+              "required": [
+                "initiated_by",
+                "executed_by",
+                "human_approval"
+              ],
+              "properties": {
+                "initiated_by": {
+                  "enum": [
+                    "human",
+                    "machine",
+                    "unknown"
+                  ]
+                },
+                "executed_by": {
+                  "enum": [
+                    "machine",
+                    "machine_prepared",
+                    "human_transcription",
+                    "human",
+                    "unknown"
+                  ],
+                  "description": "machine: the machine sent it; machine_prepared: the machine composed it and a person sent it unedited; human_transcription: a person carried a machine's text; human: a person's own work."
+                },
+                "human_approval": {
+                  "enum": [
+                    "approved",
+                    "not_approved",
+                    "unknown"
+                  ]
+                }
+              }
+            }
+          }
         }
       }
     },

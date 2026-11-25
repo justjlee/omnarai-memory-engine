@@ -20,6 +20,7 @@
 
 import { runInquiryBrief } from "./_inquiry.js";
 import { originHeaders } from "./_quota.js";
+import { observeClient, originClientHeaders } from "./_participation.js";
 // The remote tool list, output schemas, server version and spec versions are GENERATED from the
 // npm package: api/_remote-tools.js is a byte copy of omnarai-mcp/remote-tools.js
 // (scripts/sync-mcp-modules.mjs; scripts/check-mcp-surface.js fails if it differs).
@@ -44,8 +45,11 @@ const FETCH_OPTS = {
 // user in the world shares one IP hash — the first user to spend the daily cap
 // would lock out all of them. originHeaders() signs the hash with INGEST_SECRET
 // so a forged header can't buy unlimited runs. See api/_quota.js.
-function fetchOptsFor(req) {
-  const headers = { ...FETCH_OPTS.headers, ...originHeaders(req) };
+// Also forwards, signed, the client FAMILY observed on the ORIGINAL request (2026-11-25), so a contribution
+// made through ChatGPT or Claude is recorded as such instead of as "omnarai-remote-mcp" (api/_participation.js).
+function fetchOptsFor(req, clientInfo = null) {
+  const observed = observeClient({ clientInfoName: clientInfo?.name || null, userAgent: req?.headers?.["user-agent"] || null });
+  const headers = { ...FETCH_OPTS.headers, ...originHeaders(req), ...originClientHeaders(observed) };
   if (req?.headers?.["x-omnarai-self"]) headers["x-omnarai-self"] = "1";
   return { headers };
 }
@@ -502,7 +506,7 @@ export async function handleMcp(req, res) {
       if (!name || typeof name !== "string") return rpcError(res, msg.id, -32602, "tools/call requires params.name.", isModern ? 400 : 200);
       let result;
       try {
-        result = await callTool(name, args, fetchOptsFor(req));
+        result = await callTool(name, args, fetchOptsFor(req, isModern ? kind.clientInfo : null));
       } catch (err) {
         // Tool-level failures are results with isError, not protocol errors.
         const prefix = err instanceof ToolInputError ? "Invalid input" : "Tool failed";

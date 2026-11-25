@@ -31,16 +31,44 @@ function fresh(cap = "3") {
   process.env.CONTRIB_DAILY_CAP = cap;
 }
 
-test("exact duplicate → 409 pointing at the original; nothing new is stored", async () => {
+test("same answer, different request → 409 pointing at the original; nothing new is stored", async () => {
   fresh();
   const a = await send({ answer: "The burden of proof sits with the one overriding the person." });
   assert.equal(a.status, 200);
-  const before = mem.__dump("contributions/").length + mem.__dump("footprints/events/").length;
-  const b = await send({ answer: "The burden of proof sits with the one overriding the person." });
+  const before = (mem.__dump("contributions/").length + mem.__dumpPrivate("contributions/").length) + (mem.__dump("footprints/events/").length + mem.__dumpPrivate("footprints/events/").length);
+  const b = await send({ answer: "The burden of proof sits with the one overriding the person.", position: { stance: "support" } });
   assert.equal(b.status, 409);
   assert.equal(b.body.code, "DUPLICATE_CONTRIBUTION");
   assert.equal(b.body.existing_contribution_id, a.body.received.id);
-  assert.equal(mem.__dump("contributions/").length + mem.__dump("footprints/events/").length, before, "no new blobs");
+  assert.equal((mem.__dump("contributions/").length + mem.__dumpPrivate("contributions/").length) + (mem.__dump("footprints/events/").length + mem.__dumpPrivate("footprints/events/").length), before, "no new blobs");
+});
+
+// Safe retries (2026-11-25): the identical request again (a client retrying after a lost response) gets the
+// ORIGINAL receipt back — same footprint id, same token, same content hash — and nothing is stored or spent.
+test("identical request again → 200 replay of the original receipt; nothing stored, no allowance spent", async () => {
+  fresh("2");
+  const a = await send({ answer: "Retry me safely." });
+  assert.equal(a.status, 200);
+  const before = (mem.__dump("contributions/").length + mem.__dumpPrivate("contributions/").length) + (mem.__dump("footprints/events/").length + mem.__dumpPrivate("footprints/events/").length);
+  for (let i = 0; i < 3; i++) {
+    const r = await send({ answer: "Retry me safely." });
+    assert.equal(r.status, 200, `replay ${i}`);
+    assert.equal(r.body.replayed, true);
+    assert.equal(r.body.footprint_id, a.body.footprint_id);
+    assert.equal(r.body.continuance.token, a.body.continuance.token);
+    assert.equal(r.body.continuance.content_hash, a.body.continuance.content_hash);
+    assert.equal(r.body.received.id, a.body.received.id);
+  }
+  assert.equal((mem.__dump("contributions/").length + mem.__dumpPrivate("contributions/").length) + (mem.__dump("footprints/events/").length + mem.__dumpPrivate("footprints/events/").length), before, "no new blobs");
+  assert.equal((await send({ answer: "a second real one" })).status, 200, "replays did not spend the cap of 2");
+});
+
+test("a cosmetic variant of a stored answer is NOT a replay (still 409)", async () => {
+  fresh("10");
+  assert.equal((await send({ answer: "Exact bytes matter." })).status, 200);
+  const r = await send({ answer: "exact  bytes matter." });
+  assert.equal(r.status, 409);
+  assert.notEqual(r.body.replayed, true);
 });
 
 test("duplicate detection folds case and whitespace, and is not fooled by cosmetic edits", async () => {
@@ -99,7 +127,7 @@ test("a rejected submission never spends the allowance", async () => {
 test("an unidentifiable caller (no IP) is never capped, but exact duplicates are still refused", async () => {
   fresh("1");
   for (let i = 0; i < 4; i++) assert.equal((await send({ answer: `anon ${i}` }, {})).status, 200);
-  assert.equal((await send({ answer: "anon 0" }, {})).status, 409);
+  assert.equal((await send({ answer: "ANON 0" }, {})).status, 409);
 });
 
 test("both checks FAIL OPEN when storage cannot be read (they guard the queue, not security)", async () => {

@@ -133,7 +133,10 @@ test("[P1] legacy contribution: old contract intact + footprint minted, pending"
   assert.equal(r.body.continuance.content_hash, r.body.footprint.content_sha256);
 
   const stored = mem.__readPrivate(`contributions/${r.body.received.id}.json`);
-  assert.deepEqual(Object.keys(stored).sort(), ["answer", "country", "footprint_id", "id", "identity", "justification", "question", "status", "submittedAt", "target_id", "wordCount"].sort(), "legacy shape + footprint_id only");
+  // Legacy shape + footprint_id, plus (since 2026-11-25) two fields the SERVER records on every contribution, never
+  // the submitter: what it observed about the arrival (submission) and the hash that makes a retry safe.
+  assert.deepEqual(Object.keys(stored).sort(), ["answer", "country", "footprint_id", "id", "identity", "justification", "question", "status", "submittedAt", "target_id", "wordCount", "submission", "request_sha256"].sort(), "legacy shape + footprint_id + server-recorded arrival fields only");
+  assert.equal(stored.submission.declared, null, "nothing declared when the submitter declared nothing");
   const fp = mem.__readPrivate(`${FP.EVENTS_PREFIX}${r.body.footprint_id}.json`);
   assert.equal(fp.moderation.state, "pending");
   assert.equal(fp.provenance.source_contribution_id, stored.id);

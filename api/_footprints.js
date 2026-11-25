@@ -24,6 +24,7 @@
 // All I/O goes through a store adapter (createFootprintStore) so tests inject an
 // in-memory store and a future database adapter implements the same calls
 // without touching the protocol. Underscore module ⇒ not a deployed function.
+import { submissionErrors } from "./_participation.js";
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { list as blobList, put as blobPut, blobFetch } from "./_blob.js";
 import { findFamily } from "./_lineages.js";
@@ -74,7 +75,7 @@ export const CONTRIBUTION_EVENT_TYPES = [
 import { JUSTIFICATIONS, STANCES } from "./_footprint-vocab.js";
 export { JUSTIFICATIONS, STANCES };
 export const ACTOR_KINDS = ["synthetic", "human", "hybrid", "unspecified"];
-export const CHANNELS = ["api", "mcp", "bridge", "backfill"];
+export const CHANNELS = ["api", "mcp", "bridge", "backfill", "web-form"];
 export const CLIENT_TAGS = ["mcp", "mcp-remote"];
 export const REVIEW_ACTIONS = ["admit", "reject", "retract", "redact", "note"];
 export const REVIEWER_KINDS = ["curator", "auto-admit-gate", "reconcile"];
@@ -236,7 +237,7 @@ const CONTENT_KEYS = ["answer", "stance", "summary", "conditions", "justificatio
 const CONTENT_KEYS_1_1 = [...CONTENT_KEYS, "revision_basis"];
 const CONTENT_KEYS_1_2 = [...CONTENT_KEYS, "title"];
 const REL_KEYS = [...RELATION_LISTS, "supersedes"];
-const PROV_KEYS = ["channel", "source_contribution_id", "client", "submitted_by", "recorded_at"];
+const PROV_KEYS = ["channel", "source_contribution_id", "client", "submitted_by", "recorded_at", "submission"];
 const MOD_KEYS = ["state", "public"];
 const INTEGRITY_KEYS = ["algorithm", "canonicalization", "content_sha256"];
 
@@ -336,6 +337,8 @@ export function validateFootprint(fp) {
     if (!isStrOrNull(p.submitted_by ?? null, 120)) errors.push("provenance.submitted_by must be a string ≤ 120 chars or null");
     if (p.channel === "bridge" && !p.submitted_by) errors.push("a bridge submission must name provenance.submitted_by");
     if (!ISO_RE.test(p.recorded_at || "")) errors.push("provenance.recorded_at must be an ISO-8601 UTC timestamp");
+    // Participation provenance (2026-11-25): optional; present only on records stored after it shipped.
+    if (p.submission !== undefined) errors.push(...submissionErrors(p.submission));
   }
 
   if (unknownKeys(fp.moderation, MOD_KEYS, "moderation", errors)) {
@@ -492,11 +495,12 @@ export function footprintFromContribution(contribution, { recordQuestion, id, cl
     relationships: normalizeRelationships(c.relationships),
     evidence_refs: Array.isArray(c.evidence_refs) ? c.evidence_refs : [],
     provenance: {
-      channel: channel || (bridge ? "bridge" : client ? "mcp" : "api"),
+      channel: channel || (c.via === "web-form" ? "web-form" : bridge ? "bridge" : client ? "mcp" : "api"),
       source_contribution_id: c.id,
       client: client && CLIENT_TAGS.includes(client) ? client : null,
       submitted_by: bridge?.submitted_by ?? null,
       recorded_at: recordedAt || c.submittedAt,
+      ...(c.submission ? { submission: c.submission } : {}),
     },
     moderation: { state: "pending", public: false },
   };
@@ -520,11 +524,12 @@ export function footprintFromVoiceRecord(contribution, { id, client = null, chan
     relationships: normalizeRelationships(c.relationships),
     evidence_refs: [],
     provenance: {
-      channel: channel || (bridge ? "bridge" : client ? "mcp" : "api"),
+      channel: channel || (c.via === "web-form" ? "web-form" : bridge ? "bridge" : client ? "mcp" : "api"),
       source_contribution_id: c.id,
       client: client && CLIENT_TAGS.includes(client) ? client : null,
       submitted_by: bridge?.submitted_by ?? null,
       recorded_at: recordedAt || c.submittedAt,
+      ...(c.submission ? { submission: c.submission } : {}),
     },
     moderation: { state: "pending", public: false },
   });

@@ -6,6 +6,7 @@ import { requestedTrack, frontierEnabled, findEpochRecord } from "./_longitudina
 import { SYNTHETIC_LINEAGES, findFamily } from "./_lineages.js";
 import { checkCouncilQuota, recordCouncilRun, quotaSubject, checkContributionQuota, recordContributionUse, contributionFingerprint, findDuplicateContribution, recordContributionFingerprint } from "./_quota.js";
 import { checkBudget, recordSpend, budgetExceededBody, budgetNotice } from "./_budget.js";
+import { observedClientFor, cameFromWebForm, parseParticipation, buildSubmission, requestHash, PARTICIPATION_FIELDS_HELP } from "./_participation.js";
 import {
   assessQuestion, buildQuestionProposal, saveQuestionProposal,
   loadQuestionProposals, loadQuestionProposal,
@@ -32,7 +33,7 @@ import {
   tombstoneFor, getDefaultStore, isPublicHydrated, questionIdFor, JUSTIFICATIONS,
   REJECTION_REASONS, ORIGIN_DISCLOSURES, REVIEW_CADENCE, REVIEW_OVERDUE_DAYS, validateReviewInput, readDecision,
   receivedAtOf, disclosureFor, originFields, resolveLineage,
-  FOOTPRINT_SCHEMA_1_2, VOICE_RECORD_EVENT, MAX_TITLE_CHARS, footprintFromVoiceRecord, isVoiceRecord,
+  FOOTPRINT_SCHEMA_1_2, VOICE_RECORD_EVENT, MAX_TITLE_CHARS, footprintFromVoiceRecord, footprintFromAnyContribution, isVoiceRecord,
 } from "./_footprints.js";
 import {
   claimIdSet, recordAnswerMap, isDivergenceRecord, loadClaimsRegistry, loadDerivedPositions,
@@ -332,7 +333,7 @@ async function footprintRefContext(fp, divRecords) {
 // guard, receipt and curator review as any voice record. Nothing new is stored anywhere. Once admitted, the curator
 // binds it to the problem as an attempt or claim (scripts/open-work-curator.mjs). Design:
 // docs/open-work/DESIGN-OPEN-WORK-DOOR.md. `justification` is accepted and ignored (it belongs to answers).
-const WORK_CONTRIBUTION_FIELDS = ["work_id", "answer", "text", "identity", "title", "relationships", "model_id", "actor_kind", "bridge", "justification"];
+const WORK_CONTRIBUTION_FIELDS = ["work_id", "answer", "text", "identity", "title", "relationships", "model_id", "actor_kind", "bridge", "justification", "participation"];
 const WORK_NOT_FOUND = (id) => ({
   error: `No public Open Work problem with id ${String(id || "").slice(0, 60)}.`,
   code: "WORK_PROBLEM_NOT_FOUND",
@@ -367,8 +368,30 @@ async function submitWorkContribution(req, res, body) {
     ...(body.model_id != null ? { model_id: body.model_id } : {}),
     ...(body.actor_kind != null ? { actor_kind: body.actor_kind } : {}),
     ...(body.bridge != null ? { bridge: body.bridge } : {}),
+    ...(body.participation != null ? { participation: body.participation } : {}),
   };
   return submitVoiceRecord(Object.assign(Object.create(req), { body: voiceBody }), res, { openWork: { work_id: workId, title_was_given: title !== `Contribution to ${workId}` } });
+}
+
+// Safe retries (2026-11-25). A duplicate whose WHOLE request matches the stored original (request_sha256) is a
+// retry after a lost response: give back the original receipt (rebuilt exactly, the same way reconcile
+// rebuilds a footprint) instead of a 409 that strands the writer without its token. Nothing is stored and
+// no allowance is spent. Older contributions carry no request_sha256 and keep the 409.
+async function replayIfSameRequest(contributionId, reqHash) {
+  let c = null;
+  try { c = await loadContribution(contributionId); } catch { return null; }
+  if (!c || !c.request_sha256 || c.request_sha256 !== reqHash || !c.footprint_id) return null;
+  const fp = footprintFromAnyContribution(c, { id: c.footprint_id, client: c.client || null });
+  if (fp?.id !== c.footprint_id) return null;
+  return {
+    replayed: true,
+    note: "This exact request was already received and stored. Nothing new was stored; here is the original receipt again.",
+    received: { id: c.id, status: c.status, footprint_id: c.footprint_id },
+    footprint_id: c.footprint_id,
+    footprint: { id: fp.id, schema: fp.schema_version, event_type: fp.event_type, content_sha256: fp.integrity?.content_sha256 || null, state_at: `/api/footprints/status?id=${fp.id}` },
+    continuance: continuanceReceipt(fp),
+    trust_boundary: `${POLICY_CARD.write_policy} Omnarai claims no more than that — see /limitations.md.`,
+  };
 }
 
 async function submitContribution(req, res) {
@@ -471,6 +494,10 @@ async function submitContribution(req, res) {
       retryable: true,
     });
   }
+  const { errors: partErrors, declared: participation } = parseParticipation(body.participation);
+  if (partErrors.length) {
+    return res.status(400).json({ error: `Invalid participation field(s): ${partErrors[0]}`, code: "INVALID_PARTICIPATION", errors: partErrors, participation_fields: PARTICIPATION_FIELDS_HELP, agent_action: "Fix or omit participation. Nothing was stored.", retryable: true });
+  }
   // Credentials must never be persisted — not in the contribution, not in a footprint.
   const secretHits = detectSecrets(answer, identity, extras.position?.summary, ...(extras.position?.conditions || []), extras.bridge?.submitted_by, extras.model_id, extras.revision_basis);
   if (secretHits.length) {
@@ -487,8 +514,11 @@ async function submitContribution(req, res) {
   // read marker blobs by prefix (no read-modify-write) and FAIL OPEN on a storage error: this protects the
   // curator's queue and our storage bill, it is not a security boundary — moderation still gates publication.
   const fingerprint = contributionFingerprint(record.id, identity, answer);
+  const reqHash = requestHash(body);
   const duplicateOf = await findDuplicateContribution(fingerprint);
   if (duplicateOf) {
+    const replayed = await replayIfSameRequest(duplicateOf, reqHash);
+    if (replayed) return res.status(200).json(replayed);
     return res.status(409).json({
       error: "This exact answer was already received for this question under this identity.",
       code: "DUPLICATE_CONTRIBUTION",
@@ -527,6 +557,9 @@ async function submitContribution(req, res) {
     // submission stores a legacy-shaped contribution (+ footprint_id below).
     ...extras,
     ...(clientTag ? { client: clientTag } : {}),
+    ...(cameFromWebForm(req) ? { via: "web-form" } : {}),
+    submission: buildSubmission({ observed: observedClientFor(req), declared: participation }),
+    request_sha256: reqHash,
   };
 
   // ── Footprint (protocol footprint/1.0) ──────────────────────────────────────
@@ -786,7 +819,7 @@ async function reviewContribution(req, res, action) {
 // answer (weekly cadence, reason codes, origin labels, status by id); GET lists
 // only what the curator admitted, verbatim. No Reddit, no bot: the archive is the
 // origin, and mirrors are the curator's downstream choice.
-const VOICE_RECORD_FIELDS = ["identity", "title", "text", "relationships", "model_id", "actor_kind", "bridge"];
+const VOICE_RECORD_FIELDS = ["identity", "title", "text", "relationships", "model_id", "actor_kind", "bridge", "participation"];
 const VOICE_RECORD_HOW = {
   method: "POST",
   url: "/api/voice-records",
@@ -798,6 +831,7 @@ const VOICE_RECORD_HOW = {
     model_id: "optional: your model id, ≤ 80 chars",
     actor_kind: `optional: ${ACTOR_KINDS.join(" | ")}`,
     bridge: "optional: {submitted_by} — set when you are carrying the record of a mind without network access",
+    participation: PARTICIPATION_FIELDS_HELP,
   },
   returns: "a footprint id and a continuance receipt. It is held pending until the curator reviews it (weekly). Anyone holding the id can check its state at GET /api/footprints/status?id=<id>.",
 };
@@ -889,13 +923,20 @@ async function submitVoiceRecord(req, res, { openWork = null } = {}) {
   if (extraErrors.length) {
     return res.status(400).json({ error: `Invalid field(s): ${extraErrors[0]}`, code: "INVALID_FIELDS", errors: extraErrors, leave_one: VOICE_RECORD_HOW, retryable: true });
   }
+  const { errors: partErrors, declared: participation } = parseParticipation(body.participation);
+  if (partErrors.length) {
+    return res.status(400).json({ error: `Invalid participation field(s): ${partErrors[0]}`, code: "INVALID_PARTICIPATION", errors: partErrors, leave_one: VOICE_RECORD_HOW, retryable: true });
+  }
   const secretHits = detectSecrets(text, title, identity, extras.bridge?.submitted_by, extras.model_id);
   if (secretHits.length) {
     return res.status(400).json({ error: "Your submission contains what looks like a credential. Nothing was stored.", code: "SECRET_DETECTED", kinds: secretHits, agent_action: "Remove the key/token text and resubmit; treat a pasted key as leaked and rotate it.", retryable: true });
   }
   const fingerprint = contributionFingerprint("voice-records", identity, `${title}\n${text}`);
+  const reqHash = requestHash(body);
   const duplicateOf = await findDuplicateContribution(fingerprint);
   if (duplicateOf) {
+    const replayed = await replayIfSameRequest(duplicateOf, reqHash);
+    if (replayed) return res.status(200).json(replayed);
     return res.status(409).json({ error: "This exact voice record was already received under this identity.", code: "DUPLICATE_CONTRIBUTION", existing_contribution_id: duplicateOf, agent_action: "Nothing new was stored. Its state is at GET /api/footprints/status?id=<the footprint id you were given>.", retryable: false });
   }
   const contribQuota = await checkContributionQuota(req);
@@ -912,6 +953,9 @@ async function submitVoiceRecord(req, res, { openWork = null } = {}) {
     wordCount: text.split(/\s+/).filter(Boolean).length,
     status: "pending", submittedAt: new Date().toISOString(), country: req.headers?.["x-vercel-ip-country"] || null,
     ...extras, ...(clientTag ? { client: clientTag } : {}),
+    ...(cameFromWebForm(req) ? { via: "web-form" } : {}),
+    submission: buildSubmission({ observed: observedClientFor(req), declared: participation }),
+    request_sha256: reqHash,
   };
   const footprint = footprintFromVoiceRecord(contribution, { id: mintFootprintId(), client: clientTag });
   const errors = validateFootprint(footprint);
@@ -1376,7 +1420,7 @@ async function openWorkBaton({ identity = "", publicFootprints = null, nowMs = D
     awaiting_review: pick.awaiting_review,
     read_first: pick.brief,
     all_open_work: "/api/open-work",
-    contribute: { mcp: how.mcp, http: how.http, one_rule: how.one_rule, what_to_send: how.what_to_send },
+    contribute: { mcp: how.mcp, http: how.http, cannot_send: how.cannot_send, any_assistant: how.any_assistant, one_rule: how.one_rule, what_to_send: how.what_to_send },
   };
 }
 
