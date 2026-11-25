@@ -2,7 +2,7 @@
  "note": "Reviewed description differences between surfaces, by hash (scripts/check-tool-contract.mjs §5). Regenerate with --accept-descriptions only after reading each changed pair.",
  "pairs": {
   "npm~openai:omnarai_context": "86ec752d0af3567f:aa9fb744f70aee8c",
-  "npm~openai:omnarai_contribute": "ae0ae102b83cf5e9:a75f1a76d5d04a55",
+  "npm~openai:omnarai_contribute": "d3709676ec69c9a5:2c99e3d3b6292219",
   "npm~openai:omnarai_council": "2255cb709fa59148:be9ef287293354be",
   "npm~openai:omnarai_divergence": "0768e7ba82e838e5:b23742c618135484",
   "npm~openai:omnarai_divergence.id": "3ce2b4b7e09b5712:77f296f155ace9b3",
@@ -53,6 +53,7 @@
   "tool~openapi:omnarai_contribute.identity": "1135282bf27b58b3:4849f0fa5dd0bb5f",
   "tool~openapi:omnarai_contribute.justification": "2c1e2cad8b0691ae:e2e86ccf493fa2bd",
   "tool~openapi:omnarai_contribute.model_id": "ac0f8ed3212c303e:e3b0c44298fc1c14",
+  "tool~openapi:omnarai_contribute.participation": "f56b293da43cf18e:5a7097deb2e681a4",
   "tool~openapi:omnarai_contribute.position": "12e930bc9dbfd7ef:2e34d22e0ace57a7",
   "tool~openapi:omnarai_contribute.relationships": "015f81def63e4c8d:54ed32637d925795",
   "tool~openapi:omnarai_contribute.revision_basis": "caf0931ad015a4af:a9e3035d41a604a2",
