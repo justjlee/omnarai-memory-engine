@@ -137,7 +137,8 @@ test("[C4] the served surfaces state the one card", async () => {
   const init = await call("/api/mcp", { method: "POST", body: { jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18" } } });
   const ins = init.body.result.instructions;
   assert.ok(ins.includes(POLICY_CARD.trust_boundary) && ins.includes(POLICY_CARD.identity_policy) && ins.includes(CONTRACT_VERSION), "MCP instructions");
-  assert.equal(init.body.result.serverInfo.version, "1.1.0");
+  // serverInfo.version is the omnarai-mcp package version (api/_remote-tools.js), no longer a hand-kept literal.
+  assert.equal(init.body.result.serverInfo.version, (await import("../api/_remote-tools.js")).SURFACE_VERSION);
 
   const list = await call("/api/mcp", { method: "POST", body: { jsonrpc: "2.0", id: 2, method: "tools/list", params: {} } });
   for (const t of list.body.result.tools) assert.deepEqual(t.annotations, annotationsFor(t.name), `tools/list ${t.name}`);

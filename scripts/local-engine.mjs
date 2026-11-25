@@ -26,7 +26,7 @@ import { readFileSync, existsSync, statSync } from "node:fs";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as mem from "./lib/mem-blob.mjs";
-import { call } from "./lib/invoke.mjs";
+import { call, resolveRoute } from "./lib/invoke.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const args = process.argv.slice(2);
@@ -190,7 +190,8 @@ function staticFile(pathname) {
 createServer(async (req, res) => {
   const u = new URL(req.url, `http://localhost:${PORT}`);
   try {
-    if (u.pathname.startsWith("/api/")) {
+    // /.well-known/* paths that vercel.json rewrites onto a function (e.g. /.well-known/mcp.json) run it too.
+    if (u.pathname.startsWith("/api/") || (u.pathname.startsWith("/.well-known/") && resolveRoute(u.pathname).fn)) {
       let body = {};
       if (req.method === "POST") {
         const chunks = [];
@@ -203,7 +204,8 @@ createServer(async (req, res) => {
       res.writeHead(r.status, { "content-type": typeof r.body === "string" ? (r.headers["content-type"] || "text/plain") : "application/json", "access-control-allow-origin": "*", ...(OPERATOR && r.headers["set-cookie"] ? { "set-cookie": r.headers["set-cookie"] } : {}) });
       return res.end(r.body == null ? "" : typeof r.body === "string" ? r.body : JSON.stringify(r.body, null, 2));
     }
-    const file = staticFile(u.pathname) || (existsSync(join(DIST, "index.html")) ? join(DIST, "index.html") : null);
+    // Clean URLs: /arrive → public /arrive.html, as vercel.json's page rewrites do in production.
+    const file = staticFile(u.pathname) || (!extname(u.pathname) && staticFile(`${u.pathname}.html`)) || (existsSync(join(DIST, "index.html")) ? join(DIST, "index.html") : null);
     if (!file) { res.writeHead(404); return res.end("run `npm run build` first"); }
     res.writeHead(200, { "content-type": TYPES[extname(file)] || "application/octet-stream" });
     res.end(readFileSync(file));

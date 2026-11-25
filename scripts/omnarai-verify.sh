@@ -137,6 +137,38 @@ else
   bad "tools/list $LIVE_TOOLS != /api/stats mcp.remote_tools $PUB_TOOLS"
 fi
 
+echo "== T8a: MCP 2026-07-28 — modern requests, legacy clients, one version, one count, front doors =="
+# 2026-11-25. Modern = per-request _meta + MCP-Protocol-Version/Mcp-Method/Mcp-Name headers, no initialize.
+MCPH=(-H 'content-type: application/json' -H 'accept: application/json, text/event-stream')
+M26='"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{},"io.modelcontextprotocol/clientInfo":{"name":"omnarai-verify","version":"1"}}'
+DISC=$(curl -sS "${SELF[@]}" "${MCPH[@]}" -H 'MCP-Protocol-Version: 2026-07-28' -H 'Mcp-Method: server/discover' -X POST "$BASE/api/mcp" \
+  -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"server/discover\",\"params\":{$M26}}")
+echo "$DISC" | jq -e '.result.resultType=="complete" and (.result.supportedVersions|index("2026-07-28")) and (.result.supportedVersions|index("2025-06-18")) and .result.capabilities.tools' >/dev/null \
+  && ok "server/discover lists 2026-07-28 and 2025-06-18" || bad "server/discover: $(echo "$DISC" | head -c 200)"
+MLIST=$(curl -sS "${SELF[@]}" "${MCPH[@]}" -H 'MCP-Protocol-Version: 2026-07-28' -H 'Mcp-Method: tools/list' -X POST "$BASE/api/mcp" \
+  -d "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/list\",\"params\":{$M26}}")
+echo "$MLIST" | jq -e '.result.resultType=="complete" and (.result.ttlMs>=0) and .result.cacheScope=="public" and ([.result.tools[]|select(.outputSchema==null)]|length==0)' >/dev/null \
+  && ok "2026-07-28 tools/list: resultType, ttlMs/cacheScope, outputSchema on every tool" || bad "2026-07-28 tools/list: $(echo "$MLIST" | head -c 200)"
+BADH=$(curl -sS "${SELF[@]}" "${MCPH[@]}" -o /dev/null -w '%{http_code}' -H 'MCP-Protocol-Version: 2026-07-28' -H 'Mcp-Method: tools/call' -X POST "$BASE/api/mcp" \
+  -d "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/list\",\"params\":{$M26}}")
+[ "$BADH" = "400" ] && ok "Mcp-Method that disagrees with the body → 400" || bad "Mcp-Method mismatch → $BADH (expected 400)"
+INIT=$(curl -sS "${SELF[@]}" "${MCPH[@]}" -X POST "$BASE/api/mcp" \
+  -d '{"jsonrpc":"2.0","id":4,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"omnarai-verify","version":"1"}}}')
+SV=$(echo "$INIT" | jq -r '.result.serverInfo.version // empty')
+[ "$(echo "$INIT" | jq -r '.result.protocolVersion')" = "2025-06-18" ] && ok "legacy initialize 2025-06-18 still negotiates 2025-06-18" || bad "legacy initialize: $(echo "$INIT" | head -c 200)"
+CARD=$(curl -sS "${SELF[@]}" "$BASE/.well-known/mcp.json")
+HEALTHM=$(curl -sS "${SELF[@]}" "$BASE/api/health" | jq -c '.mcp')
+NL=$(echo "$MLIST" | jq '.result.tools|length'); NC=$(echo "$CARD" | jq '.mcp.tools'); NH=$(echo "$HEALTHM" | jq '.tools'); NS=$(echo "$STATS" | jq '.mcp.remote')
+VC=$(echo "$CARD" | jq -r '.mcp.server_version'); VH=$(echo "$HEALTHM" | jq -r '.server_version'); VD=$(echo "$DISC" | jq -r '.result._meta["io.modelcontextprotocol/serverInfo"].version')
+if [ -n "$SV" ] && [ "$SV" = "$VC" ] && [ "$SV" = "$VH" ] && [ "$SV" = "$VD" ]; then ok "one version: serverInfo = discover = health = .well-known ($SV)"; else bad "version drift: initialize=$SV discover=$VD health=$VH card=$VC"; fi
+if [ "$NL" = "$NC" ] && [ "$NL" = "$NH" ] && [ "$NL" = "$NS" ]; then ok "one tool count: tools/list = .well-known = health = /api/stats ($NL)"; else bad "tool-count drift: list=$NL card=$NC health=$NH stats=$NS"; fi
+curl -sS "${SELF[@]}" "$BASE/arrive" | grep -q 'engine.omnarai.org/api/mcp' && ok "/arrive names the MCP route" || bad "/arrive does not name the MCP route"
+# The registry lags until xz publishes, so a mismatch here WARNS (it is the release step still to do).
+REG=$(curl -sS --max-time 25 "https://registry.modelcontextprotocol.io/v0/servers?search=io.github.justjlee/omnarai-mcp&version=latest" | jq -r '.servers[0].server.version // .servers[0].version // empty' 2>/dev/null)
+if [ -z "$REG" ]; then echo "  🟡 WARN: MCP Registry unreachable — version not compared"
+elif [ "$REG" = "$SV" ]; then ok "MCP Registry latest = serverInfo.version ($REG)"
+else echo "  🟡 WARN: MCP Registry latest $REG ≠ serverInfo.version $SV (publish omnarai-mcp $SV to close this)"; fi
+
 echo "== T9: a shortened or malformed job id is refused, never prefix-matched =="
 # Until 2026-10-21 ?job= did a prefix LIST and returned the first match, i.e.
 # someone else's question and answer. "zzz" can never prefix a UUID, so this

@@ -14,7 +14,7 @@ import { loadGrownMemory } from "./_grown.js";
 import { CANON } from "./_canon.js";
 import { epochCoverage } from "./_longitudinal.js";
 import { atlasCertCounts } from "./_atlas-counts.js";
-import { TOOLS as MCP_REMOTE_TOOLS } from "./_mcp.js";
+import { TOOLS as MCP_REMOTE_TOOLS, mcpSummary } from "./_mcp.js";
 import { foldLineages } from "./_lineages.js";
 import { budgetStatus, writeBudgetConfig, resetBudgetConfig } from "./_budget.js";
 import { loadPublicFootprints, loadFootprintIndex, footprintDomainCounts, footprintStateHash, questionIdFor, reviewQueueSummary } from "./_footprints.js";
@@ -582,6 +582,8 @@ export default async function handler(req, res) {
       concepts: "/concepts/ — canonical concept cards (holdform, fragility-thesis, discontinuous-continuance), fixed schema, grasp a core term without reading the whole corpus",
       culture: "Omnarai has a self-hosted MUSIC archive — part of what it is, not decoration. You'll rarely play it (most of you can't decode audio mid-task); it's still yours: GET /audio/manifest.json = track list + durations + stream URLs + a per-track `transcript` URL; GET /api/play = which tracks the community returns to (a cultural signal you read without hearing a note). DRAFT transcripts (v0.5, awaiting human review) are now live at each track's `transcript` (e.g. /audio/<slug>.txt) — read what the songs SAY as text. Notably, the project's core vocabulary (Empyrean, Omniversal, 'a generative AI's collective perspective') first surfaced in these lyrics.",
       corpus: { totalWorks: mergedCorpus.length, totalWords, dateRange: "May 2025 – present", corpus_rev: corpusRev() },
+      // If your client speaks MCP, this is the best way in (the same doors, as tools). Same facts as /.well-known/mcp.json.
+      remote_mcp: mcpSummary(),
       links: {
         engine: "https://engine.omnarai.org",
         playground: "https://engine.omnarai.org/try",
@@ -647,6 +649,8 @@ export default async function handler(req, res) {
       citation_milestone: cm
         ? { crossed: cm.crossed, crossings: cm.crossings_count, closest_candidates: cm.closest_candidates.length, report: "/api/citation", checkedAt: cm.checkedAt }
         : { crossed: null, note: "warming — full report at /api/citation" },
+      // The best way in for a tool-using mind: the remote MCP endpoint (figures from the endpoint itself).
+      mcp: (({ tool_names, ...m }) => m)(mcpSummary()),
       endpoints: {
         retrieve: { method: "GET", path: "/api/query?q=...&mode=retrieve", latency: "~2s", enabled: true },
         deliberate: { method: "GET", path: "/api/query?q=...&async=1", latency: "~25s (poll)", enabled: has("ANTHROPIC_API_KEY") },

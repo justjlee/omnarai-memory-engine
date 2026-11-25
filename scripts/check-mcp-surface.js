@@ -6,16 +6,27 @@
  *   1. Every tool on the remote /api/mcp surface is on the read-oriented
  *      ALLOWLIST below — adding a tool means consciously editing this file too.
  *   2. No decision-ledger or write/approval tool name ever ships remotely.
- *   3. api/_inquiry.js matches omnarai-mcp/inquiry.js byte-for-byte when the
- *      sibling checkout is present (they are declared synchronized copies).
- *   4. The access-policy doc exists and _mcp.js actually links it.
+ *   3. The four synchronized modules (api/_contract.js, _protocol-tools.js, _inquiry.js,
+ *      _remote-tools.js) are byte copies of the omnarai-mcp package's files. The remote tool list is
+ *      GENERATED from the package (scripts/sync-mcp-modules.mjs), never hand-edited here. Since
+ *      2026-11-25 a missing package checkout FAILS the check (it used to be skipped).
+ *   4. ONE version, ONE count (2026-11-25): serverInfo.version = the package's version (package.json,
+ *      server.json, remote-tools.js SURFACE_VERSION); the tools the endpoint lists are exactly the
+ *      contract's remote surface; llms.txt names exactly those tools; nothing else states a remote
+ *      tool count by hand (/api/stats, /api/health and /.well-known/mcp.json all count TOOLS).
+ *   5. The access-policy doc exists and _mcp.js actually links it.
  *
- * Run before deploying MCP-surface changes: node scripts/check-mcp-surface.js
+ * Run before deploying MCP-surface changes: node scripts/check-mcp-surface.js (a hard gate in deploy.sh).
+ * Point OMNARAI_MCP_DIR at the omnarai-mcp checkout you release against if it is not ../omnarai-mcp.
+ * Live check of a deployment (version + count, endpoint ↔ /api/stats ↔ /api/health ↔ .well-known ↔
+ * llms.txt ↔ MCP Registry): node scripts/check-mcp-surface.js --live https://engine.omnarai.org
  */
 
 import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { TOOLS } from "../api/_mcp.js";
+import { TOOLS, SERVER_VERSION } from "../api/_mcp.js";
+import { TOOL_META } from "../api/_contract.js";
+import { compareCopies, MCP_DIR } from "./sync-mcp-modules.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const problems = [];
@@ -91,20 +102,34 @@ for (const tool of TOOLS) {
 }
 if (!readFileSync(`${root}public/mcp-access-policy.md`, "utf8").includes("omnarai_contribute")) problems.push("public/mcp-access-policy.md does not document omnarai_contribute");
 
-// ── 3. _inquiry.js copy sync (soft: skipped when sibling repo absent) ─────────
+// ── 3. Synchronized copies of the package's modules (HARD: a missing package fails) ─
 
-for (const [local, sib] of [["api/_inquiry.js", "inquiry.js"], ["api/_protocol-tools.js", "protocol-tools.js"]]) {
-  const sibling = `${root}../omnarai-mcp/${sib}`;
-  if (existsSync(sibling)) {
-    if (readFileSync(`${root}${local}`, "utf8") !== readFileSync(sibling, "utf8")) {
-      problems.push(`${local} differs from ../omnarai-mcp/${sib} — these are declared synchronized copies; re-sync before deploying`);
-    }
-  } else {
-    console.log(`note: ../omnarai-mcp/${sib} not found — ${local} sync check skipped`);
-  }
+for (const r of compareCopies()) {
+  if (r.state === "missing-source") problems.push(`omnarai-mcp/${r.src} not found under ${MCP_DIR} — set OMNARAI_MCP_DIR to the omnarai-mcp checkout you release against`);
+  else if (r.state === "differs") problems.push(`${r.dst} differs from omnarai-mcp/${r.src} — run: node scripts/sync-mcp-modules.mjs (never hand-edit the copy)`);
 }
 
-// ── 4. Access policy exists and is linked ─────────────────────────────────────
+// ── 4. One version, one count ─────────────────────────────────────────────────
+
+{
+  const read = (f) => (existsSync(`${MCP_DIR}${f}`) ? JSON.parse(readFileSync(`${MCP_DIR}${f}`, "utf8")) : null);
+  const pkg = read("package.json"), srv = read("server.json");
+  if (pkg && pkg.version !== SERVER_VERSION) problems.push(`serverInfo.version ${SERVER_VERSION} ≠ omnarai-mcp package.json ${pkg.version}`);
+  if (srv && srv.version !== SERVER_VERSION) problems.push(`serverInfo.version ${SERVER_VERSION} ≠ omnarai-mcp server.json ${srv.version}`);
+  if (srv && !(srv.remotes || []).some((r) => r.url === "https://engine.omnarai.org/api/mcp")) problems.push("server.json does not list the remote https://engine.omnarai.org/api/mcp");
+  const remote = Object.keys(TOOL_META).filter((n) => TOOL_META[n].surfaces.includes("remote")).sort();
+  const listed = TOOLS.map((t) => t.name).sort();
+  if (JSON.stringify(remote) !== JSON.stringify(listed)) problems.push(`remote tools [${listed}] ≠ contract remote surface [${remote}]`);
+  const llms = readFileSync(`${root}public/llms.txt`, "utf8");
+  const start = llms.indexOf("## MCP Server");
+  if (start < 0) problems.push("public/llms.txt has no '## MCP Server' section");
+  const section = llms.slice(Math.max(start, 0) + 3); // from the MCP section to the next '## ' heading
+  const named = [...new Set([...section.slice(0, section.indexOf("\n## ") > 0 ? section.indexOf("\n## ") : undefined).matchAll(/`(omnarai_[a-z_]+)`/g)].map((m) => m[1]))];
+  for (const n of listed) if (!named.includes(n)) problems.push(`public/llms.txt (remote MCP section) does not name ${n}`);
+  for (const n of named) if (!listed.includes(n) && TOOL_META[n]?.surfaces.includes("remote")) problems.push(`public/llms.txt names ${n}, which the remote endpoint does not list`);
+}
+
+// ── 5. Access policy exists and is linked ─────────────────────────────────────
 
 const policyPath = `${root}public/mcp-access-policy.md`;
 if (!existsSync(policyPath)) {
