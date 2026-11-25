@@ -1,0 +1,29 @@
+{
+ "schema": "verifier-receipt/1.0",
+ "verifier_id": "crux-reask",
+ "subject": {
+  "claim_event_id": "OMN-WE-1795645492447-a3b10f22",
+  "footprint_id": "OMN-FP-1795644692426-6b9baa9f",
+  "content_sha256": "363d93398212492d788294c030f997cf20b07ba5e98f7e76456a7f80b1115a3f"
+ },
+ "result": "pass",
+ "method": {
+  "name": "crux-reask-and-score",
+  "version": "crux-check/1.0"
+ },
+ "scope_note": "Crux check, crux-check/1.0 (rules sha256 94712f5b46916d42…), run run-2026-11-25-relay001-p1: 9 of 10 predictions met; 3 more than the null predictor; 3 predicted flips observed. One run: resolution needs an independent reproduction and an independent review.",
+ "limitations": [
+  "Forced binary decisions flatten conditional positions; an unparseable reply counts as UNCLEAR.",
+  "Today's panel at its lowest reasoning setting, 3 re-asks per cell; other settings or generations may differ.",
+  "It measures whether the premise moves the panel's decisions, not whether either decision is right."
+ ],
+ "executed_at": "2026-11-25T22:25:45.055Z",
+ "cost": {
+  "usd": 0.114695
+ },
+ "id": "OMN-VR-1795645545055-47b947f6",
+ "integrity": {
+  "canonicalization": "sorted-keys-json/1",
+  "content_sha256": "fe1cd937b7f95b86c544f4e0b162fd41001d2f41ba8db69c28ac0e160eef5624"
+ }
+}
