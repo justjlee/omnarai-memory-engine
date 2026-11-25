@@ -1,0 +1,12 @@
+{
+  "study_id": "IS1-STUDY-PILOT-002",
+  "status": "registered",
+  "registered_commit_sha": "9adaa95a570e7dcc3fabe1fb2d0da30239a0214d",
+  "registered_at": "2026-11-24T14:52:28Z",
+  "pushed_before_any_pilot_call": true,
+  "preregistration_path": "research/inheritance-001/preregistration-002.draft.yaml",
+  "plan_sha256": "95e1046f119166ad9d3feae59e177e061c28eced6e903303bab7097d3506987f",
+  "note": "Pilot 002's own registration file (Pilot 001's is registration.json). lab.mjs run-models --study pilot-002 reads only this file and refuses unless it says registered, names this study and carries the sha of the public commit that holds preregistration-002.draft.yaml by itself.",
+  "instrument_commit": "6715db0",
+  "recorded_at": "2026-11-24T14:52:37Z"
+}

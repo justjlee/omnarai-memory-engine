@@ -1,0 +1,523 @@
+{
+  "schema_version": "omnarai.inheritance-study.plan/0.1",
+  "study_id": "IS1-PROBE-CAL-003",
+  "kind": "producer-probe",
+  "arm": "producer",
+  "seed": "calibration-probe-3-2026-11-20",
+  "steps": 4,
+  "families": [
+    {
+      "schema_version": "omnarai.inheritance-study.task_family/0.1",
+      "id": "IS1-FAM-cdf973ef5a",
+      "study_id": "IS1-PROBE-CAL-003",
+      "domain": "str",
+      "role": "calibration",
+      "generation": 0,
+      "n_steps": 4,
+      "template_commitment_sha256": "8f686b4cf0c6e7bee2874613b9ca0bff2bbbbaacf7d013be97be9c305a2588e1",
+      "generator": {
+        "name": "is1-program-induction",
+        "version": "0.1.0"
+      },
+      "verification": {
+        "kind": "deterministic-dsl",
+        "cost_class": "cheap"
+      },
+      "contamination_class": "synthetic-novel",
+      "sha256": "1684b0c4f2d96b36631e8f5b2c2806bd2ccc7a46804f816394942baab33e9bf8"
+    },
+    {
+      "schema_version": "omnarai.inheritance-study.task_family/0.1",
+      "id": "IS1-FAM-123f6732ad",
+      "study_id": "IS1-PROBE-CAL-003",
+      "domain": "str",
+      "role": "calibration",
+      "generation": 0,
+      "n_steps": 4,
+      "template_commitment_sha256": "31558a114182d4fe7b76246dab821df212cde12896ff2aabaaa50443bfbffca3",
+      "generator": {
+        "name": "is1-program-induction",
+        "version": "0.1.0"
+      },
+      "verification": {
+        "kind": "deterministic-dsl",
+        "cost_class": "cheap"
+      },
+      "contamination_class": "synthetic-novel",
+      "sha256": "08ceea59c79a207fd230ad1d651a6a23b7fe044b829ef992190adbc0ebe40675"
+    },
+    {
+      "schema_version": "omnarai.inheritance-study.task_family/0.1",
+      "id": "IS1-FAM-a4f7eff969",
+      "study_id": "IS1-PROBE-CAL-003",
+      "domain": "str",
+      "role": "calibration",
+      "generation": 0,
+      "n_steps": 4,
+      "template_commitment_sha256": "375164677f93bf67c196b4bb4ce4cdcb3de31430a327da1c541c3cdf3f9b45e4",
+      "generator": {
+        "name": "is1-program-induction",
+        "version": "0.1.0"
+      },
+      "verification": {
+        "kind": "deterministic-dsl",
+        "cost_class": "cheap"
+      },
+      "contamination_class": "synthetic-novel",
+      "sha256": "281745dbd082d73f04255fc359df467efe194386d354449a611a76a15a6a1727"
+    },
+    {
+      "schema_version": "omnarai.inheritance-study.task_family/0.1",
+      "id": "IS1-FAM-559eec0565",
+      "study_id": "IS1-PROBE-CAL-003",
+      "domain": "str",
+      "role": "calibration",
+      "generation": 0,
+      "n_steps": 4,
+      "template_commitment_sha256": "f8e3acd909437b229e1f7cc2cc1198e45f5672d7a85401d473624242536b68de",
+      "generator": {
+        "name": "is1-program-induction",
+        "version": "0.1.0"
+      },
+      "verification": {
+        "kind": "deterministic-dsl",
+        "cost_class": "cheap"
+      },
+      "contamination_class": "synthetic-novel",
+      "sha256": "07b94200ac56fb53fdd9abb06416eba4965b811a2940a733f193051fc2d297b0"
+    },
+    {
+      "schema_version": "omnarai.inheritance-study.task_family/0.1",
+      "id": "IS1-FAM-7816ae1630",
+      "study_id": "IS1-PROBE-CAL-003",
+      "domain": "num",
+      "role": "placebo",
+      "generation": 0,
+      "n_steps": 1,
+      "template_commitment_sha256": "9da203ffbb0ae58c6c9175fcc6253960352807fb38e94c0e481e1e49c1daec20",
+      "generator": {
+        "name": "is1-program-induction",
+        "version": "0.1.0"
+      },
+      "verification": {
+        "kind": "deterministic-dsl",
+        "cost_class": "cheap"
+      },
+      "contamination_class": "synthetic-novel",
+      "sha256": "4d15827197dce37b6f56ebaaed0f73dd35ca6cda33aad5ac375ed2c9cae01c94"
+    },
+    {
+      "schema_version": "omnarai.inheritance-study.task_family/0.1",
+      "id": "IS1-FAM-2093f4957f",
+      "study_id": "IS1-PROBE-CAL-003",
+      "domain": "num",
+      "role": "placebo",
+      "generation": 0,
+      "n_steps": 2,
+      "template_commitment_sha256": "88c39ac040e280dcf2af131b0c872ed801de20a4ca174d8706268bc692a69102",
+      "generator": {
+        "name": "is1-program-induction",
+        "version": "0.1.0"
+      },
+      "verification": {
+        "kind": "deterministic-dsl",
+        "cost_class": "cheap"
+      },
+      "contamination_class": "synthetic-novel",
+      "sha256": "09ecb8231db9422c568c2a35dca0ffb74a479650d1410a1601ee3a1bf7ac5697"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "IS1-TASK-765959f38906",
+      "family_id": "IS1-FAM-cdf973ef5a",
+      "domain": "str",
+      "sealed_commitment_sha256": "e660242b899d3b81e9c256e99102c60baa1c26f0e01e01523c3cfcd93f720f63"
+    },
+    {
+      "id": "IS1-TASK-6f3cb55dad5a",
+      "family_id": "IS1-FAM-cdf973ef5a",
+      "domain": "str",
+      "sealed_commitment_sha256": "4a16bad064004ae799468a239fc72d3095ecb366109b0a9c10f51305fe54a88d"
+    },
+    {
+      "id": "IS1-TASK-2035965581c4",
+      "family_id": "IS1-FAM-123f6732ad",
+      "domain": "str",
+      "sealed_commitment_sha256": "309e25838c5ccd397ef45b5677b5467413a28ae3c072e7fddcbad72b96eb6e7b"
+    },
+    {
+      "id": "IS1-TASK-374715fecc12",
+      "family_id": "IS1-FAM-123f6732ad",
+      "domain": "str",
+      "sealed_commitment_sha256": "d699283232b6b844b769f8af6768020332935cfaa941bc05b73a6cbc061adc63"
+    },
+    {
+      "id": "IS1-TASK-594010c7f105",
+      "family_id": "IS1-FAM-a4f7eff969",
+      "domain": "str",
+      "sealed_commitment_sha256": "638800dba0934dcf095a43b49ce87d462b2e9abc4f2e53263495c8a7cd0ad0a6"
+    },
+    {
+      "id": "IS1-TASK-b8da78cf8a18",
+      "family_id": "IS1-FAM-a4f7eff969",
+      "domain": "str",
+      "sealed_commitment_sha256": "e5b0a3520229f0f7d0fb373b84a629f6644a558fbbbcebf0461bed4f9cf702ff"
+    },
+    {
+      "id": "IS1-TASK-3aa971f0909f",
+      "family_id": "IS1-FAM-559eec0565",
+      "domain": "str",
+      "sealed_commitment_sha256": "9227ad071448ab920164b7d94fc871315133ba7cfbe424d13bb566413df4df86"
+    },
+    {
+      "id": "IS1-TASK-17867b0d47c6",
+      "family_id": "IS1-FAM-559eec0565",
+      "domain": "str",
+      "sealed_commitment_sha256": "beef380eb33e536d50c5a549c03dcd99677305cdc75f41fa9be1758227734ba7"
+    },
+    {
+      "id": "IS1-TASK-02aedbd52156",
+      "family_id": "IS1-FAM-7816ae1630",
+      "domain": "num",
+      "sealed_commitment_sha256": "49f07052bc0ff97db41af2501e350b640a5a5f14287e8684e19c6152f420074f"
+    },
+    {
+      "id": "IS1-TASK-9af9707d2c7a",
+      "family_id": "IS1-FAM-2093f4957f",
+      "domain": "num",
+      "sealed_commitment_sha256": "a4aabeedc9e02ce745e1b53f019150de1439ca8789f4a4a6a938a6b86c534bfd"
+    }
+  ],
+  "models": [
+    {
+      "model_id": "deepseek-v4-pro",
+      "provider": "deepseek",
+      "role": "producer",
+      "controls": {
+        "thinking": {
+          "type": "disabled"
+        }
+      },
+      "max_output_tokens": 3000,
+      "output_cap": {
+        "field": "max_tokens",
+        "enforced": true,
+        "status": "verified-from-docs (thinking disabled only)",
+        "sources": [
+          "https://api-docs.deepseek.com/api/create-chat-completion",
+          "https://api-docs.deepseek.com/guides/thinking_mode"
+        ]
+      }
+    },
+    {
+      "model_id": "gemini-4-carbon",
+      "provider": "gemini",
+      "role": "producer",
+      "controls": {
+        "thinking_level": "low"
+      },
+      "max_output_tokens": 4500,
+      "output_cap": {
+        "field": "generation_config.max_output_tokens",
+        "enforced": true,
+        "status": "verified-from-docs (Interactions API only)",
+        "sources": [
+          "https://aistudio.google.com/docs/thinking",
+          "https://aistudio.google.com/api-reference/interactions"
+        ]
+      }
+    }
+  ],
+  "calls": [
+    {
+      "call_id": "PRB-5da423eb1e51",
+      "task_id": "IS1-TASK-17867b0d47c6",
+      "family_id": "IS1-FAM-559eec0565",
+      "domain": "str",
+      "model_id": "deepseek-v4-pro",
+      "provider": "deepseek",
+      "role": "producer",
+      "expected_family": "deepseek"
+    },
+    {
+      "call_id": "PRB-7fb7ffcea943",
+      "task_id": "IS1-TASK-02aedbd52156",
+      "family_id": "IS1-FAM-7816ae1630",
+      "domain": "num",
+      "model_id": "gemini-4-carbon",
+      "provider": "gemini",
+      "role": "producer",
+      "expected_family": "google-gemini"
+    },
+    {
+      "call_id": "PRB-92d1ac916b7f",
+      "task_id": "IS1-TASK-02aedbd52156",
+      "family_id": "IS1-FAM-7816ae1630",
+      "domain": "num",
+      "model_id": "deepseek-v4-pro",
+      "provider": "deepseek",
+      "role": "producer",
+      "expected_family": "deepseek"
+    },
+    {
+      "call_id": "PRB-8733aa24b74b",
+      "task_id": "IS1-TASK-594010c7f105",
+      "family_id": "IS1-FAM-a4f7eff969",
+      "domain": "str",
+      "model_id": "deepseek-v4-pro",
+      "provider": "deepseek",
+      "role": "producer",
+      "expected_family": "deepseek"
+    },
+    {
+      "call_id": "PRB-597e3b5bc747",
+      "task_id": "IS1-TASK-6f3cb55dad5a",
+      "family_id": "IS1-FAM-cdf973ef5a",
+      "domain": "str",
+      "model_id": "deepseek-v4-pro",
+      "provider": "deepseek",
+      "role": "producer",
+      "expected_family": "deepseek"
+    },
+    {
+      "call_id": "PRB-4b5d0bc970b0",
+      "task_id": "IS1-TASK-6f3cb55dad5a",
+      "family_id": "IS1-FAM-cdf973ef5a",
+      "domain": "str",
+      "model_id": "gemini-4-carbon",
+      "provider": "gemini",
+      "role": "producer",
+      "expected_family": "google-gemini"
+    },
+    {
+      "call_id": "PRB-6abdb71604b8",
+      "task_id": "IS1-TASK-594010c7f105",
+      "family_id": "IS1-FAM-a4f7eff969",
+      "domain": "str",
+      "model_id": "gemini-4-carbon",
+      "provider": "gemini",
+      "role": "producer",
+      "expected_family": "google-gemini"
+    },
+    {
+      "call_id": "PRB-8f4e070743a4",
+      "task_id": "IS1-TASK-374715fecc12",
+      "family_id": "IS1-FAM-123f6732ad",
+      "domain": "str",
+      "model_id": "gemini-4-carbon",
+      "provider": "gemini",
+      "role": "producer",
+      "expected_family": "google-gemini"
+    },
+    {
+      "call_id": "PRB-738643a89b65",
+      "task_id": "IS1-TASK-765959f38906",
+      "family_id": "IS1-FAM-cdf973ef5a",
+      "domain": "str",
+      "model_id": "gemini-4-carbon",
+      "provider": "gemini",
+      "role": "producer",
+      "expected_family": "google-gemini"
+    },
+    {
+      "call_id": "PRB-f12f9a15a3a2",
+      "task_id": "IS1-TASK-3aa971f0909f",
+      "family_id": "IS1-FAM-559eec0565",
+      "domain": "str",
+      "model_id": "deepseek-v4-pro",
+      "provider": "deepseek",
+      "role": "producer",
+      "expected_family": "deepseek"
+    },
+    {
+      "call_id": "PRB-2c42fce4e3ad",
+      "task_id": "IS1-TASK-2035965581c4",
+      "family_id": "IS1-FAM-123f6732ad",
+      "domain": "str",
+      "model_id": "deepseek-v4-pro",
+      "provider": "deepseek",
+      "role": "producer",
+      "expected_family": "deepseek"
+    },
+    {
+      "call_id": "PRB-e862851fa52d",
+      "task_id": "IS1-TASK-2035965581c4",
+      "family_id": "IS1-FAM-123f6732ad",
+      "domain": "str",
+      "model_id": "gemini-4-carbon",
+      "provider": "gemini",
+      "role": "producer",
+      "expected_family": "google-gemini"
+    },
+    {
+      "call_id": "PRB-4e76f1127ae6",
+      "task_id": "IS1-TASK-9af9707d2c7a",
+      "family_id": "IS1-FAM-2093f4957f",
+      "domain": "num",
+      "model_id": "gemini-4-carbon",
+      "provider": "gemini",
+      "role": "producer",
+      "expected_family": "google-gemini"
+    },
+    {
+      "call_id": "PRB-223d2aa0dcb6",
+      "task_id": "IS1-TASK-b8da78cf8a18",
+      "family_id": "IS1-FAM-a4f7eff969",
+      "domain": "str",
+      "model_id": "gemini-4-carbon",
+      "provider": "gemini",
+      "role": "producer",
+      "expected_family": "google-gemini"
+    },
+    {
+      "call_id": "PRB-789ba5e61a86",
+      "task_id": "IS1-TASK-17867b0d47c6",
+      "family_id": "IS1-FAM-559eec0565",
+      "domain": "str",
+      "model_id": "gemini-4-carbon",
+      "provider": "gemini",
+      "role": "producer",
+      "expected_family": "google-gemini"
+    },
+    {
+      "call_id": "PRB-a53f404f1104",
+      "task_id": "IS1-TASK-9af9707d2c7a",
+      "family_id": "IS1-FAM-2093f4957f",
+      "domain": "num",
+      "model_id": "deepseek-v4-pro",
+      "provider": "deepseek",
+      "role": "producer",
+      "expected_family": "deepseek"
+    },
+    {
+      "call_id": "PRB-8b83411ba4f4",
+      "task_id": "IS1-TASK-3aa971f0909f",
+      "family_id": "IS1-FAM-559eec0565",
+      "domain": "str",
+      "model_id": "gemini-4-carbon",
+      "provider": "gemini",
+      "role": "producer",
+      "expected_family": "google-gemini"
+    },
+    {
+      "call_id": "PRB-1111c960a1d5",
+      "task_id": "IS1-TASK-374715fecc12",
+      "family_id": "IS1-FAM-123f6732ad",
+      "domain": "str",
+      "model_id": "deepseek-v4-pro",
+      "provider": "deepseek",
+      "role": "producer",
+      "expected_family": "deepseek"
+    },
+    {
+      "call_id": "PRB-2ca34ca08139",
+      "task_id": "IS1-TASK-765959f38906",
+      "family_id": "IS1-FAM-cdf973ef5a",
+      "domain": "str",
+      "model_id": "deepseek-v4-pro",
+      "provider": "deepseek",
+      "role": "producer",
+      "expected_family": "deepseek"
+    },
+    {
+      "call_id": "PRB-0d046ce58932",
+      "task_id": "IS1-TASK-b8da78cf8a18",
+      "family_id": "IS1-FAM-a4f7eff969",
+      "domain": "str",
+      "model_id": "deepseek-v4-pro",
+      "provider": "deepseek",
+      "role": "producer",
+      "expected_family": "deepseek"
+    }
+  ],
+  "params": {
+    "max_output_tokens": 3000,
+    "max_output_tokens_by_model": {
+      "gemini-4-carbon": 4500
+    },
+    "base_reasoning_tokens": 1024,
+    "timeout_ms": 600000,
+    "max_attempts": 1,
+    "timeouts_charged_at_worst_case": true,
+    "producer_language": true,
+    "contribution_request_sha256": {
+      "str": "731f040dd92bb49d9027dad39e6ae28820fc55d6018f1a23fbd92adface97d8e",
+      "num": "983844bb00050cd6e4fead4a24e87d8cedda26ab9be37da1e7ae588f64e8857e"
+    }
+  },
+  "projection": {
+    "price_date": "2026-12-01",
+    "calls": 20,
+    "input_counted": "twice the estimate (as the spend guard)",
+    "by_model": [
+      {
+        "model_id": "deepseek-v4-pro",
+        "role": "producer",
+        "calls": 10,
+        "tokens_in_est": 7732,
+        "max_output_tokens_per_call": 3000,
+        "price_per_m": {
+          "in": 1.32,
+          "out": 3.96
+        },
+        "usd_worst": 0.1392
+      },
+      {
+        "model_id": "gemini-4-carbon",
+        "role": "producer",
+        "calls": 10,
+        "tokens_in_est": 7732,
+        "max_output_tokens_per_call": 4500,
+        "price_per_m": {
+          "in": 4,
+          "out": 20
+        },
+        "usd_worst": 0.9619
+      }
+    ],
+    "usd_worst": 1.1011
+  },
+  "decision_rule": {
+    "verification": [
+      {
+        "when": "every producer's verified share (records that pass their task's hidden checks, of its completed calls) >= 0.5",
+        "then": "producers can leave verifiable work with these instructions: prepare Pilot 002 (fresh sealed draw, new registration, xz's approval)"
+      },
+      {
+        "when": "any producer's verified share < 0.25",
+        "then": "that producer cannot reliably leave verifiable work this way: xz decides (replace it, or change the instructions) before any new pilot"
+      },
+      {
+        "when": "anything else",
+        "then": "proceed only on xz's decision, given the expected number of verified records in a pilot (56 producer calls times the shares)"
+      }
+    ],
+    "placebo": {
+      "when": "no number-domain record verifies",
+      "then": "arm E (the placebo) would be empty again: fix before any registration"
+    },
+    "size": {
+      "when": "a producer has more than 10% of its completed replies set aside as too long",
+      "then": "tighten the length request before any registration"
+    },
+    "output_cap": {
+      "when": "for any producer, more than 10% of its completed calls stop at its output cap",
+      "then": "raise that producer's cap by half and re-project before any registration"
+    },
+    "cap_enforcement": {
+      "when": "any completed call bills more output than the requested cap, a DeepSeek call reports reasoning tokens, or an OpenAI call reports more reasoning tokens than completion tokens",
+      "then": "that model's cap is not enforced as documented: set cap_enforced false in lib/caps.mjs (the live gate then refuses it) and replace it before the pilot"
+    },
+    "latency": {
+      "when": "a model has more than one call time out at 600 s",
+      "then": "that model is unsuitable for the pilot as configured: xz decides"
+    },
+    "identity": {
+      "when": "a provider returns a model id whose family differs from the expected family",
+      "then": "exclude that model from the pilot until explained"
+    },
+    "note": "Probe tasks are public calibration tasks, drawn from a seed never used before and excluded from every sealed draw. A verified share here is not a result about inheritance."
+  },
+  "plan_sha256": "36fe203610e44b620d1cf364fcc434559690951053de6d6bab5bd5ae8bdbf2e4"
+}

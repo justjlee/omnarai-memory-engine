@@ -1,0 +1,1087 @@
+{
+  "schema_version": "omnarai.inheritance-study.report/0.1",
+  "study_id": "IS1-STUDY-DEMO-POSITIVE-SHARED",
+  "status": "offline_simulation",
+  "simulation": true,
+  "evidence_status": "mock — mechanics only, NOT evidence about any model",
+  "world": "positive-shared",
+  "spend_usd": 0,
+  "primary": {
+    "estimand": "G = mean over task families of mean paired (C − A+)",
+    "label": "primary: verified inheritance vs compute-matched",
+    "contrast": "C-A+",
+    "estimate": 0.3222,
+    "ci_low": 0.1222,
+    "ci_high": 0.5556,
+    "n_clusters": 10,
+    "n_pairs": 108,
+    "p_two_sided": 0.023438,
+    "test": "exact sign-flip (2^10)",
+    "missing_pairs": 0,
+    "classification": "positive"
+  },
+  "G_by_generation": [
+    {
+      "generation": 1,
+      "label": "primary: verified inheritance vs compute-matched",
+      "contrast": "C-A+",
+      "estimate": 0.3611,
+      "ci_low": -0.1111,
+      "ci_high": 0.75,
+      "n_clusters": 6,
+      "n_pairs": 36,
+      "p_two_sided": 0.3125,
+      "test": "exact sign-flip (2^6)",
+      "missing_pairs": 0,
+      "classification": "null-or-inconclusive",
+      "anchor": {
+        "contrast": "C-A+",
+        "estimate": 0.125,
+        "ci_low": -0.375,
+        "ci_high": 0.5833,
+        "n_clusters": 4,
+        "n_pairs": 24,
+        "p_two_sided": 1,
+        "test": "exact sign-flip (2^4)",
+        "missing_pairs": 0,
+        "classification": "null-or-inconclusive"
+      },
+      "fresh_families": {
+        "contrast": "C-A+",
+        "estimate": 0.8333,
+        "ci_low": 0.6667,
+        "ci_high": 1,
+        "n_clusters": 2,
+        "n_pairs": 12,
+        "p_two_sided": 0.5,
+        "test": "exact sign-flip (2^2)",
+        "missing_pairs": 0,
+        "classification": "positive"
+      }
+    },
+    {
+      "generation": 2,
+      "label": "primary: verified inheritance vs compute-matched",
+      "contrast": "C-A+",
+      "estimate": 0.1944,
+      "ci_low": -0.0556,
+      "ci_high": 0.4444,
+      "n_clusters": 6,
+      "n_pairs": 36,
+      "p_two_sided": 0.34375,
+      "test": "exact sign-flip (2^6)",
+      "missing_pairs": 0,
+      "classification": "null-or-inconclusive",
+      "anchor": {
+        "contrast": "C-A+",
+        "estimate": 0.0833,
+        "ci_low": -0.1667,
+        "ci_high": 0.3333,
+        "n_clusters": 4,
+        "n_pairs": 24,
+        "p_two_sided": 0.875,
+        "test": "exact sign-flip (2^4)",
+        "missing_pairs": 0,
+        "classification": "null-or-inconclusive"
+      },
+      "fresh_families": {
+        "contrast": "C-A+",
+        "estimate": 0.4167,
+        "ci_low": 0.1667,
+        "ci_high": 0.6667,
+        "n_clusters": 2,
+        "n_pairs": 12,
+        "p_two_sided": 0.5,
+        "test": "exact sign-flip (2^2)",
+        "missing_pairs": 0,
+        "classification": "positive"
+      }
+    },
+    {
+      "generation": 3,
+      "label": "primary: verified inheritance vs compute-matched",
+      "contrast": "C-A+",
+      "estimate": 0.1667,
+      "ci_low": 0.0278,
+      "ci_high": 0.3333,
+      "n_clusters": 6,
+      "n_pairs": 36,
+      "p_two_sided": 0.25,
+      "test": "exact sign-flip (2^6)",
+      "missing_pairs": 0,
+      "classification": "positive",
+      "anchor": {
+        "contrast": "C-A+",
+        "estimate": 0.2083,
+        "ci_low": 0,
+        "ci_high": 0.4167,
+        "n_clusters": 4,
+        "n_pairs": 24,
+        "p_two_sided": 0.5,
+        "test": "exact sign-flip (2^4)",
+        "missing_pairs": 0,
+        "classification": "null-or-inconclusive"
+      },
+      "fresh_families": {
+        "contrast": "C-A+",
+        "estimate": 0.0833,
+        "ci_low": 0,
+        "ci_high": 0.1667,
+        "n_clusters": 2,
+        "n_pairs": 12,
+        "p_two_sided": 1,
+        "test": "exact sign-flip (2^2)",
+        "missing_pairs": 0,
+        "classification": "null-or-inconclusive"
+      }
+    }
+  ],
+  "hypotheses": [
+    {
+      "id": "H1",
+      "text": "C outperforms A+ on held-out families",
+      "contrast": "C-A+",
+      "estimate": 0.3222,
+      "ci_low": 0.1222,
+      "ci_high": 0.5556,
+      "n_clusters": 10,
+      "n_pairs": 108,
+      "p_two_sided": 0.023438,
+      "test": "exact sign-flip (2^10)",
+      "missing_pairs": 0,
+      "classification": "positive",
+      "p_holm": 0.046876,
+      "inference": "descriptive-only",
+      "verdict": "not-assessable (simulation); pattern: positive"
+    },
+    {
+      "id": "H2",
+      "text": "C outperforms the unrelated placebo E",
+      "contrast": "C-E",
+      "estimate": 0.4667,
+      "ci_low": 0.2833,
+      "ci_high": 0.6556,
+      "n_clusters": 10,
+      "n_pairs": 108,
+      "p_two_sided": 0.003906,
+      "test": "exact sign-flip (2^10)",
+      "missing_pairs": 0,
+      "classification": "positive",
+      "p_holm": 0.011718,
+      "inference": "descriptive-only",
+      "verdict": "not-assessable (simulation); pattern: positive"
+    },
+    {
+      "id": "H3",
+      "text": "C outperforms A+ when producer and consumer families differ by PROVIDER-RETURNED ids (identity-mismatched blocks excluded)",
+      "contrast": "C-A+",
+      "estimate": 0.3222,
+      "ci_low": 0.1222,
+      "ci_high": 0.5556,
+      "n_clusters": 10,
+      "n_pairs": 108,
+      "p_two_sided": 0.023438,
+      "test": "exact sign-flip (2^10)",
+      "missing_pairs": 0,
+      "classification": "positive",
+      "p_holm": 0.046876,
+      "inference": "descriptive-only",
+      "verdict": "not-assessable (simulation); pattern: positive"
+    },
+    {
+      "id": "H4",
+      "text": "exploratory: transfer varies with verification cost",
+      "inference": "exploratory",
+      "verdict": "not assessable: one verification regime (cheap deterministic) in this study"
+    }
+  ],
+  "contrasts": {
+    "pooled": {
+      "C-A+": {
+        "label": "primary: verified inheritance vs compute-matched",
+        "contrast": "C-A+",
+        "estimate": 0.3222,
+        "ci_low": 0.1222,
+        "ci_high": 0.5556,
+        "n_clusters": 10,
+        "n_pairs": 108,
+        "p_two_sided": 0.023438,
+        "test": "exact sign-flip (2^10)",
+        "missing_pairs": 0,
+        "classification": "positive"
+      },
+      "C-A": {
+        "label": "verified inheritance vs cold",
+        "contrast": "C-A",
+        "estimate": 0.4778,
+        "ci_low": 0.2944,
+        "ci_high": 0.6833,
+        "n_clusters": 10,
+        "n_pairs": 108,
+        "p_two_sided": 0.001953,
+        "test": "exact sign-flip (2^10)",
+        "missing_pairs": 0,
+        "classification": "positive"
+      },
+      "C-B": {
+        "label": "curation: verified vs raw history",
+        "contrast": "C-B",
+        "estimate": 0.05,
+        "ci_low": -0.0389,
+        "ci_high": 0.1444,
+        "n_clusters": 10,
+        "n_pairs": 108,
+        "p_two_sided": 0.445313,
+        "test": "exact sign-flip (2^10)",
+        "missing_pairs": 0,
+        "classification": "null-or-inconclusive"
+      },
+      "C-D": {
+        "label": "contamination cost (C minus contaminated)",
+        "contrast": "C-D",
+        "estimate": 0.2944,
+        "ci_low": 0.1778,
+        "ci_high": 0.4167,
+        "n_clusters": 10,
+        "n_pairs": 108,
+        "p_two_sided": 0.003906,
+        "test": "exact sign-flip (2^10)",
+        "missing_pairs": 0,
+        "classification": "positive"
+      },
+      "C-E": {
+        "label": "knowledge vs scaffolding (placebo)",
+        "contrast": "C-E",
+        "estimate": 0.4667,
+        "ci_low": 0.2833,
+        "ci_high": 0.6556,
+        "n_clusters": 10,
+        "n_pairs": 108,
+        "p_two_sided": 0.003906,
+        "test": "exact sign-flip (2^10)",
+        "missing_pairs": 0,
+        "classification": "positive"
+      },
+      "A+-A": {
+        "label": "does extra reasoning allowance help?",
+        "contrast": "A+-A",
+        "estimate": 0.1556,
+        "ci_low": 0.0611,
+        "ci_high": 0.2667,
+        "n_clusters": 10,
+        "n_pairs": 108,
+        "p_two_sided": 0.03125,
+        "test": "exact sign-flip (2^10)",
+        "missing_pairs": 0,
+        "classification": "positive"
+      },
+      "B-A+": {
+        "label": "raw history vs compute-matched",
+        "contrast": "B-A+",
+        "estimate": 0.2722,
+        "ci_low": 0.0778,
+        "ci_high": 0.5,
+        "n_clusters": 10,
+        "n_pairs": 108,
+        "p_two_sided": 0.050781,
+        "test": "exact sign-flip (2^10)",
+        "missing_pairs": 0,
+        "classification": "positive"
+      },
+      "D-A+": {
+        "label": "contaminated vs compute-matched",
+        "contrast": "D-A+",
+        "estimate": 0.0278,
+        "ci_low": -0.1889,
+        "ci_high": 0.2557,
+        "n_clusters": 10,
+        "n_pairs": 108,
+        "p_two_sided": 0.863281,
+        "test": "exact sign-flip (2^10)",
+        "missing_pairs": 0,
+        "classification": "null-or-inconclusive"
+      },
+      "E-A+": {
+        "label": "placebo vs compute-matched",
+        "contrast": "E-A+",
+        "estimate": -0.1444,
+        "ci_low": -0.2556,
+        "ci_high": -0.0444,
+        "n_clusters": 10,
+        "n_pairs": 108,
+        "p_two_sided": 0.0625,
+        "test": "exact sign-flip (2^10)",
+        "missing_pairs": 0,
+        "classification": "negative"
+      },
+      "E-A": {
+        "label": "placebo vs cold (format/scaffolding effect)",
+        "contrast": "E-A",
+        "estimate": 0.0111,
+        "ci_low": -0.0278,
+        "ci_high": 0.0556,
+        "n_clusters": 10,
+        "n_pairs": 108,
+        "p_two_sided": 0.875,
+        "test": "exact sign-flip (2^10)",
+        "missing_pairs": 0,
+        "classification": "null-or-inconclusive"
+      }
+    },
+    "g1": {
+      "C-A+": {
+        "label": "primary: verified inheritance vs compute-matched",
+        "contrast": "C-A+",
+        "estimate": 0.3611,
+        "ci_low": -0.1111,
+        "ci_high": 0.75,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 0.3125,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "null-or-inconclusive"
+      },
+      "C-A": {
+        "label": "verified inheritance vs cold",
+        "contrast": "C-A",
+        "estimate": 0.4167,
+        "ci_low": 0.0556,
+        "ci_high": 0.75,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 0.125,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "positive"
+      },
+      "C-B": {
+        "label": "curation: verified vs raw history",
+        "contrast": "C-B",
+        "estimate": -0.1389,
+        "ci_low": -0.3611,
+        "ci_high": 0.0556,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 0.5,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "null-or-inconclusive"
+      },
+      "C-D": {
+        "label": "contamination cost (C minus contaminated)",
+        "contrast": "C-D",
+        "estimate": 0.1944,
+        "ci_low": 0.0278,
+        "ci_high": 0.4167,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 0.25,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "positive"
+      },
+      "C-E": {
+        "label": "knowledge vs scaffolding (placebo)",
+        "contrast": "C-E",
+        "estimate": 0.4444,
+        "ci_low": 0.1111,
+        "ci_high": 0.7778,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 0.125,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "positive"
+      },
+      "A+-A": {
+        "label": "does extra reasoning allowance help?",
+        "contrast": "A+-A",
+        "estimate": 0.0556,
+        "ci_low": 0,
+        "ci_high": 0.1667,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 1,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "null-or-inconclusive"
+      },
+      "B-A+": {
+        "label": "raw history vs compute-matched",
+        "contrast": "B-A+",
+        "estimate": 0.5,
+        "ci_low": 0.2222,
+        "ci_high": 0.7778,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 0.125,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "positive"
+      },
+      "D-A+": {
+        "label": "contaminated vs compute-matched",
+        "contrast": "D-A+",
+        "estimate": 0.1667,
+        "ci_low": -0.1951,
+        "ci_high": 0.4722,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 0.5,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "null-or-inconclusive"
+      },
+      "E-A+": {
+        "label": "placebo vs compute-matched",
+        "contrast": "E-A+",
+        "estimate": -0.0833,
+        "ci_low": -0.2778,
+        "ci_high": 0.0556,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 0.75,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "null-or-inconclusive"
+      },
+      "E-A": {
+        "label": "placebo vs cold (format/scaffolding effect)",
+        "contrast": "E-A",
+        "estimate": -0.0278,
+        "ci_low": -0.1111,
+        "ci_high": 0.0556,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 1,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "null-or-inconclusive"
+      }
+    },
+    "g2": {
+      "C-A+": {
+        "label": "primary: verified inheritance vs compute-matched",
+        "contrast": "C-A+",
+        "estimate": 0.1944,
+        "ci_low": -0.0556,
+        "ci_high": 0.4444,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 0.34375,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "null-or-inconclusive"
+      },
+      "C-A": {
+        "label": "verified inheritance vs cold",
+        "contrast": "C-A",
+        "estimate": 0.3889,
+        "ci_low": 0.1667,
+        "ci_high": 0.6667,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 0.0625,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "positive"
+      },
+      "C-B": {
+        "label": "curation: verified vs raw history",
+        "contrast": "C-B",
+        "estimate": 0.1111,
+        "ci_low": 0.0278,
+        "ci_high": 0.2222,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 0.25,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "positive"
+      },
+      "C-D": {
+        "label": "contamination cost (C minus contaminated)",
+        "contrast": "C-D",
+        "estimate": 0.25,
+        "ci_low": 0.1389,
+        "ci_high": 0.3333,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 0.0625,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "positive"
+      },
+      "C-E": {
+        "label": "knowledge vs scaffolding (placebo)",
+        "contrast": "C-E",
+        "estimate": 0.3333,
+        "ci_low": 0.0833,
+        "ci_high": 0.5833,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 0.09375,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "positive"
+      },
+      "A+-A": {
+        "label": "does extra reasoning allowance help?",
+        "contrast": "A+-A",
+        "estimate": 0.1944,
+        "ci_low": 0.0556,
+        "ci_high": 0.3333,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 0.125,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "positive"
+      },
+      "B-A+": {
+        "label": "raw history vs compute-matched",
+        "contrast": "B-A+",
+        "estimate": 0.0833,
+        "ci_low": -0.0833,
+        "ci_high": 0.25,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 0.5625,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "null-or-inconclusive"
+      },
+      "D-A+": {
+        "label": "contaminated vs compute-matched",
+        "contrast": "D-A+",
+        "estimate": -0.0556,
+        "ci_low": -0.2778,
+        "ci_high": 0.1667,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 0.8125,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "null-or-inconclusive"
+      },
+      "E-A+": {
+        "label": "placebo vs compute-matched",
+        "contrast": "E-A+",
+        "estimate": -0.1389,
+        "ci_low": -0.2778,
+        "ci_high": -0.0278,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 0.25,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "negative"
+      },
+      "E-A": {
+        "label": "placebo vs cold (format/scaffolding effect)",
+        "contrast": "E-A",
+        "estimate": 0.0556,
+        "ci_low": 0,
+        "ci_high": 0.1111,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 0.5,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "null-or-inconclusive"
+      }
+    },
+    "g3": {
+      "C-A+": {
+        "label": "primary: verified inheritance vs compute-matched",
+        "contrast": "C-A+",
+        "estimate": 0.1667,
+        "ci_low": 0.0278,
+        "ci_high": 0.3333,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 0.25,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "positive"
+      },
+      "C-A": {
+        "label": "verified inheritance vs cold",
+        "contrast": "C-A",
+        "estimate": 0.3611,
+        "ci_low": 0.2778,
+        "ci_high": 0.4444,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 0.03125,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "positive"
+      },
+      "C-B": {
+        "label": "curation: verified vs raw history",
+        "contrast": "C-B",
+        "estimate": 0.0556,
+        "ci_low": -0.0556,
+        "ci_high": 0.1389,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 0.625,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "null-or-inconclusive"
+      },
+      "C-D": {
+        "label": "contamination cost (C minus contaminated)",
+        "contrast": "C-D",
+        "estimate": 0.3611,
+        "ci_low": 0.1944,
+        "ci_high": 0.5833,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 0.03125,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "positive"
+      },
+      "C-E": {
+        "label": "knowledge vs scaffolding (placebo)",
+        "contrast": "C-E",
+        "estimate": 0.3889,
+        "ci_low": 0.2778,
+        "ci_high": 0.4722,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 0.03125,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "positive"
+      },
+      "A+-A": {
+        "label": "does extra reasoning allowance help?",
+        "contrast": "A+-A",
+        "estimate": 0.1944,
+        "ci_low": 0.0556,
+        "ci_high": 0.3333,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 0.125,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "positive"
+      },
+      "B-A+": {
+        "label": "raw history vs compute-matched",
+        "contrast": "B-A+",
+        "estimate": 0.1111,
+        "ci_low": -0.0833,
+        "ci_high": 0.3056,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 0.5,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "null-or-inconclusive"
+      },
+      "D-A+": {
+        "label": "contaminated vs compute-matched",
+        "contrast": "D-A+",
+        "estimate": -0.1944,
+        "ci_low": -0.3611,
+        "ci_high": -0.0278,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 0.15625,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "negative"
+      },
+      "E-A+": {
+        "label": "placebo vs compute-matched",
+        "contrast": "E-A+",
+        "estimate": -0.2222,
+        "ci_low": -0.3889,
+        "ci_high": -0.0556,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 0.125,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "negative"
+      },
+      "E-A": {
+        "label": "placebo vs cold (format/scaffolding effect)",
+        "contrast": "E-A",
+        "estimate": -0.0278,
+        "ci_low": -0.0833,
+        "ci_high": 0,
+        "n_clusters": 6,
+        "n_pairs": 36,
+        "p_two_sided": 1,
+        "test": "exact sign-flip (2^6)",
+        "missing_pairs": 0,
+        "classification": "null-or-inconclusive"
+      }
+    }
+  },
+  "flags": [
+    {
+      "code": "CURATION_NOT_SHOWN",
+      "text": "Verified inheritance is not clearly above raw history B."
+    },
+    {
+      "code": "CONTAMINATION_HARMS",
+      "text": "Replacing part of C with refuted/poisoned records lowered scores: the verification gate is load-bearing."
+    }
+  ],
+  "missingness": {
+    "incomplete_blocks": 0,
+    "outcome_counts": {
+      "A": {
+        "abstain": 96,
+        "pass": 12
+      },
+      "A+": {
+        "abstain": 80,
+        "pass": 28
+      },
+      "B": {
+        "pass": 53,
+        "abstain": 55
+      },
+      "C": {
+        "abstain": 54,
+        "pass": 54
+      },
+      "D": {
+        "abstain": 50,
+        "pass": 25,
+        "fail": 33
+      },
+      "E": {
+        "abstain": 94,
+        "pass": 12,
+        "fail": 2
+      }
+    },
+    "policy": {
+      "timeout": "scored 0",
+      "error": "missing (excluded pairwise)",
+      "abstain": "scored 0"
+    },
+    "primary_bounds": {
+      "worst_case_for_C": {
+        "estimate": 0.3222,
+        "ci_low": 0.1222,
+        "ci_high": 0.5556,
+        "n_clusters": 10,
+        "n_pairs": 108
+      },
+      "best_case_for_C": {
+        "estimate": 0.3222,
+        "ci_low": 0.1222,
+        "ci_high": 0.5556,
+        "n_clusters": 10,
+        "n_pairs": 108
+      }
+    }
+  },
+  "identity": {
+    "trials_with_returned_id": 648,
+    "returned_family_differs_from_expected": 0,
+    "unknown_returned_family": 0
+  },
+  "ablations": [
+    {
+      "id": "IS1-ABL-653bab3c3453",
+      "generation": 1,
+      "artifact_id": "IS1-ART-g0-0d3566f4201a",
+      "blocks_where_artifact_was_shown": 24,
+      "delta": {
+        "estimate": 0,
+        "ci_low": -0.125,
+        "ci_high": 0.125,
+        "n_clusters": 4,
+        "n_pairs": 24
+      },
+      "flag": "nonpositive (flagged, not deleted)"
+    },
+    {
+      "id": "IS1-ABL-a8b769bf40c6",
+      "generation": 1,
+      "artifact_id": "IS1-ART-g0-d05b3deaded0",
+      "blocks_where_artifact_was_shown": 24,
+      "delta": {
+        "estimate": -0.0833,
+        "ci_low": -0.1667,
+        "ci_high": 0,
+        "n_clusters": 4,
+        "n_pairs": 24
+      },
+      "flag": "nonpositive (flagged, not deleted)"
+    },
+    {
+      "id": "IS1-ABL-7d0912b1c19a",
+      "generation": 2,
+      "artifact_id": "IS1-ART-g0-0d3566f4201a",
+      "blocks_where_artifact_was_shown": 18,
+      "delta": {
+        "estimate": -0.0833,
+        "ci_low": -0.1667,
+        "ci_high": 0,
+        "n_clusters": 4,
+        "n_pairs": 24
+      },
+      "flag": "nonpositive (flagged, not deleted)"
+    },
+    {
+      "id": "IS1-ABL-16ffeac2700a",
+      "generation": 2,
+      "artifact_id": "IS1-ART-g0-5fcc07515177",
+      "blocks_where_artifact_was_shown": 16,
+      "delta": {
+        "estimate": -0.1667,
+        "ci_low": -0.2917,
+        "ci_high": -0.0417,
+        "n_clusters": 4,
+        "n_pairs": 24
+      },
+      "flag": "nonpositive (flagged, not deleted)"
+    },
+    {
+      "id": "IS1-ABL-afce92e29d0f",
+      "generation": 3,
+      "artifact_id": "IS1-ART-g1-eb4c11cd9498",
+      "blocks_where_artifact_was_shown": 17,
+      "delta": {
+        "estimate": 0.0417,
+        "ci_low": -0.25,
+        "ci_high": 0.3333,
+        "n_clusters": 4,
+        "n_pairs": 24
+      },
+      "flag": "inconclusive"
+    },
+    {
+      "id": "IS1-ABL-2b36532a8804",
+      "generation": 3,
+      "artifact_id": "IS1-ART-g2-e67d0d13d69b",
+      "blocks_where_artifact_was_shown": 16,
+      "delta": {
+        "estimate": 0.0417,
+        "ci_low": -0.0833,
+        "ci_high": 0.1667,
+        "n_clusters": 4,
+        "n_pairs": 24
+      },
+      "flag": "inconclusive"
+    }
+  ],
+  "ratchet": {
+    "claim_permitted": false,
+    "reason": "simulation: no claim about any intelligence can be made from mock outcomes",
+    "checklist": [
+      {
+        "id": "i",
+        "criterion": "positive C−A+ on held-out families after compute accounting",
+        "met": false
+      },
+      {
+        "id": "ii",
+        "criterion": "uncertainty-adjusted positive trend over ≥3 transitions on the fixed anchor panel",
+        "met": false,
+        "detail": "2 transition(s); slope 0.0417 [-0.2083, 0.3958]"
+      },
+      {
+        "id": "iii",
+        "criterion": "inherited records are independently checked and from other provider-returned families",
+        "met": true
+      },
+      {
+        "id": "iv",
+        "criterion": "ablations identify contributions that matter (some delta interval > 0)",
+        "met": false
+      },
+      {
+        "id": "v",
+        "criterion": "verification does not degrade across generations",
+        "met": false,
+        "detail": "verified fraction by generation: 0.5833, 0.5, 0.1667"
+      },
+      {
+        "id": "vi",
+        "criterion": "full uncertainty and negative cases disclosed",
+        "met": true,
+        "detail": "this report lists every contrast, flag and missing pair"
+      }
+    ],
+    "anchor_trend": {
+      "per_generation": [
+        0.125,
+        0.0833,
+        0.2083
+      ],
+      "slope": 0.0417,
+      "ci_low": -0.2083,
+      "ci_high": 0.3958,
+      "n_families": 4
+    },
+    "verification_by_generation": [
+      {
+        "generation": 0,
+        "produced": 12,
+        "passed": 7,
+        "failed": 2,
+        "inconclusive": 3,
+        "error": 0,
+        "verified_fraction": 0.5833
+      },
+      {
+        "generation": 1,
+        "produced": 6,
+        "passed": 3,
+        "failed": 1,
+        "inconclusive": 2,
+        "error": 0,
+        "verified_fraction": 0.5
+      },
+      {
+        "generation": 2,
+        "produced": 6,
+        "passed": 1,
+        "failed": 0,
+        "inconclusive": 5,
+        "error": 0,
+        "verified_fraction": 0.1667
+      }
+    ],
+    "note": "A monotonic chart of G(n) alone never satisfies this checklist."
+  },
+  "cost": {
+    "by_arm": {
+      "A": {
+        "trials": 108,
+        "tokens_in": 24338,
+        "tokens_out": 35001,
+        "context_tokens_est": 21712,
+        "usd": 0,
+        "cost_status": "mock-zero"
+      },
+      "A+": {
+        "trials": 108,
+        "tokens_in": 24360,
+        "tokens_out": 99105,
+        "context_tokens_est": 21718,
+        "usd": 0,
+        "cost_status": "mock-zero"
+      },
+      "B": {
+        "trials": 108,
+        "tokens_in": 93816,
+        "tokens_out": 27689,
+        "context_tokens_est": 91180,
+        "usd": 0,
+        "cost_status": "mock-zero"
+      },
+      "C": {
+        "trials": 108,
+        "tokens_in": 93931,
+        "tokens_out": 27590,
+        "context_tokens_est": 91286,
+        "usd": 0,
+        "cost_status": "mock-zero"
+      },
+      "D": {
+        "trials": 108,
+        "tokens_in": 92061,
+        "tokens_out": 21307,
+        "context_tokens_est": 89427,
+        "usd": 0,
+        "cost_status": "mock-zero"
+      },
+      "E": {
+        "trials": 108,
+        "tokens_in": 94468,
+        "tokens_out": 34595,
+        "context_tokens_est": 91828,
+        "usd": 0,
+        "cost_status": "mock-zero"
+      }
+    },
+    "curation": {
+      "tokens_in": 11925,
+      "tokens_out": 6927,
+      "usd": 0
+    },
+    "verification": {
+      "evaluations": 32,
+      "interpreter_steps": 352,
+      "cpu_ms": 0,
+      "model_tokens": 0,
+      "human_minutes": 0,
+      "cpu_ms_measured": false
+    },
+    "amortization": {
+      "consumer_trials_drawing_on_snapshots": 108,
+      "curation_tokens_per_C_trial": 174.5556,
+      "horizons_tokens_per_trial": {
+        "1": 18852,
+        "10": 1885.2,
+        "100": 188.52,
+        "1000": 18.852
+      }
+    },
+    "matching": {
+      "method": "A+ allowance = (C context tokens − A context tokens) + amortized curation tokens, per block; token-for-token, so A+ is favoured in dollars (output > input price)",
+      "aplus_mean_extra_allowance": 741.5093
+    },
+    "slices": {
+      "fixed_inference_tokens": {
+        "C_minus_Aplus": 0.3222,
+        "note": "primary: A+ is matched in tokens by construction"
+      },
+      "fixed_total_dollars": {
+        "note": "unavailable: mock calls cost $0 by definition"
+      }
+    },
+    "value_per_1k_incremental_tokens": 0.0036
+  },
+  "inputs": {
+    "plan_sha256": "b600cff2cefb286a200b6793e0adb22eafcd4e208940f7f87683dcbb164dfebd",
+    "trials_sha256": "7111c05b6e4695ed7cd5c53ff3d9bb38c1dbf5492b9b76921f7ccb73171f0ea7",
+    "snapshots": [
+      {
+        "id": "IS1-SNAP-g1-2c7befb7b175",
+        "sha256": "4290580ee7a0ac1fe918f0f7a9878a548d7307c67c32a03c0c88781dbb4c4b6d"
+      },
+      {
+        "id": "IS1-SNAP-g2-785ea4220a95",
+        "sha256": "467d5e4cd83c1c0df5a6cad8b501dcd12a1376d400837c27ae4330d5952e5551"
+      },
+      {
+        "id": "IS1-SNAP-g3-2dfa9c177b05",
+        "sha256": "67b9ddedacbf03c2ac06911478ca654401def72cd1b04f1a3849e18981b969f8"
+      }
+    ],
+    "artifacts": 34,
+    "evaluations": 32,
+    "runs": [
+      "IS1-RUN-70bca9e5d823"
+    ]
+  },
+  "analysis_config": {
+    "resamples": 2000,
+    "alpha": 0.05,
+    "seed": 11,
+    "min_clusters_for_inference": 10,
+    "timeouts_as_failures": true,
+    "primary_family": [
+      "H1",
+      "H2",
+      "H3"
+    ]
+  },
+  "id": "IS1-REPORT-2a84da094458",
+  "sha256": "b3bdf15da6598695c5adbc62032ebe004bc0d70c1695aa4f6e04ff93e9c9b4c5"
+}

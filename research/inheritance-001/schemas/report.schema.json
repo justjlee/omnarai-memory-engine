@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://engine.omnarai.org/research/inheritance-001/schemas/report-0.1.schema.json",
+  "title": "Inheritance Study 001 report record (research draft; not a Footprint, not a public contract)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "study_id",
+    "status",
+    "simulation",
+    "evidence_status",
+    "world",
+    "spend_usd",
+    "primary",
+    "G_by_generation",
+    "hypotheses",
+    "contrasts",
+    "flags",
+    "missingness",
+    "identity",
+    "ablations",
+    "ratchet",
+    "cost",
+    "inputs",
+    "analysis_config",
+    "sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "omnarai.inheritance-study.report/0.1"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^IS1-REPORT-[0-9a-f]{12}$"
+    },
+    "study_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "offline_simulation",
+        "pilot_exploratory",
+        "preregistered_confirmatory",
+        "unregistered"
+      ]
+    },
+    "simulation": {
+      "type": "boolean"
+    },
+    "evidence_status": {
+      "type": "string",
+      "minLength": 1
+    },
+    "world": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "spend_usd": {
+      "type": "number"
+    },
+    "primary": {
+      "type": "object"
+    },
+    "G_by_generation": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "hypotheses": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "contrasts": {
+      "type": "object"
+    },
+    "flags": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "text"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "missingness": {
+      "type": "object"
+    },
+    "identity": {
+      "type": "object"
+    },
+    "ablations": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "ratchet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "claim_permitted",
+        "reason",
+        "checklist",
+        "anchor_trend",
+        "verification_by_generation",
+        "note"
+      ],
+      "properties": {
+        "claim_permitted": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "checklist": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "anchor_trend": {
+          "type": "object"
+        },
+        "verification_by_generation": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "note": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "cost": {
+      "type": "object"
+    },
+    "inputs": {
+      "type": "object"
+    },
+    "analysis_config": {
+      "type": "object"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

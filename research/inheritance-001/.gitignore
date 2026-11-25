@@ -1,0 +1,12 @@
+# Offline demo sealed side (synthetic answers/canaries + raw mock outputs): reproducible with one command, not committed.
+examples/*/sealed-demo/
+# The null-world demo is reproducible; keep only its report and summary in git.
+examples/demo-null-disjoint/*
+!examples/demo-null-disjoint/REPORT.md
+!examples/demo-null-disjoint/summary.json
+# Never in the repository (see sealed/README.md).
+sealed/*
+!sealed/README.md
+results/
+registration.local.json
+KILL

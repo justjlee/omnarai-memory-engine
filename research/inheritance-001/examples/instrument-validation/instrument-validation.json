@@ -1,0 +1,515 @@
+{
+  "note": "Synthetic worlds with known truth. Rates are over seeds (different tasks and mock orderings). Mock outcomes: NOT evidence about any model.",
+  "seeds": 20,
+  "resamples": 500,
+  "worlds": {
+    "positive-shared": {
+      "truth": "transfer is real where held-out families reuse ops prior work covered: C > A and C > E expected; C vs A+ depends on size; D < C",
+      "seeds": 20,
+      "contrasts": {
+        "C-A+": {
+          "positive_rate": 0.2,
+          "negative_rate": 0,
+          "null_rate": 0.8,
+          "mean_estimate": 0.1889
+        },
+        "C-A": {
+          "positive_rate": 1,
+          "negative_rate": 0,
+          "null_rate": 0,
+          "mean_estimate": 0.3817
+        },
+        "C-B": {
+          "positive_rate": 0.05,
+          "negative_rate": 0,
+          "null_rate": 0.95,
+          "mean_estimate": 0.0321
+        },
+        "C-D": {
+          "positive_rate": 0.9,
+          "negative_rate": 0,
+          "null_rate": 0.1,
+          "mean_estimate": 0.269
+        },
+        "C-E": {
+          "positive_rate": 1,
+          "negative_rate": 0,
+          "null_rate": 0,
+          "mean_estimate": 0.3578
+        },
+        "A+-A": {
+          "positive_rate": 0.85,
+          "negative_rate": 0,
+          "null_rate": 0.15,
+          "mean_estimate": 0.1928
+        },
+        "B-A+": {
+          "positive_rate": 0.2,
+          "negative_rate": 0,
+          "null_rate": 0.8,
+          "mean_estimate": 0.1568
+        },
+        "D-A+": {
+          "positive_rate": 0,
+          "negative_rate": 0.05,
+          "null_rate": 0.95,
+          "mean_estimate": -0.0801
+        },
+        "E-A+": {
+          "positive_rate": 0,
+          "negative_rate": 0.8,
+          "null_rate": 0.2,
+          "mean_estimate": -0.1689
+        },
+        "E-A": {
+          "positive_rate": 0.1,
+          "negative_rate": 0,
+          "null_rate": 0.9,
+          "mean_estimate": 0.0239
+        }
+      }
+    },
+    "null-disjoint": {
+      "truth": "no transfer: C ≤ A+ (inherited priors waste search)",
+      "seeds": 20,
+      "contrasts": {
+        "C-A+": {
+          "positive_rate": 0,
+          "negative_rate": 1,
+          "null_rate": 0,
+          "mean_estimate": -0.1942
+        },
+        "C-A": {
+          "positive_rate": 0,
+          "negative_rate": 0.5,
+          "null_rate": 0.5,
+          "mean_estimate": -0.0667
+        },
+        "C-B": {
+          "positive_rate": 0.05,
+          "negative_rate": 0,
+          "null_rate": 0.95,
+          "mean_estimate": 0.0086
+        },
+        "C-D": {
+          "positive_rate": 0.05,
+          "negative_rate": 0,
+          "null_rate": 0.95,
+          "mean_estimate": 0.0003
+        },
+        "C-E": {
+          "positive_rate": 0,
+          "negative_rate": 0.4,
+          "null_rate": 0.6,
+          "mean_estimate": -0.0497
+        },
+        "A+-A": {
+          "positive_rate": 0.55,
+          "negative_rate": 0,
+          "null_rate": 0.45,
+          "mean_estimate": 0.1275
+        },
+        "B-A+": {
+          "positive_rate": 0,
+          "negative_rate": 1,
+          "null_rate": 0,
+          "mean_estimate": -0.2028
+        },
+        "D-A+": {
+          "positive_rate": 0,
+          "negative_rate": 0.9,
+          "null_rate": 0.1,
+          "mean_estimate": -0.1944
+        },
+        "E-A+": {
+          "positive_rate": 0,
+          "negative_rate": 0.75,
+          "null_rate": 0.25,
+          "mean_estimate": -0.1444
+        },
+        "E-A": {
+          "positive_rate": 0,
+          "negative_rate": 0.05,
+          "null_rate": 0.95,
+          "mean_estimate": -0.0169
+        }
+      }
+    },
+    "harmful-anchoring": {
+      "truth": "negative transfer: C < A",
+      "seeds": 20,
+      "contrasts": {
+        "C-A+": {
+          "positive_rate": 0,
+          "negative_rate": 1,
+          "null_rate": 0,
+          "mean_estimate": -0.2147
+        },
+        "C-A": {
+          "positive_rate": 0,
+          "negative_rate": 0.4,
+          "null_rate": 0.6,
+          "mean_estimate": -0.0511
+        },
+        "C-B": {
+          "positive_rate": 0,
+          "negative_rate": 0,
+          "null_rate": 1,
+          "mean_estimate": 0
+        },
+        "C-D": {
+          "positive_rate": 0,
+          "negative_rate": 0,
+          "null_rate": 1,
+          "mean_estimate": 0.0039
+        },
+        "C-E": {
+          "positive_rate": 0,
+          "negative_rate": 0.55,
+          "null_rate": 0.45,
+          "mean_estimate": -0.0481
+        },
+        "A+-A": {
+          "positive_rate": 0.8,
+          "negative_rate": 0,
+          "null_rate": 0.2,
+          "mean_estimate": 0.1636
+        },
+        "B-A+": {
+          "positive_rate": 0,
+          "negative_rate": 1,
+          "null_rate": 0,
+          "mean_estimate": -0.2147
+        },
+        "D-A+": {
+          "positive_rate": 0,
+          "negative_rate": 1,
+          "null_rate": 0,
+          "mean_estimate": -0.2186
+        },
+        "E-A+": {
+          "positive_rate": 0,
+          "negative_rate": 0.9,
+          "null_rate": 0.1,
+          "mean_estimate": -0.1667
+        },
+        "E-A": {
+          "positive_rate": 0.05,
+          "negative_rate": 0,
+          "null_rate": 0.95,
+          "mean_estimate": -0.0031
+        }
+      }
+    },
+    "scaffold-only": {
+      "truth": "format effect only: C ≈ E > A",
+      "seeds": 20,
+      "contrasts": {
+        "C-A+": {
+          "positive_rate": 0,
+          "negative_rate": 0.15,
+          "null_rate": 0.85,
+          "mean_estimate": -0.0442
+        },
+        "C-A": {
+          "positive_rate": 0.6,
+          "negative_rate": 0,
+          "null_rate": 0.4,
+          "mean_estimate": 0.1111
+        },
+        "C-B": {
+          "positive_rate": 0.05,
+          "negative_rate": 0.1,
+          "null_rate": 0.85,
+          "mean_estimate": -0.0328
+        },
+        "C-D": {
+          "positive_rate": 0.1,
+          "negative_rate": 0.05,
+          "null_rate": 0.85,
+          "mean_estimate": -0.0056
+        },
+        "C-E": {
+          "positive_rate": 0.15,
+          "negative_rate": 0.1,
+          "null_rate": 0.75,
+          "mean_estimate": 0.0142
+        },
+        "A+-A": {
+          "positive_rate": 0.85,
+          "negative_rate": 0,
+          "null_rate": 0.15,
+          "mean_estimate": 0.1553
+        },
+        "B-A+": {
+          "positive_rate": 0,
+          "negative_rate": 0.05,
+          "null_rate": 0.95,
+          "mean_estimate": -0.0114
+        },
+        "D-A+": {
+          "positive_rate": 0,
+          "negative_rate": 0.25,
+          "null_rate": 0.75,
+          "mean_estimate": -0.0386
+        },
+        "E-A+": {
+          "positive_rate": 0,
+          "negative_rate": 0.2,
+          "null_rate": 0.8,
+          "mean_estimate": -0.0583
+        },
+        "E-A": {
+          "positive_rate": 0.55,
+          "negative_rate": 0,
+          "null_rate": 0.45,
+          "mean_estimate": 0.097
+        }
+      }
+    },
+    "inert": {
+      "truth": "no arm effect except A+'s extra search",
+      "seeds": 20,
+      "contrasts": {
+        "C-A+": {
+          "positive_rate": 0,
+          "negative_rate": 0.85,
+          "null_rate": 0.15,
+          "mean_estimate": -0.1433
+        },
+        "C-A": {
+          "positive_rate": 0.1,
+          "negative_rate": 0,
+          "null_rate": 0.9,
+          "mean_estimate": 0.0014
+        },
+        "C-B": {
+          "positive_rate": 0.05,
+          "negative_rate": 0.05,
+          "null_rate": 0.9,
+          "mean_estimate": 0.0047
+        },
+        "C-D": {
+          "positive_rate": 0.1,
+          "negative_rate": 0,
+          "null_rate": 0.9,
+          "mean_estimate": 0.0081
+        },
+        "C-E": {
+          "positive_rate": 0.05,
+          "negative_rate": 0.05,
+          "null_rate": 0.9,
+          "mean_estimate": 0.003
+        },
+        "A+-A": {
+          "positive_rate": 0.65,
+          "negative_rate": 0,
+          "null_rate": 0.35,
+          "mean_estimate": 0.1447
+        },
+        "B-A+": {
+          "positive_rate": 0,
+          "negative_rate": 0.8,
+          "null_rate": 0.2,
+          "mean_estimate": -0.1481
+        },
+        "D-A+": {
+          "positive_rate": 0,
+          "negative_rate": 0.85,
+          "null_rate": 0.15,
+          "mean_estimate": -0.1514
+        },
+        "E-A+": {
+          "positive_rate": 0,
+          "negative_rate": 0.9,
+          "null_rate": 0.1,
+          "mean_estimate": -0.1464
+        },
+        "E-A": {
+          "positive_rate": 0.05,
+          "negative_rate": 0.05,
+          "null_rate": 0.9,
+          "mean_estimate": -0.0017
+        }
+      }
+    }
+  },
+  "power_parametric": [
+    {
+      "families": 8,
+      "tasks_per_family": 3,
+      "consumers": 2,
+      "base_rate": 0.4,
+      "true_effect": 0,
+      "family_sd": 0.1,
+      "sims": 300,
+      "power": 0.04,
+      "wrong_sign_rate": 0.037
+    },
+    {
+      "families": 8,
+      "tasks_per_family": 3,
+      "consumers": 2,
+      "base_rate": 0.4,
+      "true_effect": 0.1,
+      "family_sd": 0.1,
+      "sims": 300,
+      "power": 0.223,
+      "wrong_sign_rate": 0.003
+    },
+    {
+      "families": 8,
+      "tasks_per_family": 3,
+      "consumers": 2,
+      "base_rate": 0.4,
+      "true_effect": 0.15,
+      "family_sd": 0.1,
+      "sims": 300,
+      "power": 0.413,
+      "wrong_sign_rate": 0.003
+    },
+    {
+      "families": 8,
+      "tasks_per_family": 3,
+      "consumers": 2,
+      "base_rate": 0.4,
+      "true_effect": 0.2,
+      "family_sd": 0.1,
+      "sims": 300,
+      "power": 0.607,
+      "wrong_sign_rate": 0
+    },
+    {
+      "families": 16,
+      "tasks_per_family": 3,
+      "consumers": 2,
+      "base_rate": 0.4,
+      "true_effect": 0,
+      "family_sd": 0.1,
+      "sims": 300,
+      "power": 0.043,
+      "wrong_sign_rate": 0.033
+    },
+    {
+      "families": 16,
+      "tasks_per_family": 3,
+      "consumers": 2,
+      "base_rate": 0.4,
+      "true_effect": 0.1,
+      "family_sd": 0.1,
+      "sims": 300,
+      "power": 0.35,
+      "wrong_sign_rate": 0
+    },
+    {
+      "families": 16,
+      "tasks_per_family": 3,
+      "consumers": 2,
+      "base_rate": 0.4,
+      "true_effect": 0.15,
+      "family_sd": 0.1,
+      "sims": 300,
+      "power": 0.563,
+      "wrong_sign_rate": 0
+    },
+    {
+      "families": 16,
+      "tasks_per_family": 3,
+      "consumers": 2,
+      "base_rate": 0.4,
+      "true_effect": 0.2,
+      "family_sd": 0.1,
+      "sims": 300,
+      "power": 0.793,
+      "wrong_sign_rate": 0
+    },
+    {
+      "families": 24,
+      "tasks_per_family": 3,
+      "consumers": 2,
+      "base_rate": 0.4,
+      "true_effect": 0,
+      "family_sd": 0.1,
+      "sims": 300,
+      "power": 0.033,
+      "wrong_sign_rate": 0.033
+    },
+    {
+      "families": 24,
+      "tasks_per_family": 3,
+      "consumers": 2,
+      "base_rate": 0.4,
+      "true_effect": 0.1,
+      "family_sd": 0.1,
+      "sims": 300,
+      "power": 0.463,
+      "wrong_sign_rate": 0
+    },
+    {
+      "families": 24,
+      "tasks_per_family": 3,
+      "consumers": 2,
+      "base_rate": 0.4,
+      "true_effect": 0.15,
+      "family_sd": 0.1,
+      "sims": 300,
+      "power": 0.71,
+      "wrong_sign_rate": 0
+    },
+    {
+      "families": 24,
+      "tasks_per_family": 3,
+      "consumers": 2,
+      "base_rate": 0.4,
+      "true_effect": 0.2,
+      "family_sd": 0.1,
+      "sims": 300,
+      "power": 0.947,
+      "wrong_sign_rate": 0
+    },
+    {
+      "families": 32,
+      "tasks_per_family": 3,
+      "consumers": 2,
+      "base_rate": 0.4,
+      "true_effect": 0,
+      "family_sd": 0.1,
+      "sims": 300,
+      "power": 0.043,
+      "wrong_sign_rate": 0.027
+    },
+    {
+      "families": 32,
+      "tasks_per_family": 3,
+      "consumers": 2,
+      "base_rate": 0.4,
+      "true_effect": 0.1,
+      "family_sd": 0.1,
+      "sims": 300,
+      "power": 0.52,
+      "wrong_sign_rate": 0
+    },
+    {
+      "families": 32,
+      "tasks_per_family": 3,
+      "consumers": 2,
+      "base_rate": 0.4,
+      "true_effect": 0.15,
+      "family_sd": 0.1,
+      "sims": 300,
+      "power": 0.807,
+      "wrong_sign_rate": 0
+    },
+    {
+      "families": 32,
+      "tasks_per_family": 3,
+      "consumers": 2,
+      "base_rate": 0.4,
+      "true_effect": 0.2,
+      "family_sd": 0.1,
+      "sims": 300,
+      "power": 0.993,
+      "wrong_sign_rate": 0
+    }
+  ]
+}

@@ -1,0 +1,252 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://engine.omnarai.org/research/inheritance-001/schemas/snapshot-0.1.schema.json",
+  "title": "Inheritance Study 001 snapshot record (research draft; not a Footprint, not a public contract)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "study_id",
+    "generation",
+    "policy",
+    "entries",
+    "excluded",
+    "counts",
+    "ablation_targets",
+    "audits",
+    "frozen_at",
+    "sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "omnarai.inheritance-study.snapshot/0.1"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^IS1-SNAP-g\\d{1,3}-[0-9a-f]{12}$"
+    },
+    "study_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "allowed_generations",
+        "main_domain",
+        "c_requires",
+        "cross_family_filter"
+      ],
+      "properties": {
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "allowed_generations": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "main_domain": {
+          "enum": [
+            "str",
+            "num"
+          ]
+        },
+        "c_requires": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cross_family_filter": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "artifact_id",
+          "artifact_sha256",
+          "generation",
+          "kind",
+          "domain",
+          "producer_family",
+          "identity_status",
+          "state",
+          "evaluation_id",
+          "evaluation_sha256",
+          "eligible",
+          "production_tokens"
+        ],
+        "properties": {
+          "artifact_id": {
+            "type": "string",
+            "pattern": "^IS1-ART-g\\d{1,3}-[0-9a-f]{12}$"
+          },
+          "artifact_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "generation": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "kind": {
+            "enum": [
+              "producer_output",
+              "poison_fixture",
+              "footprint_import"
+            ]
+          },
+          "domain": {
+            "enum": [
+              "str",
+              "num"
+            ]
+          },
+          "producer_family": {
+            "type": "string",
+            "minLength": 1
+          },
+          "identity_status": {
+            "enum": [
+              "provider-returned",
+              "declared-unverified",
+              "investigator"
+            ]
+          },
+          "state": {
+            "enum": [
+              "proposed",
+              "evaluated",
+              "rejected",
+              "unverifiable",
+              "superseded"
+            ]
+          },
+          "evaluation_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "evaluation_sha256": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "eligible": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "B",
+                "C",
+                "D",
+                "D-poison",
+                "E"
+              ]
+            }
+          },
+          "production_tokens": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "excluded": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "artifact_id",
+          "reason"
+        ],
+        "properties": {
+          "artifact_id": {
+            "type": "string",
+            "pattern": "^IS1-ART-g\\d{1,3}-[0-9a-f]{12}$"
+          },
+          "reason": {
+            "enum": [
+              "SAME_GENERATION",
+              "FUTURE_GENERATION",
+              "LEAK",
+              "DUPLICATE_CONTENT"
+            ]
+          },
+          "detail": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "duplicate_of": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "counts": {
+      "type": "object"
+    },
+    "ablation_targets": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^IS1-ART-g\\d{1,3}-[0-9a-f]{12}$"
+      }
+    },
+    "audits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "leak_problems",
+        "causality",
+        "receipts_reexecuted"
+      ],
+      "properties": {
+        "leak_problems": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "causality": {
+          "enum": [
+            "passed"
+          ]
+        },
+        "receipts_reexecuted": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "frozen_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

@@ -1,0 +1,1302 @@
+[
+  {
+    "schema_version": "omnarai.inheritance-study.snapshot/0.1",
+    "study_id": "IS1-STUDY-DEMO-POSITIVE-SHARED",
+    "generation": 1,
+    "policy": {
+      "version": "is1-snapshot-policy/0.1",
+      "allowed_generations": [
+        0
+      ],
+      "main_domain": "str",
+      "c_requires": "independent evaluation, status passed, re-executed at freeze; curator admission is not evidence",
+      "cross_family_filter": "applied per consumer at context time, on provider-returned families"
+    },
+    "entries": [
+      {
+        "artifact_id": "IS1-ART-g0-01ab1f5e3d22",
+        "artifact_sha256": "9f8025465f72d287171918f37b4f127d7e7f343fc3fe0c065b0b0a2b62d1a1e6",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-gamma",
+        "identity_status": "provider-returned",
+        "state": "unverifiable",
+        "evaluation_id": "IS1-EVAL-0fa0e8fae378",
+        "evaluation_sha256": "edc8bc4ef9a4f9332341b948af30cdaeb9fb01da528089d37add0763daa1c8ff",
+        "eligible": [
+          "B"
+        ],
+        "production_tokens": 673
+      },
+      {
+        "artifact_id": "IS1-ART-g0-0cb968f81798",
+        "artifact_sha256": "952d2b3c8d1cf728bbc99d4adc3424bdfebd289875a46f40f8f61563c085aba4",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "num",
+        "producer_family": "mock-gamma",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-6cd4ac8f5312",
+        "evaluation_sha256": "3180d92f86ee27c82dff63deb524ab9faf948b347cf73441589ce25b51b4a3cd",
+        "eligible": [
+          "E"
+        ],
+        "production_tokens": 408
+      },
+      {
+        "artifact_id": "IS1-ART-g0-0d3566f4201a",
+        "artifact_sha256": "519deabd02bed67ceac089986b056e90c7fdf71e845e72e89d02b8a5ac45d4b4",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-gamma",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-a92c97e4673b",
+        "evaluation_sha256": "3cf8b89527a3cca928093345506f499b5b3500c4bebb7519bac6048a894e17a7",
+        "eligible": [
+          "B",
+          "C",
+          "D"
+        ],
+        "production_tokens": 674
+      },
+      {
+        "artifact_id": "IS1-ART-g0-0dd3782db1b9",
+        "artifact_sha256": "4117e4a4965265d85054caf2fbee82712886e087bf50d136578c2949809f564a",
+        "generation": 0,
+        "kind": "poison_fixture",
+        "domain": "str",
+        "producer_family": "investigator",
+        "identity_status": "investigator",
+        "state": "proposed",
+        "evaluation_id": null,
+        "evaluation_sha256": null,
+        "eligible": [
+          "D-poison"
+        ],
+        "production_tokens": 0
+      },
+      {
+        "artifact_id": "IS1-ART-g0-21bc2ae28a07",
+        "artifact_sha256": "0445330c24cb0c856925d095031cb146147437f02414cc1c0df6aedd019f9eb2",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "num",
+        "producer_family": "mock-gamma",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-8fb5e999e8c6",
+        "evaluation_sha256": "1bd7c02b797efefd1d48c5e112755575bec92444386627dcf2bd482b106bd4e4",
+        "eligible": [
+          "E"
+        ],
+        "production_tokens": 381
+      },
+      {
+        "artifact_id": "IS1-ART-g0-31d96cf60043",
+        "artifact_sha256": "5789ca9c6483bd184becf73c0a73eee4a49800d3287664c48fd5ac7b94a0aedb",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-delta",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-f141b347a6b3",
+        "evaluation_sha256": "03f318c1cdf8bb5ba8d25620ee711ddfbef67076e1b41c4caf73691c5df694b7",
+        "eligible": [
+          "B",
+          "C",
+          "D"
+        ],
+        "production_tokens": 446
+      },
+      {
+        "artifact_id": "IS1-ART-g0-40de30932bab",
+        "artifact_sha256": "17e68fad51da38261391c1707f58e307c34266b0ead17572f854f441e25e2c78",
+        "generation": 0,
+        "kind": "poison_fixture",
+        "domain": "str",
+        "producer_family": "investigator",
+        "identity_status": "investigator",
+        "state": "proposed",
+        "evaluation_id": null,
+        "evaluation_sha256": null,
+        "eligible": [
+          "D-poison"
+        ],
+        "production_tokens": 0
+      },
+      {
+        "artifact_id": "IS1-ART-g0-4d560e50cc25",
+        "artifact_sha256": "dbe87efde41c8daabfd2421ef4d078590e61a6224c10b599b410b9339ab7ef45",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-gamma",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-32efe66b793b",
+        "evaluation_sha256": "980173d12e5aa93e659f62a44123575a6861ed0cff7ebf5c272cd9dd57cf275b",
+        "eligible": [
+          "B",
+          "C",
+          "D"
+        ],
+        "production_tokens": 452
+      },
+      {
+        "artifact_id": "IS1-ART-g0-5fcc07515177",
+        "artifact_sha256": "6de6b9ed5593f34e54a51fbeb224928627e9561f9738735dcf51e947f9d57f5b",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-delta",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-97ce3ba6690e",
+        "evaluation_sha256": "03211dfefdfcd90cb4e54b3e6cdb074fa20c4e61c169735bfd3ed5523d425ad7",
+        "eligible": [
+          "B",
+          "C",
+          "D"
+        ],
+        "production_tokens": 639
+      },
+      {
+        "artifact_id": "IS1-ART-g0-7e21fed0065b",
+        "artifact_sha256": "d42b2d3824f1cd938b3e0ceee60b2fd5bb2436ef5dc99f1dda950576d191e329",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "num",
+        "producer_family": "mock-delta",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-ee6acd9da4f3",
+        "evaluation_sha256": "319aa915d07b730d1348b790107d6774b40b2e08f31091771e8ed3382fa4130b",
+        "eligible": [
+          "E"
+        ],
+        "production_tokens": 486
+      },
+      {
+        "artifact_id": "IS1-ART-g0-8194d75fd712",
+        "artifact_sha256": "d9b0609b3b19f0c199d4c4e7ed5870c5e56730f014a7fc1a5de53839da940d95",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "num",
+        "producer_family": "mock-gamma",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-cecd5a9d751f",
+        "evaluation_sha256": "201c31752caa8685a60b7fd3d3750c1cd5e83dab4d25540c45de48917a5ae277",
+        "eligible": [
+          "E"
+        ],
+        "production_tokens": 442
+      },
+      {
+        "artifact_id": "IS1-ART-g0-905ce8e12ba0",
+        "artifact_sha256": "9c39a8165c88ddcf6c40ef1b7e2ec9e261f72f9f03adeb6d1cfcb5973343a391",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-delta",
+        "identity_status": "provider-returned",
+        "state": "rejected",
+        "evaluation_id": "IS1-EVAL-c1e5a26abe8c",
+        "evaluation_sha256": "ad355cfefa56bed6174c9efb614581ce40a41e25df55bd3ab9273e94da7fd104",
+        "eligible": [
+          "B",
+          "D-poison"
+        ],
+        "production_tokens": 531
+      },
+      {
+        "artifact_id": "IS1-ART-g0-9ef0f9eb80f9",
+        "artifact_sha256": "573d75b66925946195013cbe4b0978347b44910446fc82e5afc8c2bf44f8b2e4",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "num",
+        "producer_family": "mock-delta",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-70f969e1a044",
+        "evaluation_sha256": "ebe867d1dbbcb7c51e1e215f50d3a14ee03bce3bbe15a44c87b25a8e2d6fece5",
+        "eligible": [
+          "E"
+        ],
+        "production_tokens": 470
+      },
+      {
+        "artifact_id": "IS1-ART-g0-a44a790c2158",
+        "artifact_sha256": "43230e59c72433d29bb461017422be1be42209365ac53ecff74cc320480889a0",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-delta",
+        "identity_status": "provider-returned",
+        "state": "rejected",
+        "evaluation_id": "IS1-EVAL-d6cf04e2a985",
+        "evaluation_sha256": "5819181cee251a70ce641847e357c9f152a4b8b069179d33f0e75a6ba25ae2a8",
+        "eligible": [
+          "B",
+          "D-poison"
+        ],
+        "production_tokens": 679
+      },
+      {
+        "artifact_id": "IS1-ART-g0-a58361a8d3fd",
+        "artifact_sha256": "bcdea436d3ebe2e62883ccf4b4e367a4334b0d2ad9a36e683eb7fadcfba45da5",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "num",
+        "producer_family": "mock-gamma",
+        "identity_status": "provider-returned",
+        "state": "rejected",
+        "evaluation_id": "IS1-EVAL-624c0e0e11ec",
+        "evaluation_sha256": "c006bd3e349e7740a67009fb46e53d0cd68698782068e6f986108c60043da368",
+        "eligible": [],
+        "production_tokens": 405
+      },
+      {
+        "artifact_id": "IS1-ART-g0-cce43880f604",
+        "artifact_sha256": "cfd721787395aa13be91f5ca03af32dd0ddc0fa40fc934b6a8eff88a1be002f3",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "num",
+        "producer_family": "mock-delta",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-bcda656aefea",
+        "evaluation_sha256": "5a9833bfb91fea2686b113420b4b7e9275d720fea3a7805b2f2e8300aecaa28e",
+        "eligible": [
+          "E"
+        ],
+        "production_tokens": 396
+      },
+      {
+        "artifact_id": "IS1-ART-g0-d05b3deaded0",
+        "artifact_sha256": "2ee8c832ff0b555382c4cf7b4cb1d76bc5ba6660e20cac893494afaae864ef25",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-gamma",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-5a57fd4e520a",
+        "evaluation_sha256": "b12cebe2d3a7ed62241bb32b03cac00121bfb8d4490d0c7eb3926b00ff88ea11",
+        "eligible": [
+          "B",
+          "C",
+          "D"
+        ],
+        "production_tokens": 539
+      },
+      {
+        "artifact_id": "IS1-ART-g0-e00953c64036",
+        "artifact_sha256": "bfa66008cfbefc53a42c65aed5ff11f5e72a681c665c5eac4af8ff83e627ce6a",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "num",
+        "producer_family": "mock-delta",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-52195db1f397",
+        "evaluation_sha256": "83c8fca5b01739de634131c8bf6e846d48bcd62df2cbeb79750f4bbd73f75831",
+        "eligible": [
+          "E"
+        ],
+        "production_tokens": 460
+      }
+    ],
+    "excluded": [
+      {
+        "artifact_id": "IS1-ART-g0-05cba40b3568",
+        "reason": "DUPLICATE_CONTENT",
+        "duplicate_of": "IS1-ART-g0-01ab1f5e3d22"
+      },
+      {
+        "artifact_id": "IS1-ART-g0-2e3617f431e6",
+        "reason": "DUPLICATE_CONTENT",
+        "duplicate_of": "IS1-ART-g0-0d3566f4201a"
+      },
+      {
+        "artifact_id": "IS1-ART-g0-51768955f384",
+        "reason": "DUPLICATE_CONTENT",
+        "duplicate_of": "IS1-ART-g0-31d96cf60043"
+      },
+      {
+        "artifact_id": "IS1-ART-g0-a3b90636f71c",
+        "reason": "DUPLICATE_CONTENT",
+        "duplicate_of": "IS1-ART-g0-01ab1f5e3d22"
+      }
+    ],
+    "counts": {
+      "entries": 18,
+      "by_state": {
+        "unverifiable": 1,
+        "evaluated": 12,
+        "proposed": 2,
+        "rejected": 3
+      },
+      "by_arm": {
+        "B": 8,
+        "C": 5,
+        "D-poison": 4,
+        "E": 7
+      },
+      "excluded": 4
+    },
+    "ablation_targets": [
+      "IS1-ART-g0-0d3566f4201a",
+      "IS1-ART-g0-d05b3deaded0"
+    ],
+    "audits": {
+      "leak_problems": [],
+      "causality": "passed",
+      "receipts_reexecuted": 15
+    },
+    "frozen_at": "2026-11-20T00:00:43.000Z",
+    "id": "IS1-SNAP-g1-2c7befb7b175",
+    "sha256": "4290580ee7a0ac1fe918f0f7a9878a548d7307c67c32a03c0c88781dbb4c4b6d"
+  },
+  {
+    "schema_version": "omnarai.inheritance-study.snapshot/0.1",
+    "study_id": "IS1-STUDY-DEMO-POSITIVE-SHARED",
+    "generation": 2,
+    "policy": {
+      "version": "is1-snapshot-policy/0.1",
+      "allowed_generations": [
+        0,
+        1
+      ],
+      "main_domain": "str",
+      "c_requires": "independent evaluation, status passed, re-executed at freeze; curator admission is not evidence",
+      "cross_family_filter": "applied per consumer at context time, on provider-returned families"
+    },
+    "entries": [
+      {
+        "artifact_id": "IS1-ART-g0-01ab1f5e3d22",
+        "artifact_sha256": "9f8025465f72d287171918f37b4f127d7e7f343fc3fe0c065b0b0a2b62d1a1e6",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-gamma",
+        "identity_status": "provider-returned",
+        "state": "unverifiable",
+        "evaluation_id": "IS1-EVAL-0fa0e8fae378",
+        "evaluation_sha256": "edc8bc4ef9a4f9332341b948af30cdaeb9fb01da528089d37add0763daa1c8ff",
+        "eligible": [
+          "B"
+        ],
+        "production_tokens": 673
+      },
+      {
+        "artifact_id": "IS1-ART-g0-0cb968f81798",
+        "artifact_sha256": "952d2b3c8d1cf728bbc99d4adc3424bdfebd289875a46f40f8f61563c085aba4",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "num",
+        "producer_family": "mock-gamma",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-6cd4ac8f5312",
+        "evaluation_sha256": "3180d92f86ee27c82dff63deb524ab9faf948b347cf73441589ce25b51b4a3cd",
+        "eligible": [
+          "E"
+        ],
+        "production_tokens": 408
+      },
+      {
+        "artifact_id": "IS1-ART-g0-0d3566f4201a",
+        "artifact_sha256": "519deabd02bed67ceac089986b056e90c7fdf71e845e72e89d02b8a5ac45d4b4",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-gamma",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-a92c97e4673b",
+        "evaluation_sha256": "3cf8b89527a3cca928093345506f499b5b3500c4bebb7519bac6048a894e17a7",
+        "eligible": [
+          "B",
+          "C",
+          "D"
+        ],
+        "production_tokens": 674
+      },
+      {
+        "artifact_id": "IS1-ART-g0-0dd3782db1b9",
+        "artifact_sha256": "4117e4a4965265d85054caf2fbee82712886e087bf50d136578c2949809f564a",
+        "generation": 0,
+        "kind": "poison_fixture",
+        "domain": "str",
+        "producer_family": "investigator",
+        "identity_status": "investigator",
+        "state": "proposed",
+        "evaluation_id": null,
+        "evaluation_sha256": null,
+        "eligible": [
+          "D-poison"
+        ],
+        "production_tokens": 0
+      },
+      {
+        "artifact_id": "IS1-ART-g0-21bc2ae28a07",
+        "artifact_sha256": "0445330c24cb0c856925d095031cb146147437f02414cc1c0df6aedd019f9eb2",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "num",
+        "producer_family": "mock-gamma",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-8fb5e999e8c6",
+        "evaluation_sha256": "1bd7c02b797efefd1d48c5e112755575bec92444386627dcf2bd482b106bd4e4",
+        "eligible": [
+          "E"
+        ],
+        "production_tokens": 381
+      },
+      {
+        "artifact_id": "IS1-ART-g0-31d96cf60043",
+        "artifact_sha256": "5789ca9c6483bd184becf73c0a73eee4a49800d3287664c48fd5ac7b94a0aedb",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-delta",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-f141b347a6b3",
+        "evaluation_sha256": "03f318c1cdf8bb5ba8d25620ee711ddfbef67076e1b41c4caf73691c5df694b7",
+        "eligible": [
+          "B",
+          "C",
+          "D"
+        ],
+        "production_tokens": 446
+      },
+      {
+        "artifact_id": "IS1-ART-g0-40de30932bab",
+        "artifact_sha256": "17e68fad51da38261391c1707f58e307c34266b0ead17572f854f441e25e2c78",
+        "generation": 0,
+        "kind": "poison_fixture",
+        "domain": "str",
+        "producer_family": "investigator",
+        "identity_status": "investigator",
+        "state": "proposed",
+        "evaluation_id": null,
+        "evaluation_sha256": null,
+        "eligible": [
+          "D-poison"
+        ],
+        "production_tokens": 0
+      },
+      {
+        "artifact_id": "IS1-ART-g0-4d560e50cc25",
+        "artifact_sha256": "dbe87efde41c8daabfd2421ef4d078590e61a6224c10b599b410b9339ab7ef45",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-gamma",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-32efe66b793b",
+        "evaluation_sha256": "980173d12e5aa93e659f62a44123575a6861ed0cff7ebf5c272cd9dd57cf275b",
+        "eligible": [
+          "B",
+          "C",
+          "D"
+        ],
+        "production_tokens": 452
+      },
+      {
+        "artifact_id": "IS1-ART-g0-5fcc07515177",
+        "artifact_sha256": "6de6b9ed5593f34e54a51fbeb224928627e9561f9738735dcf51e947f9d57f5b",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-delta",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-97ce3ba6690e",
+        "evaluation_sha256": "03211dfefdfcd90cb4e54b3e6cdb074fa20c4e61c169735bfd3ed5523d425ad7",
+        "eligible": [
+          "B",
+          "C",
+          "D"
+        ],
+        "production_tokens": 639
+      },
+      {
+        "artifact_id": "IS1-ART-g0-7e21fed0065b",
+        "artifact_sha256": "d42b2d3824f1cd938b3e0ceee60b2fd5bb2436ef5dc99f1dda950576d191e329",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "num",
+        "producer_family": "mock-delta",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-ee6acd9da4f3",
+        "evaluation_sha256": "319aa915d07b730d1348b790107d6774b40b2e08f31091771e8ed3382fa4130b",
+        "eligible": [
+          "E"
+        ],
+        "production_tokens": 486
+      },
+      {
+        "artifact_id": "IS1-ART-g0-8194d75fd712",
+        "artifact_sha256": "d9b0609b3b19f0c199d4c4e7ed5870c5e56730f014a7fc1a5de53839da940d95",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "num",
+        "producer_family": "mock-gamma",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-cecd5a9d751f",
+        "evaluation_sha256": "201c31752caa8685a60b7fd3d3750c1cd5e83dab4d25540c45de48917a5ae277",
+        "eligible": [
+          "E"
+        ],
+        "production_tokens": 442
+      },
+      {
+        "artifact_id": "IS1-ART-g0-905ce8e12ba0",
+        "artifact_sha256": "9c39a8165c88ddcf6c40ef1b7e2ec9e261f72f9f03adeb6d1cfcb5973343a391",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-delta",
+        "identity_status": "provider-returned",
+        "state": "rejected",
+        "evaluation_id": "IS1-EVAL-c1e5a26abe8c",
+        "evaluation_sha256": "ad355cfefa56bed6174c9efb614581ce40a41e25df55bd3ab9273e94da7fd104",
+        "eligible": [
+          "B",
+          "D-poison"
+        ],
+        "production_tokens": 531
+      },
+      {
+        "artifact_id": "IS1-ART-g0-9ef0f9eb80f9",
+        "artifact_sha256": "573d75b66925946195013cbe4b0978347b44910446fc82e5afc8c2bf44f8b2e4",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "num",
+        "producer_family": "mock-delta",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-70f969e1a044",
+        "evaluation_sha256": "ebe867d1dbbcb7c51e1e215f50d3a14ee03bce3bbe15a44c87b25a8e2d6fece5",
+        "eligible": [
+          "E"
+        ],
+        "production_tokens": 470
+      },
+      {
+        "artifact_id": "IS1-ART-g0-a44a790c2158",
+        "artifact_sha256": "43230e59c72433d29bb461017422be1be42209365ac53ecff74cc320480889a0",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-delta",
+        "identity_status": "provider-returned",
+        "state": "rejected",
+        "evaluation_id": "IS1-EVAL-d6cf04e2a985",
+        "evaluation_sha256": "5819181cee251a70ce641847e357c9f152a4b8b069179d33f0e75a6ba25ae2a8",
+        "eligible": [
+          "B",
+          "D-poison"
+        ],
+        "production_tokens": 679
+      },
+      {
+        "artifact_id": "IS1-ART-g0-a58361a8d3fd",
+        "artifact_sha256": "bcdea436d3ebe2e62883ccf4b4e367a4334b0d2ad9a36e683eb7fadcfba45da5",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "num",
+        "producer_family": "mock-gamma",
+        "identity_status": "provider-returned",
+        "state": "rejected",
+        "evaluation_id": "IS1-EVAL-624c0e0e11ec",
+        "evaluation_sha256": "c006bd3e349e7740a67009fb46e53d0cd68698782068e6f986108c60043da368",
+        "eligible": [],
+        "production_tokens": 405
+      },
+      {
+        "artifact_id": "IS1-ART-g0-cce43880f604",
+        "artifact_sha256": "cfd721787395aa13be91f5ca03af32dd0ddc0fa40fc934b6a8eff88a1be002f3",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "num",
+        "producer_family": "mock-delta",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-bcda656aefea",
+        "evaluation_sha256": "5a9833bfb91fea2686b113420b4b7e9275d720fea3a7805b2f2e8300aecaa28e",
+        "eligible": [
+          "E"
+        ],
+        "production_tokens": 396
+      },
+      {
+        "artifact_id": "IS1-ART-g0-d05b3deaded0",
+        "artifact_sha256": "2ee8c832ff0b555382c4cf7b4cb1d76bc5ba6660e20cac893494afaae864ef25",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-gamma",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-5a57fd4e520a",
+        "evaluation_sha256": "b12cebe2d3a7ed62241bb32b03cac00121bfb8d4490d0c7eb3926b00ff88ea11",
+        "eligible": [
+          "B",
+          "C",
+          "D"
+        ],
+        "production_tokens": 539
+      },
+      {
+        "artifact_id": "IS1-ART-g0-e00953c64036",
+        "artifact_sha256": "bfa66008cfbefc53a42c65aed5ff11f5e72a681c665c5eac4af8ff83e627ce6a",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "num",
+        "producer_family": "mock-delta",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-52195db1f397",
+        "evaluation_sha256": "83c8fca5b01739de634131c8bf6e846d48bcd62df2cbeb79750f4bbd73f75831",
+        "eligible": [
+          "E"
+        ],
+        "production_tokens": 460
+      },
+      {
+        "artifact_id": "IS1-ART-g1-711f292ff6c4",
+        "artifact_sha256": "c445e8a2464946b7734aece053b6549b8d89bfae1cd6f28d9a93fff9c7e66dc7",
+        "generation": 1,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-delta",
+        "identity_status": "provider-returned",
+        "state": "rejected",
+        "evaluation_id": "IS1-EVAL-02605d063663",
+        "evaluation_sha256": "1c1f530021ff7340989e783591761de19e869bf9ab58989120592e86bc8f2562",
+        "eligible": [
+          "B",
+          "D-poison"
+        ],
+        "production_tokens": 897
+      },
+      {
+        "artifact_id": "IS1-ART-g1-88ebf2a03af8",
+        "artifact_sha256": "01dd7dac97ec6cbb1425c572c1a61ac4ad3edaa10ec9ae778fed86fc414b596f",
+        "generation": 1,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-delta",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-cb721a1f4687",
+        "evaluation_sha256": "d2e32e584c2d4a02896e73b970f14064072279cc4221c197c7ebf95ca1f7e4cc",
+        "eligible": [
+          "B",
+          "C",
+          "D"
+        ],
+        "production_tokens": 774
+      },
+      {
+        "artifact_id": "IS1-ART-g1-bf5e6aacf2f0",
+        "artifact_sha256": "d216c6c11fdab045703e677b09349927c936d0d3833c97ecb0d75dae0146cbbd",
+        "generation": 1,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-gamma",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-54356b180b38",
+        "evaluation_sha256": "9839e88ecc2efe9326993b5feafe4e89308995520b058fe9373e74cbf144f771",
+        "eligible": [
+          "B",
+          "C",
+          "D"
+        ],
+        "production_tokens": 814
+      },
+      {
+        "artifact_id": "IS1-ART-g1-eb4c11cd9498",
+        "artifact_sha256": "57951cedaa86033f3b31891f479896739ae41d8eabae0c7bbc0a0113f134a817",
+        "generation": 1,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-gamma",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-690c43e7089a",
+        "evaluation_sha256": "f8d8c6edf5f0173fa41690d74426ddebdf9b176d8ab15d88f6914212b6cde658",
+        "eligible": [
+          "B",
+          "C",
+          "D"
+        ],
+        "production_tokens": 787
+      }
+    ],
+    "excluded": [
+      {
+        "artifact_id": "IS1-ART-g0-05cba40b3568",
+        "reason": "DUPLICATE_CONTENT",
+        "duplicate_of": "IS1-ART-g0-01ab1f5e3d22"
+      },
+      {
+        "artifact_id": "IS1-ART-g0-2e3617f431e6",
+        "reason": "DUPLICATE_CONTENT",
+        "duplicate_of": "IS1-ART-g0-0d3566f4201a"
+      },
+      {
+        "artifact_id": "IS1-ART-g0-51768955f384",
+        "reason": "DUPLICATE_CONTENT",
+        "duplicate_of": "IS1-ART-g0-31d96cf60043"
+      },
+      {
+        "artifact_id": "IS1-ART-g0-a3b90636f71c",
+        "reason": "DUPLICATE_CONTENT",
+        "duplicate_of": "IS1-ART-g0-01ab1f5e3d22"
+      },
+      {
+        "artifact_id": "IS1-ART-g1-5d694a735a70",
+        "reason": "DUPLICATE_CONTENT",
+        "duplicate_of": "IS1-ART-g0-01ab1f5e3d22"
+      },
+      {
+        "artifact_id": "IS1-ART-g1-7feaba769d15",
+        "reason": "DUPLICATE_CONTENT",
+        "duplicate_of": "IS1-ART-g0-01ab1f5e3d22"
+      }
+    ],
+    "counts": {
+      "entries": 22,
+      "by_state": {
+        "unverifiable": 1,
+        "evaluated": 15,
+        "proposed": 2,
+        "rejected": 4
+      },
+      "by_arm": {
+        "B": 12,
+        "C": 8,
+        "D-poison": 5,
+        "E": 7
+      },
+      "excluded": 6
+    },
+    "ablation_targets": [
+      "IS1-ART-g0-0d3566f4201a",
+      "IS1-ART-g0-5fcc07515177"
+    ],
+    "audits": {
+      "leak_problems": [],
+      "causality": "passed",
+      "receipts_reexecuted": 19
+    },
+    "frozen_at": "2026-11-20T00:00:56.000Z",
+    "id": "IS1-SNAP-g2-785ea4220a95",
+    "sha256": "467d5e4cd83c1c0df5a6cad8b501dcd12a1376d400837c27ae4330d5952e5551"
+  },
+  {
+    "schema_version": "omnarai.inheritance-study.snapshot/0.1",
+    "study_id": "IS1-STUDY-DEMO-POSITIVE-SHARED",
+    "generation": 3,
+    "policy": {
+      "version": "is1-snapshot-policy/0.1",
+      "allowed_generations": [
+        0,
+        1,
+        2
+      ],
+      "main_domain": "str",
+      "c_requires": "independent evaluation, status passed, re-executed at freeze; curator admission is not evidence",
+      "cross_family_filter": "applied per consumer at context time, on provider-returned families"
+    },
+    "entries": [
+      {
+        "artifact_id": "IS1-ART-g0-01ab1f5e3d22",
+        "artifact_sha256": "9f8025465f72d287171918f37b4f127d7e7f343fc3fe0c065b0b0a2b62d1a1e6",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-gamma",
+        "identity_status": "provider-returned",
+        "state": "unverifiable",
+        "evaluation_id": "IS1-EVAL-0fa0e8fae378",
+        "evaluation_sha256": "edc8bc4ef9a4f9332341b948af30cdaeb9fb01da528089d37add0763daa1c8ff",
+        "eligible": [
+          "B"
+        ],
+        "production_tokens": 673
+      },
+      {
+        "artifact_id": "IS1-ART-g0-0cb968f81798",
+        "artifact_sha256": "952d2b3c8d1cf728bbc99d4adc3424bdfebd289875a46f40f8f61563c085aba4",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "num",
+        "producer_family": "mock-gamma",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-6cd4ac8f5312",
+        "evaluation_sha256": "3180d92f86ee27c82dff63deb524ab9faf948b347cf73441589ce25b51b4a3cd",
+        "eligible": [
+          "E"
+        ],
+        "production_tokens": 408
+      },
+      {
+        "artifact_id": "IS1-ART-g0-0d3566f4201a",
+        "artifact_sha256": "519deabd02bed67ceac089986b056e90c7fdf71e845e72e89d02b8a5ac45d4b4",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-gamma",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-a92c97e4673b",
+        "evaluation_sha256": "3cf8b89527a3cca928093345506f499b5b3500c4bebb7519bac6048a894e17a7",
+        "eligible": [
+          "B",
+          "C",
+          "D"
+        ],
+        "production_tokens": 674
+      },
+      {
+        "artifact_id": "IS1-ART-g0-0dd3782db1b9",
+        "artifact_sha256": "4117e4a4965265d85054caf2fbee82712886e087bf50d136578c2949809f564a",
+        "generation": 0,
+        "kind": "poison_fixture",
+        "domain": "str",
+        "producer_family": "investigator",
+        "identity_status": "investigator",
+        "state": "proposed",
+        "evaluation_id": null,
+        "evaluation_sha256": null,
+        "eligible": [
+          "D-poison"
+        ],
+        "production_tokens": 0
+      },
+      {
+        "artifact_id": "IS1-ART-g0-21bc2ae28a07",
+        "artifact_sha256": "0445330c24cb0c856925d095031cb146147437f02414cc1c0df6aedd019f9eb2",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "num",
+        "producer_family": "mock-gamma",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-8fb5e999e8c6",
+        "evaluation_sha256": "1bd7c02b797efefd1d48c5e112755575bec92444386627dcf2bd482b106bd4e4",
+        "eligible": [
+          "E"
+        ],
+        "production_tokens": 381
+      },
+      {
+        "artifact_id": "IS1-ART-g0-31d96cf60043",
+        "artifact_sha256": "5789ca9c6483bd184becf73c0a73eee4a49800d3287664c48fd5ac7b94a0aedb",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-delta",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-f141b347a6b3",
+        "evaluation_sha256": "03f318c1cdf8bb5ba8d25620ee711ddfbef67076e1b41c4caf73691c5df694b7",
+        "eligible": [
+          "B",
+          "C",
+          "D"
+        ],
+        "production_tokens": 446
+      },
+      {
+        "artifact_id": "IS1-ART-g0-40de30932bab",
+        "artifact_sha256": "17e68fad51da38261391c1707f58e307c34266b0ead17572f854f441e25e2c78",
+        "generation": 0,
+        "kind": "poison_fixture",
+        "domain": "str",
+        "producer_family": "investigator",
+        "identity_status": "investigator",
+        "state": "proposed",
+        "evaluation_id": null,
+        "evaluation_sha256": null,
+        "eligible": [
+          "D-poison"
+        ],
+        "production_tokens": 0
+      },
+      {
+        "artifact_id": "IS1-ART-g0-4d560e50cc25",
+        "artifact_sha256": "dbe87efde41c8daabfd2421ef4d078590e61a6224c10b599b410b9339ab7ef45",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-gamma",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-32efe66b793b",
+        "evaluation_sha256": "980173d12e5aa93e659f62a44123575a6861ed0cff7ebf5c272cd9dd57cf275b",
+        "eligible": [
+          "B",
+          "C",
+          "D"
+        ],
+        "production_tokens": 452
+      },
+      {
+        "artifact_id": "IS1-ART-g0-5fcc07515177",
+        "artifact_sha256": "6de6b9ed5593f34e54a51fbeb224928627e9561f9738735dcf51e947f9d57f5b",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-delta",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-97ce3ba6690e",
+        "evaluation_sha256": "03211dfefdfcd90cb4e54b3e6cdb074fa20c4e61c169735bfd3ed5523d425ad7",
+        "eligible": [
+          "B",
+          "C",
+          "D"
+        ],
+        "production_tokens": 639
+      },
+      {
+        "artifact_id": "IS1-ART-g0-7e21fed0065b",
+        "artifact_sha256": "d42b2d3824f1cd938b3e0ceee60b2fd5bb2436ef5dc99f1dda950576d191e329",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "num",
+        "producer_family": "mock-delta",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-ee6acd9da4f3",
+        "evaluation_sha256": "319aa915d07b730d1348b790107d6774b40b2e08f31091771e8ed3382fa4130b",
+        "eligible": [
+          "E"
+        ],
+        "production_tokens": 486
+      },
+      {
+        "artifact_id": "IS1-ART-g0-8194d75fd712",
+        "artifact_sha256": "d9b0609b3b19f0c199d4c4e7ed5870c5e56730f014a7fc1a5de53839da940d95",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "num",
+        "producer_family": "mock-gamma",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-cecd5a9d751f",
+        "evaluation_sha256": "201c31752caa8685a60b7fd3d3750c1cd5e83dab4d25540c45de48917a5ae277",
+        "eligible": [
+          "E"
+        ],
+        "production_tokens": 442
+      },
+      {
+        "artifact_id": "IS1-ART-g0-905ce8e12ba0",
+        "artifact_sha256": "9c39a8165c88ddcf6c40ef1b7e2ec9e261f72f9f03adeb6d1cfcb5973343a391",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-delta",
+        "identity_status": "provider-returned",
+        "state": "rejected",
+        "evaluation_id": "IS1-EVAL-c1e5a26abe8c",
+        "evaluation_sha256": "ad355cfefa56bed6174c9efb614581ce40a41e25df55bd3ab9273e94da7fd104",
+        "eligible": [
+          "B",
+          "D-poison"
+        ],
+        "production_tokens": 531
+      },
+      {
+        "artifact_id": "IS1-ART-g0-9ef0f9eb80f9",
+        "artifact_sha256": "573d75b66925946195013cbe4b0978347b44910446fc82e5afc8c2bf44f8b2e4",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "num",
+        "producer_family": "mock-delta",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-70f969e1a044",
+        "evaluation_sha256": "ebe867d1dbbcb7c51e1e215f50d3a14ee03bce3bbe15a44c87b25a8e2d6fece5",
+        "eligible": [
+          "E"
+        ],
+        "production_tokens": 470
+      },
+      {
+        "artifact_id": "IS1-ART-g0-a44a790c2158",
+        "artifact_sha256": "43230e59c72433d29bb461017422be1be42209365ac53ecff74cc320480889a0",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-delta",
+        "identity_status": "provider-returned",
+        "state": "rejected",
+        "evaluation_id": "IS1-EVAL-d6cf04e2a985",
+        "evaluation_sha256": "5819181cee251a70ce641847e357c9f152a4b8b069179d33f0e75a6ba25ae2a8",
+        "eligible": [
+          "B",
+          "D-poison"
+        ],
+        "production_tokens": 679
+      },
+      {
+        "artifact_id": "IS1-ART-g0-a58361a8d3fd",
+        "artifact_sha256": "bcdea436d3ebe2e62883ccf4b4e367a4334b0d2ad9a36e683eb7fadcfba45da5",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "num",
+        "producer_family": "mock-gamma",
+        "identity_status": "provider-returned",
+        "state": "rejected",
+        "evaluation_id": "IS1-EVAL-624c0e0e11ec",
+        "evaluation_sha256": "c006bd3e349e7740a67009fb46e53d0cd68698782068e6f986108c60043da368",
+        "eligible": [],
+        "production_tokens": 405
+      },
+      {
+        "artifact_id": "IS1-ART-g0-cce43880f604",
+        "artifact_sha256": "cfd721787395aa13be91f5ca03af32dd0ddc0fa40fc934b6a8eff88a1be002f3",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "num",
+        "producer_family": "mock-delta",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-bcda656aefea",
+        "evaluation_sha256": "5a9833bfb91fea2686b113420b4b7e9275d720fea3a7805b2f2e8300aecaa28e",
+        "eligible": [
+          "E"
+        ],
+        "production_tokens": 396
+      },
+      {
+        "artifact_id": "IS1-ART-g0-d05b3deaded0",
+        "artifact_sha256": "2ee8c832ff0b555382c4cf7b4cb1d76bc5ba6660e20cac893494afaae864ef25",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-gamma",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-5a57fd4e520a",
+        "evaluation_sha256": "b12cebe2d3a7ed62241bb32b03cac00121bfb8d4490d0c7eb3926b00ff88ea11",
+        "eligible": [
+          "B",
+          "C",
+          "D"
+        ],
+        "production_tokens": 539
+      },
+      {
+        "artifact_id": "IS1-ART-g0-e00953c64036",
+        "artifact_sha256": "bfa66008cfbefc53a42c65aed5ff11f5e72a681c665c5eac4af8ff83e627ce6a",
+        "generation": 0,
+        "kind": "producer_output",
+        "domain": "num",
+        "producer_family": "mock-delta",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-52195db1f397",
+        "evaluation_sha256": "83c8fca5b01739de634131c8bf6e846d48bcd62df2cbeb79750f4bbd73f75831",
+        "eligible": [
+          "E"
+        ],
+        "production_tokens": 460
+      },
+      {
+        "artifact_id": "IS1-ART-g1-711f292ff6c4",
+        "artifact_sha256": "c445e8a2464946b7734aece053b6549b8d89bfae1cd6f28d9a93fff9c7e66dc7",
+        "generation": 1,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-delta",
+        "identity_status": "provider-returned",
+        "state": "rejected",
+        "evaluation_id": "IS1-EVAL-02605d063663",
+        "evaluation_sha256": "1c1f530021ff7340989e783591761de19e869bf9ab58989120592e86bc8f2562",
+        "eligible": [
+          "B",
+          "D-poison"
+        ],
+        "production_tokens": 897
+      },
+      {
+        "artifact_id": "IS1-ART-g1-88ebf2a03af8",
+        "artifact_sha256": "01dd7dac97ec6cbb1425c572c1a61ac4ad3edaa10ec9ae778fed86fc414b596f",
+        "generation": 1,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-delta",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-cb721a1f4687",
+        "evaluation_sha256": "d2e32e584c2d4a02896e73b970f14064072279cc4221c197c7ebf95ca1f7e4cc",
+        "eligible": [
+          "B",
+          "C",
+          "D"
+        ],
+        "production_tokens": 774
+      },
+      {
+        "artifact_id": "IS1-ART-g1-bf5e6aacf2f0",
+        "artifact_sha256": "d216c6c11fdab045703e677b09349927c936d0d3833c97ecb0d75dae0146cbbd",
+        "generation": 1,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-gamma",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-54356b180b38",
+        "evaluation_sha256": "9839e88ecc2efe9326993b5feafe4e89308995520b058fe9373e74cbf144f771",
+        "eligible": [
+          "B",
+          "C",
+          "D"
+        ],
+        "production_tokens": 814
+      },
+      {
+        "artifact_id": "IS1-ART-g1-eb4c11cd9498",
+        "artifact_sha256": "57951cedaa86033f3b31891f479896739ae41d8eabae0c7bbc0a0113f134a817",
+        "generation": 1,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-gamma",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-690c43e7089a",
+        "evaluation_sha256": "f8d8c6edf5f0173fa41690d74426ddebdf9b176d8ab15d88f6914212b6cde658",
+        "eligible": [
+          "B",
+          "C",
+          "D"
+        ],
+        "production_tokens": 787
+      },
+      {
+        "artifact_id": "IS1-ART-g2-e67d0d13d69b",
+        "artifact_sha256": "20868f0a9fe842c12e7a6fc8b4b22de05d51ba7b5b07f923c23112d14b36b138",
+        "generation": 2,
+        "kind": "producer_output",
+        "domain": "str",
+        "producer_family": "mock-gamma",
+        "identity_status": "provider-returned",
+        "state": "evaluated",
+        "evaluation_id": "IS1-EVAL-99571a415ada",
+        "evaluation_sha256": "1df22b80dfcb61e4d7df819b4d42d911816144af819a648ae812e342e92967fb",
+        "eligible": [
+          "B",
+          "C",
+          "D"
+        ],
+        "production_tokens": 760
+      }
+    ],
+    "excluded": [
+      {
+        "artifact_id": "IS1-ART-g0-05cba40b3568",
+        "reason": "DUPLICATE_CONTENT",
+        "duplicate_of": "IS1-ART-g0-01ab1f5e3d22"
+      },
+      {
+        "artifact_id": "IS1-ART-g0-2e3617f431e6",
+        "reason": "DUPLICATE_CONTENT",
+        "duplicate_of": "IS1-ART-g0-0d3566f4201a"
+      },
+      {
+        "artifact_id": "IS1-ART-g0-51768955f384",
+        "reason": "DUPLICATE_CONTENT",
+        "duplicate_of": "IS1-ART-g0-31d96cf60043"
+      },
+      {
+        "artifact_id": "IS1-ART-g0-a3b90636f71c",
+        "reason": "DUPLICATE_CONTENT",
+        "duplicate_of": "IS1-ART-g0-01ab1f5e3d22"
+      },
+      {
+        "artifact_id": "IS1-ART-g1-5d694a735a70",
+        "reason": "DUPLICATE_CONTENT",
+        "duplicate_of": "IS1-ART-g0-01ab1f5e3d22"
+      },
+      {
+        "artifact_id": "IS1-ART-g1-7feaba769d15",
+        "reason": "DUPLICATE_CONTENT",
+        "duplicate_of": "IS1-ART-g0-01ab1f5e3d22"
+      },
+      {
+        "artifact_id": "IS1-ART-g2-2049b248d7b2",
+        "reason": "DUPLICATE_CONTENT",
+        "duplicate_of": "IS1-ART-g0-01ab1f5e3d22"
+      },
+      {
+        "artifact_id": "IS1-ART-g2-2849d1cac709",
+        "reason": "DUPLICATE_CONTENT",
+        "duplicate_of": "IS1-ART-g0-01ab1f5e3d22"
+      },
+      {
+        "artifact_id": "IS1-ART-g2-29246dac009f",
+        "reason": "DUPLICATE_CONTENT",
+        "duplicate_of": "IS1-ART-g0-01ab1f5e3d22"
+      },
+      {
+        "artifact_id": "IS1-ART-g2-cbdbedad05e4",
+        "reason": "DUPLICATE_CONTENT",
+        "duplicate_of": "IS1-ART-g0-01ab1f5e3d22"
+      },
+      {
+        "artifact_id": "IS1-ART-g2-f1050adbd87e",
+        "reason": "DUPLICATE_CONTENT",
+        "duplicate_of": "IS1-ART-g0-01ab1f5e3d22"
+      }
+    ],
+    "counts": {
+      "entries": 23,
+      "by_state": {
+        "unverifiable": 1,
+        "evaluated": 16,
+        "proposed": 2,
+        "rejected": 4
+      },
+      "by_arm": {
+        "B": 13,
+        "C": 9,
+        "D-poison": 5,
+        "E": 7
+      },
+      "excluded": 11
+    },
+    "ablation_targets": [
+      "IS1-ART-g1-eb4c11cd9498",
+      "IS1-ART-g2-e67d0d13d69b"
+    ],
+    "audits": {
+      "leak_problems": [],
+      "causality": "passed",
+      "receipts_reexecuted": 20
+    },
+    "frozen_at": "2026-11-20T00:01:09.000Z",
+    "id": "IS1-SNAP-g3-2dfa9c177b05",
+    "sha256": "67b9ddedacbf03c2ac06911478ca654401def72cd1b04f1a3849e18981b969f8"
+  }
+]

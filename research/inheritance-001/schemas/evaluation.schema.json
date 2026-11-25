@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://engine.omnarai.org/research/inheritance-001/schemas/evaluation-0.1.schema.json",
+  "title": "Inheritance Study 001 evaluation record (research draft; not a Footprint, not a public contract)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "study_id",
+    "artifact_id",
+    "artifact_sha256",
+    "verifier",
+    "independent_of_producer",
+    "evidence_tier",
+    "status",
+    "detail",
+    "cases",
+    "cost",
+    "scope_note",
+    "recorded_at",
+    "sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "omnarai.inheritance-study.evaluation/0.1"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^IS1-EVAL-[0-9a-f]{12}$"
+    },
+    "study_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifact_id": {
+      "type": "string",
+      "pattern": "^IS1-ART-g\\d{1,3}-[0-9a-f]{12}$"
+    },
+    "artifact_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "verifier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "version",
+        "code_sha256"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "deterministic-dsl",
+            "human-adjudication",
+            "model-judge"
+          ]
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "code_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "family": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "independent_of_producer": {
+      "type": "boolean"
+    },
+    "evidence_tier": {
+      "enum": [
+        "objective-hidden-tests",
+        "human-adjudicated",
+        "model-judged"
+      ]
+    },
+    "status": {
+      "enum": [
+        "passed",
+        "failed",
+        "error",
+        "inconclusive"
+      ]
+    },
+    "detail": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "cases": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "task_id",
+        "n",
+        "passed",
+        "commitment_sha256"
+      ],
+      "properties": {
+        "task_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "n": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "passed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "commitment_sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "cost": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "interpreter_steps",
+        "cpu_ms",
+        "cpu_ms_measured",
+        "model_tokens_in",
+        "model_tokens_out",
+        "human_minutes",
+        "usd"
+      ],
+      "properties": {
+        "interpreter_steps": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cpu_ms": {
+          "type": "number"
+        },
+        "cpu_ms_measured": {
+          "type": "boolean"
+        },
+        "model_tokens_in": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "model_tokens_out": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "human_minutes": {
+          "type": "number"
+        },
+        "usd": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "scope_note": {
+      "type": "string",
+      "minLength": 1
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

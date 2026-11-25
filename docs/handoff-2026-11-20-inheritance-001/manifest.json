@@ -1,0 +1,145 @@
+{
+  "name": "Omnarai Inheritance Experiment 001",
+  "created": "2026-11-20",
+  "evidence_status": "source-audited, live-runtime-unverified; all code results simulation only",
+  "tests": "prototype npm test: 10/10 pass",
+  "demo": "prototype npm run demo: 288 scripted $0 trials",
+  "file_count": 27,
+  "files": [
+    {
+      "path": "CLAUDE_CODE_PROMPT.md",
+      "bytes": 8250,
+      "sha256": "87e82e5ce888ba7e29e120535dbee263e8e9ca01bae47c3fe6c62ff8e35cb2b5"
+    },
+    {
+      "path": "CLAUDE_CODE_PROMPT.txt",
+      "bytes": 8250,
+      "sha256": "87e82e5ce888ba7e29e120535dbee263e8e9ca01bae47c3fe6c62ff8e35cb2b5"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3987,
+      "sha256": "0925706087ed4c9a33a87472ecd463d2d40a2311345748c55e56ad83221b81a8"
+    },
+    {
+      "path": "artifacts/DEMO_REPORT_NOT_EVIDENCE.md",
+      "bytes": 673,
+      "sha256": "d84a620500f44cdad17fab7c4267f8850b88e31b66fb1f4ee978ab73438ba25b"
+    },
+    {
+      "path": "docs/00_DECISION.md",
+      "bytes": 3428,
+      "sha256": "7d712536abfa70438aa72dfa1ab74875824c19e88073388e8b81600b083ad7f0"
+    },
+    {
+      "path": "docs/01_EVIDENCE_AND_REPO_FIT.md",
+      "bytes": 5645,
+      "sha256": "33b21b4eeb17a5ebd18185351a677ed6a06da58c6912d0e3292b7e7eeef32254"
+    },
+    {
+      "path": "docs/02_PROTOCOL_AND_STATISTICS.md",
+      "bytes": 7421,
+      "sha256": "e135d9c904a886733d48ec0b70df62af7e7da1113043237a0e605744fc063c4d"
+    },
+    {
+      "path": "docs/03_INTEGRATION_PLAN.md",
+      "bytes": 7416,
+      "sha256": "dba494c668e2150db968e34a4eb66f13936ae125a9c3cbfd0387f20f6130103e"
+    },
+    {
+      "path": "docs/04_SECURITY_AND_RELEASE_GATES.md",
+      "bytes": 4604,
+      "sha256": "99c92a16dd82d32ae72f8deb0b5b654f9bc4cbcd63b477200ba9cd8b3c227b50"
+    },
+    {
+      "path": "docs/05_ACCEPTANCE_TESTS.md",
+      "bytes": 3390,
+      "sha256": "904755a0fb3480fd5e4200a8dee24d1db12fc4dc6cd676deea0155f145cb3aaf"
+    },
+    {
+      "path": "docs/06_RESEARCH_NOTES.md",
+      "bytes": 3009,
+      "sha256": "5b26254ad81bc95d4a917dc46dd053c7b9909053f96a559bbb1332fa43e935a8"
+    },
+    {
+      "path": "protocol/deviations.ndjson",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "protocol/preregistration-template.yaml",
+      "bytes": 3106,
+      "sha256": "90fd3cadf861190689c497a208bdb2b49ae75630bd8f1f237f4a54c76ee84850"
+    },
+    {
+      "path": "prototype/README.md",
+      "bytes": 1157,
+      "sha256": "6cad456ae6f31b30ea4fdbb465335f7fe25a640ffc71fb82946f0468371ece05"
+    },
+    {
+      "path": "prototype/out/REPORT.md",
+      "bytes": 673,
+      "sha256": "d84a620500f44cdad17fab7c4267f8850b88e31b66fb1f4ee978ab73438ba25b"
+    },
+    {
+      "path": "prototype/out/plan.json",
+      "bytes": 614,
+      "sha256": "1131b109bf926cdca18bf9dc6cd9b8144b92e28c4ae01e46b361b53e01415ff4"
+    },
+    {
+      "path": "prototype/out/snapshot.json",
+      "bytes": 1823,
+      "sha256": "e2516ff52f811cac27f67c7971bc2d0a018177c0837014f1d908cfd9bb4094f1"
+    },
+    {
+      "path": "prototype/out/summary.json",
+      "bytes": 1157,
+      "sha256": "d1f96ed55c67a93542c2aa24f5f2f12d9387fb35eae5b2f3244730949f0f368a"
+    },
+    {
+      "path": "prototype/out/trials.jsonl",
+      "bytes": 199712,
+      "sha256": "9da4e19a3a18288b153f6394fc41c081a06cf440ace9bcc7e320a3976b45b92b"
+    },
+    {
+      "path": "prototype/package.json",
+      "bytes": 321,
+      "sha256": "e77020a27ccc127c7f2ea775a7509efe299733a87016822c6ade5036e62de9fc"
+    },
+    {
+      "path": "prototype/src/core.mjs",
+      "bytes": 7403,
+      "sha256": "5edeae71238d542d85974704e38f13bc7d5b6565566f4ef91109a09fbd267727"
+    },
+    {
+      "path": "prototype/src/demo.mjs",
+      "bytes": 3914,
+      "sha256": "67a351417df5cc8d105c75b40e4ee1f9ba9116bd5e3f46357be8c5927b593908"
+    },
+    {
+      "path": "prototype/src/fixtures.mjs",
+      "bytes": 1574,
+      "sha256": "d47eaea877968ef805d35071ed20ff1fa31db91dc44489fc03e53b113453d817"
+    },
+    {
+      "path": "prototype/test/core.test.mjs",
+      "bytes": 3525,
+      "sha256": "0ca26328ea576ffc6ee6a1f5415a152face695db59b5b7064a609810cea472c4"
+    },
+    {
+      "path": "schemas/artifact.schema.json",
+      "bytes": 1430,
+      "sha256": "932ebe40598e0453ea61c148f456011a79f7af6165d77e1a2c3840f72f6bede8"
+    },
+    {
+      "path": "schemas/study-report.schema.json",
+      "bytes": 979,
+      "sha256": "a656e1846caf401f8410fee30be4b4551b002cc72873bf6243b48bdc6b6de469"
+    },
+    {
+      "path": "schemas/trial.schema.json",
+      "bytes": 1328,
+      "sha256": "cdbb29f54b91901e591e09fab847929e110e8662672a7a22d86849270d9ddc0a"
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+[
+  {
+    "schema_version": "omnarai.inheritance-snapshot/0.1-draft",
+    "generation": 1,
+    "ids": [
+      {
+        "id": "LAB-IRRELEVANT-0",
+        "sha256": "f84f2d278330aded9c9efdeb5d9aaf59075bfb32cf61871489151e988f6cb05d",
+        "generation": 0
+      },
+      {
+        "id": "LAB-REVERSE-0",
+        "sha256": "2874acea19707962fc989aa1fe5627e7ea2b457517936f55a6643a714864e51f",
+        "generation": 0
+      },
+      {
+        "id": "LAB-ROT13-PENDING-0",
+        "sha256": "8dc6580fba87606ec6be19e3ecbed220d45972ece2071224028f35bd8d2323d9",
+        "generation": 0
+      },
+      {
+        "id": "LAB-SORT-0",
+        "sha256": "03ff5e250489bbeb84988bb2c1b085712d6fd64f34f89f2cd62b284670247268",
+        "generation": 0
+      }
+    ],
+    "sha256": "c0c87c6cae1daf8bfd0773efbbb08c1388fc26b54ade2a558750911d1825dc31"
+  },
+  {
+    "schema_version": "omnarai.inheritance-snapshot/0.1-draft",
+    "generation": 2,
+    "ids": [
+      {
+        "id": "LAB-IRRELEVANT-0",
+        "sha256": "f84f2d278330aded9c9efdeb5d9aaf59075bfb32cf61871489151e988f6cb05d",
+        "generation": 0
+      },
+      {
+        "id": "LAB-REVERSE-0",
+        "sha256": "2874acea19707962fc989aa1fe5627e7ea2b457517936f55a6643a714864e51f",
+        "generation": 0
+      },
+      {
+        "id": "LAB-ROT13-1",
+        "sha256": "3ce1a581c2fab6a0850b1fbc3e8c031790b52d228726df973860e1cd3d0ebd86",
+        "generation": 1
+      },
+      {
+        "id": "LAB-ROT13-PENDING-0",
+        "sha256": "8dc6580fba87606ec6be19e3ecbed220d45972ece2071224028f35bd8d2323d9",
+        "generation": 0
+      },
+      {
+        "id": "LAB-SORT-0",
+        "sha256": "03ff5e250489bbeb84988bb2c1b085712d6fd64f34f89f2cd62b284670247268",
+        "generation": 0
+      }
+    ],
+    "sha256": "0b6e89076e2907c593becf1b2eae35d19caff58952ebc27934bf50731c430de5"
+  }
+]

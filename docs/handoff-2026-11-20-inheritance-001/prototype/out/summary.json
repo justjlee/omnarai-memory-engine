@@ -1,0 +1,38 @@
+{
+  "protocol": "omnarai.inheritance-study/0.1-draft",
+  "study_id": "TOY-DEMO-NOT-SCIENCE",
+  "status": "offline_simulation",
+  "simulation": true,
+  "comparisons": [
+    {
+      "generation": 1,
+      "n_pairs": 24,
+      "mean_C_minus_A_plus": 0.6666666666666666,
+      "ci_low": 0.4583333333333333,
+      "ci_high": 0.8333333333333334
+    },
+    {
+      "generation": 2,
+      "n_pairs": 24,
+      "mean_C_minus_A_plus": 1,
+      "ci_low": 1,
+      "ci_high": 1
+    }
+  ],
+  "arm_means": {
+    "A": 0,
+    "A+": 0,
+    "B": 1,
+    "C": 0.8333333333333334,
+    "D": 0.5,
+    "E": 0
+  },
+  "trials": 288,
+  "limitations": [
+    "All participants, contributions, and outcomes are scripted fixtures, not actual AI systems.",
+    "No causal claims, genuine held-out categories, calibrated generation difficulty, or verified model identities.",
+    "No real compute-matched A+ treatment; measured cost is mock $0.",
+    "Confidence intervals treat task instances as exchangeable and are illustrative only; real study must cluster by task family.",
+    "Any positive difference is intentionally created by the mock fixture, never experimental evidence."
+  ]
+}

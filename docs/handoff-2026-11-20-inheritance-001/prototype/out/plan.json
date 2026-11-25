@@ -1,0 +1,31 @@
+{
+  "study_id": "TOY-DEMO-NOT-SCIENCE",
+  "arms": [
+    "A",
+    "A+",
+    "B",
+    "C",
+    "D",
+    "E"
+  ],
+  "generations": [
+    1,
+    2
+  ],
+  "consumers": [
+    {
+      "provider": "scripted",
+      "model_id": "toy-consumer-gpt-like",
+      "family": "toy-openai"
+    },
+    {
+      "provider": "scripted",
+      "model_id": "toy-consumer-claude-like",
+      "family": "toy-anthropic"
+    }
+  ],
+  "randomized_assignment": false,
+  "paid_calls_enabled": false,
+  "task_fixture_kind": "public_toystore",
+  "note": "This file is a scripted mechanics demonstration, NOT a pre-registered model experiment."
+}
