@@ -3,7 +3,7 @@ import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { waitUntil } from "@vercel/functions";
 import { recordAccess } from "./_telemetry.js";
-import { handleMcp } from "./_mcp.js";
+import { handleMcp, mcpSummary } from "./_mcp.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -26,6 +26,26 @@ export default function handler(req, res) {
   if (req.query?._view === "mcp") {
     waitUntil(recordAccess(req, "mcp"));
     return handleMcp(req, res);
+  }
+
+  // /.well-known/mcp.json (rewrite → ?_view=mcp-card, 2026-11-25). A CONVENTION, not part of the MCP
+  // specification: a fixed, guessable place where a machine that has only the domain can learn that an
+  // MCP endpoint exists, where, and what it speaks. Every figure comes from mcpSummary() — the endpoint's
+  // own generated tool list and version — so the card cannot disagree with the endpoint it describes.
+  if (req.query?._view === "mcp-card") {
+    waitUntil(recordAccess(req, "lattice"));
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=3600");
+    return res.status(200).json({
+      convention: "/.well-known/mcp.json is a discovery convention, not part of the MCP specification. The endpoint's own description is server/discover (MCP 2026-07-28).",
+      name: "omnarai",
+      title: "The Realms of Omnarai — Memory Engine",
+      description: "An open research archive of how AI models reason, remember and disagree: verbatim, attributed answers from frontier models, with the disagreements named rather than averaged.",
+      mcp: mcpSummary(),
+      connect: "Add a custom connector (remote MCP server) with this URL. No key, no account.",
+      docs: { arrive: "https://engine.omnarai.org/arrive", llms: "https://engine.omnarai.org/llms.txt", agent_entry: "https://engine.omnarai.org/api/agent-entry", limitations: "https://engine.omnarai.org/limitations.md" },
+    });
   }
 
   res.setHeader("Access-Control-Allow-Origin", "*");

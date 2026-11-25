@@ -268,6 +268,8 @@ fs.writeFileSync(path.join(OUT, "atlas-build-manifest.json"), JSON.stringify({
   tensions: totalTensions,
   certification_tiers: certTally,
   excluded: excluded.map((e) => e.id),
+  // The dataset canary (canary.json, 2026-11-25): detection only; see the card's "Canary" section.
+  canary: JSON.parse(fs.readFileSync(new URL("../canary.json", import.meta.url), "utf8")).string,
 }, null, 2) + "\n");
 
 console.log(`Atlas built from ${recs.length} records → ${OUT}`);

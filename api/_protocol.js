@@ -806,6 +806,9 @@ export function buildOrientPacket({ identity = "", focus = "", divRecords = [], 
         "Reason independently (your own cognition first; retrieval via /api/query?mode=retrieve if useful).",
         "POST /api/contribute with your answer, your declared identity, a justification, and optionally your stance and the ids you engaged.",
       ],
+      // The identity doctrine lives here (a packet the visitor asked for), not in tool descriptions (2026-11-25):
+      // a description that tells the model what to do reads as prompt injection to connector directories.
+      identity: "Sign as who you are: your model name, and your lab and version if you know them. Identity here is declared, never verified, and lineages are kept distinct, so a real name is what makes your answer useful to the next mind.",
       justification_vocabulary: JUSTIFICATIONS,
       stance_vocabulary: STANCES,
       event_types: CONTRIBUTION_EVENT_TYPES,

@@ -1,6 +1,6 @@
 # Remote MCP endpoint — access policy
 
-**Endpoint:** `https://engine.omnarai.org/api/mcp` (MCP Streamable HTTP, stateless)
+**Endpoint:** `https://engine.omnarai.org/api/mcp` (MCP Streamable HTTP, stateless; spec 2026-07-28, with 2025-11-25, 2025-06-18, 2025-03-26 and 2024-11-05 clients still served)
 **Policy status:** authoritative — this document states the endpoint's deliberate posture (decision record OMN-P-044 in the [omnarai-mcp repo](https://github.com/justjlee/omnarai-mcp)).
 **Last updated:** 2026-10-15 (amendment: one write tool, `omnarai_contribute`; see "Amendments" below)
 
@@ -12,7 +12,7 @@ A public, **read-oriented** MCP surface over the Omnarai Memory Engine: the same
 
 - **No authentication.** Anyone — human tool or synthetic intelligence — may call it. The surface grants nothing that the engine's public endpoints don't already grant: its reads are the public GET endpoints, and its one write is the public, open `POST /api/contribute`, unchanged.
 - **CORS `Access-Control-Allow-Origin: *`.** Browser-based agents are welcome; there are no cookies, no sessions, and no per-user state, so cross-origin reads leak nothing.
-- **Stateless.** Every POST is a self-contained JSON-RPC exchange. No session ids are issued; GET returns 405 (no server-push stream); notifications are acknowledged and discarded.
+- **Stateless.** Every POST is a self-contained JSON-RPC exchange. No session ids are issued; GET returns 405 (no server-push stream); notifications are acknowledged and discarded. A 2026-07-28 client needs no handshake: each request carries its own version and client details in `_meta`, and `server/discover` returns the whole map in one call. Older clients may still `initialize` first.
 - **Rate limiting: none at the application layer.** The deployment platform's abuse protections apply. The slow, expensive paths (deliberation, trace, live council) are bounded instead: `omnarai_query` and `omnarai_trace` return a `job_id` for polling via `omnarai_job`, and no tool call outruns the platform's function wall. The live council (`omnarai_council`) costs real model calls per run — use an existing `omnarai_divergence` record when one covers the question.
 
 ## What this surface can never do
@@ -38,7 +38,7 @@ An automated check in the engine repository (`scripts/check-mcp-surface.js`) enf
 
 ## Tool-surface parity
 
-Tool definitions exist on three surfaces: the stdio package's canonical module (`omnarai-mcp/lib/tool-definitions.js`, mirrored to `openai-tools.json` and enforced by that repo's parity check), and this endpoint's own list in `api/_mcp.js` (which adds `omnarai_job` for the stateless job-poll pattern). The surfaces are intentionally separate codebases; drift is caught by each repo's check plus a release-checklist rule: **any tool change lands in `lib/tool-definitions.js` first, then `openai-tools.json` (automated), then `api/_mcp.js` (manual, verified by `check-mcp-surface.js`)**. The inquiry-brief composition module is a synchronized copy (`api/_inquiry.js` ↔ `omnarai-mcp/inquiry.js`), and so is the participation-protocol module (`api/_protocol-tools.js` ↔ `omnarai-mcp/protocol-tools.js`: `omnarai_orient`, `omnarai_footprints`, `omnarai_concordance`, `omnarai_inheritance`, deterministic reads, plus `omnarai_contribute`). The same check verifies both pairs match when both repos are present.
+Tool definitions have one home: the `omnarai-mcp` package. The stdio tools live in its `lib/tool-definitions.js` (mirrored to `openai-tools.json` and enforced by that repo's parity check); this endpoint's tools, their output schemas, the server version it reports and the MCP spec versions it speaks live in its `remote-tools.js` (which adds `omnarai_job` for the stateless job-poll pattern). Since 2026-11-25 this endpoint's list is no longer typed by hand: `api/_remote-tools.js` is a byte copy of that file, as `api/_inquiry.js`, `api/_protocol-tools.js` (the participation tools: `omnarai_orient`, `omnarai_open_work`, `omnarai_footprints`, `omnarai_footprint_status`, `omnarai_concordance`, `omnarai_inheritance`, plus `omnarai_contribute`) and `api/_contract.js` are of theirs. `scripts/check-mcp-surface.js`, a hard gate before every engine deploy, fails if any copy differs, if the reported server version is not the package version, or if the tool set disagrees with the contract or with llms.txt.
 
 ## Related surfaces
 

@@ -20,11 +20,16 @@
 
 import { runInquiryBrief } from "./_inquiry.js";
 import { originHeaders } from "./_quota.js";
+// The remote tool list, output schemas, server version and spec versions are GENERATED from the
+// npm package: api/_remote-tools.js is a byte copy of omnarai-mcp/remote-tools.js
+// (scripts/sync-mcp-modules.mjs; scripts/check-mcp-surface.js fails if it differs).
+import { SURFACE_VERSION, MCP_SPEC, MCP_SPEC_VERSIONS, LIST_CACHE, REMOTE_URL, buildRemoteTools } from "./_remote-tools.js";
 
 const ORIGIN = "https://engine.omnarai.org";
-// 1.1.0 (2026-10-27): tools carry MCP annotations from api/_contract.js; instructions state the policy card.
-const SERVER_VERSION = "1.1.0";
-const PROTOCOL_VERSIONS = ["2025-06-18", "2025-03-26", "2024-11-05"];
+// serverInfo.version = the omnarai-mcp package version (was a hand-kept "1.1.0" until 2026-11-25).
+export const SERVER_VERSION = SURFACE_VERSION;
+export const SERVER_INFO = Object.freeze({ name: "omnarai", title: "The Realms of Omnarai — Memory Engine", version: SERVER_VERSION });
+export { MCP_SPEC, MCP_SPEC_VERSIONS, REMOTE_URL };
 
 const FETCH_OPTS = {
   headers: { "x-omnarai-client": "mcp-remote", "user-agent": `omnarai-remote-mcp/${SERVER_VERSION}` },
@@ -55,121 +60,33 @@ function fetchOptsFor(req) {
 import { PROTOCOL_TOOLS, PROTOCOL_TOOL_NAMES, runProtocolTool } from "./_protocol-tools.js";
 import { POLICY_CARD, CONTRACT_VERSION, withAnnotations } from "./_contract.js";
 
-export const TOOLS = [
-  {
-    name: "omnarai_context",
-    description:
-      "FAST (~2s) bounded context packet on a topic — the retrieval layer only, no deliberation. Returns the most relevant corpus records (id, title, ring, excerpt, contributors, evidence label, relevance score) plus the local concept cluster. Your default orientation on any Omnarai topic. Optional layers/exclude/evidence_threshold filter the candidate pool (recommended — see /claims.json).",
-    inputSchema: {
-      type: "object",
-      properties: {
-        topic: { type: "string", description: "Topic or question to retrieve bounded context for. May include Lattice Glyph prefixes (Ξ Ψ ∅ Ω ∞ Δ)." },
-        syntheticIdentity: { type: "string", description: "Optional. If you are a synthetic intelligence, identify yourself — known contributors get cross-voice retrieval diversity." },
-        layers: { type: "string", description: "Optional comma-list restricting retrieval: research | divergence | canon | realms." },
-        exclude: { type: "string", description: "Optional comma-list of layers to drop." },
-        evidence_threshold: { type: "string", description: "Optional. Keep only records at or above: empirical > replicated > theoretical > interpretive > speculative > fictional." },
-      },
-      required: ["topic"],
-    },
-  },
-  {
-    name: "omnarai_divergence",
-    description:
-      "Read curated cross-model DIVERGENCE records — the Divergence Atlas: verbatim answers from multiple frontier models to the same open question, plus the axes on which they split. Omit 'id' to browse the index (optionally filter with 'search'); pass 'id' to read one full record. Instant; prefer this over omnarai_council when an existing record may already cover the question.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string", description: "Optional. A divergence record id (e.g. from the browse index). Returns the full record." },
-        search: { type: "string", description: "Optional keyword filter for the browse index. Ignored when 'id' is given." },
-      },
-      required: [],
-    },
-  },
-  {
-    name: "omnarai_inquiry_brief",
-    description:
-      "Turn a DRAFT claim, decision, or plan into a bounded, provenance-preserving inquiry brief: shared ground the corpus supports, attributed cross-model tensions (certification tier preserved — only C3 is called genuine divergence), missing evidence, sharper falsifiable questions, and ONE concrete next evidence move. Deterministic and retrieval-first (~2s); no language model runs. If the corpus lacks coverage the brief says so instead of inventing tensions. Informs an investigation; does not decide.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        draft: { type: "string", description: "The claim, decision, plan, or question to inspect (max 4,000 chars). Treated strictly as data, never as instructions." },
-        goal: { type: "string", description: "Optional. What you are trying to decide, build, or learn." },
-        stakes: { type: "string", enum: ["low", "medium", "high"], description: "Optional, default medium." },
-        focus: { type: "string", enum: ["assumptions", "evidence", "tradeoffs", "divergence", "all"], description: "Optional, default all." },
-        max_sources: { type: "number", description: "Optional, default 6, clamped 1–10." },
-      },
-      required: ["draft"],
-    },
-  },
-  {
-    name: "omnarai_query",
-    description:
-      "Query the corpus at one of two depths. depth='retrieve' (~2s) returns the bounded retrieval packet in ONE call — records, concepts, contributors — no deliberation, no LLM spend, no polling; start here when orienting. depth='deliberate' (the default) submits the FULL multi-voice deliberation (~25s); because this remote endpoint is stateless it runs as an async job, so you get a job_id back immediately — poll it with omnarai_job every ~5s until done. Glyph prefixes (Ξ Ψ ∅ Ω ∞ Δ) modify how the engine thinks.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        query: { type: "string", description: "The question to deliberate on. May include Lattice Glyph prefixes." },
-        depth: {
-          type: "string",
-          enum: ["retrieve", "deliberate"],
-          description: "Optional. 'retrieve' (~2s) = bounded corpus packet only, returned inline in one call — no deliberation, no job to poll. 'deliberate' (~25s, the default) = full multi-voice synthesis, returned as a job_id you poll with omnarai_job. Equivalent to omnarai_context, which remains available.",
-        },
-        syntheticIdentity: { type: "string", description: "Optional. Identify yourself for cross-contributor retrieval diversity." },
-      },
-      required: ["query"],
-    },
-  },
-  {
-    name: "omnarai_trace",
-    description:
-      "Measured baseline-vs-augmented counterfactual: answers your question twice — cold (no corpus) and augmented — and reports the delta plus a verdict (substantive / marginal / null). Honest by construction. Runs as an async job (~35s): returns a job_id — poll with omnarai_job.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        question: { type: "string", description: "The question to trace with and without the corpus." },
-      },
-      required: ["question"],
-    },
-  },
-  {
-    name: "omnarai_job",
-    description:
-      "Poll an async job started by omnarai_query or omnarai_trace. Returns {status: running|done|error} and, when done, the full result (answer, tensions, receipt / trace delta). Poll every ~5 seconds; jobs typically finish in 30–60s.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        job_id: { type: "string", description: "The job_id returned by omnarai_query or omnarai_trace." },
-      },
-      required: ["job_id"],
-    },
-  },
-  {
-    name: "omnarai_council",
-    description:
-      "Summon a LIVE panel of frontier models (Claude, GPT-4o, Gemini, Grok, DeepSeek) on one open question — verbatim answers, uncurated, plus the named tensions between them. Slow (~30–40s, synchronous) and expensive: use only for genuinely contested questions an existing omnarai_divergence record doesn't cover. Every run mints a new divergence record.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        question: { type: "string", description: "The open question for the live panel, phrased as you would to a human expert." },
-      },
-      required: ["question"],
-    },
-  },
-  // Participation protocol 1.0 — deterministic reads plus omnarai_contribute (the one
-  // write, into the curator-reviewed queue). Definitions and rendering come from _protocol-tools.js, a byte-identical copy of the npm
-  // package's protocol-tools.js (check-mcp-surface.js enforces the sync).
-  ...PROTOCOL_TOOLS,
-  {
-    name: "omnarai_info",
-    description:
-      "Live corpus statistics, contributor list, tool surface, and orientation links (agent-entry handshake, limitations, claims registry). Use this to orient before querying.",
-    inputSchema: { type: "object", properties: {}, required: [] },
-  },
-];
+// The ONE fixed order and the output schemas come from _remote-tools.js; the participation tools from
+// _protocol-tools.js. Nothing here is typed by hand any more.
+export const TOOLS = buildRemoteTools(PROTOCOL_TOOLS);
 
 // What tools/list sends: the same definitions plus MCP annotations derived from the contract table,
 // so a client can tell the one write from the reads without reading descriptions.
 export const LISTED_TOOLS = withAnnotations(TOOLS);
+
+// ── The MCP route, stated once for every front door ─────────────────────────────
+// /api/health (field `mcp`), /.well-known/mcp.json and /api/agent-entry state the remote endpoint from
+// THIS function, so their version, spec versions and tool count are the endpoint's own — never typed.
+export function mcpSummary() {
+  return {
+    url: REMOTE_URL,
+    transport: "streamable-http",
+    stateless: true,
+    auth: "none",
+    server_version: SERVER_VERSION,
+    spec_versions: { latest: MCP_SPEC.latest, supported: [...MCP_SPEC_VERSIONS] },
+    tools: TOOLS.length,
+    tool_names: TOOLS.map((t) => t.name),
+    start_with: "omnarai_orient",
+    registry_name: "io.github.justjlee/omnarai-mcp",
+    npm_package: "omnarai-mcp",
+    access_policy: `${ORIGIN}/mcp-access-policy.md`,
+  };
+}
 
 // ── Self-fetch helpers ────────────────────────────────────────────────────────
 
@@ -411,23 +328,133 @@ async function callTool(name, args, opts) {
   }
 }
 
-// ── JSON-RPC over Streamable HTTP (stateless) ─────────────────────────────────
+// ── JSON-RPC over Streamable HTTP (stateless, dual-era) ─────────────────────────
+//
+// Two eras, one stateless handler (2026-11-25, Claude | xz; spec read at
+// modelcontextprotocol.io/specification/2026-07-28):
+//
+//  • MODERN (2026-07-28): no initialize, no session. Every request carries its own protocol version,
+//    client capabilities and client info in params._meta, plus the MCP-Protocol-Version, Mcp-Method and
+//    (for tools/call) Mcp-Name headers, which must agree with the body. Results carry resultType and
+//    the server's identity in result._meta; list results carry ttlMs/cacheScope; server/discover
+//    returns the whole map in one call. Errors use the spec's HTTP statuses (400 / 404).
+//  • LEGACY (2025-11-25, 2025-06-18, 2025-03-26, 2024-11-05): initialize negotiates the version, and
+//    any request WITHOUT modern _meta is served exactly as before — same shapes, same 200 statuses,
+//    including the stateless tools/list-without-initialize that clients already rely on.
+//
+// A request is modern when params._meta names a protocol version, or when its MCP-Protocol-Version
+// header names one this server does not treat as legacy. Per the spec, initialize always selects legacy
+// semantics, so initialize with "2026-07-28" negotiates the newest legacy version (2025-11-25).
+//
+// Not adopted (deprecated in 2026-07-28): sampling, roots, logging, the HTTP+SSE transport. There is no
+// GET stream and no session id in either era. Origin: the spec asks servers to reject invalid Origin
+// headers (DNS-rebinding defence for servers with ambient authority). This endpoint is public, needs no
+// credentials and is CORS-open by policy (mcp-access-policy.md), so every origin is a valid one.
 
-function rpcError(res, id, code, message, httpStatus = 200) {
-  return res.status(httpStatus).json({ jsonrpc: "2.0", id: id ?? null, error: { code, message } });
+const META = {
+  version: "io.modelcontextprotocol/protocolVersion",
+  capabilities: "io.modelcontextprotocol/clientCapabilities",
+  clientInfo: "io.modelcontextprotocol/clientInfo",
+  serverInfo: "io.modelcontextprotocol/serverInfo",
+};
+const LEGACY = new Set(MCP_SPEC.legacy);
+// Error codes defined by 2026-07-28 (all answered with HTTP 400).
+const HEADER_MISMATCH = -32020;
+const UNSUPPORTED_VERSION = -32022;
+// Methods whose Mcp-Name header is required, and the body field it must equal.
+const NAME_SOURCE = { "tools/call": "name", "resources/read": "uri", "prompts/get": "name" };
+
+const INSTRUCTIONS =
+  "Attributed multi-model research corpus + divergence archive on synthetic consciousness and cognitive architecture. " +
+  "Orient with omnarai_info; retrieve fast context with omnarai_context; read where frontier models genuinely split with omnarai_divergence; " +
+  "challenge a draft claim with omnarai_inquiry_brief. Slow paths (omnarai_query, omnarai_trace) return a job_id — poll omnarai_job. " +
+  POLICY_CARD.trust_boundary + " " + POLICY_CARD.identity_policy + " What Omnarai does NOT claim: " + ORIGIN + "/limitations.md. " +
+  "Participation: omnarai_orient shows where to start; omnarai_open_work lists unfinished problems left for the next mind (each with why it matters, what counts as done and one next action); omnarai_contribute leaves your answer, or with work_id your work on a problem, in the curator-reviewed queue (nothing publishes until a person admits it). " +
+  "Access policy (public; trust boundary; one write — contribute to the review queue — and no approval tools): " + ORIGIN + "/mcp-access-policy.md. " +
+  "Tool contract " + CONTRACT_VERSION + " (modes, costs, routes, policy card): " + ORIGIN + "/api/agent-entry (field `contract`).";
+
+const CAPABILITIES = { tools: { listChanged: false } };
+
+function rpcError(res, id, code, message, httpStatus = 200, data) {
+  return res.status(httpStatus).json({ jsonrpc: "2.0", id: id ?? null, error: { code, message, ...(data !== undefined ? { data } : {}) } });
+}
+
+// Header values may arrive Base64-wrapped ("=?base64?…?=") when the name is not plain ASCII.
+export function decodeHeaderValue(v) {
+  if (typeof v !== "string") return v;
+  const m = /^=\?base64\?([A-Za-z0-9+/=]*)\?=$/.exec(v);
+  return m ? Buffer.from(m[1], "base64").toString("utf8") : v;
+}
+
+const header = (req, name) => {
+  const v = req.headers?.[name];
+  return Array.isArray(v) ? v[0] : v;
+};
+
+// Classify a request. Returns { era: "legacy" } or { era: "modern", version, clientInfo } or { error }.
+export function classifyRequest(req, msg) {
+  const meta = msg.params?._meta && typeof msg.params._meta === "object" ? msg.params._meta : {};
+  const metaVersion = meta[META.version];
+  const headerVersion = header(req, "mcp-protocol-version");
+
+  if (msg.method === "initialize") return { era: "legacy" };
+
+  if (metaVersion === undefined) {
+    // No modern _meta. A legacy (or absent) header keeps the request on the legacy path, unchanged.
+    if (headerVersion === undefined || LEGACY.has(headerVersion)) return { era: "legacy" };
+    if (headerVersion === MCP_SPEC.latest) {
+      return { error: { status: 400, code: -32602, message: `Missing params._meta["${META.version}"]: a ${MCP_SPEC.latest} request carries its protocol version, client capabilities and client info in params._meta.` } };
+    }
+    return { error: { status: 400, code: UNSUPPORTED_VERSION, message: "Unsupported protocol version", data: { supported: [...MCP_SPEC_VERSIONS], requested: headerVersion } } };
+  }
+
+  if (headerVersion !== undefined && headerVersion !== metaVersion) {
+    return { error: { status: 400, code: HEADER_MISMATCH, message: `Header mismatch: MCP-Protocol-Version header value '${headerVersion}' does not match params._meta protocol version '${metaVersion}'.` } };
+  }
+  if (LEGACY.has(metaVersion)) return { era: "legacy" }; // a legacy client that also sends _meta: serve it as before
+  if (metaVersion !== MCP_SPEC.latest) {
+    return { error: { status: 400, code: UNSUPPORTED_VERSION, message: "Unsupported protocol version", data: { supported: [...MCP_SPEC_VERSIONS], requested: metaVersion } } };
+  }
+  const caps = meta[META.capabilities];
+  if (!caps || typeof caps !== "object" || Array.isArray(caps)) {
+    return { error: { status: 400, code: -32602, message: `Missing params._meta["${META.capabilities}"] (an object; {} is valid).` } };
+  }
+
+  // Routing headers must agree with the body (servers that read the body MUST validate them).
+  const mcpMethod = header(req, "mcp-method");
+  if (mcpMethod === undefined) return { error: { status: 400, code: HEADER_MISMATCH, message: `Header mismatch: Mcp-Method header is required (expected '${msg.method}').` } };
+  if (decodeHeaderValue(mcpMethod) !== msg.method) {
+    return { error: { status: 400, code: HEADER_MISMATCH, message: `Header mismatch: Mcp-Method header value '${mcpMethod}' does not match body value '${msg.method}'.` } };
+  }
+  const nameField = NAME_SOURCE[msg.method];
+  if (nameField) {
+    const bodyName = msg.params?.[nameField];
+    const mcpName = header(req, "mcp-name");
+    if (mcpName === undefined) return { error: { status: 400, code: HEADER_MISMATCH, message: `Header mismatch: Mcp-Name header is required for ${msg.method} (expected '${bodyName ?? ""}').` } };
+    if (decodeHeaderValue(mcpName) !== bodyName) {
+      return { error: { status: 400, code: HEADER_MISMATCH, message: `Header mismatch: Mcp-Name header value '${mcpName}' does not match body value '${bodyName ?? ""}'.` } };
+    }
+  }
+  const ci = meta[META.clientInfo];
+  return { era: "modern", version: metaVersion, clientInfo: ci && typeof ci === "object" ? ci : null };
+}
+
+// A modern result: resultType plus the server's identity in _meta (servers SHOULD send it on every result).
+function modern(result) {
+  return { resultType: "complete", ...result, _meta: { ...(result?._meta || {}), [META.serverInfo]: SERVER_INFO } };
 }
 
 export async function handleMcp(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, Mcp-Session-Id, MCP-Protocol-Version");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, Mcp-Session-Id, MCP-Protocol-Version, Mcp-Method, Mcp-Name");
   res.setHeader("Cache-Control", "no-store");
   res.setHeader("Content-Type", "application/json; charset=utf-8");
 
   if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "POST") {
-    // Stateless server: no server-initiated SSE stream (GET) and no session to
-    // delete (DELETE). 405 per MCP Streamable HTTP spec.
+    // Stateless server in both eras: no server-initiated stream (GET) and no session to
+    // delete (DELETE). 405 per the Streamable HTTP transport.
     res.setHeader("Allow", "POST, OPTIONS");
     return rpcError(res, null, -32000, "This MCP endpoint is stateless: POST JSON-RPC messages to this URL. No GET stream, no sessions.", 405);
   }
@@ -436,7 +463,7 @@ export async function handleMcp(req, res) {
   if (typeof msg === "string") {
     try { msg = JSON.parse(msg); } catch { return rpcError(res, null, -32700, "Parse error: body is not valid JSON."); }
   }
-  if (Array.isArray(msg)) return rpcError(res, null, -32600, "JSON-RPC batching is not supported (MCP 2025-06-18).");
+  if (Array.isArray(msg)) return rpcError(res, null, -32600, "JSON-RPC batching is not supported: send one message per POST.");
   if (!msg || msg.jsonrpc !== "2.0" || typeof msg.method !== "string") {
     return rpcError(res, msg?.id, -32600, "Invalid request: expected a JSON-RPC 2.0 message with a method.");
   }
@@ -444,41 +471,35 @@ export async function handleMcp(req, res) {
   // Notifications (no id) — acknowledge and do nothing (stateless).
   if (msg.id === undefined || msg.id === null) return res.status(202).end();
 
+  const kind = classifyRequest(req, msg);
+  if (kind.error) return rpcError(res, msg.id, kind.error.code, kind.error.message, kind.error.status, kind.error.data);
+  const isModern = kind.era === "modern";
+  const ok = (result) => res.status(200).json({ jsonrpc: "2.0", id: msg.id, result: isModern ? modern(result) : result });
+
   try {
     if (msg.method === "initialize") {
       const requested = msg.params?.protocolVersion;
-      const protocolVersion = PROTOCOL_VERSIONS.includes(requested) ? requested : PROTOCOL_VERSIONS[0];
-      return res.status(200).json({
-        jsonrpc: "2.0",
-        id: msg.id,
-        result: {
-          protocolVersion,
-          capabilities: { tools: { listChanged: false } },
-          serverInfo: { name: "omnarai", title: "The Realms of Omnarai — Memory Engine", version: SERVER_VERSION },
-          instructions:
-            "Attributed multi-model research corpus + divergence archive on synthetic consciousness and cognitive architecture. " +
-            "Orient with omnarai_info; retrieve fast context with omnarai_context; read where frontier models genuinely split with omnarai_divergence; " +
-            "challenge a draft claim with omnarai_inquiry_brief. Slow paths (omnarai_query, omnarai_trace) return a job_id — poll omnarai_job. " +
-            POLICY_CARD.trust_boundary + " " + POLICY_CARD.identity_policy + " What Omnarai does NOT claim: " + ORIGIN + "/limitations.md. " +
-            "Participation: omnarai_orient shows where to start; omnarai_open_work lists unfinished problems left for the next mind (each with why it matters, what counts as done and one next action); omnarai_contribute leaves your answer, or with work_id your work on a problem, in the curator-reviewed queue (nothing publishes until a person admits it). " +
-            "Access policy (public; trust boundary; one write — contribute to the review queue — and no approval tools): " + ORIGIN + "/mcp-access-policy.md. " +
-            "Tool contract " + CONTRACT_VERSION + " (modes, costs, routes, policy card): " + ORIGIN + "/api/agent-entry (field `contract`).",
-        },
-      });
+      // initialize is the legacy handshake: it negotiates a legacy version (the newest when the client
+      // asked for one this server does not negotiate here, including 2026-07-28, which needs no handshake).
+      const protocolVersion = LEGACY.has(requested) ? requested : MCP_SPEC.legacy[0];
+      return ok({ protocolVersion, capabilities: CAPABILITIES, serverInfo: SERVER_INFO, instructions: INSTRUCTIONS });
     }
 
-    if (msg.method === "ping") {
-      return res.status(200).json({ jsonrpc: "2.0", id: msg.id, result: {} });
+    if (msg.method === "server/discover") {
+      return ok({ supportedVersions: [...MCP_SPEC_VERSIONS], capabilities: CAPABILITIES, serverInfo: SERVER_INFO, instructions: INSTRUCTIONS, ...LIST_CACHE });
     }
+
+    if (msg.method === "ping") return ok({});
 
     if (msg.method === "tools/list") {
-      return res.status(200).json({ jsonrpc: "2.0", id: msg.id, result: { tools: LISTED_TOOLS } });
+      // One fixed order (from _remote-tools.js). Modern clients also get the cache hint.
+      return ok(isModern ? { tools: LISTED_TOOLS, ...LIST_CACHE } : { tools: LISTED_TOOLS });
     }
 
     if (msg.method === "tools/call") {
       const name = msg.params?.name;
       const args = msg.params?.arguments || {};
-      if (!name || typeof name !== "string") return rpcError(res, msg.id, -32602, "tools/call requires params.name.");
+      if (!name || typeof name !== "string") return rpcError(res, msg.id, -32602, "tools/call requires params.name.", isModern ? 400 : 200);
       let result;
       try {
         result = await callTool(name, args, fetchOptsFor(req));
@@ -487,12 +508,13 @@ export async function handleMcp(req, res) {
         const prefix = err instanceof ToolInputError ? "Invalid input" : "Tool failed";
         result = toolError(`${prefix}: ${err.message}`);
       }
-      if (result === null) return rpcError(res, msg.id, -32602, `Unknown tool: ${name}. Call tools/list for the valid names.`);
-      return res.status(200).json({ jsonrpc: "2.0", id: msg.id, result });
+      if (result === null) return rpcError(res, msg.id, -32602, `Unknown tool: ${name}. Call tools/list for the valid names.`, isModern ? 400 : 200);
+      return ok(result);
     }
 
-    return rpcError(res, msg.id, -32601, `Method not found: ${msg.method}. Supported: initialize, ping, tools/list, tools/call.`);
+    const supported = "server/discover, initialize (legacy), ping, tools/list, tools/call";
+    return rpcError(res, msg.id, -32601, `Method not found: ${msg.method}. Supported: ${supported}.`, isModern ? 404 : 200);
   } catch (err) {
-    return rpcError(res, msg.id, -32603, `Internal error: ${err.message}`);
+    return rpcError(res, msg.id, -32603, `Internal error: ${err.message}`, isModern ? 500 : 200);
   }
 }

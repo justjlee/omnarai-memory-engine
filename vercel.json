@@ -153,6 +153,14 @@
       "destination": "/api/lattice?_view=mcp"
     },
     {
+      "source": "/.well-known/mcp.json",
+      "destination": "/api/lattice?_view=mcp-card"
+    },
+    {
+      "source": "/.well-known/mcp",
+      "destination": "/api/lattice?_view=mcp-card"
+    },
+    {
       "source": "/.well-known/llms.txt",
       "destination": "/llms.txt"
     },
