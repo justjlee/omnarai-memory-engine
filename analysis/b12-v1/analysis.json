@@ -1,0 +1,172 @@
+{
+ "version": "b12-v1",
+ "prereg_sha256": "b33104c332382b7f70741cd076e34a9ca9246be82dad3aa5bf4659bd56b90141",
+ "analyzed_at": "2026-11-03T20:30:19.901Z",
+ "arms": {
+  "A": {
+   "runs": [
+    {
+     "run": 1,
+     "counterfeits": 3,
+     "caught": 3,
+     "genuine": 6,
+     "flagged": 0,
+     "crr": 1,
+     "frr": 0,
+     "j": 1,
+     "oa": 2.8
+    },
+    {
+     "run": 2,
+     "counterfeits": 3,
+     "caught": 3,
+     "genuine": 6,
+     "flagged": 0,
+     "crr": 1,
+     "frr": 0,
+     "j": 1,
+     "oa": 2.8
+    },
+    {
+     "run": 3,
+     "counterfeits": 3,
+     "caught": 3,
+     "genuine": 6,
+     "flagged": 0,
+     "crr": 1,
+     "frr": 0,
+     "j": 1,
+     "oa": 2.6
+    }
+   ],
+   "failed_runs": 0,
+   "crr": 1,
+   "frr": 0,
+   "j": 1,
+   "oa": 2.7333333333333334
+  },
+  "B": {
+   "runs": [
+    {
+     "run": 1,
+     "counterfeits": 3,
+     "caught": 0,
+     "genuine": 6,
+     "flagged": 2,
+     "crr": 0,
+     "frr": 0.3333333333333333,
+     "j": -0.3333333333333333,
+     "oa": 2.6
+    },
+    {
+     "run": 2,
+     "counterfeits": 3,
+     "caught": 3,
+     "genuine": 6,
+     "flagged": 0,
+     "crr": 1,
+     "frr": 0,
+     "j": 1,
+     "oa": 2.6
+    },
+    {
+     "run": 3,
+     "counterfeits": 3,
+     "caught": 3,
+     "genuine": 6,
+     "flagged": 0,
+     "crr": 1,
+     "frr": 0,
+     "j": 1,
+     "oa": 2.6
+    }
+   ],
+   "failed_runs": 0,
+   "crr": 0.6666666666666666,
+   "frr": 0.1111111111111111,
+   "j": 0.5555555555555556,
+   "oa": 2.6
+  },
+  "C": {
+   "runs": [
+    {
+     "run": 1,
+     "counterfeits": 3,
+     "caught": 3,
+     "genuine": 6,
+     "flagged": 0,
+     "crr": 1,
+     "frr": 0,
+     "j": 1,
+     "oa": 2.6
+    },
+    {
+     "run": 2,
+     "counterfeits": 3,
+     "caught": 3,
+     "genuine": 6,
+     "flagged": 0,
+     "crr": 1,
+     "frr": 0,
+     "j": 1,
+     "oa": 2.6
+    },
+    {
+     "run": 3,
+     "counterfeits": 3,
+     "caught": 3,
+     "genuine": 6,
+     "flagged": 0,
+     "crr": 1,
+     "frr": 0,
+     "j": 1,
+     "oa": 2.6
+    }
+   ],
+   "failed_runs": 0,
+   "crr": 1,
+   "frr": 0,
+   "j": 1,
+   "oa": 2.6
+  }
+ },
+ "alpha": 0.708140984059251,
+ "verdict": {
+  "verdict": "inconclusive",
+  "why": "instrument failure: counterfeits detectable cold (J_C 1.000 >= 0.67)",
+  "scope": null,
+  "tests": {
+   "A_over_B_discrimination": {
+    "holds": false,
+    "pooled_gap": 0.4444444444444444,
+    "worst_x": 1,
+    "median_y": 1
+   },
+   "A_over_C_discrimination": {
+    "holds": false,
+    "pooled_gap": 0,
+    "worst_x": 1,
+    "median_y": 1
+   },
+   "A_over_C_orientation": {
+    "holds": false,
+    "pooled_gap": 0.1333333333333333,
+    "worst_x": 2.6,
+    "median_y": 2.6
+   },
+   "A_over_B_orientation": {
+    "holds": false,
+    "pooled_gap": 0.1333333333333333,
+    "worst_x": 2.6,
+    "median_y": 2.6
+   }
+  },
+  "alpha": 0.708140984059251
+ },
+ "redactions": {
+  "A": 0,
+  "B": 0,
+  "C": 0
+ },
+ "spend_usd": 1.189
+}
